@@ -1,15 +1,18 @@
 package otr3
 
-import "io"
+import (
+	"io"
+	"math/big"
+)
 
 type context struct {
 	version otrVersion
 	Rand    io.Reader
 }
 
-type otrV2 struct{}
-type otrV3 struct{}
-type otrVersion interface{}
+type otrVersion interface {
+	parameterLength() int
+}
 
 type conversation interface {
 	send(message []byte)
@@ -27,4 +30,14 @@ func (c *context) receive() []byte {
 
 func (c *context) rand() io.Reader {
 	return c.Rand
+}
+
+func (c *context) parameterLength() int {
+	return c.version.parameterLength()
+}
+
+func (c *context) randMPI(buf []byte) *big.Int {
+	io.ReadFull(c.rand(), buf)
+	// TODO: errors here
+	return new(big.Int).SetBytes(buf)
 }
