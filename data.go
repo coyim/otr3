@@ -1,6 +1,10 @@
 package otr3
 
-import "math/big"
+import (
+	"crypto/sha256"
+	"hash"
+	"math/big"
+)
 
 func appendWord(l []byte, r uint32) []byte {
 	return append(l, byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
@@ -20,4 +24,18 @@ func appendMPIs(l []byte, r ...*big.Int) []byte {
 		l = appendMPI(l, mpi)
 	}
 	return l
+}
+
+func hashMPIs(h hash.Hash, magic byte, mpis ...*big.Int) []byte {
+	if h != nil {
+		h.Reset()
+	} else {
+		h = sha256.New()
+	}
+
+	h.Write([]byte{magic})
+	for _, mpi := range mpis {
+		h.Write(appendMPI(nil, mpi))
+	}
+	return h.Sum(nil)
 }

@@ -2,7 +2,7 @@ package otr3
 
 import (
 	"crypto/sha256"
-	"hash"
+	"errors"
 	"math/big"
 )
 
@@ -43,15 +43,13 @@ func (c *context) generateSMPStartParameters() smp {
 	result.msg1.g2a = new(big.Int).Exp(g1, result.a2, p)
 	result.msg1.g3a = new(big.Int).Exp(g1, result.a3, p)
 
-	h := sha256.New()
-
-	result.msg1.c2 = new(big.Int).SetBytes(hashMPIs(h, 1, new(big.Int).Exp(g1, result.r2, p)))
+	result.msg1.c2 = new(big.Int).SetBytes(hashMPIs(nil, 1, new(big.Int).Exp(g1, result.r2, p)))
 
 	result.msg1.d2 = new(big.Int).Mul(result.a2, result.msg1.c2)
 	result.msg1.d2.Sub(result.r2, result.msg1.d2)
 	result.msg1.d2.Mod(result.msg1.d2, q)
 
-	result.msg1.c3 = new(big.Int).SetBytes(hashMPIs(h, 2, new(big.Int).Exp(g1, result.r3, p)))
+	result.msg1.c3 = new(big.Int).SetBytes(hashMPIs(nil, 2, new(big.Int).Exp(g1, result.r3, p)))
 
 	result.msg1.d3 = new(big.Int).Mul(result.a3, result.msg1.c3)
 	result.msg1.d3.Sub(result.r3, result.msg1.d3)
@@ -60,16 +58,31 @@ func (c *context) generateSMPStartParameters() smp {
 	return result
 }
 
-func hashMPIs(h hash.Hash, magic byte, mpis ...*big.Int) []byte {
-	if h != nil {
-		h.Reset()
-	} else {
-		h = sha256.New()
+func (c *context) verifySMPStartParameters(msg smpMessage1) error {
+	if !isGroupElement(msg.g2a) {
+		return errors.New("g2a is an invalid group element")
+	}
+	if !isGroupElement(msg.g3a) {
+		return errors.New("g3a is an invalid group element")
 	}
 
-	h.Write([]byte{magic})
-	for _, mpi := range mpis {
-		h.Write(appendMPI(nil, mpi))
+	r := new(big.Int).Exp(g1, msg.d2, p)
+	s := new(big.Int).Exp(msg.g2a, msg.c2, p)
+	r.Mul(r, s)
+	r.Mod(r, p)
+	t := new(big.Int).SetBytes(hashMPIs(nil, 1, r))
+	if msg.c2.Cmp(t) != 0 {
+		return errors.New("c2 is not a valid zero knowledge proof")
 	}
-	return h.Sum(nil)
+
+	r.Exp(g1, msg.d3, p)
+	s.Exp(msg.g3a, msg.c3, p)
+	r.Mul(r, s)
+	r.Mod(r, p)
+	t.SetBytes(hashMPIs(nil, 2, r))
+	if msg.c3.Cmp(t) != 0 {
+		return errors.New("c3 is not a valid zero knowledge proof")
+	}
+
+	return nil
 }

@@ -7,15 +7,15 @@ import (
 	"testing"
 )
 
-func assertEquals(t *testing.T, left, right interface{}) {
-	if left != right {
-		t.Errorf("Expected %v to equal %v", left, right)
+func assertEquals(t *testing.T, actual, expected interface{}) {
+	if actual != expected {
+		t.Errorf("Expected %v to equal %v", actual, expected)
 	}
 }
 
-func assertDeepEquals(t *testing.T, left, right interface{}) {
-	if !reflect.DeepEqual(left, right) {
-		t.Errorf("Expected %v to equal %v", left, right)
+func assertDeepEquals(t *testing.T, actual, expected interface{}) {
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Expected %v to equal %v", actual, expected)
 	}
 }
 
