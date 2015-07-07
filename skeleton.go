@@ -12,6 +12,7 @@ type context struct {
 
 type otrVersion interface {
 	parameterLength() int
+	isGroupElement(n *big.Int) bool
 }
 
 type conversation interface {
@@ -34,6 +35,10 @@ func (c *context) rand() io.Reader {
 
 func (c *context) parameterLength() int {
 	return c.version.parameterLength()
+}
+
+func (c *context) isGroupElement(n *big.Int) bool {
+	return c.version.isGroupElement(n)
 }
 
 func (c *context) randMPI(buf []byte) *big.Int {

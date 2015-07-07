@@ -59,10 +59,10 @@ func (c *context) generateSMPStartParameters() smp {
 }
 
 func (c *context) verifySMPStartParameters(msg smpMessage1) error {
-	if !isGroupElement(msg.g2a) {
+	if !c.isGroupElement(msg.g2a) {
 		return errors.New("g2a is an invalid group element")
 	}
-	if !isGroupElement(msg.g3a) {
+	if !c.isGroupElement(msg.g3a) {
 		return errors.New("g3a is an invalid group element")
 	}
 
