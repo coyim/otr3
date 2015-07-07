@@ -9,8 +9,12 @@ import (
 const smpVersion = 1
 
 type smp struct {
-	a2, a3   *big.Int
-	r2, r3   *big.Int
+	a2, a3 *big.Int
+	r2, r3 *big.Int
+	msg1   smpMessage1
+}
+
+type smpMessage1 struct {
 	g2a, g3a *big.Int
 	c2, c3   *big.Int
 	d2, d3   *big.Int
@@ -28,6 +32,7 @@ func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret 
 
 func (c *context) generateSMPStartParameters() smp {
 	result := smp{}
+
 	randBuf := make([]byte, c.parameterLength(), c.parameterLength())
 
 	result.a2 = c.randMPI(randBuf)
@@ -35,22 +40,22 @@ func (c *context) generateSMPStartParameters() smp {
 	result.r2 = c.randMPI(randBuf)
 	result.r3 = c.randMPI(randBuf)
 
-	result.g2a = new(big.Int).Exp(g1, result.a2, p)
-	result.g3a = new(big.Int).Exp(g1, result.a3, p)
+	result.msg1.g2a = new(big.Int).Exp(g1, result.a2, p)
+	result.msg1.g3a = new(big.Int).Exp(g1, result.a3, p)
 
 	h := sha256.New()
 
-	result.c2 = new(big.Int).SetBytes(hashMPIs(h, 1, new(big.Int).Exp(g1, result.r2, p)))
+	result.msg1.c2 = new(big.Int).SetBytes(hashMPIs(h, 1, new(big.Int).Exp(g1, result.r2, p)))
 
-	result.d2 = new(big.Int).Mul(result.a2, result.c2)
-	result.d2.Sub(result.r2, result.d2)
-	result.d2.Mod(result.d2, q)
+	result.msg1.d2 = new(big.Int).Mul(result.a2, result.msg1.c2)
+	result.msg1.d2.Sub(result.r2, result.msg1.d2)
+	result.msg1.d2.Mod(result.msg1.d2, q)
 
-	result.c3 = new(big.Int).SetBytes(hashMPIs(h, 2, new(big.Int).Exp(g1, result.r3, p)))
+	result.msg1.c3 = new(big.Int).SetBytes(hashMPIs(h, 2, new(big.Int).Exp(g1, result.r3, p)))
 
-	result.d3 = new(big.Int).Mul(result.a3, result.c3)
-	result.d3.Sub(result.r3, result.d3)
-	result.d3.Mod(result.d3, q)
+	result.msg1.d3 = new(big.Int).Mul(result.a3, result.msg1.c3)
+	result.msg1.d3.Sub(result.r3, result.msg1.d3)
+	result.msg1.d3.Mod(result.msg1.d3, q)
 
 	return result
 }
