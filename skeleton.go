@@ -50,11 +50,11 @@ type conversation interface {
 }
 
 func (c *context) send(message []byte) {
-	// Dummy for now
+	// FIXME Dummy for now
 }
 
 func (c *context) receive() []byte {
-	// Dummy for now
+	// FIXME Dummy for now
 	return nil
 }
 
