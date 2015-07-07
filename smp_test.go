@@ -10,3 +10,9 @@ func Test_generateSMPSecretGeneratesASecret(t *testing.T) {
 	result := generateSMPSecret(aliceFingerprint, bobFingerprint, ssid, secret)
 	assertDeepEquals(t, result, []byte{0xd9, 0xb2, 0xe5, 0x63, 0x21, 0xf9, 0xa9, 0xf8, 0xe3, 0x64, 0x60, 0x7c, 0x8c, 0x82, 0xde, 0xcd, 0x8e, 0x8e, 0x62, 0x9, 0xe2, 0xcb, 0x95, 0x2c, 0x7e, 0x64, 0x96, 0x20, 0xf5, 0x28, 0x6f, 0xe3})
 }
+
+// func Test_generatesAandRValuesBasedOnTheProtocol(t *testing.T) {
+// 	otr := context{otrV3{}, fixedRand([]string{"ABCDABCDABCDABCDABCDABCD"})}
+// 	smp := otr.generateSMPStartParameters()
+// 	assertEquals(smp.a2, new(big.Int).SetString("ABCDABCDABCDABCDABCDABCD"))
+// }

@@ -1,6 +1,15 @@
 package otr3
 
-type context struct{}
+import "io"
+
+type context struct {
+	version otrVersion
+	Rand    io.Reader
+}
+
+type otrV2 struct{}
+type otrV3 struct{}
+type otrVersion interface{}
 
 type conversation interface {
 	send(message []byte)
@@ -14,4 +23,8 @@ func (c *context) send(message []byte) {
 func (c *context) receive() []byte {
 	// Dummy for now
 	return nil
+}
+
+func (c *context) rand() io.Reader {
+	return c.Rand
 }
