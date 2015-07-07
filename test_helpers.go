@@ -19,6 +19,11 @@ func assertDeepEquals(t *testing.T, left, right interface{}) {
 	}
 }
 
+func hexToByte(s string) []byte {
+	plainBytes, _ := hex.DecodeString(s)
+	return plainBytes
+}
+
 type fixedRandReader struct {
 	data []string
 	at   int
@@ -30,7 +35,7 @@ func fixedRand(data []string) io.Reader {
 
 func (frr *fixedRandReader) Read(p []byte) (n int, err error) {
 	if frr.at < len(frr.data) {
-		plainBytes, _ := hex.DecodeString(frr.data[frr.at])
+		plainBytes := hexToByte(frr.data[frr.at])
 		frr.at++
 		n = copy(p, plainBytes)
 		return
