@@ -60,11 +60,20 @@ func Test_computesG2aAndG3aCorrectlyForOtrV2(t *testing.T) {
 	assertDeepEquals(t, smp.g3a, expected2)
 }
 
-func Test_computesC2aAndD3aCorrectlyForOtrV2(t *testing.T) {
+func Test_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
 	otr := context{otrV2{}, defaultRand()}
 	smp := otr.generateSMPStartParameters()
 	expected1, _ := new(big.Int).SetString("d3b6ef5528fa97e983395bec165fa4ced7657bdabf3742d60880965c369c880c", 16)
 	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af339d65211b4fcfa466656c89b4217f90102e4aa3ac176a41f6240f32689712b0391c1c659757f4bfb83e6ba66bf8b630", 16)
 	assertDeepEquals(t, smp.c2, expected1)
 	assertDeepEquals(t, smp.d2, expected2)
+}
+
+func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
+	otr := context{otrV2{}, defaultRand()}
+	smp := otr.generateSMPStartParameters()
+	expected1, _ := new(big.Int).SetString("57d8cfda442854ecb01b28e631aa9165d51d1192f7f464bf17ea7f6665c05030", 16)
+	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af8140bb2aa65628bcff455920bba95a1392f2fcb5c115f43a7a828b5bf0393c5c775a17a88506a7893ff509d674cd655c", 16)
+	assertDeepEquals(t, smp.c3, expected1)
+	assertDeepEquals(t, smp.d3, expected2)
 }

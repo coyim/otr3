@@ -39,11 +39,18 @@ func (c *context) generateSMPStartParameters() smp {
 	result.g3a = new(big.Int).Exp(g1, result.a3, p)
 
 	h := sha256.New()
+
 	result.c2 = new(big.Int).SetBytes(hashMPIs(h, 1, new(big.Int).Exp(g1, result.r2, p)))
 
 	result.d2 = new(big.Int).Mul(result.a2, result.c2)
 	result.d2.Sub(result.r2, result.d2)
 	result.d2.Mod(result.d2, q)
+
+	result.c3 = new(big.Int).SetBytes(hashMPIs(h, 2, new(big.Int).Exp(g1, result.r3, p)))
+
+	result.d3 = new(big.Int).Mul(result.a3, result.c3)
+	result.d3.Sub(result.r3, result.d3)
+	result.d3.Mod(result.d3, q)
 
 	return result
 }
