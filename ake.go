@@ -10,8 +10,12 @@ import (
 )
 
 type AKE struct {
-	Rand io.Reader
-	gx   *big.Int
+	Rand            io.Reader
+	gx              *big.Int
+	protocolVersion [2]byte
+	messageType     byte
+	sendInstag      uint32
+	receiveInstag   uint32
 }
 
 var (
@@ -40,7 +44,7 @@ func (ake *AKE) initGx() {
 	ake.gx = gx
 }
 
-func (ake *AKE) encryptGx() []byte {
+func (ake *AKE) encryptedGx() []byte {
 	var randr [16]byte
 	_, err := io.ReadFull(ake.rand(), randr[:])
 
@@ -56,6 +60,19 @@ func (ake *AKE) encryptGx() []byte {
 	return ciphertext
 }
 
-func (ake *AKE) hashedGx() [32]byte {
-	return sha256.Sum256(ake.gx.Bytes())
+func (ake *AKE) hashedGx() []byte {
+	out := sha256.Sum256(ake.gx.Bytes())
+	return out[:]
+}
+
+func (ake *AKE) DHCommitMessage() []byte {
+	var out []byte
+	ake.initGx()
+	out = appendBytes(out, ake.protocolVersion[:])
+	out = append(out, ake.messageType)
+	out = appendWord(out, ake.sendInstag)
+	out = appendWord(out, ake.receiveInstag)
+	out = appendBytes(out, ake.encryptedGx())
+	out = appendBytes(out, ake.hashedGx())
+	return out
 }

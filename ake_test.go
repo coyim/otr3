@@ -23,33 +23,44 @@ var x = [40]byte{
 	0x00, 0x01, 0x02, 0x03,
 	0x00, 0x01, 0x02, 0x03,
 }
+var expectedEncryptedGxValue []byte
+var expectedHashedGxValue []byte
 
-func TestDHCommitMessage(t *testing.T) {
-	protocolVersion := [2]byte{}
-	messageType := 0x01
-	sendInstag := 0x0001
-	receiveInstag := 0x0001
-	var ake AKE
-	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:]), hex.EncodeToString(r[:])})
-	ake.initGx()
-	t.Skipf("protocolVersion %x", protocolVersion)
-	t.Skipf("messageType %x", messageType)
-	t.Skipf("sendInstag %x", sendInstag)
-	t.Skipf("receiveInstag %x", receiveInstag)
+func init() {
+	expectedEncryptedGxValue, _ = hex.DecodeString("d032246eaa0c13e844874f8b6f31259ea0d17c1c6a54b6a3578a0318e956544146aad8a25bcf3fa29207902e40b51d5de0bbfc099c9ed52d09e46bfce785a66c969f0a9ed02d6e4b3a9f2c85c9f750abb53af13f381557717159fcf5d53bde1119e77ee6ec2de8748936d2a906eb73de943443600a77a8ec6f2994be35a0c2439fb767331f752d342ec27830dd63f9ef7e4d96ee66ffea8aba7aae664107a5af3d7124a8d37c238a228e1276d21af8af1f4f7363f25fcb8e9b7bd072c51db8a2457b5d3e")
+	expectedHashedGxValue, _ = hex.DecodeString("d0a4c6efc6fd45398e67fc9166c2097b801727a19c47a7700437abad3e9eaebf")
 }
 
-func TestEncryptGx(t *testing.T) {
+func TestDHCommitMessage(t *testing.T) {
+	var ake AKE
+	ake.protocolVersion = [2]byte{0x00, 0x03}
+	ake.messageType = 0x02
+	ake.sendInstag = 0x00000001
+	ake.receiveInstag = 0x00000001
+	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:]), hex.EncodeToString(r[:]), hex.EncodeToString(r[:])})
+	result := ake.DHCommitMessage()
+	var out []byte
+	out = appendBytes(out, ake.protocolVersion[:])
+	out = append(out, ake.messageType)
+	out = appendWord(out, ake.sendInstag)
+	out = appendWord(out, ake.receiveInstag)
+	out = appendBytes(out, expectedEncryptedGxValue)
+	out = appendBytes(out, expectedHashedGxValue)
+	assertDeepEquals(t, result, out)
+}
+
+func Test_encryptedGx(t *testing.T) {
 	var ake AKE
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:]), hex.EncodeToString(r[:])})
 	ake.initGx()
-	encryptGx := ake.encryptGx()
+	encryptGx := ake.encryptedGx()
 	assertEquals(t, len(encryptGx), len(appendMPI([]byte{}, ake.gx)))
 }
 
-func TestHashedGx(t *testing.T) {
+func Test_hashedGx(t *testing.T) {
 	var ake AKE
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:])})
 	ake.initGx()
 	hashedGx := ake.hashedGx()
-	assertEquals(t, hex.EncodeToString(hashedGx[:]), "d0a4c6efc6fd45398e67fc9166c2097b801727a19c47a7700437abad3e9eaebf")
+	assertDeepEquals(t, hashedGx, expectedHashedGxValue)
 }
