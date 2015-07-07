@@ -80,5 +80,6 @@ func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
 
 // func Test_thatVerifySMPStartParametersCheckG2AForOtrV3(t *testing.T) {
 // 	otr := context{otrV3{}, defaultRand()}
-// 	otr.verifySMPStartParameters()
+// 	err := otr.verifySMPStartParameters(smpMessage1{g2a: new(big.Int).SetInt64(1)})
+// 	assertEquals(t, err, errors.New("invalid
 // }
