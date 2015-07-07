@@ -61,7 +61,6 @@ func Test_computesG2aAndG3aCorrectlyForOtrV2(t *testing.T) {
 }
 
 func Test_computesC2aAndD3aCorrectlyForOtrV2(t *testing.T) {
-	t.Skip("Not implemented yet")
 	otr := context{otrV2{}, defaultRand()}
 	smp := otr.generateSMPStartParameters()
 	expected1, _ := new(big.Int).SetString("d3b6ef5528fa97e983395bec165fa4ced7657bdabf3742d60880965c369c880c", 16)
