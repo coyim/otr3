@@ -12,11 +12,16 @@ import (
 type AKE struct {
 	Rand            io.Reader
 	gx              *big.Int
+	gy              *big.Int
 	protocolVersion [2]byte
-	messageType     byte
 	sendInstag      uint32
 	receiveInstag   uint32
 }
+
+const (
+	msgTypeDHCommit = 2
+	msgTypeDHKey    = 10
+)
 
 var (
 	g *big.Int // group generator
@@ -33,15 +38,25 @@ func (ake *AKE) rand() io.Reader {
 	return rand.Reader
 }
 
-func (ake *AKE) initGx() {
+func (ake *AKE) generateRand() *big.Int {
 	var randx [40]byte
 	_, err := io.ReadFull(ake.rand(), randx[:])
 	if err != nil {
 		panic(err)
 	}
-	x := new(big.Int).SetBytes(randx[:])
+	return new(big.Int).SetBytes(randx[:])
+}
+
+func (ake *AKE) initGx() {
+	x := ake.generateRand()
 	gx := new(big.Int).Exp(g, x, p)
 	ake.gx = gx
+}
+
+func (ake *AKE) initGy() {
+	y := ake.generateRand()
+	gy := new(big.Int).Exp(g, y, p)
+	ake.gy = gy
 }
 
 func (ake *AKE) encryptedGx() []byte {
@@ -69,10 +84,21 @@ func (ake *AKE) DHCommitMessage() []byte {
 	var out []byte
 	ake.initGx()
 	out = appendBytes(out, ake.protocolVersion[:])
-	out = append(out, ake.messageType)
+	out = append(out, msgTypeDHCommit)
 	out = appendWord(out, ake.sendInstag)
 	out = appendWord(out, ake.receiveInstag)
 	out = appendBytes(out, ake.encryptedGx())
 	out = appendBytes(out, ake.hashedGx())
+	return out
+}
+
+func (ake *AKE) DHKeyMessage() []byte {
+	var out []byte
+	ake.initGy()
+	out = appendBytes(out, ake.protocolVersion[:])
+	out = append(out, msgTypeDHKey)
+	out = appendWord(out, ake.sendInstag)
+	out = appendWord(out, ake.receiveInstag)
+	out = appendMPI(out, ake.gy)
 	return out
 }

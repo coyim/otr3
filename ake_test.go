@@ -34,18 +34,32 @@ func init() {
 func TestDHCommitMessage(t *testing.T) {
 	var ake AKE
 	ake.protocolVersion = [2]byte{0x00, 0x03}
-	ake.messageType = 0x02
 	ake.sendInstag = 0x00000001
 	ake.receiveInstag = 0x00000001
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:]), hex.EncodeToString(r[:]), hex.EncodeToString(r[:])})
 	result := ake.DHCommitMessage()
 	var out []byte
 	out = appendBytes(out, ake.protocolVersion[:])
-	out = append(out, ake.messageType)
+	out = append(out, msgTypeDHCommit)
 	out = appendWord(out, ake.sendInstag)
 	out = appendWord(out, ake.receiveInstag)
 	out = appendBytes(out, expectedEncryptedGxValue)
 	out = appendBytes(out, expectedHashedGxValue)
+	assertDeepEquals(t, result, out)
+}
+
+func TestDHKeyMessage(t *testing.T) {
+	var ake AKE
+	ake.protocolVersion = [2]byte{0x00, 0x03}
+	ake.sendInstag = 0x00000001
+	ake.receiveInstag = 0x00000001
+	result := ake.DHKeyMessage()
+	var out []byte
+	out = appendBytes(out, ake.protocolVersion[:])
+	out = append(out, msgTypeDHKey)
+	out = appendWord(out, ake.sendInstag)
+	out = appendWord(out, ake.receiveInstag)
+	out = appendMPI(out, ake.gy)
 	assertDeepEquals(t, result, out)
 }
 
