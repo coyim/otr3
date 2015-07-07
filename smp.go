@@ -8,8 +8,11 @@ import (
 const smpVersion = 1
 
 type smp struct {
-	a2, a3 *big.Int
-	r2, r3 *big.Int
+	a2, a3   *big.Int
+	r2, r3   *big.Int
+	g2a, g3a *big.Int
+	c2, c3   *big.Int
+	d2, d3   *big.Int
 }
 
 func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) []byte {
@@ -31,5 +34,25 @@ func (c *context) generateSMPStartParameters() smp {
 	result.r2 = c.randMPI(randBuf)
 	result.r3 = c.randMPI(randBuf)
 
+	result.g2a = new(big.Int).Exp(g1, result.a2, p)
+	result.g3a = new(big.Int).Exp(g1, result.a3, p)
+
+	// h := sha256.New()
+	// result.c2 = new(big.Int).SetBytes(hashMPIs(h, 1, new(big.Int).Exp(g1, result.r2, p)))
+
 	return result
 }
+
+// func hashMPIs(h hash.Hash, magic byte, mpis ...*big.Int) []byte {
+// 	if h != nil {
+// 		h.Reset()
+// 	} else {
+// 		h = sha256.New()
+// 	}
+
+// 	h.Write([]byte{magic})
+// 	for _, mpi := range mpis {
+// 		h.Write(appendMPI(nil, mpi))
+// 	}
+// 	return h.Sum(nil)
+// }
