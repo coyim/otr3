@@ -43,7 +43,7 @@ func TestEncryptGx(t *testing.T) {
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:]), hex.EncodeToString(r[:])})
 	ake.initGx()
 	encryptGx := ake.encryptGx()
-	assertEquals(t, len(encryptGx), len(BytesToMPI(ake.gx.Bytes())))
+	assertEquals(t, len(encryptGx), len(appendMPI([]byte{}, ake.gx)))
 }
 
 func TestHashedGx(t *testing.T) {

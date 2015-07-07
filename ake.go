@@ -11,7 +11,7 @@ import (
 
 type AKE struct {
 	Rand io.Reader
-	gx   big.Int
+	gx   *big.Int
 }
 
 var (
@@ -37,7 +37,7 @@ func (ake *AKE) initGx() {
 	}
 	x := new(big.Int).SetBytes(randx[:])
 	gx := new(big.Int).Exp(g, x, p)
-	ake.gx = *gx
+	ake.gx = gx
 }
 
 func (ake *AKE) encryptGx() []byte {
@@ -48,25 +48,14 @@ func (ake *AKE) encryptGx() []byte {
 	if err != nil {
 		panic(err)
 	}
-	ciphertext := make([]byte, len(BytesToMPI(ake.gx.Bytes())))
+	var gxMPI = appendMPI([]byte{}, ake.gx)
+	ciphertext := make([]byte, len(gxMPI))
 	iv := ciphertext[:aes.BlockSize]
 	stream := cipher.NewCTR(aesCipher, iv)
-	stream.XORKeyStream(ciphertext, BytesToMPI(ake.gx.Bytes()))
+	stream.XORKeyStream(ciphertext, gxMPI)
 	return ciphertext
 }
 
 func (ake *AKE) hashedGx() [32]byte {
 	return sha256.Sum256(ake.gx.Bytes())
-}
-
-func BytesToMPI(v []byte) []byte {
-	var out []byte
-	length := Uint32toBytes(uint32(len(v)))
-	out = append(out, length[:]...)
-	out = append(out, v...)
-	return out
-}
-
-func Uint32toBytes(i uint32) [4]byte {
-	return [4]byte{byte(i >> 24), byte(i >> 16), byte(i >> 8), byte(i)}
 }
