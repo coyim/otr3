@@ -3,7 +3,6 @@ package otr3
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/dsa"
 	"crypto/rand"
 	"crypto/sha256"
 	"hash"
@@ -28,15 +27,6 @@ type AKE struct {
 type akeKeys struct {
 	c      [16]byte
 	m1, m2 [32]byte
-}
-
-type PrivateKey struct {
-	PublicKey
-	dsa.PrivateKey
-}
-
-type PublicKey struct {
-	dsa.PublicKey
 }
 
 const (
