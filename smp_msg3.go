@@ -9,8 +9,13 @@ type smp3 struct {
 }
 
 type smpMessage3 struct {
-	g2, g3 *big.Int
-	pa, qa *big.Int
+	g2, g3     *big.Int
+	pa, qa     *big.Int
+	cp         *big.Int
+	d5, d6, d7 *big.Int
+	ra         *big.Int
+	cr         *big.Int
+	qaqb, papb *big.Int
 }
 
 func (c *context) generateThirdParameters() smp3 {
@@ -31,6 +36,18 @@ func calculateMessageThree(s smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
 
 	m.pa = modExp(m.g3, s.r4)
 	m.qa = mulMod(modExp(g1, s.r4), modExp(m.g2, s.x), p)
+
+	m.cp = hashMPIsBN(nil, 6, modExp(m.g3, s.r5), mulMod(modExp(g1, s.r5), modExp(m.g2, s.r6), p))
+	m.d5 = generateDZKP(s.r5, s.r4, m.cp)
+	m.d6 = generateDZKP(s.r6, s.x, m.cp)
+
+	m.qaqb = divMod(m.qa, m2.qb, p)
+	m.ra = modExp(m.qaqb, s1.a3)
+
+	m.cr = hashMPIsBN(nil, 7, modExp(g1, s.r7), modExp(m.qaqb, s.r7))
+	m.d7 = subMod(s.r7, mul(s1.a3, m.cr), q)
+
+	m.papb = divMod(m.pa, m2.pb, p)
 
 	return m
 }

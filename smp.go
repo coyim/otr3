@@ -17,9 +17,13 @@ func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret 
 	return h.Sum(nil)
 }
 
+func generateDZKP(r, a, c *big.Int) *big.Int {
+	return subMod(r, mul(a, c), q)
+}
+
 func generateZKP(r, a *big.Int, ix byte) (c, d *big.Int) {
 	c = hashMPIsBN(nil, ix, modExp(g1, r))
-	d = subMod(r, mul(a, c), q)
+	d = generateDZKP(r, a, c)
 	return
 }
 
