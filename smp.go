@@ -46,3 +46,17 @@ func verifyZKP2(g2, g3, d5, d6, pb, qb, cp *big.Int, ix byte) bool {
 	t := hashMPIsBN(nil, ix, l, r)
 	return eq(cp, t)
 }
+
+func verifyZKP3(cp, g2, g3, d5, d6, pa, qa *big.Int, ix byte) bool {
+	l := mulMod(modExp(g3, d5), modExp(pa, cp), p)
+	r := mulMod(mul(modExp(g1, d5), modExp(g2, d6)), modExp(qa, cp), p)
+	t := hashMPIsBN(nil, ix, l, r)
+	return eq(cp, t)
+}
+
+func verifyZKP4(cr, g3a, d7, qaqb, ra *big.Int, ix byte) bool {
+	l := mulMod(modExp(g1, d7), modExp(g3a, cr), p)
+	r := mulMod(modExp(qaqb, d7), modExp(ra, cr), p)
+	t := hashMPIsBN(nil, ix, l, r)
+	return eq(cr, t)
+}

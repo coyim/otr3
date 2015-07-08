@@ -62,20 +62,6 @@ func (c *context) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMes
 	return s
 }
 
-func verifyZKP3(cp, g2, g3, d5, d6, pa, qa *big.Int, ix byte) bool {
-	l := mulMod(modExp(g3, d5), modExp(pa, cp), p)
-	r := mulMod(mul(modExp(g1, d5), modExp(g2, d6)), modExp(qa, cp), p)
-	t := hashMPIsBN(nil, ix, l, r)
-	return eq(cp, t)
-}
-
-func verifyZKP4(cr, g3a, d7, qaqb, ra *big.Int, ix byte) bool {
-	l := mulMod(modExp(g1, d7), modExp(g3a, cr), p)
-	r := mulMod(modExp(qaqb, d7), modExp(ra, cr), p)
-	t := hashMPIsBN(nil, ix, l, r)
-	return eq(cr, t)
-}
-
 func (c *context) verifySMP3Parameters(msg1 smpMessage1, msg smpMessage3) error {
 	if !c.isGroupElement(msg.pa) {
 		return errors.New("Pa is an invalid group element")
