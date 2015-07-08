@@ -31,7 +31,7 @@ func init() {
 			"B3861AA7255E4C0278BA36046511B993FFFFFFFFFFFFFFFF", 16)
 
 	pMinusTwo = new(big.Int).Sub(p, new(big.Int).SetInt64(2))
-	g1 = new(big.Int).SetInt64(2)
+	g1 = big.NewInt(2)
 }
 
 func isGroupElement(n *big.Int) bool {

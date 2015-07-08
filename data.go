@@ -39,3 +39,7 @@ func hashMPIs(h hash.Hash, magic byte, mpis ...*big.Int) []byte {
 	}
 	return h.Sum(nil)
 }
+
+func hashMPIsBN(h hash.Hash, magic byte, mpis ...*big.Int) *big.Int {
+	return new(big.Int).SetBytes(hashMPIs(h, magic, mpis...))
+}

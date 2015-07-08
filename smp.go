@@ -30,57 +30,60 @@ func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret 
 	return h.Sum(nil)
 }
 
+func (c *context) generateInitialParameters() smp {
+	b := make([]byte, c.parameterLength(), c.parameterLength())
+	s := smp{}
+	s.a2 = c.randMPI(b)
+	s.a3 = c.randMPI(b)
+	s.r2 = c.randMPI(b)
+	s.r3 = c.randMPI(b)
+	return s
+}
+
+func generateZKP(r, a *big.Int, ix byte) (c, d *big.Int) {
+	c = hashMPIsBN(nil, ix, modExp(g1, r))
+	d = subMod(r, mul(a, c), q)
+	return
+}
+
+func generateMessageOneFor(s smp) smpMessage1 {
+	var m smpMessage1
+
+	m.g2a = modExp(g1, s.a2)
+	m.g3a = modExp(g1, s.a3)
+	m.c2, m.d2 = generateZKP(s.r2, s.a2, 1)
+	m.c3, m.d3 = generateZKP(s.r3, s.a3, 2)
+
+	return m
+}
+
 func (c *context) generateSMPStartParameters() smp {
-	result := smp{}
+	s := c.generateInitialParameters()
+	s.msg1 = generateMessageOneFor(s)
+	return s
+}
 
-	randBuf := make([]byte, c.parameterLength(), c.parameterLength())
-
-	result.a2 = c.randMPI(randBuf)
-	result.a3 = c.randMPI(randBuf)
-	result.r2 = c.randMPI(randBuf)
-	result.r3 = c.randMPI(randBuf)
-
-	result.msg1.g2a = new(big.Int).Exp(g1, result.a2, p)
-	result.msg1.g3a = new(big.Int).Exp(g1, result.a3, p)
-
-	result.msg1.c2 = new(big.Int).SetBytes(hashMPIs(nil, 1, new(big.Int).Exp(g1, result.r2, p)))
-
-	result.msg1.d2 = new(big.Int).Mul(result.a2, result.msg1.c2)
-	result.msg1.d2.Sub(result.r2, result.msg1.d2)
-	result.msg1.d2.Mod(result.msg1.d2, q)
-
-	result.msg1.c3 = new(big.Int).SetBytes(hashMPIs(nil, 2, new(big.Int).Exp(g1, result.r3, p)))
-
-	result.msg1.d3 = new(big.Int).Mul(result.a3, result.msg1.c3)
-	result.msg1.d3.Sub(result.r3, result.msg1.d3)
-	result.msg1.d3.Mod(result.msg1.d3, q)
-
-	return result
+func verifyZKP(d, gen, c *big.Int, ix byte) bool {
+	r := modExp(g1, d)
+	s := modExp(gen, c)
+	t := hashMPIsBN(nil, ix, mulMod(r, s, p))
+	return c.Cmp(t) == 0
 }
 
 func (c *context) verifySMPStartParameters(msg smpMessage1) error {
 	if !c.isGroupElement(msg.g2a) {
 		return errors.New("g2a is an invalid group element")
 	}
+
 	if !c.isGroupElement(msg.g3a) {
 		return errors.New("g3a is an invalid group element")
 	}
 
-	r := new(big.Int).Exp(g1, msg.d2, p)
-	s := new(big.Int).Exp(msg.g2a, msg.c2, p)
-	r.Mul(r, s)
-	r.Mod(r, p)
-	t := new(big.Int).SetBytes(hashMPIs(nil, 1, r))
-	if msg.c2.Cmp(t) != 0 {
+	if !verifyZKP(msg.d2, msg.g2a, msg.c2, 1) {
 		return errors.New("c2 is not a valid zero knowledge proof")
 	}
 
-	r.Exp(g1, msg.d3, p)
-	s.Exp(msg.g3a, msg.c3, p)
-	r.Mul(r, s)
-	r.Mod(r, p)
-	t.SetBytes(hashMPIs(nil, 2, r))
-	if msg.c3.Cmp(t) != 0 {
+	if !verifyZKP(msg.d3, msg.g3a, msg.c3, 2) {
 		return errors.New("c3 is not a valid zero knowledge proof")
 	}
 
