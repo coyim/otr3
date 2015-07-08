@@ -22,7 +22,7 @@ type smpMessage3 struct {
 }
 
 func (c *context) generateThirdParameters() smp3 {
-	b := make([]byte, c.parameterLength(), c.parameterLength())
+	b := make([]byte, c.parameterLength())
 	s := smp3{}
 	s.r4 = c.randMPI(b)
 	s.r5 = c.randMPI(b)

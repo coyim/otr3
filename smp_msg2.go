@@ -23,7 +23,7 @@ type smpMessage2 struct {
 }
 
 func (c *context) generateSecondaryParameters() smp2 {
-	b := make([]byte, c.parameterLength(), c.parameterLength())
+	b := make([]byte, c.parameterLength())
 	s := smp2{}
 	s.b2 = c.randMPI(b)
 	s.b3 = c.randMPI(b)
