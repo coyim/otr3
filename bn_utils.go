@@ -29,3 +29,23 @@ func subMod(l, r, m *big.Int) *big.Int {
 func mod(l, m *big.Int) *big.Int {
 	return new(big.Int).Mod(l, m)
 }
+
+func lt(l, r *big.Int) bool {
+	return l.Cmp(r) == -1
+}
+
+func lte(l, r *big.Int) bool {
+	return l.Cmp(r) != 1
+}
+
+func eq(l, r *big.Int) bool {
+	return l.Cmp(r) == 0
+}
+
+func gt(l, r *big.Int) bool {
+	return l.Cmp(r) == 1
+}
+
+func gte(l, r *big.Int) bool {
+	return l.Cmp(r) != -1
+}

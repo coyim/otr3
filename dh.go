@@ -35,5 +35,5 @@ func init() {
 }
 
 func isGroupElement(n *big.Int) bool {
-	return g1.Cmp(n) != 1 && pMinusTwo.Cmp(n) != -1
+	return gte(n, g1) && lte(n, pMinusTwo)
 }

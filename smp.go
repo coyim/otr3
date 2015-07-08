@@ -67,7 +67,7 @@ func verifyZKP(d, gen, c *big.Int, ix byte) bool {
 	r := modExp(g1, d)
 	s := modExp(gen, c)
 	t := hashMPIsBN(nil, ix, mulMod(r, s, p))
-	return c.Cmp(t) == 0
+	return eq(c, t)
 }
 
 func (c *context) verifySMPStartParameters(msg smpMessage1) error {
