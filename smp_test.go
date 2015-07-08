@@ -413,13 +413,13 @@ func Test_generateSMPThirdParameters_computesD7Correctly(t *testing.T) {
 
 func Test_verifySMP3Parameters_failsIfPaIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMP3Parameters(smpMessage3{pa: big.NewInt(1)})
+	err := otr.verifySMP3Parameters(fixtureMessage1(), smpMessage3{pa: big.NewInt(1)})
 	assertDeepEquals(t, err, errors.New("Pa is an invalid group element"))
 }
 
 func Test_verifySMP3Parameters_failsIfQaIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMP3Parameters(smpMessage3{
+	err := otr.verifySMP3Parameters(fixtureMessage1(), smpMessage3{
 		pa: big.NewInt(2),
 		qa: big.NewInt(1),
 	})
@@ -428,7 +428,7 @@ func Test_verifySMP3Parameters_failsIfQaIsNotInTheGroupForProtocolV3(t *testing.
 
 func Test_verifySMP3Parameters_failsIfRaIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMP3Parameters(smpMessage3{
+	err := otr.verifySMP3Parameters(fixtureMessage1(), smpMessage3{
 		pa: big.NewInt(2),
 		qa: big.NewInt(2),
 		ra: big.NewInt(1),
@@ -438,7 +438,7 @@ func Test_verifySMP3Parameters_failsIfRaIsNotInTheGroupForProtocolV3(t *testing.
 
 func Test_verifySMP3Parameters_succeedsForValidZKPS(t *testing.T) {
 	otr := context{otrV2{}, fixtureRand()}
-	err := otr.verifySMP3Parameters(fixtureMessage3())
+	err := otr.verifySMP3Parameters(fixtureMessage1(), fixtureMessage3())
 	assertDeepEquals(t, err, nil)
 }
 
@@ -446,6 +446,14 @@ func Test_verifySMP3Parameters_failsIfCpIsNotAValidZKP(t *testing.T) {
 	otr := context{otrV2{}, fixtureRand()}
 	m := fixtureMessage3()
 	m.cp = sub(m.cp, big.NewInt(1))
-	err := otr.verifySMP3Parameters(m)
+	err := otr.verifySMP3Parameters(fixtureMessage1(), m)
 	assertDeepEquals(t, err, errors.New("cP is not a valid zero knowledge proof"))
+}
+
+func Test_verifySMP3Parameters_failsIfCrIsNotAValidZKP(t *testing.T) {
+	otr := context{otrV2{}, fixtureRand()}
+	m := fixtureMessage3()
+	m.cr = sub(m.cr, big.NewInt(1))
+	err := otr.verifySMP3Parameters(fixtureMessage1(), m)
+	assertDeepEquals(t, err, errors.New("cR is not a valid zero knowledge proof"))
 }
