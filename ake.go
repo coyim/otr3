@@ -5,22 +5,34 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
+	"hash"
 	"io"
 	"math/big"
 )
 
 type AKE struct {
 	Rand                io.Reader
+	r                   [16]byte
+	x                   *big.Int
+	y                   *big.Int
 	gx                  *big.Int
 	gy                  *big.Int
 	protocolVersion     [2]byte
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
+	revealKey, sigKey   akeKeys
+	ssid                [8]byte
+}
+
+type akeKeys struct {
+	c      [16]byte
+	m1, m2 [32]byte
 }
 
 const (
 	msgTypeDHCommit = 2
 	msgTypeDHKey    = 10
+	msgTypeRevelSig = 17
 )
 
 var (
@@ -54,6 +66,7 @@ func (ake *AKE) initGx() error {
 	}
 
 	gx := new(big.Int).Exp(g, x, p)
+	ake.x = x
 	ake.gx = gx
 
 	return nil
@@ -66,20 +79,16 @@ func (ake *AKE) initGy() error {
 	}
 
 	gy := new(big.Int).Exp(g, y, p)
+	ake.y = y
 	ake.gy = gy
 
 	return nil
 }
 
 func (ake *AKE) encryptedGx() ([]byte, error) {
-	var randr [16]byte
+	_, err := io.ReadFull(ake.rand(), ake.r[:])
 
-	_, err := io.ReadFull(ake.rand(), randr[:])
-	if err != nil {
-		return nil, err
-	}
-
-	aesCipher, err := aes.NewCipher(randr[:])
+	aesCipher, err := aes.NewCipher(ake.r[:])
 	if err != nil {
 		return nil, err
 	}
@@ -96,6 +105,33 @@ func (ake *AKE) encryptedGx() ([]byte, error) {
 func (ake *AKE) hashedGx() []byte {
 	out := sha256.Sum256(ake.gx.Bytes())
 	return out[:]
+}
+
+func (ake *AKE) calcAKEKeys() {
+	s := ake.calcDHSharedSecret()
+	secbytes := appendMPI(nil, s)
+	h := sha256.New()
+	copy(ake.ssid[:], h2(0x00, secbytes, h)[:8])
+	copy(ake.revealKey.c[:], h2(0x01, secbytes, h)[:16])
+	copy(ake.sigKey.c[:], h2(0x01, secbytes, h)[16:])
+	copy(ake.revealKey.m1[:], h2(0x02, secbytes, h))
+	copy(ake.revealKey.m2[:], h2(0x03, secbytes, h))
+	copy(ake.sigKey.m1[:], h2(0x04, secbytes, h))
+	copy(ake.sigKey.m2[:], h2(0x05, secbytes, h))
+}
+
+func h2(b byte, secbytes []byte, h hash.Hash) []byte {
+	h.Reset()
+	var p [1]byte
+	p[0] = b
+	h.Write(p[:])
+	h.Write(secbytes[:])
+	out := h.Sum(nil)
+	return out[:]
+}
+
+func (ake *AKE) calcDHSharedSecret() *big.Int {
+	return new(big.Int).Exp(ake.gy, ake.x, p)
 }
 
 func (ake *AKE) DHCommitMessage() ([]byte, error) {
@@ -130,5 +166,18 @@ func (ake *AKE) DHKeyMessage() []byte {
 	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendMPI(out, ake.gy)
 
+	return out
+}
+
+func (ake *AKE) RevealSigMessage() []byte {
+	var out []byte
+	ake.initGy()
+	out = appendBytes(out, ake.protocolVersion[:])
+	out = append(out, msgTypeRevelSig)
+	out = appendWord(out, ake.senderInstanceTag)
+	out = appendWord(out, ake.receiverInstanceTag)
+	out = appendBytes(out, ake.r[:])
+	//	out = appendBytes(out, ake.encryptedSig())
+	//	out = appendBytes(out, ake.macSig())
 	return out
 }
