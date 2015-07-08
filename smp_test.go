@@ -54,8 +54,8 @@ func Test_computesG2aAndG3aCorrectlyForOtrV3(t *testing.T) {
 	smp := otr.generateSMPStartParameters()
 	expected1, _ := new(big.Int).SetString("2403828132201280691996934790042280522039644351533698950188369222708084962201190259148331059300969970454760451858146292777271089101335555432831591932280897663128605540136047489902371842091500899696205003971442783016830569070154151538113509331728265831584544751982441886086856394142221987668411465357977595712909149546719860976278668856500931856381813557383455751167139453911498547553424315774735908660702360108350494792398612100509843726869895575665079703048760466", 10)
 	expected2, _ := new(big.Int).SetString("545300291901380653980556916625957052030430375409433663251760516986016273974200122997230389944238471404021073102701550317663669624982742390354806536963349739870183347869815633451836184053254713103530928305206048828718330259320999178725064437137499780326636715585953004481720026913428336861587141398794337053489567564530999611735085631734084309755871299251468595807420396099483025772958221192002020467585351536202731371781577659533010401568100631459405229307956337", 10)
-	assertDeepEquals(t, smp.msg1.g2a, expected1)
-	assertDeepEquals(t, smp.msg1.g3a, expected2)
+	assertDeepEquals(t, smp.msg.g2a, expected1)
+	assertDeepEquals(t, smp.msg.g3a, expected2)
 }
 
 func Test_computesG2aAndG3aCorrectlyForOtrV2(t *testing.T) {
@@ -63,8 +63,8 @@ func Test_computesG2aAndG3aCorrectlyForOtrV2(t *testing.T) {
 	smp := otr.generateSMPStartParameters()
 	expected1, _ := new(big.Int).SetString("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77", 16)
 	expected2, _ := new(big.Int).SetString("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a", 16)
-	assertDeepEquals(t, smp.msg1.g2a, expected1)
-	assertDeepEquals(t, smp.msg1.g3a, expected2)
+	assertDeepEquals(t, smp.msg.g2a, expected1)
+	assertDeepEquals(t, smp.msg.g3a, expected2)
 }
 
 func Test_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
@@ -72,8 +72,8 @@ func Test_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
 	smp := otr.generateSMPStartParameters()
 	expected1, _ := new(big.Int).SetString("d3b6ef5528fa97e983395bec165fa4ced7657bdabf3742d60880965c369c880c", 16)
 	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af339d65211b4fcfa466656c89b4217f90102e4aa3ac176a41f6240f32689712b0391c1c659757f4bfb83e6ba66bf8b630", 16)
-	assertDeepEquals(t, smp.msg1.c2, expected1)
-	assertDeepEquals(t, smp.msg1.d2, expected2)
+	assertDeepEquals(t, smp.msg.c2, expected1)
+	assertDeepEquals(t, smp.msg.d2, expected2)
 }
 
 func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
@@ -81,8 +81,8 @@ func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
 	smp := otr.generateSMPStartParameters()
 	expected1, _ := new(big.Int).SetString("57d8cfda442854ecb01b28e631aa9165d51d1192f7f464bf17ea7f6665c05030", 16)
 	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af8140bb2aa65628bcff455920bba95a1392f2fcb5c115f43a7a828b5bf0393c5c775a17a88506a7893ff509d674cd655c", 16)
-	assertDeepEquals(t, smp.msg1.c3, expected1)
-	assertDeepEquals(t, smp.msg1.d3, expected2)
+	assertDeepEquals(t, smp.msg.c3, expected1)
+	assertDeepEquals(t, smp.msg.d3, expected2)
 }
 
 func Test_thatVerifySMPStartParametersCheckG2AForOtrV3(t *testing.T) {
@@ -227,8 +227,8 @@ func Test_generateSMPSecondParameters_computesG2bAndG3bCorrectlyForOtrV2(t *test
 	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
 	expected1, _ := new(big.Int).SetString("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77", 16)
 	expected2, _ := new(big.Int).SetString("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a", 16)
-	assertDeepEquals(t, smp.msg2.g2b, expected1)
-	assertDeepEquals(t, smp.msg2.g3b, expected2)
+	assertDeepEquals(t, smp.msg.g2b, expected1)
+	assertDeepEquals(t, smp.msg.g3b, expected2)
 }
 
 func Test_generateSMPSecondParameters_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
@@ -237,8 +237,8 @@ func Test_generateSMPSecondParameters_computesC2AndD2CorrectlyForOtrV2(t *testin
 	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
 	expected1, _ := new(big.Int).SetString("5f78f76ed595e10b8ec22a10b848a2dbfc01d5b4bf4f3354fa7d9e7a7b89be3c", 16)
 	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af81a02d5a40ae02cf4b98b37d6f98f1c0fc61fb686e150da2863071729e0bec44d63b7abd8751f58a1a5499c8526241c0", 16)
-	assertDeepEquals(t, smp.msg2.c2, expected1)
-	assertDeepEquals(t, smp.msg2.d2, expected2)
+	assertDeepEquals(t, smp.msg.c2, expected1)
+	assertDeepEquals(t, smp.msg.d2, expected2)
 }
 
 func Test_generateSMPSecondParameters_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
@@ -247,8 +247,8 @@ func Test_generateSMPSecondParameters_computesC3AndD3CorrectlyForOtrV2(t *testin
 	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
 	expected1, _ := new(big.Int).SetString("e6417f7a922aa04d488ccd60062eaa374b772054c4e7bf72e6a570db604c3bcc", 16)
 	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af18c7d9799344f5a6052f526c1b70ab3aa4098d714850b6535a758a04e6cc15cd396287aa3a2009185e9793757c748570", 16)
-	assertDeepEquals(t, smp.msg2.c3, expected1)
-	assertDeepEquals(t, smp.msg2.d3, expected2)
+	assertDeepEquals(t, smp.msg.c3, expected1)
+	assertDeepEquals(t, smp.msg.d3, expected2)
 }
 
 func Test_generateSMPSecondParameters_computesG2AndG3Correctly(t *testing.T) {
@@ -257,8 +257,8 @@ func Test_generateSMPSecondParameters_computesG2AndG3Correctly(t *testing.T) {
 	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
 	expected1 := bnFromHex("8b9e73cca287ed2f46c011090efffcfe394bed51a3ad23e9f7815d9c9c20184ddc0acc2cb0cdd3b8630c453339b6ef7158af705530e33ccac72a855164ca038da837942f3de762ea9af2942c9355dee8eb8b7ce94a3ade33d6a7c79c2a879239c08af22e6987b9345c5e093d33bc8734aaa4019f614dfd65500107756cf6d0ff4591b482d975ca6e43b9f706e969a987306a1a1b905385ffd13d7a24dabc6d513f32a46041cd760e404d1a4c7b6c0b426589ba3ec3d252110578740ccee4bcb3")
 	expected2 := bnFromHex("75cb16d985029162aba03d37b9ef375dca716fc2a4f7d25c6e1b6c511622a47567999230706eda31e44b47c1d7f61df12f49e59142fda0af377d2c5972ad663213db031f131b2abc557e507e6ffbf4dc4a5b44cd0cdf985bc247afb2e5733513f4f022feb5e7a955611175b0ffcfe54763cf7430ce0ede472a7ab5fc0f9f039fcf476be22ec66f8b96759e44a946180f27d16d6c37067e7f1acd3b691b5d56a90b641cc9c8fdac1c41e310e469db4e2f83d28c3dda51b2a36bcbc43d70f0a093")
-	assertDeepEquals(t, smp.msg2.g2, expected1)
-	assertDeepEquals(t, smp.msg2.g3, expected2)
+	assertDeepEquals(t, smp.msg.g2, expected1)
+	assertDeepEquals(t, smp.msg.g3, expected2)
 }
 
 func newDefaultSecret() *big.Int {
@@ -278,8 +278,8 @@ func Test_generateSMPSecondParameters_computesPbAndQbCorrectly(t *testing.T) {
 	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
 	expected1 := bnFromHex("70f18724fd6263a694b82a6272e938a81f56b7373c29a4f78ee2d5dd94bf7fe8ff59d837ca2686088f62f7ec178a5b47bcdec3b6f2af7820d6583d5358a714a5cf6d943371289cce76a9cc09e04306bcffde5a6dbeb887a5e18aff1740be083e2b4a505e30fa56771d5be27984ca85e90a9d90faa278db0b5d51f334e80cfab14cb5e7fed9c6d3d0eaff5c1f3dbe698ba8f0db3517e892474cc899d46866546ea306d4f6e0a11546305c4fd50ad8e49163fb9abc3294612868d310d2e5755d4d")
 	expected2 := bnFromHex("69902e8e3f11e631b24343b0788eef58a2cd13afa8f5550749309ace728f2d5a8a4cb9df5916281053d6faaec73c10b66e1cd4cc3c88184e0c524a7ccf693b2a9776227ba27487966695a44053501aab6683fbf4ffe043cab35dae5c077a109b00865b99f7fb9ad7b049dca1dac9f7787d16d35b72f5f4530425def6272b85348f813af1ae64847f01a9bce288e9c47ffcf50cca049f527c4d4593836bd43d22ac71d83b638e0f181e285cc7d54ae0c3e2d7783a4baa03b9fd79950128fada7f")
-	assertDeepEquals(t, smp.msg2.pb, expected1)
-	assertDeepEquals(t, smp.msg2.qb, expected2)
+	assertDeepEquals(t, smp.msg.pb, expected1)
+	assertDeepEquals(t, smp.msg.qb, expected2)
 }
 
 func Test_generateSMPSecondParameters_computesCPCorrectly(t *testing.T) {
@@ -287,7 +287,7 @@ func Test_generateSMPSecondParameters_computesCPCorrectly(t *testing.T) {
 	smp1 := newDefaultMessage1()
 	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
 	expected1 := bnFromHex("1bfd38604f788c140186388f48adb32c49725b1fb0a7d152fb02a96dede93f36")
-	assertDeepEquals(t, smp.msg2.cp, expected1)
+	assertDeepEquals(t, smp.msg.cp, expected1)
 }
 
 func Test_generateSMPSecondParameters_computesD5Correctly(t *testing.T) {
@@ -295,7 +295,7 @@ func Test_generateSMPSecondParameters_computesD5Correctly(t *testing.T) {
 	smp1 := newDefaultMessage1()
 	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
 	expected1 := bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267afa7eabf42bf076f4040403db48ffb54afd86d74189952bdf7d7c76b428a31c54a1ce43d9f900d73c4c74e8f9caa8efb8e")
-	assertDeepEquals(t, smp.msg2.d5, expected1)
+	assertDeepEquals(t, smp.msg.d5, expected1)
 }
 
 func Test_generateSMPSecondParameters_computesD6Correctly(t *testing.T) {
@@ -303,7 +303,7 @@ func Test_generateSMPSecondParameters_computesD6Correctly(t *testing.T) {
 	smp1 := newDefaultMessage1()
 	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
 	expected1 := bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82b49ff02bddc494c3a81caeefaaaebfda10656000c64956f65dc53b5ef82e8641a877db4a709931afc80f7e4521723d1a0b646aaaddc46ac095d3d47b052234ea")
-	assertDeepEquals(t, smp.msg2.d6, expected1)
+	assertDeepEquals(t, smp.msg.d6, expected1)
 }
 
 func Test_verifySMPSecondParameters_checkG2bForOtrV3(t *testing.T) {
@@ -388,4 +388,70 @@ func Test_verifySMPSecondParameters_succeedsForACorrectZKP(t *testing.T) {
 	otr := context{otrV3{}, defaultRand()}
 	err := otr.verifySMPSecondParameters(defaultMessage2())
 	assertDeepEquals(t, err, nil)
+}
+
+func defaultSmp1() smp1 {
+	var s smp1
+	s.a2 = bnFromHex("ABCDABCDABCDABCDABCDABCDABCDABCD")
+	s.a3 = bnFromHex("BBCDABCDABCDABCDABCDABCDABCDABCD")
+	s.msg = newDefaultMessage1()
+	return s
+}
+
+func Test_generateSMPThirdParameters_generatesLongerValuesForR4WithProtocolV3(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
+	assertDeepEquals(t, smp.r4, new(big.Int).SetBytes(hexToByte("ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+}
+
+func Test_generateSMPThirdParameters_generatesLongerValuesForR5WithProtocolV3(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
+	assertDeepEquals(t, smp.r5, new(big.Int).SetBytes(hexToByte("BBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+}
+
+func Test_generateSMPThirdParameters_generatesLongerValuesForR6WithProtocolV3(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
+	assertDeepEquals(t, smp.r6, new(big.Int).SetBytes(hexToByte("CBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+}
+
+func Test_generateSMPThirdParameters_generatesLongerValuesForR7WithProtocolV3(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
+	assertDeepEquals(t, smp.r7, new(big.Int).SetBytes(hexToByte("DBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+}
+
+func Test_generateSMPThirdParameters_generatesShorterValuesForR4WithProtocolV2(t *testing.T) {
+	otr := context{otrV2{}, defaultRand()}
+	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
+	assertDeepEquals(t, smp.r4, new(big.Int).SetBytes(hexToByte("ABCDABCDABCDABCDABCDABCDABCDABCD")))
+}
+
+func Test_generateSMPThirdParameters_computesG2Correctly(t *testing.T) {
+	otr := context{otrV2{}, defaultRand()}
+	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
+	expected := bnFromHex("8B9E73CCA287ED2F46C011090EFFFCFE394BED51A3AD23E9F7815D9C9C20184DDC0ACC2CB0CDD3B8630C453339B6EF7158AF705530E33CCAC72A855164CA038DA837942F3DE762EA9AF2942C9355DEE8EB8B7CE94A3ADE33D6A7C79C2A879239C08AF22E6987B9345C5E093D33BC8734AAA4019F614DFD65500107756CF6D0FF4591B482D975CA6E43B9F706E969A987306A1A1B905385FFD13D7A24DABC6D513F32A46041CD760E404D1A4C7B6C0B426589BA3EC3D252110578740CCEE4BCB3")
+	assertDeepEquals(t, smp.msg.g2, expected)
+}
+
+func Test_generateSMPThirdParameters_computesG3Correctly(t *testing.T) {
+	otr := context{otrV2{}, defaultRand()}
+	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
+	expected := bnFromHex("75CB16D985029162ABA03D37B9EF375DCA716FC2A4F7D25C6E1B6C511622A47567999230706EDA31E44B47C1D7F61DF12F49E59142FDA0AF377D2C5972AD663213DB031F131B2ABC557E507E6FFBF4DC4A5B44CD0CDF985BC247AFB2E5733513F4F022FEB5E7A955611175B0FFCFE54763CF7430CE0EDE472A7AB5FC0F9F039FCF476BE22EC66F8B96759E44A946180F27D16D6C37067E7F1ACD3B691B5D56A90B641CC9C8FDAC1C41E310E469DB4E2F83D28C3DDA51B2A36BCBC43D70F0A093")
+	assertDeepEquals(t, smp.msg.g3, expected)
+}
+
+func Test_generateSMPThirdParameters_computesPaCorrectly(t *testing.T) {
+	otr := context{otrV2{}, defaultRand()}
+	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
+	expected := bnFromHex("8EE76C232535FA68E18C13817056B7415E8FE8224AD15FA317C8D6F1AF17A0E45F538930F10DB29943E54E8D39D145E51B53D6A58C9E499A6353BBF378FD9D32370105EA4DEF5C88B755EFA485EF70C9097DEEA76A853F32CE98AA7ECE96073C0ABEDC91D1C9C0E092E86D36F4F1319EC7E8E40D4156F04CF18D7A79B01D44EBBB685F272FA39AA8C90662E4D8FBFB3F0A9F06478366C6708741F26FFA5F492CDD07D1F73A93BC18B3ECBE9F4071EC9FE600BCB67A8BC76920ED2C61BB94D07C")
+	assertDeepEquals(t, smp.msg.pa, expected)
+}
+
+func Test_generateSMPThirdParameters_computesQaCorrectly(t *testing.T) {
+	otr := context{otrV2{}, defaultRand()}
+	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
+	expected := bnFromHex("5533DDDE3704615657E1A654293D110C1557E6913DD8B79A5F15B5AF1F276153DBB8DEC7E17D157CF20DD54BC9B9373D6D0F2B44B3E88AD6F926B0D18DD87940C6E969184F1B184E441D379234C52EBB67584863925D775A423A962DC88A1A2E58152C1E7458BDF6FE762C5EA580A46C9AF6AD34D47F26B12D514F637FFD1D15D1CFB3FF330B53F1213D759A8F528ED4C22A9003A186A65F509EC96DB02420EF24D43E08FF469A0B4558B3A39778668E463647858C241B81F61A6C97FD076D72")
+	assertDeepEquals(t, smp.msg.qa, expected)
 }
