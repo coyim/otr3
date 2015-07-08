@@ -3,9 +3,9 @@ package otr3
 import "math/big"
 
 var (
-	p         *big.Int // prime field
+	p         *big.Int // prime field, defined in RFC3526 as Diffie-Hellman Group 5
 	pMinusTwo *big.Int
-	q         *big.Int
+	q         *big.Int // prime order
 	g1        *big.Int // group generator
 )
 
