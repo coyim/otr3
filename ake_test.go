@@ -51,7 +51,7 @@ func TestDHKeyMessage(t *testing.T) {
 	ake.senderInstanceTag = 0x00000001
 	ake.receiverInstanceTag = 0x00000001
 
-	result := ake.DHKeyMessage()
+	result, _ := ake.DHKeyMessage()
 
 	var out []byte
 	out = appendBytes(out, ake.protocolVersion[:])
@@ -84,8 +84,7 @@ func TestRevealSigMessage(t *testing.T) {
 func Test_encryptedGx(t *testing.T) {
 	var ake AKE
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:]), hex.EncodeToString(r[:])})
-	ake.initGx()
-
+	ake.gx, _ = new(big.Int).SetString("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d", 16)
 	encryptGx, err := ake.encryptedGx()
 	assertEquals(t, err, nil)
 	assertEquals(t, len(encryptGx), len(appendMPI([]byte{}, ake.gx)))
@@ -94,7 +93,7 @@ func Test_encryptedGx(t *testing.T) {
 func Test_hashedGx(t *testing.T) {
 	var ake AKE
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:])})
-	ake.initGx()
+	ake.gx, _ = new(big.Int).SetString("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d", 16)
 	hashedGx := ake.hashedGx()
 	assertDeepEquals(t, hashedGx, expectedHashedGxValue)
 }

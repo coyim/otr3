@@ -3,6 +3,7 @@ package otr3
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/dsa"
 	"crypto/rand"
 	"crypto/sha256"
 	"hash"
@@ -11,17 +12,17 @@ import (
 )
 
 type AKE struct {
+	PrivateKey          *PrivateKey
 	Rand                io.Reader
 	r                   [16]byte
-	x                   *big.Int
-	y                   *big.Int
-	gx                  *big.Int
-	gy                  *big.Int
+	x, y                *big.Int
+	gx, gy              *big.Int
 	protocolVersion     [2]byte
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
 	revealKey, sigKey   akeKeys
 	ssid                [8]byte
+	myKeyId             uint32
 }
 
 type akeKeys struct {
@@ -29,19 +30,20 @@ type akeKeys struct {
 	m1, m2 [32]byte
 }
 
+type PrivateKey struct {
+	PublicKey
+	dsa.PrivateKey
+}
+
+type PublicKey struct {
+	dsa.PublicKey
+}
+
 const (
 	msgTypeDHCommit = 2
 	msgTypeDHKey    = 10
 	msgTypeRevelSig = 17
 )
-
-var (
-	g *big.Int // group generator
-)
-
-func init() {
-	g = new(big.Int).SetInt64(2)
-}
 
 func (ake *AKE) rand() io.Reader {
 	if ake.Rand != nil {
@@ -57,32 +59,6 @@ func (ake *AKE) generateRand() (*big.Int, error) {
 		return nil, err
 	}
 	return new(big.Int).SetBytes(randx[:]), nil
-}
-
-func (ake *AKE) initGx() error {
-	x, err := ake.generateRand()
-	if err != nil {
-		return err
-	}
-
-	gx := new(big.Int).Exp(g, x, p)
-	ake.x = x
-	ake.gx = gx
-
-	return nil
-}
-
-func (ake *AKE) initGy() error {
-	y, err := ake.generateRand()
-	if err != nil {
-		return err
-	}
-
-	gy := new(big.Int).Exp(g, y, p)
-	ake.y = y
-	ake.gy = gy
-
-	return nil
 }
 
 func (ake *AKE) encryptedGx() ([]byte, error) {
@@ -136,12 +112,15 @@ func (ake *AKE) calcDHSharedSecret() *big.Int {
 
 func (ake *AKE) DHCommitMessage() ([]byte, error) {
 	var out []byte
+	ake.myKeyId = 0
 
-	err := ake.initGx()
+	x, err := ake.generateRand()
 	if err != nil {
 		return nil, err
 	}
 
+	ake.x = x
+	ake.gx = new(big.Int).Exp(g1, ake.x, p)
 	encryptedGx, err := ake.encryptedGx()
 	if err != nil {
 		return nil, err
@@ -157,21 +136,26 @@ func (ake *AKE) DHCommitMessage() ([]byte, error) {
 	return out, nil
 }
 
-func (ake *AKE) DHKeyMessage() []byte {
+func (ake *AKE) DHKeyMessage() ([]byte, error) {
 	var out []byte
-	ake.initGy()
+	y, err := ake.generateRand()
+
+	if err != nil {
+		return nil, err
+	}
+	ake.y = y
+	ake.gy = new(big.Int).Exp(g1, ake.y, p)
 	out = appendBytes(out, ake.protocolVersion[:])
 	out = append(out, msgTypeDHKey)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendMPI(out, ake.gy)
 
-	return out
+	return out, nil
 }
 
 func (ake *AKE) RevealSigMessage() []byte {
 	var out []byte
-	ake.initGy()
 	out = appendBytes(out, ake.protocolVersion[:])
 	out = append(out, msgTypeRevelSig)
 	out = appendWord(out, ake.senderInstanceTag)
