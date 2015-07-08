@@ -290,5 +290,102 @@ func Test_generateSMPSecondParameters_computesCPCorrectly(t *testing.T) {
 	assertDeepEquals(t, smp.msg2.cp, expected1)
 }
 
-// d5:  7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267afa7eabf42bf076f4040403db48ffb54afd86d74189952bdf7d7c76b428a31c54a1ce43d9f900d73c4c74e8f9caa8efb8e
-// d6:  7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82b49ff02bddc494c3a81caeefaaaebfda10656000c64956f65dc53b5ef82e8641a877db4a709931afc80f7e4521723d1a0b646aaaddc46ac095d3d47b052234ea
+func Test_generateSMPSecondParameters_computesD5Correctly(t *testing.T) {
+	otr := context{otrV2{}, defaultRand()}
+	smp1 := newDefaultMessage1()
+	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
+	expected1 := bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267afa7eabf42bf076f4040403db48ffb54afd86d74189952bdf7d7c76b428a31c54a1ce43d9f900d73c4c74e8f9caa8efb8e")
+	assertDeepEquals(t, smp.msg2.d5, expected1)
+}
+
+func Test_generateSMPSecondParameters_computesD6Correctly(t *testing.T) {
+	otr := context{otrV2{}, defaultRand()}
+	smp1 := newDefaultMessage1()
+	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
+	expected1 := bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82b49ff02bddc494c3a81caeefaaaebfda10656000c64956f65dc53b5ef82e8641a877db4a709931afc80f7e4521723d1a0b646aaaddc46ac095d3d47b052234ea")
+	assertDeepEquals(t, smp.msg2.d6, expected1)
+}
+
+func Test_verifySMPSecondParameters_checkG2bForOtrV3(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	err := otr.verifySMPSecondParameters(smpMessage2{g2b: new(big.Int).SetInt64(1)})
+	assertDeepEquals(t, err, errors.New("g2b is an invalid group element"))
+}
+
+func Test_verifySMPSecondParameters_checkG3bForOtrV3(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	err := otr.verifySMPSecondParameters(smpMessage2{
+		g2b: new(big.Int).SetInt64(3),
+		g3b: new(big.Int).SetInt64(1),
+	})
+	assertDeepEquals(t, err, errors.New("g3b is an invalid group element"))
+}
+
+func Test_verifySMPSecondParameters_checkPbForOtrV3(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	err := otr.verifySMPSecondParameters(smpMessage2{
+		g2b: new(big.Int).SetInt64(3),
+		g3b: new(big.Int).SetInt64(3),
+		pb:  p,
+	})
+	assertDeepEquals(t, err, errors.New("Pb is an invalid group element"))
+}
+
+func Test_verifySMPSecondParameters_checkQbForOtrV3(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	err := otr.verifySMPSecondParameters(smpMessage2{
+		g2b: new(big.Int).SetInt64(3),
+		g3b: new(big.Int).SetInt64(3),
+		pb:  pMinusTwo,
+		qb:  new(big.Int).SetInt64(1),
+	})
+	assertDeepEquals(t, err, errors.New("Qb is an invalid group element"))
+}
+
+func defaultMessage2() smpMessage2 {
+	return smpMessage2{
+		g2b: bnFromHex("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77"),
+		g3b: bnFromHex("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a"),
+		c2:  bnFromHex("5f78f76ed595e10b8ec22a10b848a2dbfc01d5b4bf4f3354fa7d9e7a7b89be3c"),
+		d2:  bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af81a02d5a40ae02cf4b98b37d6f98f1c0fc61fb686e150da2863071729e0bec44d63b7abd8751f58a1a5499c8526241c0"),
+		c3:  bnFromHex("e6417f7a922aa04d488ccd60062eaa374b772054c4e7bf72e6a570db604c3bcc"),
+		d3:  bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af18c7d9799344f5a6052f526c1b70ab3aa4098d714850b6535a758a04e6cc15cd396287aa3a2009185e9793757c748570"),
+		d5:  bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267afa7eabf42bf076f4040403db48ffb54afd86d74189952bdf7d7c76b428a31c54a1ce43d9f900d73c4c74e8f9caa8efb8e"),
+		d6:  bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82b49ff02bddc494c3a81caeefaaaebfda10656000c64956f65dc53b5ef82e8641a877db4a709931afc80f7e4521723d1a0b646aaaddc46ac095d3d47b052234ea"),
+		pb:  bnFromHex("70f18724fd6263a694b82a6272e938a81f56b7373c29a4f78ee2d5dd94bf7fe8ff59d837ca2686088f62f7ec178a5b47bcdec3b6f2af7820d6583d5358a714a5cf6d943371289cce76a9cc09e04306bcffde5a6dbeb887a5e18aff1740be083e2b4a505e30fa56771d5be27984ca85e90a9d90faa278db0b5d51f334e80cfab14cb5e7fed9c6d3d0eaff5c1f3dbe698ba8f0db3517e892474cc899d46866546ea306d4f6e0a11546305c4fd50ad8e49163fb9abc3294612868d310d2e5755d4d"),
+		qb:  bnFromHex("69902e8e3f11e631b24343b0788eef58a2cd13afa8f5550749309ace728f2d5a8a4cb9df5916281053d6faaec73c10b66e1cd4cc3c88184e0c524a7ccf693b2a9776227ba27487966695a44053501aab6683fbf4ffe043cab35dae5c077a109b00865b99f7fb9ad7b049dca1dac9f7787d16d35b72f5f4530425def6272b85348f813af1ae64847f01a9bce288e9c47ffcf50cca049f527c4d4593836bd43d22ac71d83b638e0f181e285cc7d54ae0c3e2d7783a4baa03b9fd79950128fada7f"),
+		cp:  bnFromHex("1bfd38604f788c140186388f48adb32c49725b1fb0a7d152fb02a96dede93f36"),
+		g2:  bnFromHex("8b9e73cca287ed2f46c011090efffcfe394bed51a3ad23e9f7815d9c9c20184ddc0acc2cb0cdd3b8630c453339b6ef7158af705530e33ccac72a855164ca038da837942f3de762ea9af2942c9355dee8eb8b7ce94a3ade33d6a7c79c2a879239c08af22e6987b9345c5e093d33bc8734aaa4019f614dfd65500107756cf6d0ff4591b482d975ca6e43b9f706e969a987306a1a1b905385ffd13d7a24dabc6d513f32a46041cd760e404d1a4c7b6c0b426589ba3ec3d252110578740ccee4bcb3"),
+		g3:  bnFromHex("75cb16d985029162aba03d37b9ef375dca716fc2a4f7d25c6e1b6c511622a47567999230706eda31e44b47c1d7f61df12f49e59142fda0af377d2c5972ad663213db031f131b2abc557e507e6ffbf4dc4a5b44cd0cdf985bc247afb2e5733513f4f022feb5e7a955611175b0ffcfe54763cf7430ce0ede472a7ab5fc0f9f039fcf476be22ec66f8b96759e44a946180f27d16d6c37067e7f1acd3b691b5d56a90b641cc9c8fdac1c41e310e469db4e2f83d28c3dda51b2a36bcbc43d70f0a093"),
+	}
+}
+
+func Test_verifySMPSecondParameters_failsIfC2IsNotACorrectZKP(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	s2 := defaultMessage2()
+	s2.c2 = sub(s2.c2, big.NewInt(1))
+	err := otr.verifySMPSecondParameters(s2)
+	assertDeepEquals(t, err, errors.New("c2 is not a valid zero knowledge proof"))
+}
+
+func Test_verifySMPSecondParameters_failsIfC3IsNotACorrectZKP(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	s2 := defaultMessage2()
+	s2.c3 = sub(s2.c3, big.NewInt(1))
+	err := otr.verifySMPSecondParameters(s2)
+	assertDeepEquals(t, err, errors.New("c3 is not a valid zero knowledge proof"))
+}
+
+func Test_verifySMPSecondParameters_failsIfCpIsNotACorrectZKP(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	s2 := defaultMessage2()
+	s2.cp = sub(s2.cp, big.NewInt(1))
+	err := otr.verifySMPSecondParameters(s2)
+	assertDeepEquals(t, err, errors.New("cP is not a valid zero knowledge proof"))
+}
+
+func Test_verifySMPSecondParameters_succeedsForACorrectZKP(t *testing.T) {
+	otr := context{otrV3{}, defaultRand()}
+	err := otr.verifySMPSecondParameters(defaultMessage2())
+	assertDeepEquals(t, err, nil)
+}

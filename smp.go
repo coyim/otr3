@@ -34,6 +34,7 @@ type smpMessage2 struct {
 	g2, g3   *big.Int
 	pb, qb   *big.Int
 	cp       *big.Int
+	d5, d6   *big.Int
 }
 
 func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) []byte {
@@ -84,6 +85,19 @@ func verifyZKP(d, gen, c *big.Int, ix byte) bool {
 	s := modExp(gen, c)
 	t := hashMPIsBN(nil, ix, mulMod(r, s, p))
 	return eq(c, t)
+}
+
+func verifyZKP2(g2, g3, d5, d6, pb, qb, cp *big.Int, ix byte) bool {
+	l := mulMod(
+		modExp(g3, d5),
+		modExp(pb, cp),
+		p)
+	r := mulMod(mul(modExp(g1, d5),
+		modExp(g2, d6)),
+		modExp(qb, cp),
+		p)
+	t := hashMPIsBN(nil, ix, l, r)
+	return eq(cp, t)
 }
 
 func (c *context) verifySMPStartParameters(msg smpMessage1) error {
@@ -138,6 +152,9 @@ func generateMessageTwoFor(s smpB, s1 smpMessage1) smpMessage2 {
 		modExp(m.g3, s.r5),
 		mulMod(modExp(g1, s.r5), modExp(m.g2, s.r6), p))
 
+	m.d5 = subMod(s.r5, mul(s.r4, m.cp), q)
+	m.d6 = subMod(s.r6, mul(s.y, m.cp), q)
+
 	return m
 }
 
@@ -146,4 +163,36 @@ func (c *context) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) s
 	s.y = secret
 	s.msg2 = generateMessageTwoFor(s, s1)
 	return s
+}
+
+func (c *context) verifySMPSecondParameters(msg smpMessage2) error {
+	if !c.isGroupElement(msg.g2b) {
+		return errors.New("g2b is an invalid group element")
+	}
+
+	if !c.isGroupElement(msg.g3b) {
+		return errors.New("g3b is an invalid group element")
+	}
+
+	if !c.isGroupElement(msg.pb) {
+		return errors.New("Pb is an invalid group element")
+	}
+
+	if !c.isGroupElement(msg.qb) {
+		return errors.New("Qb is an invalid group element")
+	}
+
+	if !verifyZKP(msg.d2, msg.g2b, msg.c2, 3) {
+		return errors.New("c2 is not a valid zero knowledge proof")
+	}
+
+	if !verifyZKP(msg.d3, msg.g3b, msg.c3, 4) {
+		return errors.New("c3 is not a valid zero knowledge proof")
+	}
+
+	if !verifyZKP2(msg.g2, msg.g3, msg.d5, msg.d6, msg.pb, msg.qb, msg.cp, 5) {
+		return errors.New("cP is not a valid zero knowledge proof")
+	}
+
+	return nil
 }
