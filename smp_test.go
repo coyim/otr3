@@ -435,3 +435,17 @@ func Test_verifySMP3Parameters_failsIfRaIsNotInTheGroupForProtocolV3(t *testing.
 	})
 	assertDeepEquals(t, err, errors.New("Ra is an invalid group element"))
 }
+
+func Test_verifySMP3Parameters_succeedsForValidZKPS(t *testing.T) {
+	otr := context{otrV2{}, fixtureRand()}
+	err := otr.verifySMP3Parameters(fixtureMessage3())
+	assertDeepEquals(t, err, nil)
+}
+
+func Test_verifySMP3Parameters_failsIfCpIsNotAValidZKP(t *testing.T) {
+	otr := context{otrV2{}, fixtureRand()}
+	m := fixtureMessage3()
+	m.cp = sub(m.cp, big.NewInt(1))
+	err := otr.verifySMP3Parameters(m)
+	assertDeepEquals(t, err, errors.New("cP is not a valid zero knowledge proof"))
+}

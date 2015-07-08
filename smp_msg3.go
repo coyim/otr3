@@ -62,6 +62,13 @@ func (c *context) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMes
 	return s
 }
 
+func verifyZKP3(cp, g2, g3, d5, d6, pa, qa *big.Int, ix byte) bool {
+	l := mulMod(modExp(g3, d5), modExp(pa, cp), p)
+	r := mulMod(mul(modExp(g1, d5), modExp(g2, d6)), modExp(qa, cp), p)
+	t := hashMPIsBN(nil, ix, l, r)
+	return eq(cp, t)
+}
+
 func (c *context) verifySMP3Parameters(msg smpMessage3) error {
 	if !c.isGroupElement(msg.pa) {
 		return errors.New("Pa is an invalid group element")
@@ -73,6 +80,10 @@ func (c *context) verifySMP3Parameters(msg smpMessage3) error {
 
 	if !c.isGroupElement(msg.ra) {
 		return errors.New("Ra is an invalid group element")
+	}
+
+	if !verifyZKP3(msg.cp, msg.g2, msg.g3, msg.d5, msg.d6, msg.pa, msg.qa, 6) {
+		return errors.New("cP is not a valid zero knowledge proof")
 	}
 
 	return nil
