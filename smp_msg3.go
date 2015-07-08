@@ -1,6 +1,9 @@
 package otr3
 
-import "math/big"
+import (
+	"errors"
+	"math/big"
+)
 
 type smp3 struct {
 	x              *big.Int
@@ -57,4 +60,20 @@ func (c *context) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMes
 	s.x = secret
 	s.msg = calculateMessageThree(s, s1, m2)
 	return s
+}
+
+func (c *context) verifySMP3Parameters(msg smpMessage3) error {
+	if !c.isGroupElement(msg.pa) {
+		return errors.New("Pa is an invalid group element")
+	}
+
+	if !c.isGroupElement(msg.qa) {
+		return errors.New("Qa is an invalid group element")
+	}
+
+	if !c.isGroupElement(msg.ra) {
+		return errors.New("Ra is an invalid group element")
+	}
+
+	return nil
 }

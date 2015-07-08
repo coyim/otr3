@@ -2,25 +2,9 @@ package otr3
 
 import (
 	"errors"
-	"io"
 	"math/big"
 	"testing"
 )
-
-func defaultRand() io.Reader {
-	return fixedRand([]string{
-		"ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-		"BBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-		"CBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-		"DBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-		"EBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-		"FBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-		"A1CDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-		"A2CDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-		"A3CDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-		"A4CDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
-	})
-}
 
 func Test_generateSMPSecretGeneratesASecret(t *testing.T) {
 	aliceFingerprint := hexToByte("0102030405060708090A0B0C0D0E0F1011121314")
@@ -32,73 +16,65 @@ func Test_generateSMPSecretGeneratesASecret(t *testing.T) {
 }
 
 func Test_generatesLongerAandRValuesForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	smp := otr.generateSMPStartParameters()
-	assertDeepEquals(t, smp.a2, new(big.Int).SetBytes(hexToByte("ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.a3, new(big.Int).SetBytes(hexToByte("BBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r2, new(big.Int).SetBytes(hexToByte("CBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r3, new(big.Int).SetBytes(hexToByte("DBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+	assertDeepEquals(t, smp.a2, fixtureLong1)
+	assertDeepEquals(t, smp.a3, fixtureLong2)
+	assertDeepEquals(t, smp.r2, fixtureLong3)
+	assertDeepEquals(t, smp.r3, fixtureLong4)
 }
 
 func Test_generatesShorterAandRValuesForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
+	otr := context{otrV2{}, fixtureRand()}
 	smp := otr.generateSMPStartParameters()
-	assertDeepEquals(t, smp.a2, new(big.Int).SetBytes(hexToByte("ABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.a3, new(big.Int).SetBytes(hexToByte("BBCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r2, new(big.Int).SetBytes(hexToByte("CBCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r3, new(big.Int).SetBytes(hexToByte("DBCDABCDABCDABCDABCDABCDABCDABCD")))
+	assertDeepEquals(t, smp.a2, fixtureShort1)
+	assertDeepEquals(t, smp.a3, fixtureShort2)
+	assertDeepEquals(t, smp.r2, fixtureShort3)
+	assertDeepEquals(t, smp.r3, fixtureShort4)
 }
 
 func Test_computesG2aAndG3aCorrectlyForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	smp := otr.generateSMPStartParameters()
-	expected1, _ := new(big.Int).SetString("2403828132201280691996934790042280522039644351533698950188369222708084962201190259148331059300969970454760451858146292777271089101335555432831591932280897663128605540136047489902371842091500899696205003971442783016830569070154151538113509331728265831584544751982441886086856394142221987668411465357977595712909149546719860976278668856500931856381813557383455751167139453911498547553424315774735908660702360108350494792398612100509843726869895575665079703048760466", 10)
-	expected2, _ := new(big.Int).SetString("545300291901380653980556916625957052030430375409433663251760516986016273974200122997230389944238471404021073102701550317663669624982742390354806536963349739870183347869815633451836184053254713103530928305206048828718330259320999178725064437137499780326636715585953004481720026913428336861587141398794337053489567564530999611735085631734084309755871299251468595807420396099483025772958221192002020467585351536202731371781577659533010401568100631459405229307956337", 10)
-	assertDeepEquals(t, smp.msg.g2a, expected1)
-	assertDeepEquals(t, smp.msg.g3a, expected2)
+	assertDeepEquals(t, smp.msg.g2a, fixtureMessage1_v3().g2a)
+	assertDeepEquals(t, smp.msg.g3a, fixtureMessage1_v3().g3a)
 }
 
 func Test_computesG2aAndG3aCorrectlyForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
+	otr := context{otrV2{}, fixtureRand()}
 	smp := otr.generateSMPStartParameters()
-	expected1, _ := new(big.Int).SetString("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77", 16)
-	expected2, _ := new(big.Int).SetString("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a", 16)
-	assertDeepEquals(t, smp.msg.g2a, expected1)
-	assertDeepEquals(t, smp.msg.g3a, expected2)
+	assertDeepEquals(t, smp.msg.g2a, fixtureMessage1().g2a)
+	assertDeepEquals(t, smp.msg.g3a, fixtureMessage1().g3a)
 }
 
 func Test_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
+	otr := context{otrV2{}, fixtureRand()}
 	smp := otr.generateSMPStartParameters()
-	expected1, _ := new(big.Int).SetString("d3b6ef5528fa97e983395bec165fa4ced7657bdabf3742d60880965c369c880c", 16)
-	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af339d65211b4fcfa466656c89b4217f90102e4aa3ac176a41f6240f32689712b0391c1c659757f4bfb83e6ba66bf8b630", 16)
-	assertDeepEquals(t, smp.msg.c2, expected1)
-	assertDeepEquals(t, smp.msg.d2, expected2)
+	assertDeepEquals(t, smp.msg.c2, fixtureMessage1().c2)
+	assertDeepEquals(t, smp.msg.d2, fixtureMessage1().d2)
 }
 
 func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
+	otr := context{otrV2{}, fixtureRand()}
 	smp := otr.generateSMPStartParameters()
-	expected1, _ := new(big.Int).SetString("57d8cfda442854ecb01b28e631aa9165d51d1192f7f464bf17ea7f6665c05030", 16)
-	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af8140bb2aa65628bcff455920bba95a1392f2fcb5c115f43a7a828b5bf0393c5c775a17a88506a7893ff509d674cd655c", 16)
-	assertDeepEquals(t, smp.msg.c3, expected1)
-	assertDeepEquals(t, smp.msg.d3, expected2)
+	assertDeepEquals(t, smp.msg.c3, fixtureMessage1().c3)
+	assertDeepEquals(t, smp.msg.d3, fixtureMessage1().d3)
 }
 
 func Test_thatVerifySMPStartParametersCheckG2AForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	err := otr.verifySMPStartParameters(smpMessage1{g2a: new(big.Int).SetInt64(1)})
 	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
 }
 
 func Test_thatVerifySMPStartParametersCheckG3AForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	err := otr.verifySMPStartParameters(smpMessage1{g2a: new(big.Int).SetInt64(3), g3a: p})
 	assertDeepEquals(t, err, errors.New("g3a is an invalid group element"))
 }
 
 func Test_thatVerifySMPStartParametersDoesntCheckG2AForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
+	otr := context{otrV2{}, fixtureRand()}
 	err := otr.verifySMPStartParameters(smpMessage1{
 		g2a: new(big.Int).SetInt64(1),
 		g3a: new(big.Int).SetInt64(1),
@@ -111,7 +87,7 @@ func Test_thatVerifySMPStartParametersDoesntCheckG2AForOtrV2(t *testing.T) {
 }
 
 func Test_thatVerifySMPStartParametersDoesntCheckG3AForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
+	otr := context{otrV2{}, fixtureRand()}
 	err := otr.verifySMPStartParameters(smpMessage1{
 		g2a: new(big.Int).SetInt64(3),
 		g3a: new(big.Int).SetInt64(1),
@@ -124,7 +100,7 @@ func Test_thatVerifySMPStartParametersDoesntCheckG3AForOtrV2(t *testing.T) {
 }
 
 func Test_thatVerifySMPStartParametersChecksThatc2IsAValidZeroKnowledgeProof(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	err := otr.verifySMPStartParameters(smpMessage1{
 		g2a: new(big.Int).SetInt64(3),
 		g3a: new(big.Int).SetInt64(3),
@@ -137,24 +113,21 @@ func Test_thatVerifySMPStartParametersChecksThatc2IsAValidZeroKnowledgeProof(t *
 }
 
 func Test_thatVerifySMPStartParametersChecksThatc3IsAValidZeroKnowledgeProof(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	g2a, _ := new(big.Int).SetString("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77", 16)
-	c2, _ := new(big.Int).SetString("d3b6ef5528fa97e983395bec165fa4ced7657bdabf3742d60880965c369c880c", 16)
-	d2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af339d65211b4fcfa466656c89b4217f90102e4aa3ac176a41f6240f32689712b0391c1c659757f4bfb83e6ba66bf8b630", 16)
+	otr := context{otrV3{}, fixtureRand()}
 
 	err := otr.verifySMPStartParameters(smpMessage1{
-		g2a: g2a,
+		g2a: fixtureMessage1().g2a,
 		g3a: new(big.Int).SetInt64(3),
-		c2:  c2,
+		c2:  fixtureMessage1().c2,
 		c3:  new(big.Int).SetInt64(3),
-		d2:  d2,
+		d2:  fixtureMessage1().d2,
 		d3:  new(big.Int).SetInt64(3),
 	})
 	assertDeepEquals(t, err, errors.New("c3 is not a valid zero knowledge proof"))
 }
 
 func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessage(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 
 	g2a, _ := new(big.Int).SetString("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77", 16)
 	g3a, _ := new(big.Int).SetString("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a", 16)
@@ -175,7 +148,7 @@ func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessage(t *testing.
 }
 
 func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessageWithProtocolV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
+	otr := context{otrV2{}, fixtureRand()}
 
 	g2a, _ := new(big.Int).SetString("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77", 16)
 	g3a, _ := new(big.Int).SetString("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a", 16)
@@ -196,124 +169,100 @@ func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessageWithProtocol
 }
 
 func Test_generateSMPSecondParameters_generatesLongerValuesForBAndRWithProtocolV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	assertDeepEquals(t, smp.b2, new(big.Int).SetBytes(hexToByte("ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.b3, new(big.Int).SetBytes(hexToByte("BBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r2, new(big.Int).SetBytes(hexToByte("CBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r3, new(big.Int).SetBytes(hexToByte("DBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r4, new(big.Int).SetBytes(hexToByte("EBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r5, new(big.Int).SetBytes(hexToByte("FBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r6, new(big.Int).SetBytes(hexToByte("A1CDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+	otr := context{otrV3{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.b2, fixtureLong1)
+	assertDeepEquals(t, smp.b3, fixtureLong2)
+	assertDeepEquals(t, smp.r2, fixtureLong3)
+	assertDeepEquals(t, smp.r3, fixtureLong4)
+	assertDeepEquals(t, smp.r4, fixtureLong5)
+	assertDeepEquals(t, smp.r5, fixtureLong6)
+	assertDeepEquals(t, smp.r6, fixtureLong7)
 }
 
 func Test_generateSMPSecondParameters_generatesShorterValuesForBAndRWithProtocolV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	assertDeepEquals(t, smp.b2, new(big.Int).SetBytes(hexToByte("ABCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.b3, new(big.Int).SetBytes(hexToByte("BBCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r2, new(big.Int).SetBytes(hexToByte("CBCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r3, new(big.Int).SetBytes(hexToByte("DBCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r4, new(big.Int).SetBytes(hexToByte("EBCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r5, new(big.Int).SetBytes(hexToByte("FBCDABCDABCDABCDABCDABCDABCDABCD")))
-	assertDeepEquals(t, smp.r6, new(big.Int).SetBytes(hexToByte("A1CDABCDABCDABCDABCDABCDABCDABCD")))
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.b2, fixtureShort1)
+	assertDeepEquals(t, smp.b3, fixtureShort2)
+	assertDeepEquals(t, smp.r2, fixtureShort3)
+	assertDeepEquals(t, smp.r3, fixtureShort4)
+	assertDeepEquals(t, smp.r4, fixtureShort5)
+	assertDeepEquals(t, smp.r5, fixtureShort6)
+	assertDeepEquals(t, smp.r6, fixtureShort7)
 }
 
 func Test_generateSMPSecondParameters_computesG2bAndG3bCorrectlyForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	expected1, _ := new(big.Int).SetString("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77", 16)
-	expected2, _ := new(big.Int).SetString("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a", 16)
-	assertDeepEquals(t, smp.msg.g2b, expected1)
-	assertDeepEquals(t, smp.msg.g3b, expected2)
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.msg.g2b, fixtureMessage2().g2b)
+	assertDeepEquals(t, smp.msg.g3b, fixtureMessage2().g3b)
 }
 
 func Test_generateSMPSecondParameters_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	expected1, _ := new(big.Int).SetString("5f78f76ed595e10b8ec22a10b848a2dbfc01d5b4bf4f3354fa7d9e7a7b89be3c", 16)
-	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af81a02d5a40ae02cf4b98b37d6f98f1c0fc61fb686e150da2863071729e0bec44d63b7abd8751f58a1a5499c8526241c0", 16)
-	assertDeepEquals(t, smp.msg.c2, expected1)
-	assertDeepEquals(t, smp.msg.d2, expected2)
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.msg.c2, fixtureMessage2().c2)
+	assertDeepEquals(t, smp.msg.d2, fixtureMessage2().d2)
 }
 
 func Test_generateSMPSecondParameters_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	expected1, _ := new(big.Int).SetString("e6417f7a922aa04d488ccd60062eaa374b772054c4e7bf72e6a570db604c3bcc", 16)
-	expected2, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af18c7d9799344f5a6052f526c1b70ab3aa4098d714850b6535a758a04e6cc15cd396287aa3a2009185e9793757c748570", 16)
-	assertDeepEquals(t, smp.msg.c3, expected1)
-	assertDeepEquals(t, smp.msg.d3, expected2)
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.msg.c3, fixtureMessage2().c3)
+	assertDeepEquals(t, smp.msg.d3, fixtureMessage2().d3)
 }
 
 func Test_generateSMPSecondParameters_computesG2AndG3Correctly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	expected1 := bnFromHex("8b9e73cca287ed2f46c011090efffcfe394bed51a3ad23e9f7815d9c9c20184ddc0acc2cb0cdd3b8630c453339b6ef7158af705530e33ccac72a855164ca038da837942f3de762ea9af2942c9355dee8eb8b7ce94a3ade33d6a7c79c2a879239c08af22e6987b9345c5e093d33bc8734aaa4019f614dfd65500107756cf6d0ff4591b482d975ca6e43b9f706e969a987306a1a1b905385ffd13d7a24dabc6d513f32a46041cd760e404d1a4c7b6c0b426589ba3ec3d252110578740ccee4bcb3")
-	expected2 := bnFromHex("75cb16d985029162aba03d37b9ef375dca716fc2a4f7d25c6e1b6c511622a47567999230706eda31e44b47c1d7f61df12f49e59142fda0af377d2c5972ad663213db031f131b2abc557e507e6ffbf4dc4a5b44cd0cdf985bc247afb2e5733513f4f022feb5e7a955611175b0ffcfe54763cf7430ce0ede472a7ab5fc0f9f039fcf476be22ec66f8b96759e44a946180f27d16d6c37067e7f1acd3b691b5d56a90b641cc9c8fdac1c41e310e469db4e2f83d28c3dda51b2a36bcbc43d70f0a093")
-	assertDeepEquals(t, smp.msg.g2, expected1)
-	assertDeepEquals(t, smp.msg.g3, expected2)
-}
-
-func newDefaultSecret() *big.Int {
-	return bnFromHex("D9B2E56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
-}
-
-func newDefaultMessage1() smpMessage1 {
-	return smpMessage1{
-		g2a: bnFromHex("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77"),
-		g3a: bnFromHex("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a"),
-	}
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.msg.g2, fixtureMessage2().g2)
+	assertDeepEquals(t, smp.msg.g3, fixtureMessage2().g3)
 }
 
 func Test_generateSMPSecondParameters_computesPbAndQbCorrectly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	expected1 := bnFromHex("70f18724fd6263a694b82a6272e938a81f56b7373c29a4f78ee2d5dd94bf7fe8ff59d837ca2686088f62f7ec178a5b47bcdec3b6f2af7820d6583d5358a714a5cf6d943371289cce76a9cc09e04306bcffde5a6dbeb887a5e18aff1740be083e2b4a505e30fa56771d5be27984ca85e90a9d90faa278db0b5d51f334e80cfab14cb5e7fed9c6d3d0eaff5c1f3dbe698ba8f0db3517e892474cc899d46866546ea306d4f6e0a11546305c4fd50ad8e49163fb9abc3294612868d310d2e5755d4d")
-	expected2 := bnFromHex("69902e8e3f11e631b24343b0788eef58a2cd13afa8f5550749309ace728f2d5a8a4cb9df5916281053d6faaec73c10b66e1cd4cc3c88184e0c524a7ccf693b2a9776227ba27487966695a44053501aab6683fbf4ffe043cab35dae5c077a109b00865b99f7fb9ad7b049dca1dac9f7787d16d35b72f5f4530425def6272b85348f813af1ae64847f01a9bce288e9c47ffcf50cca049f527c4d4593836bd43d22ac71d83b638e0f181e285cc7d54ae0c3e2d7783a4baa03b9fd79950128fada7f")
-	assertDeepEquals(t, smp.msg.pb, expected1)
-	assertDeepEquals(t, smp.msg.qb, expected2)
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.msg.pb, fixtureMessage2().pb)
+	assertDeepEquals(t, smp.msg.qb, fixtureMessage2().qb)
 }
 
 func Test_generateSMPSecondParameters_computesCPCorrectly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	expected1 := bnFromHex("1bfd38604f788c140186388f48adb32c49725b1fb0a7d152fb02a96dede93f36")
-	assertDeepEquals(t, smp.msg.cp, expected1)
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.msg.cp, fixtureMessage2().cp)
 }
 
 func Test_generateSMPSecondParameters_computesD5Correctly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	expected1 := bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267afa7eabf42bf076f4040403db48ffb54afd86d74189952bdf7d7c76b428a31c54a1ce43d9f900d73c4c74e8f9caa8efb8e")
-	assertDeepEquals(t, smp.msg.d5, expected1)
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.msg.d5, fixtureMessage2().d5)
 }
 
 func Test_generateSMPSecondParameters_computesD6Correctly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp1 := newDefaultMessage1()
-	smp := otr.generateSMPSecondParameters(newDefaultSecret(), smp1)
-	expected1 := bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82b49ff02bddc494c3a81caeefaaaebfda10656000c64956f65dc53b5ef82e8641a877db4a709931afc80f7e4521723d1a0b646aaaddc46ac095d3d47b052234ea")
-	assertDeepEquals(t, smp.msg.d6, expected1)
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.msg.d6, fixtureMessage2().d6)
 }
 
 func Test_verifySMPSecondParameters_checkG2bForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	err := otr.verifySMPSecondParameters(smpMessage2{g2b: new(big.Int).SetInt64(1)})
 	assertDeepEquals(t, err, errors.New("g2b is an invalid group element"))
 }
 
 func Test_verifySMPSecondParameters_checkG3bForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	err := otr.verifySMPSecondParameters(smpMessage2{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(1),
@@ -322,7 +271,7 @@ func Test_verifySMPSecondParameters_checkG3bForOtrV3(t *testing.T) {
 }
 
 func Test_verifySMPSecondParameters_checkPbForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	err := otr.verifySMPSecondParameters(smpMessage2{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(3),
@@ -332,7 +281,7 @@ func Test_verifySMPSecondParameters_checkPbForOtrV3(t *testing.T) {
 }
 
 func Test_verifySMPSecondParameters_checkQbForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	err := otr.verifySMPSecondParameters(smpMessage2{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(3),
@@ -342,158 +291,147 @@ func Test_verifySMPSecondParameters_checkQbForOtrV3(t *testing.T) {
 	assertDeepEquals(t, err, errors.New("Qb is an invalid group element"))
 }
 
-func defaultMessage2() smpMessage2 {
-	return smpMessage2{
-		g2b: bnFromHex("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77"),
-		g3b: bnFromHex("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a"),
-		c2:  bnFromHex("5f78f76ed595e10b8ec22a10b848a2dbfc01d5b4bf4f3354fa7d9e7a7b89be3c"),
-		d2:  bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af81a02d5a40ae02cf4b98b37d6f98f1c0fc61fb686e150da2863071729e0bec44d63b7abd8751f58a1a5499c8526241c0"),
-		c3:  bnFromHex("e6417f7a922aa04d488ccd60062eaa374b772054c4e7bf72e6a570db604c3bcc"),
-		d3:  bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af18c7d9799344f5a6052f526c1b70ab3aa4098d714850b6535a758a04e6cc15cd396287aa3a2009185e9793757c748570"),
-		d5:  bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267afa7eabf42bf076f4040403db48ffb54afd86d74189952bdf7d7c76b428a31c54a1ce43d9f900d73c4c74e8f9caa8efb8e"),
-		d6:  bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82b49ff02bddc494c3a81caeefaaaebfda10656000c64956f65dc53b5ef82e8641a877db4a709931afc80f7e4521723d1a0b646aaaddc46ac095d3d47b052234ea"),
-		pb:  bnFromHex("70f18724fd6263a694b82a6272e938a81f56b7373c29a4f78ee2d5dd94bf7fe8ff59d837ca2686088f62f7ec178a5b47bcdec3b6f2af7820d6583d5358a714a5cf6d943371289cce76a9cc09e04306bcffde5a6dbeb887a5e18aff1740be083e2b4a505e30fa56771d5be27984ca85e90a9d90faa278db0b5d51f334e80cfab14cb5e7fed9c6d3d0eaff5c1f3dbe698ba8f0db3517e892474cc899d46866546ea306d4f6e0a11546305c4fd50ad8e49163fb9abc3294612868d310d2e5755d4d"),
-		qb:  bnFromHex("69902e8e3f11e631b24343b0788eef58a2cd13afa8f5550749309ace728f2d5a8a4cb9df5916281053d6faaec73c10b66e1cd4cc3c88184e0c524a7ccf693b2a9776227ba27487966695a44053501aab6683fbf4ffe043cab35dae5c077a109b00865b99f7fb9ad7b049dca1dac9f7787d16d35b72f5f4530425def6272b85348f813af1ae64847f01a9bce288e9c47ffcf50cca049f527c4d4593836bd43d22ac71d83b638e0f181e285cc7d54ae0c3e2d7783a4baa03b9fd79950128fada7f"),
-		cp:  bnFromHex("1bfd38604f788c140186388f48adb32c49725b1fb0a7d152fb02a96dede93f36"),
-		g2:  bnFromHex("8b9e73cca287ed2f46c011090efffcfe394bed51a3ad23e9f7815d9c9c20184ddc0acc2cb0cdd3b8630c453339b6ef7158af705530e33ccac72a855164ca038da837942f3de762ea9af2942c9355dee8eb8b7ce94a3ade33d6a7c79c2a879239c08af22e6987b9345c5e093d33bc8734aaa4019f614dfd65500107756cf6d0ff4591b482d975ca6e43b9f706e969a987306a1a1b905385ffd13d7a24dabc6d513f32a46041cd760e404d1a4c7b6c0b426589ba3ec3d252110578740ccee4bcb3"),
-		g3:  bnFromHex("75cb16d985029162aba03d37b9ef375dca716fc2a4f7d25c6e1b6c511622a47567999230706eda31e44b47c1d7f61df12f49e59142fda0af377d2c5972ad663213db031f131b2abc557e507e6ffbf4dc4a5b44cd0cdf985bc247afb2e5733513f4f022feb5e7a955611175b0ffcfe54763cf7430ce0ede472a7ab5fc0f9f039fcf476be22ec66f8b96759e44a946180f27d16d6c37067e7f1acd3b691b5d56a90b641cc9c8fdac1c41e310e469db4e2f83d28c3dda51b2a36bcbc43d70f0a093"),
-	}
-}
-
 func Test_verifySMPSecondParameters_failsIfC2IsNotACorrectZKP(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	s2 := defaultMessage2()
+	otr := context{otrV3{}, fixtureRand()}
+	s2 := fixtureMessage2()
 	s2.c2 = sub(s2.c2, big.NewInt(1))
 	err := otr.verifySMPSecondParameters(s2)
 	assertDeepEquals(t, err, errors.New("c2 is not a valid zero knowledge proof"))
 }
 
 func Test_verifySMPSecondParameters_failsIfC3IsNotACorrectZKP(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	s2 := defaultMessage2()
+	otr := context{otrV3{}, fixtureRand()}
+	s2 := fixtureMessage2()
 	s2.c3 = sub(s2.c3, big.NewInt(1))
 	err := otr.verifySMPSecondParameters(s2)
 	assertDeepEquals(t, err, errors.New("c3 is not a valid zero knowledge proof"))
 }
 
 func Test_verifySMPSecondParameters_failsIfCpIsNotACorrectZKP(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	s2 := defaultMessage2()
+	otr := context{otrV3{}, fixtureRand()}
+	s2 := fixtureMessage2()
 	s2.cp = sub(s2.cp, big.NewInt(1))
 	err := otr.verifySMPSecondParameters(s2)
 	assertDeepEquals(t, err, errors.New("cP is not a valid zero knowledge proof"))
 }
 
 func Test_verifySMPSecondParameters_succeedsForACorrectZKP(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	err := otr.verifySMPSecondParameters(defaultMessage2())
+	otr := context{otrV3{}, fixtureRand()}
+	err := otr.verifySMPSecondParameters(fixtureMessage2())
 	assertDeepEquals(t, err, nil)
 }
 
-func defaultSmp1() smp1 {
-	var s smp1
-	s.a2 = bnFromHex("ABCDABCDABCDABCDABCDABCDABCDABCD")
-	s.a3 = bnFromHex("BBCDABCDABCDABCDABCDABCDABCDABCD")
-	s.msg = newDefaultMessage1()
-	return s
-}
-
 func Test_generateSMPThirdParameters_generatesLongerValuesForR4WithProtocolV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	assertDeepEquals(t, smp.r4, new(big.Int).SetBytes(hexToByte("ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+	otr := context{otrV3{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.r4, fixtureLong1)
 }
 
 func Test_generateSMPThirdParameters_generatesLongerValuesForR5WithProtocolV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	assertDeepEquals(t, smp.r5, new(big.Int).SetBytes(hexToByte("BBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+	otr := context{otrV3{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.r5, fixtureLong2)
 }
 
 func Test_generateSMPThirdParameters_generatesLongerValuesForR6WithProtocolV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	assertDeepEquals(t, smp.r6, new(big.Int).SetBytes(hexToByte("CBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+	otr := context{otrV3{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.r6, fixtureLong3)
 }
 
 func Test_generateSMPThirdParameters_generatesLongerValuesForR7WithProtocolV3(t *testing.T) {
-	otr := context{otrV3{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	assertDeepEquals(t, smp.r7, new(big.Int).SetBytes(hexToByte("DBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD")))
+	otr := context{otrV3{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.r7, fixtureLong4)
 }
 
 func Test_generateSMPThirdParameters_generatesShorterValuesForR4WithProtocolV2(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	assertDeepEquals(t, smp.r4, new(big.Int).SetBytes(hexToByte("ABCDABCDABCDABCDABCDABCDABCDABCD")))
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.r4, fixtureShort1)
 }
 
 func Test_generateSMPThirdParameters_computesG2Correctly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("8B9E73CCA287ED2F46C011090EFFFCFE394BED51A3AD23E9F7815D9C9C20184DDC0ACC2CB0CDD3B8630C453339B6EF7158AF705530E33CCAC72A855164CA038DA837942F3DE762EA9AF2942C9355DEE8EB8B7CE94A3ADE33D6A7C79C2A879239C08AF22E6987B9345C5E093D33BC8734AAA4019F614DFD65500107756CF6D0FF4591B482D975CA6E43B9F706E969A987306A1A1B905385FFD13D7A24DABC6D513F32A46041CD760E404D1A4C7B6C0B426589BA3EC3D252110578740CCEE4BCB3")
-	assertDeepEquals(t, smp.msg.g2, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.g2, fixtureMessage3().g2)
 }
 
 func Test_generateSMPThirdParameters_computesG3Correctly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("75CB16D985029162ABA03D37B9EF375DCA716FC2A4F7D25C6E1B6C511622A47567999230706EDA31E44B47C1D7F61DF12F49E59142FDA0AF377D2C5972AD663213DB031F131B2ABC557E507E6FFBF4DC4A5B44CD0CDF985BC247AFB2E5733513F4F022FEB5E7A955611175B0FFCFE54763CF7430CE0EDE472A7AB5FC0F9F039FCF476BE22EC66F8B96759E44A946180F27D16D6C37067E7F1ACD3B691B5D56A90B641CC9C8FDAC1C41E310E469DB4E2F83D28C3DDA51B2A36BCBC43D70F0A093")
-	assertDeepEquals(t, smp.msg.g3, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.g3, fixtureMessage3().g3)
 }
 
 func Test_generateSMPThirdParameters_computesPaCorrectly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("8EE76C232535FA68E18C13817056B7415E8FE8224AD15FA317C8D6F1AF17A0E45F538930F10DB29943E54E8D39D145E51B53D6A58C9E499A6353BBF378FD9D32370105EA4DEF5C88B755EFA485EF70C9097DEEA76A853F32CE98AA7ECE96073C0ABEDC91D1C9C0E092E86D36F4F1319EC7E8E40D4156F04CF18D7A79B01D44EBBB685F272FA39AA8C90662E4D8FBFB3F0A9F06478366C6708741F26FFA5F492CDD07D1F73A93BC18B3ECBE9F4071EC9FE600BCB67A8BC76920ED2C61BB94D07C")
-	assertDeepEquals(t, smp.msg.pa, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.pa, fixtureMessage3().pa)
 }
 
 func Test_generateSMPThirdParameters_computesQaCorrectly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("5533DDDE3704615657E1A654293D110C1557E6913DD8B79A5F15B5AF1F276153DBB8DEC7E17D157CF20DD54BC9B9373D6D0F2B44B3E88AD6F926B0D18DD87940C6E969184F1B184E441D379234C52EBB67584863925D775A423A962DC88A1A2E58152C1E7458BDF6FE762C5EA580A46C9AF6AD34D47F26B12D514F637FFD1D15D1CFB3FF330B53F1213D759A8F528ED4C22A9003A186A65F509EC96DB02420EF24D43E08FF469A0B4558B3A39778668E463647858C241B81F61A6C97FD076D72")
-	assertDeepEquals(t, smp.msg.qa, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.qa, fixtureMessage3().qa)
 }
 
 func Test_generateSMPThirdParameters_computesCPCorrectly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("F1F0147F5E53C85F410DB88C0C04370E45C341B735DA7CAF363B2497A358FCE7")
-	assertDeepEquals(t, smp.msg.cp, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.cp, fixtureMessage3().cp)
 }
 
 func Test_generateSMPThirdParameters_computesD5Correctly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("7FFFFFFFFFFFFFFFE487ED5110B4611A62633145C06E0E68948127044533E63A0105DF531D89CD9128A5043CC71A026EF7CA8CD9E69D218D98158536F92F8A1BA7F09AB6B6A8E122F242DABB312F3F637A262174D31BF6B585FFAE5B7A035BF6F71C35FDAD44CFD2D74F9208BE258FF324943328F6722D9EE1003E5C50B1DF82CC6D241B0E2AE9CD348B1FD47E9267AF1F54F142B3021B8C3E37676EA9D9D2CEFC3191FB331434AFD0328AC85221A9BC5F4D56D88694EC56144A03179AA1D9D1")
-	assertDeepEquals(t, smp.msg.d5, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.d5, fixtureMessage3().d5)
 }
 
 func Test_generateSMPThirdParameters_computesD6Correctly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("7FFFFFFFFFFFFFFFE487ED5110B4611A62633145C06E0E68948127044533E63A0105DF531D89CD9128A5043CC71A026EF7CA8CD9E69D218D98158536F92F8A1BA7F09AB6B6A8E122F242DABB312F3F637A262174D31BF6B585FFAE5B7A035BF6F71C35FDAD44CFD2D74F9208BE258FF324943328F6722D9EE1003E5C50B1DF81FEAF9103645C8C45A77954B47CFAFDA9F63D78BB41138DD8D85DA319B2F61CDE6DE2F21A5B4FAF4BFE57D3FBC5289E2B983E28ABB5A9D7A30DEDD2B3A72541F7")
-	assertDeepEquals(t, smp.msg.d6, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.d6, fixtureMessage3().d6)
 }
 
 func Test_generateSMPThirdParameters_computesRaCorrectly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("6ca88ee8cf412f4ed088d67c2e22f28569c83833669abf0393688929b4a4e85cbdbcdbd3e30a5291edf31f108e10f296413d686a3567a7859e889dad8cf4089e9f6dd1299aba36fa09742e404f80eaadbcecb0ac38c861f0c15a606bcc33987c3611cf72ebccf5fbe055b28f14ff6ea78fc793287b44f4e832e97234ef1f26147d4bf9ad510bf6f8a3319cafaf7bad6af55d9d3f3e0bdc3877538e2b5c0b01d0eb1b5e4945f469ed9fccfb8ed5f588e7e4badaed7f9f4a3a205a594adcf3eb1e")
-	assertDeepEquals(t, smp.msg.ra, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.ra, fixtureMessage3().ra)
 }
 
 func Test_generateSMPThirdParameters_computesCrCorrectly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("598d52c0ffdb62c6fc98e4b3ebafc06313fb5a60fc9e3887eca20d7d251e9954")
-	assertDeepEquals(t, smp.msg.cr, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.cr, fixtureMessage3().cr)
 }
 
 func Test_generateSMPThirdParameters_computesD7Correctly(t *testing.T) {
-	otr := context{otrV2{}, defaultRand()}
-	smp := otr.generateSMPThirdParameters(newDefaultSecret(), defaultSmp1(), defaultMessage2())
-	expected := bnFromHex("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af800080da56542af5a4ac8a711e16d8a7c7e43f631013427303aa7329b9e6c09bcc217f11d687257f7bd4389b9d9dc788")
-	assertDeepEquals(t, smp.msg.d7, expected)
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.msg.d7, fixtureMessage3().d7)
+}
+
+func Test_verifySMP3Parameters_failsIfPaIsNotInTheGroupForProtocolV3(t *testing.T) {
+	otr := context{otrV3{}, fixtureRand()}
+	err := otr.verifySMP3Parameters(smpMessage3{pa: big.NewInt(1)})
+	assertDeepEquals(t, err, errors.New("Pa is an invalid group element"))
+}
+
+func Test_verifySMP3Parameters_failsIfQaIsNotInTheGroupForProtocolV3(t *testing.T) {
+	otr := context{otrV3{}, fixtureRand()}
+	err := otr.verifySMP3Parameters(smpMessage3{
+		pa: big.NewInt(2),
+		qa: big.NewInt(1),
+	})
+	assertDeepEquals(t, err, errors.New("Qa is an invalid group element"))
+}
+
+func Test_verifySMP3Parameters_failsIfRaIsNotInTheGroupForProtocolV3(t *testing.T) {
+	otr := context{otrV3{}, fixtureRand()}
+	err := otr.verifySMP3Parameters(smpMessage3{
+		pa: big.NewInt(2),
+		qa: big.NewInt(2),
+		ra: big.NewInt(1),
+	})
+	assertDeepEquals(t, err, errors.New("Ra is an invalid group element"))
 }
