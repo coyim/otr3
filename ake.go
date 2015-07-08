@@ -10,12 +10,12 @@ import (
 )
 
 type AKE struct {
-	Rand            io.Reader
-	gx              *big.Int
-	gy              *big.Int
-	protocolVersion [2]byte
-	sendInstag      uint32
-	receiveInstag   uint32
+	Rand                io.Reader
+	gx                  *big.Int
+	gy                  *big.Int
+	protocolVersion     [2]byte
+	senderInstanceTag   uint32
+	receiverInstanceTag uint32
 }
 
 const (
@@ -113,8 +113,8 @@ func (ake *AKE) DHCommitMessage() ([]byte, error) {
 
 	out = appendBytes(out, ake.protocolVersion[:])
 	out = append(out, msgTypeDHCommit)
-	out = appendWord(out, ake.sendInstag)
-	out = appendWord(out, ake.receiveInstag)
+	out = appendWord(out, ake.senderInstanceTag)
+	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendBytes(out, encryptedGx)
 	out = appendBytes(out, ake.hashedGx())
 
@@ -126,8 +126,8 @@ func (ake *AKE) DHKeyMessage() []byte {
 	ake.initGy()
 	out = appendBytes(out, ake.protocolVersion[:])
 	out = append(out, msgTypeDHKey)
-	out = appendWord(out, ake.sendInstag)
-	out = appendWord(out, ake.receiveInstag)
+	out = appendWord(out, ake.senderInstanceTag)
+	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendMPI(out, ake.gy)
 
 	return out
