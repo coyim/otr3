@@ -15,8 +15,7 @@ func appendBytes(l, r []byte) []byte {
 }
 
 func appendMPI(l []byte, r *big.Int) []byte {
-	mpiBytes := r.Bytes()
-	return append(appendWord(l, uint32(len(mpiBytes))), mpiBytes...)
+	return appendBytes(l, r.Bytes())
 }
 
 func appendMPIs(l []byte, r ...*big.Int) []byte {

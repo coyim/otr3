@@ -8,13 +8,14 @@ import (
 
 const smpVersion = 1
 
-type smp struct {
+type smpA struct {
 	a2, a3 *big.Int
 	r2, r3 *big.Int
 	msg1   smpMessage1
 }
 
 type smpB struct {
+	y                  *big.Int
 	b2, b3             *big.Int
 	r2, r3, r4, r5, r6 *big.Int
 	msg2               smpMessage2
@@ -28,6 +29,11 @@ type smpMessage1 struct {
 
 type smpMessage2 struct {
 	g2b, g3b *big.Int
+	c2, c3   *big.Int
+	d2, d3   *big.Int
+	g2, g3   *big.Int
+	pb, qb   *big.Int
+	cp       *big.Int
 }
 
 func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) []byte {
@@ -40,9 +46,9 @@ func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret 
 	return h.Sum(nil)
 }
 
-func (c *context) generateInitialParameters() smp {
+func (c *context) generateInitialParameters() smpA {
 	b := make([]byte, c.parameterLength(), c.parameterLength())
-	s := smp{}
+	s := smpA{}
 	s.a2 = c.randMPI(b)
 	s.a3 = c.randMPI(b)
 	s.r2 = c.randMPI(b)
@@ -56,7 +62,7 @@ func generateZKP(r, a *big.Int, ix byte) (c, d *big.Int) {
 	return
 }
 
-func generateMessageOneFor(s smp) smpMessage1 {
+func generateMessageOneFor(s smpA) smpMessage1 {
 	var m smpMessage1
 
 	m.g2a = modExp(g1, s.a2)
@@ -67,7 +73,7 @@ func generateMessageOneFor(s smp) smpMessage1 {
 	return m
 }
 
-func (c *context) generateSMPStartParameters() smp {
+func (c *context) generateSMPStartParameters() smpA {
 	s := c.generateInitialParameters()
 	s.msg1 = generateMessageOneFor(s)
 	return s
@@ -113,17 +119,31 @@ func (c *context) generateSecondaryParameters() smpB {
 	return s
 }
 
-func generateMessageTwoFor(s smpB) smpMessage2 {
+func generateMessageTwoFor(s smpB, s1 smpMessage1) smpMessage2 {
 	var m smpMessage2
 
 	m.g2b = modExp(g1, s.b2)
 	m.g3b = modExp(g1, s.b3)
 
+	m.c2, m.d2 = generateZKP(s.r2, s.b2, 3)
+	m.c3, m.d3 = generateZKP(s.r3, s.b3, 4)
+
+	m.g2 = modExp(s1.g2a, s.b2)
+	m.g3 = modExp(s1.g3a, s.b3)
+
+	m.pb = modExp(m.g3, s.r4)
+	m.qb = mulMod(modExp(g1, s.r4), modExp(m.g2, s.y), p)
+
+	m.cp = hashMPIsBN(nil, 5,
+		modExp(m.g3, s.r5),
+		mulMod(modExp(g1, s.r5), modExp(m.g2, s.r6), p))
+
 	return m
 }
 
-func (c *context) generateSMPSecondParameters() smpB {
+func (c *context) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) smpB {
 	s := c.generateSecondaryParameters()
-	s.msg2 = generateMessageTwoFor(s)
+	s.y = secret
+	s.msg2 = generateMessageTwoFor(s, s1)
 	return s
 }

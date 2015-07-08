@@ -2,6 +2,11 @@ package otr3
 
 import "math/big"
 
+func bnFromHex(s string) *big.Int {
+	res, _ := new(big.Int).SetString(s, 16)
+	return res
+}
+
 func modExp(g, x *big.Int) *big.Int {
 	return new(big.Int).Exp(g, x, p)
 }
