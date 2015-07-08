@@ -14,10 +14,20 @@ type smp struct {
 	msg1   smpMessage1
 }
 
+type smpB struct {
+	b2, b3             *big.Int
+	r2, r3, r4, r5, r6 *big.Int
+	msg2               smpMessage2
+}
+
 type smpMessage1 struct {
 	g2a, g3a *big.Int
 	c2, c3   *big.Int
 	d2, d3   *big.Int
+}
+
+type smpMessage2 struct {
+	g2b, g3b *big.Int
 }
 
 func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) []byte {
@@ -88,4 +98,32 @@ func (c *context) verifySMPStartParameters(msg smpMessage1) error {
 	}
 
 	return nil
+}
+
+func (c *context) generateSecondaryParameters() smpB {
+	b := make([]byte, c.parameterLength(), c.parameterLength())
+	s := smpB{}
+	s.b2 = c.randMPI(b)
+	s.b3 = c.randMPI(b)
+	s.r2 = c.randMPI(b)
+	s.r3 = c.randMPI(b)
+	s.r4 = c.randMPI(b)
+	s.r5 = c.randMPI(b)
+	s.r6 = c.randMPI(b)
+	return s
+}
+
+func generateMessageTwoFor(s smpB) smpMessage2 {
+	var m smpMessage2
+
+	m.g2b = modExp(g1, s.b2)
+	m.g3b = modExp(g1, s.b3)
+
+	return m
+}
+
+func (c *context) generateSMPSecondParameters() smpB {
+	s := c.generateSecondaryParameters()
+	s.msg2 = generateMessageTwoFor(s)
+	return s
 }
