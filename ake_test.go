@@ -37,7 +37,7 @@ func TestDHCommitMessage(t *testing.T) {
 	ake.sendInstag = 0x00000001
 	ake.receiveInstag = 0x00000001
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:]), hex.EncodeToString(r[:]), hex.EncodeToString(r[:])})
-	result := ake.DHCommitMessage()
+
 	var out []byte
 	out = appendBytes(out, ake.protocolVersion[:])
 	out = append(out, msgTypeDHCommit)
@@ -45,6 +45,9 @@ func TestDHCommitMessage(t *testing.T) {
 	out = appendWord(out, ake.receiveInstag)
 	out = appendBytes(out, expectedEncryptedGxValue)
 	out = appendBytes(out, expectedHashedGxValue)
+
+	result, err := ake.DHCommitMessage()
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
 
@@ -53,13 +56,16 @@ func TestDHKeyMessage(t *testing.T) {
 	ake.protocolVersion = [2]byte{0x00, 0x03}
 	ake.sendInstag = 0x00000001
 	ake.receiveInstag = 0x00000001
+
 	result := ake.DHKeyMessage()
+
 	var out []byte
 	out = appendBytes(out, ake.protocolVersion[:])
 	out = append(out, msgTypeDHKey)
 	out = appendWord(out, ake.sendInstag)
 	out = appendWord(out, ake.receiveInstag)
 	out = appendMPI(out, ake.gy)
+
 	assertDeepEquals(t, result, out)
 }
 
@@ -67,7 +73,9 @@ func Test_encryptedGx(t *testing.T) {
 	var ake AKE
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:]), hex.EncodeToString(r[:])})
 	ake.initGx()
-	encryptGx := ake.encryptedGx()
+
+	encryptGx, err := ake.encryptedGx()
+	assertEquals(t, err, nil)
 	assertEquals(t, len(encryptGx), len(appendMPI([]byte{}, ake.gx)))
 }
 
