@@ -437,7 +437,7 @@ func Test_verifySMP3Parameters_failsIfRaIsNotInTheGroupForProtocolV3(t *testing.
 }
 
 func Test_verifySMP3Parameters_succeedsForValidZKPS(t *testing.T) {
-	otr := context{otrV2{}, fixtureRand()}
+	otr := context{otrV3{}, fixtureRand()}
 	err := otr.verifySMP3Parameters(fixtureMessage1(), fixtureMessage3())
 	assertDeepEquals(t, err, nil)
 }
