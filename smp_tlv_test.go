@@ -8,20 +8,27 @@ const (
 	tlvTypeLen  = 2
 	tlvSizeLen  = 2
 	mpiCountLen = 4
-	lenOfRb     = 192
-	lenOfCr     = 32
-	lenOfD7     = 192
+	c2Len       = 32
+	c3Len       = 32
+	cpLen       = 32
+	crLen       = 32
+	d2Len       = 192
+	d3Len       = 192
+	d5Len       = 192
+	d6Len       = 192
+	d7Len       = 192
 	g2aLen      = 192
+	g2bLen      = 192
 	g3aLen      = 192
-	c2len       = 32
-	c3len       = 32
-	d2len       = 192
-	d3len       = 192
+	g3bLen      = 192
+	pbLen       = 192
+	qbLen       = 192
+	rbLen       = 192
 )
 
 func Test_smpMessage1TLV(t *testing.T) {
-	expectedLength := tlvTypeLen + tlvSizeLen + mpiCountLen + (4 + g2aLen) + (4 + c2len) + (4 + d2len) +
-		(4 + g3aLen) + (4 + c3len) + (4 + d3len)
+	expectedLength := tlvTypeLen + tlvSizeLen + mpiCountLen + (4 + g2aLen) + (4 + c2Len) + (4 + d2Len) +
+		(4 + g3aLen) + (4 + c3Len) + (4 + d3Len)
 
 	exp := []byte{
 		0x00, 0x02,
@@ -38,7 +45,7 @@ func Test_smpMessage1TLV(t *testing.T) {
 }
 
 func Test_smpMessage4TLV(t *testing.T) {
-	expectedLength := tlvTypeLen + tlvSizeLen + mpiCountLen + (4 + lenOfRb) + (4 + lenOfCr) + (4 + lenOfD7)
+	expectedLength := tlvTypeLen + tlvSizeLen + mpiCountLen + (4 + rbLen) + (4 + crLen) + (4 + d7Len)
 	exp := []byte{
 		0x00, 0x05,
 		0x01, 0xB0,
