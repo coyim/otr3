@@ -18,6 +18,10 @@ type smpMessage1 struct {
 	d2, d3   *big.Int
 }
 
+func (m *smpMessage1) tlv() []byte {
+	return genSMPTLV(2, m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
+}
+
 func (c *context) generateInitialParameters() smp1 {
 	b := make([]byte, c.parameterLength())
 	s := smp1{}

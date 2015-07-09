@@ -60,3 +60,16 @@ func verifyZKP4(cr, g3a, d7, qaqb, ra *big.Int, ix byte) bool {
 	t := hashMPIsBN(nil, ix, l, r)
 	return eq(cr, t)
 }
+
+func genSMPTLV(tp byte, mpis ...*big.Int) []byte {
+	data := make([]byte, 0, 1000)
+
+	data = appendWord(data, uint32(len(mpis)))
+	data = appendMPIs(data, mpis...)
+	length := uint16(len(data))
+
+	result := make([]byte, 0, length+4)
+	result = append(result, 0x00, tp)
+	result = appendShort(result, length)
+	return append(result, data...)
+}

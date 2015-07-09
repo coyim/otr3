@@ -19,16 +19,7 @@ type smpMessage4 struct {
 }
 
 func (m *smpMessage4) tlv() []byte {
-	data := make([]byte, 0, 1000)
-
-	data = appendWord(data, uint32(3))
-	data = appendMPIs(data, m.rb, m.cr, m.d7)
-	length := uint16(len(data))
-
-	result := make([]byte, 0, length+4)
-	result = append(result, 0x00, 0x05)
-	result = appendShort(result, length)
-	return append(result, data...)
+	return genSMPTLV(5, m.rb, m.cr, m.d7)
 }
 
 func (c *context) generateSMPFourthParameters(secret *big.Int, s2 smp2, m3 smpMessage3) smp4 {
