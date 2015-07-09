@@ -33,12 +33,12 @@ func TestDHCommitMessage(t *testing.T) {
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x[:]), hex.EncodeToString(r[:])})
 
 	var out []byte
-	out = appendBytes(out, ake.protocolVersion[:])
+	out = appendData(out, ake.protocolVersion[:])
 	out = append(out, msgTypeDHCommit)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
-	out = appendBytes(out, expectedEncryptedGxValue)
-	out = appendBytes(out, expectedHashedGxValue)
+	out = appendData(out, expectedEncryptedGxValue)
+	out = appendData(out, expectedHashedGxValue)
 
 	result, err := ake.DHCommitMessage()
 	assertEquals(t, err, nil)
@@ -54,7 +54,7 @@ func TestDHKeyMessage(t *testing.T) {
 	result, _ := ake.DHKeyMessage()
 
 	var out []byte
-	out = appendBytes(out, ake.protocolVersion[:])
+	out = appendData(out, ake.protocolVersion[:])
 	out = append(out, msgTypeDHKey)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -71,13 +71,13 @@ func TestRevealSigMessage(t *testing.T) {
 	ake.receiverInstanceTag = 0x00000001
 	result := ake.RevealSigMessage()
 	var out []byte
-	out = appendBytes(out, ake.protocolVersion[:])
+	out = appendData(out, ake.protocolVersion[:])
 	out = append(out, msgTypeRevelSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
-	out = appendBytes(out, ake.r[:])
-	out = appendBytes(out, expectedEncryptedSigValue)
-	out = appendBytes(out, expectedMACSigValue)
+	out = appendData(out, ake.r[:])
+	out = appendData(out, expectedEncryptedSigValue)
+	out = appendData(out, expectedMACSigValue)
 	assertDeepEquals(t, result, out)
 }
 

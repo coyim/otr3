@@ -10,12 +10,12 @@ func appendWord(l []byte, r uint32) []byte {
 	return append(l, byte(r>>24), byte(r>>16), byte(r>>8), byte(r))
 }
 
-func appendBytes(l, r []byte) []byte {
+func appendData(l, r []byte) []byte {
 	return append(appendWord(l, uint32(len(r))), r...)
 }
 
 func appendMPI(l []byte, r *big.Int) []byte {
-	return appendBytes(l, r.Bytes())
+	return appendData(l, r.Bytes())
 }
 
 func appendMPIs(l []byte, r ...*big.Int) []byte {

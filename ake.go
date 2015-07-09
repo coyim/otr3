@@ -130,7 +130,7 @@ func (ake *AKE) generateEncryptedSignature() []byte {
 	ctr := cipher.NewCTR(aesCipher, iv[:])
 	ctr.XORKeyStream(xb, xb)
 
-	return appendBytes(nil, xb)
+	return appendData(nil, xb)
 }
 
 func (ake *AKE) DHCommitMessage() ([]byte, error) {
@@ -149,12 +149,12 @@ func (ake *AKE) DHCommitMessage() ([]byte, error) {
 		return nil, err
 	}
 
-	out = appendBytes(out, ake.protocolVersion[:])
+	out = appendData(out, ake.protocolVersion[:])
 	out = append(out, msgTypeDHCommit)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
-	out = appendBytes(out, encryptedGx)
-	out = appendBytes(out, ake.hashedGx())
+	out = appendData(out, encryptedGx)
+	out = appendData(out, ake.hashedGx())
 
 	return out, nil
 }
@@ -168,7 +168,7 @@ func (ake *AKE) DHKeyMessage() ([]byte, error) {
 	}
 	ake.y = y
 	ake.gy = new(big.Int).Exp(g1, ake.y, p)
-	out = appendBytes(out, ake.protocolVersion[:])
+	out = appendData(out, ake.protocolVersion[:])
 	out = append(out, msgTypeDHKey)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -179,12 +179,12 @@ func (ake *AKE) DHKeyMessage() ([]byte, error) {
 
 func (ake *AKE) RevealSigMessage() []byte {
 	var out []byte
-	out = appendBytes(out, ake.protocolVersion[:])
+	out = appendData(out, ake.protocolVersion[:])
 	out = append(out, msgTypeRevelSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
-	out = appendBytes(out, ake.r[:])
-	out = appendBytes(out, ake.generateEncryptedSignature())
-	//	out = appendBytes(out, ake.macSig())
+	out = appendData(out, ake.r[:])
+	out = appendData(out, ake.generateEncryptedSignature())
+	//	out = appendData(out, ake.macSig())
 	return out
 }
