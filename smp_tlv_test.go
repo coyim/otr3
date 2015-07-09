@@ -44,6 +44,26 @@ func Test_smpMessage1TLV(t *testing.T) {
 	assertDeepEquals(t, tlv[:len(exp)], exp)
 }
 
+func Test_smpMessage2TLV(t *testing.T) {
+	expectedLength := tlvTypeLen + tlvSizeLen + mpiCountLen +
+		(4 + g2bLen) + (4 + c2Len) + (4 + d2Len) + (4 + g3bLen) +
+		(4 + c3Len) + (4 + d3Len) + (4 + pbLen) + (4 + qbLen) +
+		(4 + cpLen) + (4 + d5Len) + (4 + d6Len)
+
+	exp := []byte{
+		0x00, 0x03,
+		0x06, 0x90,
+		0x00, 0x00, 0x00, 0x0b,
+		0x00, 0x00, 0x00, 0xC0,
+		0x8A, 0x88, 0xC3, 0x45,
+	}
+
+	msg := fixtureMessage2()
+	tlv := msg.tlv()
+	assertEquals(t, len(tlv), expectedLength)
+	assertDeepEquals(t, tlv[:len(exp)], exp)
+}
+
 func Test_smpMessage4TLV(t *testing.T) {
 	expectedLength := tlvTypeLen + tlvSizeLen + mpiCountLen + (4 + rbLen) + (4 + crLen) + (4 + d7Len)
 	exp := []byte{
