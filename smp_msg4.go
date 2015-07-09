@@ -11,6 +11,7 @@ type smp4 struct {
 	msg smpMessage4
 }
 
+// Like smpMessage1, contains only what is supposed to be sent
 type smpMessage4 struct {
 	cr *big.Int
 	d7 *big.Int

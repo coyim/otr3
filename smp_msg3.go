@@ -5,20 +5,24 @@ import (
 	"math/big"
 )
 
+// FIXME should store g3b, (Pa / Pb), (Qa / Qb) and Ra
+// after generating smpMessage3
+
 type smp3 struct {
 	x              *big.Int
 	r4, r5, r6, r7 *big.Int
 	msg            smpMessage3
 }
 
+// FIXME unlike smpMessage1, does not contain only data to be sent
 type smpMessage3 struct {
-	g2, g3     *big.Int
+	g2, g3     *big.Int // should be stored(?), not sent
 	pa, qa     *big.Int
 	cp         *big.Int
 	d5, d6, d7 *big.Int
 	ra         *big.Int
 	cr         *big.Int
-	qaqb, papb *big.Int
+	qaqb, papb *big.Int // should be stored, not sent
 }
 
 func (c *context) generateThirdParameters() smp3 {

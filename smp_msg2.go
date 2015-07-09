@@ -5,6 +5,9 @@ import (
 	"math/big"
 )
 
+// FIXME should store g3a, g2, g3, b3, Pb and Qb
+// after generating smpMessage2
+
 type smp2 struct {
 	y                  *big.Int
 	b2, b3             *big.Int
@@ -12,11 +15,12 @@ type smp2 struct {
 	msg                smpMessage2
 }
 
+// FIXME unlike smpMessage1, does not contain only data to be sent
 type smpMessage2 struct {
 	g2b, g3b *big.Int
 	c2, c3   *big.Int
 	d2, d3   *big.Int
-	g2, g3   *big.Int
+	g2, g3   *big.Int // should be stored, not sent
 	pb, qb   *big.Int
 	cp       *big.Int
 	d5, d6   *big.Int
