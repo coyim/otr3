@@ -15,7 +15,6 @@ type smp3 struct {
 	msg            smpMessage3
 }
 
-// FIXME unlike smpMessage1, does not contain only data to be sent
 type smpMessage3 struct {
 	pa, qa     *big.Int
 	cp         *big.Int

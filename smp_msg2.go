@@ -16,7 +16,6 @@ type smp2 struct {
 	msg                smpMessage2
 }
 
-// FIXME unlike smpMessage1, does not contain only data to be sent
 type smpMessage2 struct {
 	g2b, g3b *big.Int
 	c2, c3   *big.Int

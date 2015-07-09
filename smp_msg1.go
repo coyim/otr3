@@ -11,7 +11,6 @@ type smp1 struct {
 	msg    smpMessage1
 }
 
-// Contains only what is supposed to be sent
 type smpMessage1 struct {
 	g2a, g3a *big.Int
 	c2, c3   *big.Int
