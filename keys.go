@@ -1,33 +1,149 @@
 package otr3
 
 import (
+	"bufio"
 	"crypto/dsa"
 	"io"
 	"math/big"
+	"os"
 
 	"github.com/twstrike/otr3/sexp"
 )
 
+// PublicKey is a public key used to verify signed messages
 type PublicKey struct {
 	dsa.PublicKey
 }
 
+// PrivateKey is a private key used to sign messages
 type PrivateKey struct {
 	PublicKey
 	dsa.PrivateKey
 }
 
-func readKey(data io.Reader) *PrivateKey {
-	var pk PrivateKey
-	pk.PrivateKey.P = bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857")
-	pk.PrivateKey.Q = bnFromHex("00997BD266EF7B1F60A5C23F3A741F2AEFD07A2081")
-	return &pk
+// Account is a holder for the private key associated with an account
+type Account struct {
+	name     string
+	protocol string
+	key      *PrivateKey
 }
 
-func readParameter(data io.Reader) (tag string, value *big.Int) {
-	result := sexp.Parse(data)
-	tag = result.First().String()
-	val := result.Second().First().String()
-	value, _ = new(big.Int).SetString(val[1:len(val)-1], 16)
+// ImportKeysFromFile will read the libotr formatted file given and return all accounts defined in it
+func ImportKeysFromFile(fname string) ([]*Account, error) {
+	f, err := os.Open(fname)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return ImportKeys(f), nil
+}
+
+// ImportKeys will read the libotr formatted data given and return all accounts defined in it
+func ImportKeys(r io.Reader) []*Account {
+	return readAccounts(bufio.NewReader(r))
+}
+
+func readSymbolAndExpect(r *bufio.Reader, s string) bool {
+	res := sexp.ReadSymbol(r).Value().(string)
+	return res == s
+}
+
+func assignParameter(k *dsa.PrivateKey, s string, v *big.Int) {
+	switch s {
+	case "g":
+		k.G = v
+	case "p":
+		k.P = v
+	case "q":
+		k.Q = v
+	case "x":
+		k.X = v
+	case "y":
+		k.Y = v
+	}
+}
+
+func readAccounts(r *bufio.Reader) []*Account {
+	sexp.ReadListStart(r)
+	readSymbolAndExpect(r, "privkeys")
+	var as []*Account
+	for {
+		a := readAccount(r)
+		if a == nil {
+			break
+		}
+		as = append(as, a)
+	}
+	sexp.ReadListEnd(r)
+	return as
+}
+
+func readAccountName(r *bufio.Reader) string {
+	sexp.ReadListStart(r)
+	readSymbolAndExpect(r, "name")
+	nm := sexp.ReadString(r).Value().(string)
+	sexp.ReadListEnd(r)
+	return nm
+}
+
+func readAccountProtocol(r *bufio.Reader) string {
+	sexp.ReadListStart(r)
+	readSymbolAndExpect(r, "protocol")
+	nm := sexp.ReadSymbol(r).Value().(string)
+	sexp.ReadListEnd(r)
+	return nm
+}
+
+func readAccount(r *bufio.Reader) *Account {
+	if !sexp.ReadListStart(r) {
+		return nil
+	}
+	if !readSymbolAndExpect(r, "account") {
+		return nil
+	}
+	a := new(Account)
+	a.name = readAccountName(r)
+	a.protocol = readAccountProtocol(r)
+	a.key = readPrivateKey(r)
+	if !sexp.ReadListEnd(r) {
+		return nil
+	}
+	return a
+}
+
+func readPrivateKey(r *bufio.Reader) *PrivateKey {
+	sexp.ReadListStart(r)
+	readSymbolAndExpect(r, "private-key")
+	k := new(PrivateKey)
+	k.PrivateKey = *readDSAPrivateKey(r)
+	sexp.ReadListEnd(r)
+	return k
+}
+
+func readDSAPrivateKey(r *bufio.Reader) *dsa.PrivateKey {
+	sexp.ReadListStart(r)
+	readSymbolAndExpect(r, "dsa")
+	k := new(dsa.PrivateKey)
+	for {
+		tag, value, end := readParameter(r)
+		if end {
+			break
+		}
+		assignParameter(k, tag, value)
+	}
+	sexp.ReadListEnd(r)
+	return k
+}
+
+func readParameter(r *bufio.Reader) (tag string, value *big.Int, end bool) {
+	if !sexp.ReadListStart(r) {
+		return "", nil, true
+	}
+	tag = sexp.ReadSymbol(r).Value().(string)
+	value = sexp.ReadBigNum(r).Value().(*big.Int)
+	end = false
+	if !sexp.ReadListEnd(r) {
+		return "", nil, true
+	}
 	return
 }

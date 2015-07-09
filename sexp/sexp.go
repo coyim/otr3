@@ -5,107 +5,101 @@ import (
 	"io"
 )
 
-type value interface {
-	First() value
-	Second() value
+// Value is an S-Expression value
+type Value interface {
+	First() Value
+	Second() Value
+	Value() interface{}
 	String() string
 }
 
-type snil struct{}
-
-type atom struct {
-	val string
+func peek(r *bufio.Reader) (c byte, e error) {
+	c, e = r.ReadByte()
+	r.UnreadByte()
+	return
 }
 
-type cons struct {
-	first  value
-	second value
-}
-
-func (l cons) First() value {
-	return l.first
-}
-
-func (l cons) Second() value {
-	return l.second
-}
-
-func (l cons) String() string {
-	panic("not valid to call String on a list")
-}
-
-func (l snil) First() value {
-	return l
-}
-
-func (l snil) Second() value {
-	return l
-}
-
-func (l snil) String() string {
-	panic("not valid to call String on nil")
-}
-
-func (l atom) First() value {
-	panic("not valid to call first on an atom")
-}
-
-func (l atom) Second() value {
-	panic("not valid to call second on an atom")
-}
-
-func (l atom) String() string {
-	return l.val
-}
-
-func Parse(r io.Reader) value {
-	res, _ := ParseItem(bufio.NewReader(r))
+// Read will read an S-Expression from the given reader
+func Read(r *bufio.Reader) Value {
+	res, _ := ReadValue(r)
 	return res
 }
 
-func ParseItem(r *bufio.Reader) (value, bool) {
-	c, err := r.ReadByte()
+// ReadWhitespace will read from the reader until no whitespace is encountered
+func ReadWhitespace(r *bufio.Reader) {
+	c, e := peek(r)
+	for e != io.EOF && isWhitespace(c) {
+		r.ReadByte()
+		c, e = peek(r)
+	}
+}
+
+// ReadValue will read and return an S-Expression value from the reader
+func ReadValue(r *bufio.Reader) (Value, bool) {
+	ReadWhitespace(r)
+	c, err := peek(r)
 	if err != nil {
 		return nil, true
 	}
 	switch c {
-	case ' ', '\t', '\n':
-		return ParseItem(r)
 	case '(':
-		return parseList(r), false
+		return ReadList(r), false
 	case ')':
 		return nil, true
-	// case '"':
-	// 	return parseString(r)
+	case '"':
+		return ReadString(r), false
+	case '#':
+		return ReadBigNum(r), false
 	default:
-		r.UnreadByte()
-		return parseAtom(r), false
+		return ReadSymbol(r), false
 	}
 }
 
-func isAtomCharacter(c byte) bool {
+func isWhitespace(c byte) bool {
 	switch c {
-	case ' ', '\t', '\n', '(', ')':
-		return false
+	case ' ', '\t', '\n', '\r':
+		return true
 	default:
+		return false
+	}
+}
+
+func isNotSymbolCharacter(c byte) bool {
+	if isWhitespace(c) {
 		return true
 	}
-}
-
-func parseList(r *bufio.Reader) value {
-	val, end := ParseItem(r)
-	if end {
-		return snil{}
+	switch c {
+	case '(', ')':
+		return true
+	default:
+		return false
 	}
-	return cons{val, parseList(r)}
 }
 
-func parseAtom(r *bufio.Reader) atom {
+func expect(r *bufio.Reader, c byte) bool {
+	ReadWhitespace(r)
+	res, err := r.ReadByte()
+	if res != c {
+		r.UnreadByte()
+	}
+
+	return res == c && err != io.EOF
+}
+
+func untilFixed(b byte) func(byte) bool {
+	return func(until byte) bool {
+		return until == b
+	}
+}
+
+// ReadDataUntil will read and collect bytes from the reader until it encounters EOF or the given function returns true.
+func ReadDataUntil(r *bufio.Reader, until func(byte) bool) []byte {
 	result := make([]byte, 0, 10)
-	c, err := r.ReadByte()
-	for err != io.EOF && isAtomCharacter(c) {
+	c, err := peek(r)
+	for err != io.EOF && !until(c) {
+		r.ReadByte()
 		result = append(result, c)
-		c, err = r.ReadByte()
+		c, err = peek(r)
 	}
-	return atom{string(result)}
+	return result
 }
