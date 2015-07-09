@@ -25,6 +25,10 @@ type smpMessage3 struct {
 	qaqb, papb *big.Int // should be stored, not sent
 }
 
+func (m *smpMessage3) tlv() []byte {
+	return genSMPTLV(4, m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
+}
+
 func (c *context) generateThirdParameters() smp3 {
 	b := make([]byte, c.parameterLength())
 	s := smp3{}

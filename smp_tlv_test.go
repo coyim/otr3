@@ -21,8 +21,11 @@ const (
 	g2bLen      = 192
 	g3aLen      = 192
 	g3bLen      = 192
+	paLen       = 192
 	pbLen       = 192
+	qaLen       = 192
 	qbLen       = 192
+	raLen       = 192
 	rbLen       = 192
 )
 
@@ -59,6 +62,26 @@ func Test_smpMessage2TLV(t *testing.T) {
 	}
 
 	msg := fixtureMessage2()
+	tlv := msg.tlv()
+	assertEquals(t, len(tlv), expectedLength)
+	assertDeepEquals(t, tlv[:len(exp)], exp)
+}
+
+func Test_smpMessage3TLV(t *testing.T) {
+	expectedLength := tlvTypeLen + tlvSizeLen + mpiCountLen +
+		(4 + paLen) + (4 + qaLen) + (4 + cpLen) +
+		(4 + d5Len) + (4 + d6Len) + (4 + raLen) +
+		(4 + crLen) + (4 + d7Len)
+
+	exp := []byte{
+		0x00, 0x04,
+		0x04, 0xE4,
+		0x00, 0x00, 0x00, 0x08,
+		0x00, 0x00, 0x00, 0xC0,
+		0x8E, 0xE7, 0x6C, 0x23,
+	}
+
+	msg := fixtureMessage3()
 	tlv := msg.tlv()
 	assertEquals(t, len(tlv), expectedLength)
 	assertDeepEquals(t, tlv[:len(exp)], exp)
