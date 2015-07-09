@@ -32,9 +32,10 @@ type akeKeys struct {
 }
 
 const (
-	msgTypeDHCommit = 2
-	msgTypeDHKey    = 10
-	msgTypeRevelSig = 17
+	msgTypeDHCommit  = 2
+	msgTypeDHKey     = 10
+	msgTypeRevealSig = 17
+	msgTypeSig       = 18
 )
 
 func (ake *AKE) rand() io.Reader {
@@ -103,7 +104,6 @@ func (ake *AKE) calcDHSharedSecret() *big.Int {
 }
 
 func (ake *AKE) generateEncryptedSignature() ([]byte, []byte) {
-
 	//Mb
 	publicKey, _ := hex.DecodeString("000000000080a5138eb3d3eb9c1d85716faecadb718f87d31aaed1157671d7fee7e488f95e8e0ba60ad449ec732710a7dec5190f7182af2e2f98312d98497221dff160fd68033dd4f3a33b7c078d0d9f66e26847e76ca7447d4bab35486045090572863d9e4454777f24d6706f63e02548dfec2d0a620af37bbc1d24f884708a212c343b480d00000014e9c58f0ea21a5e4dfd9f44b6a9f7f6a9961a8fa9000000803c4d111aebd62d3c50c2889d420a32cdf1e98b70affcc1fcf44d59cca2eb019f6b774ef88153fb9b9615441a5fe25ea2d11b74ce922ca0232bd81b3c0fcac2a95b20cb6e6c0c5c1ace2e26f65dc43c751af0edbb10d669890e8ab6beea91410b8b2187af1a8347627a06ecea7e0f772c28aae9461301e83884860c9b656c722f0000008065af8625a555ea0e008cd04743671a3cda21162e83af045725db2eb2bb52712708dc0cc1a84c08b3649b88a966974bde27d8612c2861792ec9f08786a246fcadd6d8d3a81a32287745f309238f47618c2bd7612cb8b02d940571e0f30b96420bcd462ff542901b46109b1e5ad6423744448d20a57818a8cbb1647d0fea3b664e")
 	var verifyData []byte
@@ -184,7 +184,7 @@ func (ake *AKE) DHKeyMessage() ([]byte, error) {
 func (ake *AKE) RevealSigMessage() []byte {
 	var out []byte
 	out = appendData(out, ake.protocolVersion[:])
-	out = append(out, msgTypeRevelSig)
+	out = append(out, msgTypeRevealSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendData(out, ake.r[:])
