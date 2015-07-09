@@ -25,7 +25,7 @@ func TestFullSMPHandshake(t *testing.T) {
 	s2 := bob.generateSMPSecondParameters(secret, s1.msg)
 
 	// Alice
-	err = alice.verifySMPSecondParameters(s2.msg)
+	err = alice.verifySMPSecondParameters(s1, s2.msg)
 	assertDeepEquals(t, err, nil)
 
 	// Alice -> Bob
@@ -34,21 +34,21 @@ func TestFullSMPHandshake(t *testing.T) {
 	s3 := alice.generateSMPThirdParameters(secret, s1, s2.msg)
 
 	// Bob
-	err = bob.verifySMP3Parameters(s1.msg, s3.msg)
+	err = bob.verifySMP3Parameters(s1.msg, s2.msg, s3.msg, s2)
 	assertDeepEquals(t, err, nil)
 
-	err = bob.verifySMP3ProtocolSuccess(s2, s3.msg)
+	err = bob.verifySMP3ProtocolSuccess(s3, s2, s3.msg)
 	assertDeepEquals(t, err, nil)
 
 	// Bob -> Alice
 	// Stores: ???
 	// Sends: Rb, cR and D7
-	s4 := bob.generateSMPFourthParameters(secret, s2, s3.msg)
+	s4 := bob.generateSMPFourthParameters(secret, s2, s3) // HERE
 
 	// Alice
-	err = alice.verifySMP4Parameters(s2.msg, s3.msg, s4.msg)
+	err = alice.verifySMP4Parameters(s3, s2.msg, s4.msg)
 	assertDeepEquals(t, err, nil)
 
-	err = alice.verifySMP4ProtocolSuccess(s1, s3.msg, s4.msg)
+	err = alice.verifySMP4ProtocolSuccess(s1, s3, s4.msg)
 	assertDeepEquals(t, err, nil)
 }

@@ -32,6 +32,14 @@ func Test_generateSMPSecondParameters_generatesShorterValuesForBAndRWithProtocol
 	assertDeepEquals(t, smp.r6, fixtureShort7)
 }
 
+func Test_generateSMPSecondParameters_computesG2AndG3CorrectlyForOtrV2(t *testing.T) {
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.g2, fixtureSmp2().g2)
+	assertDeepEquals(t, smp.g3, fixtureSmp2().g3)
+}
+
 func Test_generateSMPSecondParameters_computesG2bAndG3bCorrectlyForOtrV2(t *testing.T) {
 	otr := context{otrV2{}, fixtureRand()}
 	smp1 := fixtureMessage1()
@@ -54,14 +62,6 @@ func Test_generateSMPSecondParameters_computesC3AndD3CorrectlyForOtrV2(t *testin
 	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.msg.c3, fixtureMessage2().c3)
 	assertDeepEquals(t, smp.msg.d3, fixtureMessage2().d3)
-}
-
-func Test_generateSMPSecondParameters_computesG2AndG3Correctly(t *testing.T) {
-	otr := context{otrV2{}, fixtureRand()}
-	smp1 := fixtureMessage1()
-	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
-	assertDeepEquals(t, smp.msg.g2, fixtureMessage2().g2)
-	assertDeepEquals(t, smp.msg.g3, fixtureMessage2().g3)
 }
 
 func Test_generateSMPSecondParameters_computesPbAndQbCorrectly(t *testing.T) {
@@ -95,13 +95,13 @@ func Test_generateSMPSecondParameters_computesD6Correctly(t *testing.T) {
 
 func Test_verifySMPSecondParameters_checkG2bForOtrV3(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMPSecondParameters(smpMessage2{g2b: new(big.Int).SetInt64(1)})
+	err := otr.verifySMPSecondParameters(fixtureSmp1(), smpMessage2{g2b: new(big.Int).SetInt64(1)})
 	assertDeepEquals(t, err, errors.New("g2b is an invalid group element"))
 }
 
 func Test_verifySMPSecondParameters_checkG3bForOtrV3(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMPSecondParameters(smpMessage2{
+	err := otr.verifySMPSecondParameters(fixtureSmp1(), smpMessage2{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(1),
 	})
@@ -110,7 +110,7 @@ func Test_verifySMPSecondParameters_checkG3bForOtrV3(t *testing.T) {
 
 func Test_verifySMPSecondParameters_checkPbForOtrV3(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMPSecondParameters(smpMessage2{
+	err := otr.verifySMPSecondParameters(fixtureSmp1(), smpMessage2{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(3),
 		pb:  p,
@@ -120,7 +120,7 @@ func Test_verifySMPSecondParameters_checkPbForOtrV3(t *testing.T) {
 
 func Test_verifySMPSecondParameters_checkQbForOtrV3(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMPSecondParameters(smpMessage2{
+	err := otr.verifySMPSecondParameters(fixtureSmp1(), smpMessage2{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(3),
 		pb:  pMinusTwo,
@@ -133,7 +133,7 @@ func Test_verifySMPSecondParameters_failsIfC2IsNotACorrectZKP(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
 	s2 := fixtureMessage2()
 	s2.c2 = sub(s2.c2, big.NewInt(1))
-	err := otr.verifySMPSecondParameters(s2)
+	err := otr.verifySMPSecondParameters(fixtureSmp1(), s2)
 	assertDeepEquals(t, err, errors.New("c2 is not a valid zero knowledge proof"))
 }
 
@@ -141,7 +141,7 @@ func Test_verifySMPSecondParameters_failsIfC3IsNotACorrectZKP(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
 	s2 := fixtureMessage2()
 	s2.c3 = sub(s2.c3, big.NewInt(1))
-	err := otr.verifySMPSecondParameters(s2)
+	err := otr.verifySMPSecondParameters(fixtureSmp1(), s2)
 	assertDeepEquals(t, err, errors.New("c3 is not a valid zero knowledge proof"))
 }
 
@@ -149,12 +149,12 @@ func Test_verifySMPSecondParameters_failsIfCpIsNotACorrectZKP(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
 	s2 := fixtureMessage2()
 	s2.cp = sub(s2.cp, big.NewInt(1))
-	err := otr.verifySMPSecondParameters(s2)
+	err := otr.verifySMPSecondParameters(fixtureSmp1(), s2)
 	assertDeepEquals(t, err, errors.New("cP is not a valid zero knowledge proof"))
 }
 
 func Test_verifySMPSecondParameters_succeedsForACorrectZKP(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMPSecondParameters(fixtureMessage2())
+	err := otr.verifySMPSecondParameters(fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, err, nil)
 }

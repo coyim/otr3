@@ -50,7 +50,18 @@ func parseSMP2TLV(data []byte) *smpMessage2 {
 }
 
 func parseSMP3TLV(data []byte) *smpMessage3 {
-	return &smpMessage3{}
+	// TODO: errors
+	var msg smpMessage3
+	mpis := extractMPIs(data, tlvHeaderLength)
+	msg.pa = mpis[0]
+	msg.qa = mpis[1]
+	msg.cp = mpis[2]
+	msg.d5 = mpis[3]
+	msg.d6 = mpis[4]
+	msg.ra = mpis[5]
+	msg.cr = mpis[6]
+	msg.d7 = mpis[7]
+	return &msg
 }
 
 func parseSMP4TLV(data []byte) *smpMessage4 {
