@@ -85,3 +85,12 @@ func (c *context) verifySMP3Parameters(msg1 smpMessage1, msg smpMessage3) error 
 
 	return nil
 }
+
+func (c *context) verifySMP3ProtocolSuccess(s2 smp2, msg smpMessage3) error {
+	rab := modExp(msg.ra, s2.b3)
+	if !eq(rab, msg.papb) {
+		return errors.New("protocol failed: x != y")
+	}
+
+	return nil
+}

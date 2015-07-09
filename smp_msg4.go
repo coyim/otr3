@@ -52,3 +52,12 @@ func calculateMessageFour(s smp4, s2 smp2, m3 smpMessage3) smpMessage4 {
 
 	return m
 }
+
+func (c *context) verifySMP4ProtocolSuccess(s1 smp1, m3 smpMessage3, msg smpMessage4) error {
+	rab := modExp(msg.rb, s1.a3)
+	if !eq(rab, m3.papb) {
+		return errors.New("protocol failed: x != y")
+	}
+
+	return nil
+}
