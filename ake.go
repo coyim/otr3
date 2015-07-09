@@ -76,8 +76,7 @@ func (ake *AKE) hashedGx() []byte {
 	return out[:]
 }
 
-func (ake *AKE) calcAKEKeys(xFirst bool) {
-	s := ake.calcDHSharedSecret(xFirst)
+func (ake *AKE) calcAKEKeys(s *big.Int) {
 	secbytes := appendMPI(nil, s)
 	h := sha256.New()
 	copy(ake.ssid[:], h2(0x00, secbytes, h)[:8])
@@ -99,8 +98,8 @@ func h2(b byte, secbytes []byte, h hash.Hash) []byte {
 	return out[:]
 }
 
-func (ake *AKE) calcDHSharedSecret(xFirst bool) *big.Int {
-	if xFirst {
+func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
+	if xKnown {
 		return new(big.Int).Exp(ake.gy, ake.x, p)
 	} else {
 		return new(big.Int).Exp(ake.gx, ake.y, p)
@@ -198,7 +197,8 @@ func (ake *AKE) DHKeyMessage() ([]byte, error) {
 }
 
 func (ake *AKE) RevealSigMessage() []byte {
-	ake.calcAKEKeys(true)
+	s := ake.calcDHSharedSecret(true)
+	ake.calcAKEKeys(s)
 	var out []byte
 	out = appendShort(out, ake.protocolVersion)
 	out = append(out, msgTypeRevealSig)
@@ -212,7 +212,8 @@ func (ake *AKE) RevealSigMessage() []byte {
 }
 
 func (ake *AKE) SigMessage() []byte {
-	ake.calcAKEKeys(false)
+	s := ake.calcDHSharedSecret(false)
+	ake.calcAKEKeys(s)
 	var out []byte
 	out = appendShort(out, ake.protocolVersion)
 	out = append(out, msgTypeSig)
