@@ -7,12 +7,11 @@ import (
 )
 
 var (
-	r                         []byte
-	x, y, gx, gy              *big.Int
-	expectedEncryptedGxValue  []byte
-	expectedHashedGxValue     []byte
-	expectedEncryptedSigValue []byte
-	expectedMACSigValue       []byte
+	r                        []byte
+	x, y, gx, gy             *big.Int
+	expectedEncryptedGxValue []byte
+	expectedHashedGxValue    []byte
+	expectedSharedSecret     *big.Int
 )
 
 func init() {
@@ -25,8 +24,7 @@ func init() {
 	expectedEncryptedGxValue, _ = hex.DecodeString("5dd6a5999be73a99b80bdb78194a125f3067bd79e69c648b76a068117a8c4d0f36f275305423a933541937145d85ab4618094cbafbe4db0c0081614c1ff0f516c3dc4f352e9c92f88e4883166f12324d82240a8f32874c3d6bc35acedb8d501aa0111937a4859f33aa9b43ec342d78c3a45a5939c1e58e6b4f02725c1922f3df8754d1e1ab7648f558e9043ad118e63603b3ba2d8cbfea99a481835e42e73e6cd6019840f4470b606e168b1cd4a1f401c3dc52525d79fa6b959a80d4e11f1ec3a7984cf9")
 	expectedHashedGxValue, _ = hex.DecodeString("5265b02c1f43d43335e88ddcaf9f1e08e41011fc49e58f68f8d977f9d2a9cc52")
 
-	expectedEncryptedSigValue, _ = hex.DecodeString("b15e9eb80f16f4beabcf7ac44c06f0b69b9f890a86a11b6cc2fd29e0f7cd15d9af7c052c4c55dfce929783e339ef094eedcfcaeb9edf896b7e201d46f16ba42dbec0a9738daa37c47a598849735b8b9ac8c98578431f8c7a6a54944ec6d830cb0ffcdf31d39cb8414bd3ddae0c483daf4e80a5990f7618edf648e68935126639d1752f49b2b8a83b170f39dd7d2a2c4ab99cb28684df2c6ee1feff9d171c25059eb6920bdf4cdab2fc0aed4aafeb66a51e938db8ca80881ad219413ecf7e0257")
-	expectedMACSigValue, _ = hex.DecodeString("accccdbabdd7cd76a85d")
+	expectedSharedSecret, _ = new(big.Int).SetString("b15e9eb80f16f4beabcf7ac44c06f0b69b9f890a86a11b6cc2fd29e0f7cd15d9af7c052c4c55dfce929783e339ef094eedcfcaeb9edf896b7e201d46f16ba42dbec0a9738daa37c47a598849735b8b9ac8c98578431f8c7a6a54944ec6d830cb0ffcdf31d39cb8414bd3ddae0c483daf4e80a5990f7618edf648e68935126639d1752f49b2b8a83b170f39dd7d2a2c4ab99cb28684df2c6ee1feff9d171c25059eb6920bdf4cdab2fc0aed4aafeb66a51e938db8ca80881ad219413ecf7e0257", 16)
 }
 
 func TestDHCommitMessage(t *testing.T) {
@@ -136,27 +134,47 @@ func Test_hashedGx(t *testing.T) {
 }
 
 func Test_calcDHSharedSecret(t *testing.T) {
-	var ake AKE
-	ake.x = x
-	ake.gy = gy
+	var bob AKE
+	bob.x = x
+	bob.gy = gy
 
-	encryptedSig := ake.calcDHSharedSecret(true)
-	assertDeepEquals(t, encryptedSig, new(big.Int).SetBytes(expectedEncryptedSigValue))
+	sharedSecretB := bob.calcDHSharedSecret(true)
+	assertDeepEquals(t, sharedSecretB, expectedSharedSecret)
+
+	var alice AKE
+	alice.y = y
+	alice.gx = gx
+
+	sharedSecretA := alice.calcDHSharedSecret(false)
+	assertDeepEquals(t, sharedSecretA, expectedSharedSecret)
 }
 
 func Test_calcAKEKeys(t *testing.T) {
-	var ake AKE
-	ake.x = x
-	ake.gy = gy
+	var bob AKE
+	bob.x = x
+	bob.gy = gy
 
-	ake.calcAKEKeys(true)
-	assertEquals(t, hex.EncodeToString(ake.ssid[:]), "9cee5d2c7edbc86d")
-	assertEquals(t, hex.EncodeToString(ake.revealKey.c[:]), "5745340b350364a02a0ac1467a318dcc")
-	assertEquals(t, hex.EncodeToString(ake.sigKey.c[:]), "d942cc80b66503414c05e3752d9ba5c4")
-	assertEquals(t, hex.EncodeToString(ake.revealKey.m1[:]), "d3251498fb9d977d07392a96eafb8c048d6bc67064bd7da72aa38f20f87a2e3d")
-	assertEquals(t, hex.EncodeToString(ake.revealKey.m2[:]), "79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6")
-	assertEquals(t, hex.EncodeToString(ake.sigKey.m1[:]), "b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c")
-	assertEquals(t, hex.EncodeToString(ake.sigKey.m2[:]), "954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5")
+	bob.calcAKEKeys(true)
+	assertEquals(t, hex.EncodeToString(bob.ssid[:]), "9cee5d2c7edbc86d")
+	assertEquals(t, hex.EncodeToString(bob.revealKey.c[:]), "5745340b350364a02a0ac1467a318dcc")
+	assertEquals(t, hex.EncodeToString(bob.sigKey.c[:]), "d942cc80b66503414c05e3752d9ba5c4")
+	assertEquals(t, hex.EncodeToString(bob.revealKey.m1[:]), "d3251498fb9d977d07392a96eafb8c048d6bc67064bd7da72aa38f20f87a2e3d")
+	assertEquals(t, hex.EncodeToString(bob.revealKey.m2[:]), "79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6")
+	assertEquals(t, hex.EncodeToString(bob.sigKey.m1[:]), "b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c")
+	assertEquals(t, hex.EncodeToString(bob.sigKey.m2[:]), "954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5")
+
+	var alice AKE
+	alice.y = y
+	alice.gx = gx
+
+	alice.calcAKEKeys(false)
+	assertEquals(t, hex.EncodeToString(alice.ssid[:]), "9cee5d2c7edbc86d")
+	assertEquals(t, hex.EncodeToString(alice.revealKey.c[:]), "5745340b350364a02a0ac1467a318dcc")
+	assertEquals(t, hex.EncodeToString(alice.sigKey.c[:]), "d942cc80b66503414c05e3752d9ba5c4")
+	assertEquals(t, hex.EncodeToString(alice.revealKey.m1[:]), "d3251498fb9d977d07392a96eafb8c048d6bc67064bd7da72aa38f20f87a2e3d")
+	assertEquals(t, hex.EncodeToString(alice.revealKey.m2[:]), "79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6")
+	assertEquals(t, hex.EncodeToString(alice.sigKey.m1[:]), "b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c")
+	assertEquals(t, hex.EncodeToString(alice.sigKey.m2[:]), "954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5")
 }
 
 func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
