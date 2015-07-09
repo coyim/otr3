@@ -112,3 +112,15 @@ func Test_readSmpMessage1TLV(t *testing.T) {
 	assertEquals(t, ok, true)
 	assertDeepEquals(t, *val, msg)
 }
+
+func Test_readSmpMessage2TLV(t *testing.T) {
+	msg := fixtureMessage2()
+	//FIXME g2 and g3 should not be part of the message
+	msg.g2, msg.g3 = nil, nil
+	tlv := msg.tlv()
+
+	parsedValue := parseTLV(tlv)
+	val, ok := parsedValue.(*smpMessage2)
+	assertEquals(t, ok, true)
+	assertDeepEquals(t, *val, msg)
+}
