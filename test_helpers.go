@@ -9,13 +9,13 @@ import (
 
 func assertEquals(t *testing.T, actual, expected interface{}) {
 	if actual != expected {
-		t.Errorf("Expected %v to equal %v", actual, expected)
+		t.Errorf("Expected:\n%v \nto equal:\n%v\n", actual, expected)
 	}
 }
 
 func assertDeepEquals(t *testing.T, actual, expected interface{}) {
 	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("Expected %v to equal %v", actual, expected)
+		t.Errorf("Expected:\n%v \nto equal:\n%v\n", actual, expected)
 	}
 }
 
