@@ -102,3 +102,13 @@ func Test_smpMessage4TLV(t *testing.T) {
 	assertEquals(t, len(tlv), expectedLength)
 	assertDeepEquals(t, tlv[:len(exp)], exp)
 }
+
+func Test_readSmpMessage1TLV(t *testing.T) {
+	msg := fixtureMessage1()
+	tlv := msg.tlv()
+
+	parsedValue := parseTLV(tlv)
+	val, ok := parsedValue.(*smpMessage1)
+	assertEquals(t, ok, true)
+	assertDeepEquals(t, *val, msg)
+}
