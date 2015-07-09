@@ -18,7 +18,7 @@ type AKE struct {
 	r                   [16]byte
 	x, y                *big.Int
 	gx, gy              *big.Int
-	protocolVersion     [2]byte
+	protocolVersion     uint16
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
 	revealKey, sigKey   akeKeys
@@ -103,7 +103,7 @@ func (ake *AKE) calcDHSharedSecret() *big.Int {
 	return new(big.Int).Exp(ake.gy, ake.x, p)
 }
 
-func (ake *AKE) generateEncryptedSignature(key akeKeys, xFirst bool) ([]byte, []byte) {
+func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, []byte) {
 	//Mb
 	var verifyData []byte
 	var publicKey []byte
@@ -165,7 +165,7 @@ func (ake *AKE) DHCommitMessage() ([]byte, error) {
 		return nil, err
 	}
 
-	out = appendData(out, ake.protocolVersion[:])
+	out = appendShort(out, ake.protocolVersion)
 	out = append(out, msgTypeDHCommit)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -184,7 +184,7 @@ func (ake *AKE) DHKeyMessage() ([]byte, error) {
 	}
 	ake.y = y
 	ake.gy = new(big.Int).Exp(g1, ake.y, p)
-	out = appendData(out, ake.protocolVersion[:])
+	out = appendShort(out, ake.protocolVersion)
 	out = append(out, msgTypeDHKey)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -194,28 +194,28 @@ func (ake *AKE) DHKeyMessage() ([]byte, error) {
 }
 
 func (ake *AKE) RevealSigMessage() []byte {
+	ake.calcAKEKeys()
 	var out []byte
-	out = appendData(out, ake.protocolVersion[:])
+	out = appendShort(out, ake.protocolVersion)
 	out = append(out, msgTypeRevealSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendData(out, ake.r[:])
-	encryptedSig, macSig := ake.generateEncryptedSignature(ake.revealKey, true)
+	encryptedSig, macSig := ake.generateEncryptedSignature(&ake.revealKey, true)
 	out = append(out, encryptedSig...)
 	out = append(out, macSig[:20]...)
 	return out
 }
 
-//func (ake *AKE) SigMessage() []byte {
-//	var out []byte
-//	out = appendData(out, ake.protocolVersion[:])
-//	out = append(out, msgTypeRevealSig)
-//	out = appendWord(out, ake.senderInstanceTag)
-//	out = appendWord(out, ake.receiverInstanceTag)
-//	out = appendData(out, ake.r[:])
-//  encryptedSig, macSig := ake.generateEncryptedSignature(ake.sigKey, false)
-//	out = append(out, encryptedSig...)
-//	out = append(out, macSig[:20]...)
-//	//	out = appendData(out, ake.macSig())
-//	return out
-//}
+func (ake *AKE) SigMessage() []byte {
+	ake.calcAKEKeys()
+	var out []byte
+	out = appendShort(out, ake.protocolVersion)
+	out = append(out, msgTypeRevealSig)
+	out = appendWord(out, ake.senderInstanceTag)
+	out = appendWord(out, ake.receiverInstanceTag)
+	encryptedSig, macSig := ake.generateEncryptedSignature(&ake.sigKey, false)
+	out = append(out, encryptedSig...)
+	out = append(out, macSig[:20]...)
+	return out
+}
