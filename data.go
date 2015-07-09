@@ -46,3 +46,36 @@ func hashMPIs(h hash.Hash, magic byte, mpis ...*big.Int) []byte {
 func hashMPIsBN(h hash.Hash, magic byte, mpis ...*big.Int) *big.Int {
 	return new(big.Int).SetBytes(hashMPIs(h, magic, mpis...))
 }
+
+func extractWord(d []byte, start int) uint32 {
+	// TODO: errors
+	return uint32(d[start])<<24 |
+		uint32(d[start+1])<<16 |
+		uint32(d[start+2])<<8 |
+		uint32(d[start+3])
+}
+
+func extractMPI(d []byte, start int) (newIndex int, mpi *big.Int) {
+	// TODO: errors
+	mpiLen := int(extractWord(d, start))
+	newIndex = start + 4 + mpiLen
+	mpi = new(big.Int).SetBytes(d[start+4 : newIndex])
+	return
+}
+
+func extractMPIs(d []byte, start int) []*big.Int {
+	// TODO: errors
+	mpiCount := int(extractWord(d, start))
+	result := make([]*big.Int, mpiCount)
+	current := start + 4
+	for i := 0; i < mpiCount; i++ {
+		current, result[i] = extractMPI(d, current)
+	}
+	return result
+}
+
+func extractShort(d []byte, start int) uint16 {
+	// TODO: errors
+	return uint16(d[start])<<8 |
+		uint16(d[start+1])
+}
