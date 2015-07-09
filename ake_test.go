@@ -72,7 +72,7 @@ func TestRevealSigMessage(t *testing.T) {
 	result := ake.RevealSigMessage()
 	var out []byte
 	out = appendData(out, ake.protocolVersion[:])
-	out = append(out, msgTypeRevelSig)
+	out = append(out, msgTypeRevealSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendData(out, ake.r[:])
