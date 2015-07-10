@@ -3,6 +3,7 @@ package otr3
 import (
 	"bufio"
 	"crypto/dsa"
+	"encoding/hex"
 	"io"
 	"math/big"
 	"os"
@@ -166,4 +167,23 @@ func (priv *PrivateKey) parse(in []byte) {
 
 	index := priv.PublicKey.parse(in)
 	index, priv.X = extractMPI(in, index)
+}
+
+func parseIntoPrivateKey(hexString string) *PrivateKey {
+	// TODO handle errors if ever used outside of tests
+	b, _ := hex.DecodeString(hexString)
+	var pk PrivateKey
+	pk.parse(b)
+	return &pk
+}
+
+var dsaKeyType = []byte{0x00, 0x00}
+
+func (pub *PublicKey) serialize() []byte {
+	result := dsaKeyType
+	result = appendMPI(result, pub.P)
+	result = appendMPI(result, pub.Q)
+	result = appendMPI(result, pub.G)
+	result = appendMPI(result, pub.Y)
+	return result
 }

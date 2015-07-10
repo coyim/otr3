@@ -13,7 +13,8 @@ import (
 )
 
 type AKE struct {
-	PrivateKey          *PrivateKey
+	ourKey              *PrivateKey
+	theirKey            *PublicKey
 	Rand                io.Reader
 	r                   [16]byte
 	x, y                *big.Int
@@ -106,18 +107,18 @@ func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
 	}
 }
 
-func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool, publicKey []byte) []byte {
+func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) []byte {
 	//Mb
-	verifyData := ake.generateVerifyData(publicKey, xFirst)
+	verifyData := ake.generateVerifyData(xFirst)
 	mb := sumHMAC(key.m1[:], verifyData)
 	// TODO mb is used in Key sign() mb := sumHMAC(key.m1[:], verifyData)
 
 	//Xb
-	xb := ake.calcXb(publicKey, key, mb, xFirst)
+	xb := ake.calcXb(key, mb, xFirst)
 	return appendData(nil, xb)
 }
 
-func (ake *AKE) generateVerifyData(publicKey []byte, xFirst bool) []byte {
+func (ake *AKE) generateVerifyData(xFirst bool) []byte {
 	var verifyData []byte
 
 	if xFirst {
@@ -128,6 +129,7 @@ func (ake *AKE) generateVerifyData(publicKey []byte, xFirst bool) []byte {
 		verifyData = appendMPI(verifyData, ake.gx)
 	}
 
+	publicKey := ake.theirKey.serialize()
 	verifyData = append(verifyData, publicKey...)
 	return appendWord(verifyData, ake.myKeyId)
 }
@@ -139,9 +141,10 @@ func sumHMAC(key, data []byte) []byte {
 	return mac.Sum(nil)
 }
 
-func (ake *AKE) calcXb(publicKey []byte, key *akeKeys, mb []byte, xFirst bool) []byte {
-	var xb, sigb []byte
-	xb = appendWord(publicKey, ake.myKeyId)
+func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
+	var sigb []byte
+	xb := ake.theirKey.serialize()
+	xb = appendWord(xb, ake.myKeyId)
 
 	if xFirst {
 		sigb, _ = hex.DecodeString("86e8158880882a85ca444ce5c31641ff321864ce0a23707826c7f5181638512ca79ebeb319986f4b")
@@ -206,7 +209,7 @@ func (ake *AKE) DHKeyMessage() ([]byte, error) {
 	return out, nil
 }
 
-func (ake *AKE) RevealSigMessage(publicKey []byte) []byte {
+func (ake *AKE) RevealSigMessage() []byte {
 	s := ake.calcDHSharedSecret(true)
 	ake.calcAKEKeys(s)
 	var out []byte
@@ -215,14 +218,14 @@ func (ake *AKE) RevealSigMessage(publicKey []byte) []byte {
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendData(out, ake.r[:])
-	encryptedSig := ake.generateEncryptedSignature(&ake.revealKey, true, publicKey)
+	encryptedSig := ake.generateEncryptedSignature(&ake.revealKey, true)
 	macSig := sumHMAC(ake.revealKey.m2[:], encryptedSig)
 	out = append(out, encryptedSig...)
 	out = append(out, macSig[:20]...)
 	return out
 }
 
-func (ake *AKE) SigMessage(publicKey []byte) []byte {
+func (ake *AKE) SigMessage() []byte {
 	s := ake.calcDHSharedSecret(false)
 	ake.calcAKEKeys(s)
 	var out []byte
@@ -231,7 +234,7 @@ func (ake *AKE) SigMessage(publicKey []byte) []byte {
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
 
-	encryptedSig := ake.generateEncryptedSignature(&ake.sigKey, false, publicKey)
+	encryptedSig := ake.generateEncryptedSignature(&ake.sigKey, false)
 	macSig := sumHMAC(ake.sigKey.m2[:], encryptedSig)
 	out = append(out, encryptedSig...)
 	out = append(out, macSig[:20]...)
