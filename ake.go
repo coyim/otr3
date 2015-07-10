@@ -11,6 +11,7 @@ import (
 	"math/big"
 )
 
+// AKE is authenticated key exchange context
 type AKE struct {
 	ourKey              *PrivateKey
 	Rand                io.Reader
@@ -22,7 +23,7 @@ type AKE struct {
 	receiverInstanceTag uint32
 	revealKey, sigKey   akeKeys
 	ssid                [8]byte
-	myKeyId             uint32
+	myKeyID             uint32
 }
 
 type akeKeys struct {
@@ -100,9 +101,8 @@ func h2(b byte, secbytes []byte, h hash.Hash) []byte {
 func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
 	if xKnown {
 		return new(big.Int).Exp(ake.gy, ake.x, p)
-	} else {
-		return new(big.Int).Exp(ake.gx, ake.y, p)
 	}
+	return new(big.Int).Exp(ake.gx, ake.y, p)
 }
 
 func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) []byte {
@@ -125,7 +125,7 @@ func (ake *AKE) generateVerifyData(xFirst bool) []byte {
 
 	publicKey := ake.ourKey.PublicKey.serialize()
 	verifyData = append(verifyData, publicKey...)
-	return appendWord(verifyData, ake.myKeyId)
+	return appendWord(verifyData, ake.myKeyID)
 }
 
 func sumHMAC(key, data []byte) []byte {
@@ -138,7 +138,7 @@ func sumHMAC(key, data []byte) []byte {
 func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 	var sigb []byte
 	xb := ake.ourKey.PublicKey.serialize()
-	xb = appendWord(xb, ake.myKeyId)
+	xb = appendWord(xb, ake.myKeyID)
 
 	sigb, _ = ake.ourKey.sign(ake.rand(), mb)
 	xb = append(xb, sigb...)
@@ -155,9 +155,9 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 	return xb
 }
 
-func (ake *AKE) DHCommitMessage() ([]byte, error) {
+func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	var out []byte
-	ake.myKeyId = 0
+	ake.myKeyID = 0
 
 	x, err := ake.generateRand()
 	if err != nil {
@@ -181,7 +181,7 @@ func (ake *AKE) DHCommitMessage() ([]byte, error) {
 	return out, nil
 }
 
-func (ake *AKE) DHKeyMessage() ([]byte, error) {
+func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	var out []byte
 	y, err := ake.generateRand()
 
@@ -199,7 +199,7 @@ func (ake *AKE) DHKeyMessage() ([]byte, error) {
 	return out, nil
 }
 
-func (ake *AKE) RevealSigMessage() []byte {
+func (ake *AKE) revealSigMessage() []byte {
 	s := ake.calcDHSharedSecret(true)
 	ake.calcAKEKeys(s)
 	var out []byte
@@ -215,7 +215,7 @@ func (ake *AKE) RevealSigMessage() []byte {
 	return out
 }
 
-func (ake *AKE) SigMessage() []byte {
+func (ake *AKE) sigMessage() []byte {
 	s := ake.calcDHSharedSecret(false)
 	ake.calcAKEKeys(s)
 	var out []byte

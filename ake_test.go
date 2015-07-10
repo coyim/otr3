@@ -23,7 +23,7 @@ var (
 	bobPrivateKey            = parseIntoPrivateKey("000000000080a5138eb3d3eb9c1d85716faecadb718f87d31aaed1157671d7fee7e488f95e8e0ba60ad449ec732710a7dec5190f7182af2e2f98312d98497221dff160fd68033dd4f3a33b7c078d0d9f66e26847e76ca7447d4bab35486045090572863d9e4454777f24d6706f63e02548dfec2d0a620af37bbc1d24f884708a212c343b480d00000014e9c58f0ea21a5e4dfd9f44b6a9f7f6a9961a8fa9000000803c4d111aebd62d3c50c2889d420a32cdf1e98b70affcc1fcf44d59cca2eb019f6b774ef88153fb9b9615441a5fe25ea2d11b74ce922ca0232bd81b3c0fcac2a95b20cb6e6c0c5c1ace2e26f65dc43c751af0edbb10d669890e8ab6beea91410b8b2187af1a8347627a06ecea7e0f772c28aae9461301e83884860c9b656c722f0000008065af8625a555ea0e008cd04743671a3cda21162e83af045725db2eb2bb52712708dc0cc1a84c08b3649b88a966974bde27d8612c2861792ec9f08786a246fcadd6d8d3a81a32287745f309238f47618c2bd7612cb8b02d940571e0f30b96420bcd462ff542901b46109b1e5ad6423744448d20a57818a8cbb1647d0fea3b664e0000001440f9f2eb554cb00d45a5826b54bfa419b6980e48")
 )
 
-func TestDHCommitMessage(t *testing.T) {
+func Test_dhCommitMessage(t *testing.T) {
 	var ake AKE
 	ake.ourKey = bobPrivateKey
 	ake.protocolVersion = 0x0003
@@ -39,12 +39,12 @@ func TestDHCommitMessage(t *testing.T) {
 	out = appendData(out, expectedEncryptedGxValue)
 	out = appendData(out, expectedHashedGxValue)
 
-	result, err := ake.DHCommitMessage()
+	result, err := ake.dhCommitMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
 
-func TestDHKeyMessage(t *testing.T) {
+func Test_dhKeyMessage(t *testing.T) {
 	var ake AKE
 	ake.ourKey = alicePrivateKey
 	ake.protocolVersion = 0x0003
@@ -60,12 +60,12 @@ func TestDHKeyMessage(t *testing.T) {
 	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendMPI(out, expectedGyValue)
 
-	result, err := ake.DHKeyMessage()
+	result, err := ake.dhKeyMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
 
-func TestRevealSigMessage(t *testing.T) {
+func Test_revealSigMessage(t *testing.T) {
 	var ake AKE
 	ake.protocolVersion = 0x0003
 	ake.senderInstanceTag = 0x000000010
@@ -75,7 +75,7 @@ func TestRevealSigMessage(t *testing.T) {
 	ake.x = x
 	ake.gx = gx
 	ake.gy = gy
-	ake.myKeyId = 1
+	ake.myKeyID = 1
 	expectedEncryptedSignature := bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf")
 	expedctedMACSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 	ake.Rand = fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
@@ -89,11 +89,11 @@ func TestRevealSigMessage(t *testing.T) {
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 
-	result := ake.RevealSigMessage()
+	result := ake.revealSigMessage()
 	assertDeepEquals(t, result, out)
 }
 
-func TestSigMessage(t *testing.T) {
+func Test_sigMessage(t *testing.T) {
 	var ake AKE
 	ake.ourKey = alicePrivateKey
 	ake.protocolVersion = 0x0003
@@ -102,7 +102,7 @@ func TestSigMessage(t *testing.T) {
 	ake.y = y
 	ake.gx = gx
 	ake.gy = gy
-	ake.myKeyId = 1
+	ake.myKeyID = 1
 
 	expectedEncryptedSignature, _ := hex.DecodeString("000001d2b4f6ac650cc1d28f61a3b9bdf3cd60e2d1ea55d4c56e9f954eb22e10764861fb40d69917f5c4249fa701f3c04fae9449cd13a5054861f95fbc5775fc3cfd931cf5cc1a89eac82e7209b607c4fbf18df945e23bd0e91365fcc6c5dac072703dd8e2287372107f6a2cbb9139f5e82108d4cbcc1c6cdfcc772014136e756338745e2210d42c6e3ec4e9cf87fa8ebd8190e00f3a54bec86ee06cb7664059bb0fa79529e9d2e563ffecc5561477b3ba6bbf4ac679624b6da69a85822ed5c6ceb56a98740b1002026c503c39badab13b5d5ec948bbb961f0c90e68894a1fb70645a8e21ffe6b78e2e4ee62a62c48bd54e3d27c1166d098791518b53a10c409b5e55d16555b721a7750b7084e8972540bf0f1d76602e9b5fd58f94ed2dbf69fafccef84fdca2f9d800346b2358a200db060d8cf1b984a5213d02f7c27e452ad1cd893b0a668aaf6733809c31a392fc6cfc754691aca9a51582b636b92ea10abd661dd88bfd4c5f19b3ce265951728637b23fff7f7c0638721b6a01b3f1c3e923c10ea37d4e240fd973647d34dde6991cc3a04ce459c23e3ee2a858912ff78f405bbd9951935a120017904537db50f6e9e29338938f2b45ed323fc508d02fd0a0703e53ffc1889bccdec87e7c3d87e442fe29a7654d1")
 	expedctedMACSignature, _ := hex.DecodeString("66b47e29be91a7cf4803d731921482fd514b4a53a9dd1639b17705c90185f91d")
@@ -115,7 +115,7 @@ func TestSigMessage(t *testing.T) {
 	out = appendWord(out, ake.receiverInstanceTag)
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
-	result := ake.SigMessage()
+	result := ake.sigMessage()
 	assertDeepEquals(t, result, out)
 }
 
@@ -184,7 +184,7 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 	ake.x = x
 	ake.gx = gx
 	ake.gy = gy
-	ake.myKeyId = 1
+	ake.myKeyID = 1
 
 	ake.Rand = fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 
@@ -204,7 +204,7 @@ func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 	ake.y = y
 	ake.gx = gx
 	ake.gy = gy
-	ake.myKeyId = 1
+	ake.myKeyID = 1
 
 	ake.Rand = fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 
@@ -223,7 +223,7 @@ func Test_generateVerifyData(t *testing.T) {
 	ake.ourKey = bobPrivateKey
 	ake.gx = gx
 	ake.gy = gy
-	ake.myKeyId = 1
+	ake.myKeyID = 1
 
 	verifyData := ake.generateVerifyData(true)
 

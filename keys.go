@@ -199,7 +199,6 @@ func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
 		copy(out[20-len(rBytes):], rBytes)
 		copy(out[len(out)-len(sBytes):], sBytes)
 		return out, nil
-	} else {
-		return nil, err
 	}
+	return nil, err
 }
