@@ -95,7 +95,7 @@ func (c *context) verifySMP3Parameters(msg1 smpMessage1, msg smpMessage3, s2 smp
 	return nil
 }
 
-func (c *context) verifySMP3ProtocolSuccess(s smp3, s2 smp2, msg smpMessage3) error {
+func (c *context) verifySMP3ProtocolSuccess(s2 smp2, msg smpMessage3) error {
 	papb := divMod(msg.pa, s2.msg.pb, p)
 
 	rab := modExp(msg.ra, s2.b3)
