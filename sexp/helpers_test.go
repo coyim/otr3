@@ -16,3 +16,11 @@ func assertDeepEquals(t *testing.T, actual, expected interface{}) {
 		t.Errorf("Expected %v to equal %v", actual, expected)
 	}
 }
+
+func checkForPanic(t *testing.T, s string) {
+	if r := recover(); r != nil {
+		assertEquals(t, r, s)
+	} else {
+		t.Errorf("Expected panic with message %v to be invoked", s)
+	}
+}

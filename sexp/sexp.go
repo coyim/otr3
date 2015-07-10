@@ -15,7 +15,9 @@ type Value interface {
 
 func peek(r *bufio.Reader) (c byte, e error) {
 	c, e = r.ReadByte()
-	r.UnreadByte()
+	if e != io.EOF {
+		r.UnreadByte()
+	}
 	return
 }
 
