@@ -11,7 +11,7 @@ func TestFullSMPHandshake(t *testing.T) {
 	bob := context{otrV3{}, rand.Reader}
 
 	// Alice -> Bob
-	// Stores: ??
+	// Stores: x, a2, and a3
 	// Sends: g2a, c2, D2, g3a, c3 and D3
 	s1 := alice.generateSMPStartParameters()
 
