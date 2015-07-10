@@ -27,8 +27,8 @@ func Test_generatesShorterAandRValuesForOtrV2(t *testing.T) {
 func Test_computesG2aAndG3aCorrectlyForOtrV3(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
 	smp := otr.generateSMPStartParameters()
-	assertDeepEquals(t, smp.msg.g2a, fixtureMessage1_v3().g2a)
-	assertDeepEquals(t, smp.msg.g3a, fixtureMessage1_v3().g3a)
+	assertDeepEquals(t, smp.msg.g2a, fixtureMessage1v3().g2a)
+	assertDeepEquals(t, smp.msg.g3a, fixtureMessage1v3().g3a)
 }
 
 func Test_computesG2aAndG3aCorrectlyForOtrV2(t *testing.T) {
