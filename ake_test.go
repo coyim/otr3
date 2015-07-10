@@ -26,7 +26,6 @@ var (
 func TestDHCommitMessage(t *testing.T) {
 	var ake AKE
 	ake.ourKey = bobPrivateKey
-	ake.theirKey = &alicePrivateKey.PublicKey
 	ake.protocolVersion = 0x0003
 	ake.senderInstanceTag = 0x00000001
 	ake.receiverInstanceTag = 0x00000001
@@ -48,7 +47,6 @@ func TestDHCommitMessage(t *testing.T) {
 func TestDHKeyMessage(t *testing.T) {
 	var ake AKE
 	ake.ourKey = alicePrivateKey
-	ake.theirKey = &bobPrivateKey.PublicKey
 	ake.protocolVersion = 0x0003
 	ake.senderInstanceTag = 0x00000001
 	ake.receiverInstanceTag = 0x00000001
@@ -72,8 +70,7 @@ func TestRevealSigMessage(t *testing.T) {
 	ake.protocolVersion = 0x0003
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
-	ake.ourKey = alicePrivateKey
-	ake.theirKey = &bobPrivateKey.PublicKey
+	ake.ourKey = bobPrivateKey
 	copy(ake.r[:], r)
 	ake.x = x
 	ake.gx = gx
@@ -98,8 +95,7 @@ func TestRevealSigMessage(t *testing.T) {
 
 func TestSigMessage(t *testing.T) {
 	var ake AKE
-	ake.ourKey = bobPrivateKey
-	ake.theirKey = &alicePrivateKey.PublicKey
+	ake.ourKey = alicePrivateKey
 	ake.protocolVersion = 0x0003
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
@@ -183,8 +179,7 @@ func Test_calcAKEKeys(t *testing.T) {
 
 func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 	var ake AKE
-	ake.ourKey = alicePrivateKey
-	ake.theirKey = &bobPrivateKey.PublicKey
+	ake.ourKey = bobPrivateKey
 	ake.x = x
 	ake.gx = gx
 	ake.gy = gy
@@ -202,8 +197,7 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 
 func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 	var ake AKE
-	ake.ourKey = bobPrivateKey
-	ake.theirKey = &alicePrivateKey.PublicKey
+	ake.ourKey = alicePrivateKey
 	ake.y = y
 	ake.gx = gx
 	ake.gy = gy
@@ -221,8 +215,7 @@ func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 
 func Test_generateVerifyData(t *testing.T) {
 	var ake AKE
-	ake.ourKey = alicePrivateKey
-	ake.theirKey = &bobPrivateKey.PublicKey
+	ake.ourKey = bobPrivateKey
 	ake.gx = gx
 	ake.gy = gy
 	ake.myKeyId = 1

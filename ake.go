@@ -14,7 +14,6 @@ import (
 
 type AKE struct {
 	ourKey              *PrivateKey
-	theirKey            *PublicKey
 	Rand                io.Reader
 	r                   [16]byte
 	x, y                *big.Int
@@ -129,7 +128,7 @@ func (ake *AKE) generateVerifyData(xFirst bool) []byte {
 		verifyData = appendMPI(verifyData, ake.gx)
 	}
 
-	publicKey := ake.theirKey.serialize()
+	publicKey := ake.ourKey.PublicKey.serialize()
 	verifyData = append(verifyData, publicKey...)
 	return appendWord(verifyData, ake.myKeyId)
 }
@@ -143,7 +142,7 @@ func sumHMAC(key, data []byte) []byte {
 
 func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 	var sigb []byte
-	xb := ake.theirKey.serialize()
+	xb := ake.ourKey.PublicKey.serialize()
 	xb = appendWord(xb, ake.myKeyId)
 
 	if xFirst {
