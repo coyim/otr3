@@ -7,7 +7,7 @@ type smpStateExpect2 struct{}
 type smpStateExpect3 struct{}
 type smpStateExpect4 struct{}
 
-var unexpectedMessageError = errors.New("unexpected SMP message")
+var errUnexpectedMessage = errors.New("unexpected SMP message")
 
 type smpMessage interface {
 	receivedMessage(smpState) (smpState, error)
@@ -25,19 +25,19 @@ func (smpStateExpect1) receiveMessage1(m smpMessage1) (smpState, error) {
 }
 
 func (smpStateExpect1) receiveMessage2(m smpMessage2) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect1) receiveMessage3(m smpMessage3) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect1) receiveMessage4(m smpMessage4) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect2) receiveMessage1(m smpMessage1) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect2) receiveMessage2(m smpMessage2) (smpState, error) {
@@ -45,19 +45,19 @@ func (smpStateExpect2) receiveMessage2(m smpMessage2) (smpState, error) {
 }
 
 func (smpStateExpect2) receiveMessage3(m smpMessage3) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect2) receiveMessage4(m smpMessage4) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect3) receiveMessage1(m smpMessage1) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect3) receiveMessage2(m smpMessage2) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect3) receiveMessage3(m smpMessage3) (smpState, error) {
@@ -65,19 +65,19 @@ func (smpStateExpect3) receiveMessage3(m smpMessage3) (smpState, error) {
 }
 
 func (smpStateExpect3) receiveMessage4(m smpMessage4) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect4) receiveMessage1(m smpMessage1) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect4) receiveMessage2(m smpMessage2) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect4) receiveMessage3(m smpMessage3) (smpState, error) {
-	return nil, unexpectedMessageError
+	return nil, errUnexpectedMessage
 }
 
 func (smpStateExpect4) receiveMessage4(m smpMessage4) (smpState, error) {
@@ -85,28 +85,28 @@ func (smpStateExpect4) receiveMessage4(m smpMessage4) (smpState, error) {
 }
 
 func (m smpMessage1) receivedMessage(currentState smpState) (s smpState, err error) {
-	if s, err = currentState.receiveMessage1(m); err == unexpectedMessageError {
+	if s, err = currentState.receiveMessage1(m); err == errUnexpectedMessage {
 		s = smpStateExpect1{}
 	}
 	return
 }
 
 func (m smpMessage2) receivedMessage(currentState smpState) (s smpState, err error) {
-	if s, err = currentState.receiveMessage2(m); err == unexpectedMessageError {
+	if s, err = currentState.receiveMessage2(m); err == errUnexpectedMessage {
 		s = smpStateExpect1{}
 	}
 	return
 }
 
 func (m smpMessage3) receivedMessage(currentState smpState) (s smpState, err error) {
-	if s, err = currentState.receiveMessage3(m); err == unexpectedMessageError {
+	if s, err = currentState.receiveMessage3(m); err == errUnexpectedMessage {
 		s = smpStateExpect1{}
 	}
 	return
 }
 
 func (m smpMessage4) receivedMessage(currentState smpState) (s smpState, err error) {
-	if s, err = currentState.receiveMessage4(m); err == unexpectedMessageError {
+	if s, err = currentState.receiveMessage4(m); err == errUnexpectedMessage {
 		s = smpStateExpect1{}
 	}
 	return

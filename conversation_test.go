@@ -54,5 +54,5 @@ func Test_contextUnexpectedMessageTransitionsToSmpExpected1(t *testing.T) {
 	err := c.receive(m.tlv())
 
 	assertEquals(t, c.currentState, smpStateExpect1{})
-	assertEquals(t, err, unexpectedMessageError)
+	assertEquals(t, err, errUnexpectedMessage)
 }
