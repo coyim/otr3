@@ -34,7 +34,7 @@ func TestFullSMPHandshake(t *testing.T) {
 	s3 := alice.generateSMPThirdParameters(secret, s1, s2.msg)
 
 	// Bob
-	err = bob.verifySMP3Parameters(s1.msg, s2.msg, s3.msg, s2)
+	err = bob.verifySMP3Parameters(s1.msg, s3.msg, s2)
 	assertDeepEquals(t, err, nil)
 
 	err = bob.verifySMP3ProtocolSuccess(s3, s2, s3.msg)

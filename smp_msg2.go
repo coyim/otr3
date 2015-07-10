@@ -5,7 +5,7 @@ import (
 	"math/big"
 )
 
-// FIXME should store g3a, g2, g3, b3, Pb and Qb
+// FIXME should store g3a*, g2, g3, b3, Pb and Qb
 // after generating smpMessage2
 
 type smp2 struct {
@@ -13,6 +13,7 @@ type smp2 struct {
 	b2, b3             *big.Int
 	r2, r3, r4, r5, r6 *big.Int
 	g2, g3             *big.Int
+	qb                 *big.Int
 	msg                smpMessage2
 }
 
@@ -71,6 +72,7 @@ func (c *context) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) s
 	s := c.generateSecondaryParameters()
 	s.y = secret
 	s.msg = generateMessageTwoFor(&s, s1)
+	s.qb = s.msg.qb
 	return s
 }
 

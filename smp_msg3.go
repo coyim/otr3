@@ -68,7 +68,7 @@ func (c *context) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMes
 	return s
 }
 
-func (c *context) verifySMP3Parameters(msg1 smpMessage1, msg2 smpMessage2, msg smpMessage3, s2 smp2) error {
+func (c *context) verifySMP3Parameters(msg1 smpMessage1, msg smpMessage3, s2 smp2) error {
 	if !c.isGroupElement(msg.pa) {
 		return errors.New("Pa is an invalid group element")
 	}
@@ -86,7 +86,7 @@ func (c *context) verifySMP3Parameters(msg1 smpMessage1, msg2 smpMessage2, msg s
 	}
 
 	//FIXME should it calculate it here?
-	qaqb := divMod(msg.qa, msg2.qb, p)
+	qaqb := divMod(msg.qa, s2.qb, p)
 
 	if !verifyZKP4(msg.cr, msg1.g3a, msg.d7, qaqb, msg.ra, 7) {
 		return errors.New("cR is not a valid zero knowledge proof")
