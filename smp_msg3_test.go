@@ -60,6 +60,12 @@ func Test_generateSMPThirdParameters_computesQaQbCorrectly(t *testing.T) {
 	assertDeepEquals(t, smp.qaqb, fixtureSmp3().qaqb)
 }
 
+func Test_generateSMPThirdParameters_storesG3b(t *testing.T) {
+	otr := context{otrV2{}, fixtureRand()}
+	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, smp.g3b, fixtureMessage2().g3b)
+}
+
 func Test_generateSMPThirdParameters_computesCPCorrectly(t *testing.T) {
 	otr := context{otrV2{}, fixtureRand()}
 	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())

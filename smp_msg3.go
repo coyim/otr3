@@ -10,6 +10,7 @@ import (
 
 type smp3 struct {
 	x              *big.Int
+	g3b            *big.Int
 	r4, r5, r6, r7 *big.Int
 	qaqb, papb     *big.Int
 	msg            smpMessage3
@@ -46,6 +47,7 @@ func calculateMessageThree(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
 	m.pa = modExp(g3, s.r4)
 	m.qa = mulMod(modExp(g1, s.r4), modExp(g2, s.x), p)
 
+	s.g3b = m2.g3b
 	s.qaqb = divMod(m.qa, m2.qb, p)
 	s.papb = divMod(m.pa, m2.pb, p)
 
