@@ -70,7 +70,7 @@ func (c *context) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMes
 	return s
 }
 
-func (c *context) verifySMP3Parameters(msg smpMessage3, s2 smp2) error {
+func (c *context) verifySMP3Parameters(s2 smp2, msg smpMessage3) error {
 	if !c.isGroupElement(msg.pa) {
 		return errors.New("Pa is an invalid group element")
 	}
