@@ -38,13 +38,13 @@ func Test_generateSMPFourthParameters_computesD7Correctly(t *testing.T) {
 
 func Test_verifySMP4Parameters_succeedsForValidZKPS(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMP4Parameters(fixtureSmp3(), fixtureMessage2(), fixtureMessage4())
+	err := otr.verifySMP4Parameters(fixtureSmp3(), fixtureMessage4())
 	assertDeepEquals(t, err, nil)
 }
 
 func Test_verifySMP4Parameters_failsIfRbIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
-	err := otr.verifySMP4Parameters(fixtureSmp3(), fixtureMessage2(), smpMessage4{rb: big.NewInt(1)})
+	err := otr.verifySMP4Parameters(fixtureSmp3(), smpMessage4{rb: big.NewInt(1)})
 	assertDeepEquals(t, err, errors.New("Rb is an invalid group element"))
 }
 
@@ -52,6 +52,6 @@ func Test_verifySMP4Parameters_failsIfCrIsNotACorrectZKP(t *testing.T) {
 	otr := context{otrV3{}, fixtureRand()}
 	m := fixtureMessage4()
 	m.cr = sub(m.cr, big.NewInt(1))
-	err := otr.verifySMP4Parameters(fixtureSmp3(), fixtureMessage2(), m)
+	err := otr.verifySMP4Parameters(fixtureSmp3(), m)
 	assertDeepEquals(t, err, errors.New("cR is not a valid zero knowledge proof"))
 }

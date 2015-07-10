@@ -46,7 +46,7 @@ func TestFullSMPHandshake(t *testing.T) {
 	s4 := bob.generateSMPFourthParameters(secret, s2, s3.msg)
 
 	// Alice
-	err = alice.verifySMP4Parameters(s3, s2.msg, s4.msg)
+	err = alice.verifySMP4Parameters(s3, s4.msg)
 	assertDeepEquals(t, err, nil)
 
 	err = alice.verifySMP4ProtocolSuccess(s1, s3, s4.msg)

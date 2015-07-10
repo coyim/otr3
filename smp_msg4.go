@@ -28,12 +28,12 @@ func (c *context) generateSMPFourthParameters(secret *big.Int, s2 smp2, msg3 smp
 	return s
 }
 
-func (c *context) verifySMP4Parameters(s3 smp3, msg2 smpMessage2, msg smpMessage4) error {
+func (c *context) verifySMP4Parameters(s3 smp3, msg smpMessage4) error {
 	if !c.isGroupElement(msg.rb) {
 		return errors.New("Rb is an invalid group element")
 	}
 
-	if !verifyZKP4(msg.cr, msg2.g3b, msg.d7, s3.qaqb, msg.rb, 8) {
+	if !verifyZKP4(msg.cr, s3.g3b, msg.d7, s3.qaqb, msg.rb, 8) {
 		return errors.New("cR is not a valid zero knowledge proof")
 	}
 
