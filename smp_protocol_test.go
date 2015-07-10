@@ -43,7 +43,7 @@ func TestFullSMPHandshake(t *testing.T) {
 	// Bob -> Alice
 	// Stores: ???
 	// Sends: Rb, cR and D7
-	s4 := bob.generateSMPFourthParameters(secret, s2, s3) // HERE
+	s4 := bob.generateSMPFourthParameters(secret, s2, s3.msg)
 
 	// Alice
 	err = alice.verifySMP4Parameters(s3, s2.msg, s4.msg)

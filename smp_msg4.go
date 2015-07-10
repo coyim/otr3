@@ -21,10 +21,10 @@ func (m *smpMessage4) tlv() []byte {
 	return genSMPTLV(5, m.rb, m.cr, m.d7)
 }
 
-func (c *context) generateSMPFourthParameters(secret *big.Int, s2 smp2, s3 smp3) smp4 {
+func (c *context) generateSMPFourthParameters(secret *big.Int, s2 smp2, msg3 smpMessage3) smp4 {
 	s := c.generateFourthParameters()
 	s.y = secret
-	s.msg = calculateMessageFour(s, s2, s3)
+	s.msg = calculateMessageFour(s, s2, msg3)
 	return s
 }
 
@@ -47,11 +47,13 @@ func (c *context) generateFourthParameters() smp4 {
 	return s
 }
 
-func calculateMessageFour(s smp4, s2 smp2, s3 smp3) smpMessage4 {
+func calculateMessageFour(s smp4, s2 smp2, msg3 smpMessage3) smpMessage4 {
 	var m smpMessage4
 
-	m.rb = modExp(s3.qaqb, s2.b3)
-	m.cr = hashMPIsBN(nil, 8, modExp(g1, s.r7), modExp(s3.qaqb, s.r7))
+	qaqb := divMod(msg3.qa, s2.qb, p)
+
+	m.rb = modExp(qaqb, s2.b3)
+	m.cr = hashMPIsBN(nil, 8, modExp(g1, s.r7), modExp(qaqb, s.r7))
 	m.d7 = subMod(s.r7, mul(s2.b3, m.cr), q)
 
 	return m
