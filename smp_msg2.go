@@ -13,6 +13,7 @@ type smp2 struct {
 	b2, b3             *big.Int
 	r2, r3, r4, r5, r6 *big.Int
 	g2, g3             *big.Int
+	g3a                *big.Int
 	qb                 *big.Int
 	msg                smpMessage2
 }
@@ -52,6 +53,7 @@ func generateMessageTwoFor(s *smp2, s1 smpMessage1) smpMessage2 {
 	m.c2, m.d2 = generateZKP(s.r2, s.b2, 3)
 	m.c3, m.d3 = generateZKP(s.r3, s.b3, 4)
 
+	s.g3a = s1.g3a
 	s.g2 = modExp(s1.g2a, s.b2)
 	s.g3 = modExp(s1.g3a, s.b3)
 

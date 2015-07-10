@@ -40,6 +40,13 @@ func Test_generateSMPSecondParameters_computesG2AndG3CorrectlyForOtrV2(t *testin
 	assertDeepEquals(t, smp.g3, fixtureSmp2().g3)
 }
 
+func Test_generateSMPSecondParameters_storesG3ForOtrV2(t *testing.T) {
+	otr := context{otrV2{}, fixtureRand()}
+	smp1 := fixtureMessage1()
+	smp := otr.generateSMPSecondParameters(fixtureSecret(), smp1)
+	assertDeepEquals(t, smp.g3a, smp1.g3a)
+}
+
 func Test_generateSMPSecondParameters_computesG2bAndG3bCorrectlyForOtrV2(t *testing.T) {
 	otr := context{otrV2{}, fixtureRand()}
 	smp1 := fixtureMessage1()
