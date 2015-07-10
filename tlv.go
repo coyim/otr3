@@ -2,7 +2,7 @@ package otr3
 
 const tlvHeaderLength = 4
 
-func parseTLV(data []byte) interface{} {
+func parseTLV(data []byte) smpMessage {
 	tlvType := extractShort(data, 0)
 	switch tlvType {
 	case 0x02:

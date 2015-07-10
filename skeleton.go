@@ -6,8 +6,13 @@ import (
 )
 
 type context struct {
-	version otrVersion
-	Rand    io.Reader
+	version      otrVersion
+	Rand         io.Reader
+	currentState smpState
+}
+
+func newContext(v otrVersion, rand io.Reader) *context {
+	return &context{version: v, Rand: rand, currentState: smpStateExpect1{}}
 }
 
 type otrVersion interface {
@@ -17,15 +22,26 @@ type otrVersion interface {
 
 type conversation interface {
 	send(message []byte)
-	receive() []byte
+	receive(message []byte) error
 }
 
 func (c *context) send(message []byte) {
 	// FIXME Dummy for now
 }
 
-func (c *context) receive() []byte {
-	// FIXME Dummy for now
+// NOTE it only accepts TLVs
+func (c *context) receive(message []byte) error {
+	var err error
+	m := parseTLV(message)
+	c.currentState, err = m.receivedMessage(c.currentState)
+	return err
+}
+
+func extractTLVs(data []byte) [][]byte {
+	return nil
+}
+
+func stripPlaintext(data []byte) []byte {
 	return nil
 }
 

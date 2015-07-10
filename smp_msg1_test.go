@@ -7,7 +7,7 @@ import (
 )
 
 func Test_generatesLongerAandRValuesForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, fixtureRand()}
+	otr := newContext(otrV3{}, fixtureRand())
 	smp := otr.generateSMPStartParameters()
 	assertDeepEquals(t, smp.a2, fixtureLong1)
 	assertDeepEquals(t, smp.a3, fixtureLong2)
@@ -16,7 +16,7 @@ func Test_generatesLongerAandRValuesForOtrV3(t *testing.T) {
 }
 
 func Test_generatesShorterAandRValuesForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, fixtureRand()}
+	otr := newContext(otrV2{}, fixtureRand())
 	smp := otr.generateSMPStartParameters()
 	assertDeepEquals(t, smp.a2, fixtureShort1)
 	assertDeepEquals(t, smp.a3, fixtureShort2)
@@ -25,47 +25,47 @@ func Test_generatesShorterAandRValuesForOtrV2(t *testing.T) {
 }
 
 func Test_computesG2aAndG3aCorrectlyForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, fixtureRand()}
+	otr := newContext(otrV3{}, fixtureRand())
 	smp := otr.generateSMPStartParameters()
 	assertDeepEquals(t, smp.msg.g2a, fixtureMessage1v3().g2a)
 	assertDeepEquals(t, smp.msg.g3a, fixtureMessage1v3().g3a)
 }
 
 func Test_computesG2aAndG3aCorrectlyForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, fixtureRand()}
+	otr := newContext(otrV2{}, fixtureRand())
 	smp := otr.generateSMPStartParameters()
 	assertDeepEquals(t, smp.msg.g2a, fixtureMessage1().g2a)
 	assertDeepEquals(t, smp.msg.g3a, fixtureMessage1().g3a)
 }
 
 func Test_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, fixtureRand()}
+	otr := newContext(otrV2{}, fixtureRand())
 	smp := otr.generateSMPStartParameters()
 	assertDeepEquals(t, smp.msg.c2, fixtureMessage1().c2)
 	assertDeepEquals(t, smp.msg.d2, fixtureMessage1().d2)
 }
 
 func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, fixtureRand()}
+	otr := newContext(otrV2{}, fixtureRand())
 	smp := otr.generateSMPStartParameters()
 	assertDeepEquals(t, smp.msg.c3, fixtureMessage1().c3)
 	assertDeepEquals(t, smp.msg.d3, fixtureMessage1().d3)
 }
 
 func Test_thatVerifySMPStartParametersCheckG2AForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, fixtureRand()}
+	otr := newContext(otrV3{}, fixtureRand())
 	err := otr.verifySMPStartParameters(smpMessage1{g2a: new(big.Int).SetInt64(1)})
 	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
 }
 
 func Test_thatVerifySMPStartParametersCheckG3AForOtrV3(t *testing.T) {
-	otr := context{otrV3{}, fixtureRand()}
+	otr := newContext(otrV3{}, fixtureRand())
 	err := otr.verifySMPStartParameters(smpMessage1{g2a: new(big.Int).SetInt64(3), g3a: p})
 	assertDeepEquals(t, err, errors.New("g3a is an invalid group element"))
 }
 
 func Test_thatVerifySMPStartParametersDoesntCheckG2AForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, fixtureRand()}
+	otr := newContext(otrV2{}, fixtureRand())
 	err := otr.verifySMPStartParameters(smpMessage1{
 		g2a: new(big.Int).SetInt64(1),
 		g3a: new(big.Int).SetInt64(1),
@@ -78,7 +78,7 @@ func Test_thatVerifySMPStartParametersDoesntCheckG2AForOtrV2(t *testing.T) {
 }
 
 func Test_thatVerifySMPStartParametersDoesntCheckG3AForOtrV2(t *testing.T) {
-	otr := context{otrV2{}, fixtureRand()}
+	otr := newContext(otrV2{}, fixtureRand())
 	err := otr.verifySMPStartParameters(smpMessage1{
 		g2a: new(big.Int).SetInt64(3),
 		g3a: new(big.Int).SetInt64(1),
@@ -91,7 +91,7 @@ func Test_thatVerifySMPStartParametersDoesntCheckG3AForOtrV2(t *testing.T) {
 }
 
 func Test_thatVerifySMPStartParametersChecksThatc2IsAValidZeroKnowledgeProof(t *testing.T) {
-	otr := context{otrV3{}, fixtureRand()}
+	otr := newContext(otrV3{}, fixtureRand())
 	err := otr.verifySMPStartParameters(smpMessage1{
 		g2a: new(big.Int).SetInt64(3),
 		g3a: new(big.Int).SetInt64(3),
@@ -104,7 +104,7 @@ func Test_thatVerifySMPStartParametersChecksThatc2IsAValidZeroKnowledgeProof(t *
 }
 
 func Test_thatVerifySMPStartParametersChecksThatc3IsAValidZeroKnowledgeProof(t *testing.T) {
-	otr := context{otrV3{}, fixtureRand()}
+	otr := newContext(otrV3{}, fixtureRand())
 
 	err := otr.verifySMPStartParameters(smpMessage1{
 		g2a: fixtureMessage1().g2a,
@@ -118,7 +118,7 @@ func Test_thatVerifySMPStartParametersChecksThatc3IsAValidZeroKnowledgeProof(t *
 }
 
 func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessage(t *testing.T) {
-	otr := context{otrV3{}, fixtureRand()}
+	otr := newContext(otrV3{}, fixtureRand())
 
 	g2a, _ := new(big.Int).SetString("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77", 16)
 	g3a, _ := new(big.Int).SetString("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a", 16)
@@ -139,7 +139,7 @@ func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessage(t *testing.
 }
 
 func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessageWithProtocolV2(t *testing.T) {
-	otr := context{otrV2{}, fixtureRand()}
+	otr := newContext(otrV2{}, fixtureRand())
 
 	g2a, _ := new(big.Int).SetString("8a88c345c63aa25dab9815f8c51f6b7b621a12d31c8220a0579381c1e2e85a2275e2407c79c8e6e1f72ae765804e6b4562ac1b2d634313c70d59752ac119c6da5cb95dde3eedd9c48595b37256f5b64c56fb938eb1131447c9af9054b42841c57d1f41fe5aa510e2bd2965434f46dd0473c60d6114da088c7047760b00bc10287a03afc4c4f30e1c7dd7c9dbd51bdbd049eb2b8921cbdc72b4f69309f61e559c2d6dec9c9ce6f38ccb4dfd07f4cf2cf6e76279b88b297848c473e13f091a0f77", 16)
 	g3a, _ := new(big.Int).SetString("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a", 16)
