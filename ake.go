@@ -108,11 +108,12 @@ func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
 
 func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool, publicKey []byte) []byte {
 	//Mb
-	// verifyData = ake.generateVerifyData(publicKey, xFirst)
+	verifyData := ake.generateVerifyData(publicKey, xFirst)
+	mb := sumHMAC(key.m1[:], verifyData)
 	// TODO mb is used in Key sign() mb := sumHMAC(key.m1[:], verifyData)
 
 	//Xb
-	xb := ake.calcXb(publicKey, key, xFirst)
+	xb := ake.calcXb(publicKey, key, mb, xFirst)
 	return appendData(nil, xb)
 }
 
@@ -138,7 +139,7 @@ func sumHMAC(key, data []byte) []byte {
 	return mac.Sum(nil)
 }
 
-func (ake *AKE) calcXb(publicKey []byte, key *akeKeys, xFirst bool) []byte {
+func (ake *AKE) calcXb(publicKey []byte, key *akeKeys, mb []byte, xFirst bool) []byte {
 	var xb, sigb []byte
 	xb = appendWord(publicKey, ake.myKeyId)
 

@@ -147,3 +147,23 @@ func readParameter(r *bufio.Reader) (tag string, value *big.Int, end bool) {
 	}
 	return
 }
+
+func (pub *PublicKey) Parse(in []byte) int {
+	//TODO Error handling
+	//extractShort(in, 0)
+
+	index := 2
+	index, pub.P = extractMPI(in, index)
+	index, pub.Q = extractMPI(in, index)
+	index, pub.G = extractMPI(in, index)
+	index, pub.Y = extractMPI(in, index)
+	return index
+}
+
+func (priv *PrivateKey) Parse(in []byte) {
+	//TODO Error handling
+	//extractShort(in, 0)
+
+	index := priv.PublicKey.Parse(in)
+	index, priv.X = extractMPI(in, index)
+}
