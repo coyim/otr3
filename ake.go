@@ -6,7 +6,6 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/hex"
 	"hash"
 	"io"
 	"math/big"
@@ -107,12 +106,8 @@ func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
 }
 
 func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) []byte {
-	//Mb
 	verifyData := ake.generateVerifyData(xFirst)
 	mb := sumHMAC(key.m1[:], verifyData)
-	// TODO mb is used in Key sign() mb := sumHMAC(key.m1[:], verifyData)
-
-	//Xb
 	xb := ake.calcXb(key, mb, xFirst)
 	return appendData(nil, xb)
 }
@@ -145,11 +140,7 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 	xb := ake.ourKey.PublicKey.serialize()
 	xb = appendWord(xb, ake.myKeyId)
 
-	if xFirst {
-		sigb, _ = hex.DecodeString("86e8158880882a85ca444ce5c31641ff321864ce0a23707826c7f5181638512ca79ebeb319986f4b")
-	} else {
-		sigb, _ = hex.DecodeString("44baa88e5746516597007414c1662801cbc7e17baf7e945ee6a77122ad38012965da4a0898a0c9bf")
-	}
+	sigb, _ = ake.ourKey.sign(ake.rand(), mb)
 	xb = append(xb, sigb...)
 
 	aesCipher, err := aes.NewCipher(key.c[:])

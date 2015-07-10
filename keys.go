@@ -166,6 +166,7 @@ func (priv *PrivateKey) parse(in []byte) {
 	//extractShort(in, 0)
 
 	index := priv.PublicKey.parse(in)
+	priv.PrivateKey.PublicKey = priv.PublicKey.PublicKey
 	index, priv.X = extractMPI(in, index)
 }
 
@@ -186,4 +187,19 @@ func (pub *PublicKey) serialize() []byte {
 	result = appendMPI(result, pub.G)
 	result = appendMPI(result, pub.Y)
 	return result
+}
+
+func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
+	r, s, err := dsa.Sign(rand, &priv.PrivateKey, hashed)
+	if err == nil {
+		rBytes := r.Bytes()
+		sBytes := s.Bytes()
+
+		out := make([]byte, 40)
+		copy(out[20-len(rBytes):], rBytes)
+		copy(out[len(out)-len(sBytes):], sBytes)
+		return out, nil
+	} else {
+		return nil, err
+	}
 }
