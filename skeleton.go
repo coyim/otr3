@@ -3,6 +3,8 @@ package otr3
 import (
 	"io"
 	"math/big"
+	"strconv"
+	"strings"
 )
 
 type context struct {
@@ -29,7 +31,32 @@ func (c *context) send(message []byte) {
 	// FIXME Dummy for now
 }
 
-// NOTE it only accepts TLVs
+var queryMarker = "?OTR"
+
+func parseOTRQueryMessage(msg string) []int {
+	ret := []int{}
+
+	if strings.Index(msg, queryMarker) == 0 {
+		var p int
+		versions := msg[len(queryMarker):]
+
+		if versions[p] == '?' {
+			ret = append(ret, 1)
+			p++
+		}
+
+		if len(versions) > p && versions[p] == 'v' {
+			for _, c := range versions[p:] {
+				if v, err := strconv.Atoi(string(c)); err == nil {
+					ret = append(ret, v)
+				}
+			}
+		}
+	}
+
+	return ret
+}
+
 func (c *context) receive(message []byte) error {
 	var err error
 	m := parseTLV(message)
