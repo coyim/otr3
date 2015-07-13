@@ -8,8 +8,13 @@ import (
 	"strconv"
 )
 
+const (
+	lenMsgHeader = 3
+)
+
 var (
 	errUnsupportedOTRVersion = errors.New("unsupported OTR version")
+	errWrongProtocolVersion  = errors.New("wrong protocol version")
 )
 
 type context struct {
@@ -63,18 +68,58 @@ func parseOTRQueryMessage(msg []byte) []int {
 	return ret
 }
 
+func isQueryMessage(msg []byte) bool {
+	return bytes.HasPrefix(msg, []byte(queryMarker))
+}
+
+var (
+	dhCommitMsg = 0x02
+	dataMsg     = 0x03
+)
+
 // This should be used by the xmpp-client to received OTR messages in plain
 //TODO toSend needs fragmentation to be implemented
 func (c *context) receive(message []byte) (toSend []byte, err error) {
 
-	if bytes.HasPrefix(message, []byte(queryMarker)) {
+	if isQueryMessage(message) {
 		toSend, err = c.receiveOTRQueryMessage(message)
 		return
 	}
 
-	//naive SMP parsing
-	err = c.receiveSMPMessage(message)
+	// TODO check the message instanceTag
+
+	msgProtocolVersion := extractShort(message, 0)
+	if c.version.Int() != int(msgProtocolVersion) {
+		return nil, errWrongProtocolVersion
+	}
+
+	msgType := int(message[2])
+
+	switch msgType {
+	case dhCommitMsg:
+		toSend, err = c.receiveDHCommit(message)
+	case dataMsg:
+		//TODO: extract message from the encripted DATA
+		//msg := decrypt(message)
+		//err = c.receiveSMPMessage(msg)
+	}
+
 	return
+}
+
+func (c *context) receiveDHCommit(msg []byte) ([]byte, error) {
+	//TODO store this state somewhere
+	ake := AKE{
+		context: c,
+	}
+
+	if ake.needInstanceTag() {
+		receiverInstanceTag, _ := extractWord(msg[lenMsgHeader:], 0)
+		ake.senderInstanceTag = generateIntanceTag()
+		ake.receiverInstanceTag = receiverInstanceTag
+	}
+
+	return ake.dhKeyMessage()
 }
 
 func generateIntanceTag() uint32 {
@@ -87,8 +132,10 @@ func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	//TODO store this state somewhere
 	ake := AKE{
-		context: c,
+		context:           c,
+		senderInstanceTag: generateIntanceTag(),
 	}
 
 	return ake.dhCommitMessage()
