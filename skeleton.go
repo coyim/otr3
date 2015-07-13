@@ -88,8 +88,7 @@ func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
 	}
 
 	ake := AKE{
-		protocolVersion:   uint16(c.version.Int()),
-		senderInstanceTag: generateIntanceTag(),
+		context: c,
 	}
 
 	return ake.dhCommitMessage()

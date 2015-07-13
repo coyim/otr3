@@ -43,3 +43,10 @@ func Test_extractShort_extractsAllTheBytes(t *testing.T) {
 	result := extractShort(d, 0)
 	assertDeepEquals(t, result, uint16(0x1214))
 }
+
+func Test_extractData_extractsFromStartIndex(t *testing.T) {
+	d := []byte{0x13, 0x54, 0x00, 0x00, 0x00, 0x05, 0x55, 0x12, 0x04, 0x8A, 0x00}
+	index, result := extractData(d, 2)
+	assertDeepEquals(t, result, []byte{0x55, 0x12, 0x04, 0x8A, 0x00})
+	assertDeepEquals(t, index, 11)
+}

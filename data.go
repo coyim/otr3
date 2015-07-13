@@ -79,3 +79,11 @@ func extractShort(d []byte, start int) uint16 {
 	return uint16(d[start])<<8 |
 		uint16(d[start+1])
 }
+
+func extractData(d []byte, start int) (newIndex int, data []byte) {
+	// TODO: errors
+	length := int(extractWord(d, start))
+	newIndex = start + 4 + length
+	data = d[start+4 : newIndex]
+	return
+}
