@@ -3,6 +3,7 @@ package otr3
 import (
 	"bufio"
 	"crypto/dsa"
+	"crypto/sha1"
 	"encoding/hex"
 	"io"
 	"math/big"
@@ -163,7 +164,6 @@ func (pub *PublicKey) parse(in []byte) int {
 
 func (priv *PrivateKey) parse(in []byte) {
 	//TODO Error handling
-	//extractShort(in, 0)
 
 	index := priv.PublicKey.parse(in)
 	priv.PrivateKey.PublicKey = priv.PublicKey.PublicKey
@@ -180,6 +180,11 @@ func parseIntoPrivateKey(hexString string) *PrivateKey {
 
 var dsaKeyType = []byte{0x00, 0x00}
 
+func (priv *PrivateKey) serialize() []byte {
+	result := priv.PublicKey.serialize()
+	return appendMPI(result, priv.PrivateKey.X)
+}
+
 func (pub *PublicKey) serialize() []byte {
 	result := dsaKeyType
 	result = appendMPI(result, pub.P)
@@ -187,6 +192,13 @@ func (pub *PublicKey) serialize() []byte {
 	result = appendMPI(result, pub.G)
 	result = appendMPI(result, pub.Y)
 	return result
+}
+
+func (pub *PublicKey) fingerprint() []byte {
+	b := pub.serialize()
+	h := sha1.New() // TODO: this instance should be configurable
+	h.Write(b[2:])  // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
+	return h.Sum(nil)
 }
 
 func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
