@@ -6,6 +6,7 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"errors"
 	"hash"
 	"io"
 	"math/big"
@@ -236,6 +237,20 @@ func (ake *AKE) sigMessage() []byte {
 	out = append(out, encryptedSig...)
 	out = append(out, macSig[:20]...)
 	return out
+}
+
+func (ake *AKE) processDHKey(in []byte) (isSame bool, err error) {
+	_, gy := extractMPI(in, 0)
+	if gy.Cmp(g1) < 0 || gy.Cmp(pMinusTwo) > 0 {
+		err = errors.New("otr: DH value out of range")
+		return
+	}
+	if ake.gy != nil {
+		isSame = ake.gy.Cmp(gy) == 0
+		return
+	}
+	ake.gy = gy
+	return
 }
 
 func (ake *AKE) protocolVersion() uint16 {
