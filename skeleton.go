@@ -1,10 +1,15 @@
 package otr3
 
 import (
+	"bytes"
+	"errors"
 	"io"
 	"math/big"
 	"strconv"
-	"strings"
+)
+
+var (
+	errUnsupportedOTRVersion = errors.New("unsupported OTR version")
 )
 
 type context struct {
@@ -18,6 +23,7 @@ func newContext(v otrVersion, rand io.Reader) *context {
 }
 
 type otrVersion interface {
+	Int() int
 	parameterLength() int
 	isGroupElement(n *big.Int) bool
 }
@@ -31,12 +37,12 @@ func (c *context) send(message []byte) {
 	// FIXME Dummy for now
 }
 
-var queryMarker = "?OTR"
+var queryMarker = []byte("?OTR")
 
-func parseOTRQueryMessage(msg string) []int {
+func parseOTRQueryMessage(msg []byte) []int {
 	ret := []int{}
 
-	if strings.Index(msg, queryMarker) == 0 {
+	if bytes.HasPrefix(msg, queryMarker) {
 		var p int
 		versions := msg[len(queryMarker):]
 
@@ -57,19 +63,61 @@ func parseOTRQueryMessage(msg string) []int {
 	return ret
 }
 
-func (c *context) receive(message []byte) error {
+// This should be used by the xmpp-client to received OTR messages in plain
+//TODO toSend needs fragmentation to be implemented
+func (c *context) receive(message []byte) (toSend []byte, err error) {
+
+	if bytes.HasPrefix(message, []byte(queryMarker)) {
+		if err = c.receiveOTRQueryMessage(message); err != nil {
+			return
+		}
+
+		ake := AKE{
+			protocolVersion:   uint16(c.version.Int()),
+			senderInstanceTag: generateIntanceTag(),
+		}
+
+		toSend, err = ake.dhCommitMessage()
+		return
+	}
+
+	//naive SMP parsing
+	err = c.receiveSMPMessage(message)
+	return
+}
+
+func generateIntanceTag() uint32 {
+	//TODO generate this
+	return 0x00000100 + 0x01
+}
+
+func (c *context) receiveOTRQueryMessage(msg []byte) error {
+	version := 0
+	versions := parseOTRQueryMessage(msg)
+
+	for _, v := range versions {
+		if v > version {
+			version = v
+		}
+	}
+
+	switch version {
+	case 2:
+		c.version = otrV2{}
+	case 3:
+		c.version = otrV3{}
+	default:
+		return errUnsupportedOTRVersion
+	}
+
+	return nil
+}
+
+func (c *context) receiveSMPMessage(message []byte) error {
 	var err error
 	m := parseTLV(message)
 	c.currentState, err = m.receivedMessage(c.currentState)
 	return err
-}
-
-func extractTLVs(data []byte) [][]byte {
-	return nil
-}
-
-func stripPlaintext(data []byte) []byte {
-	return nil
 }
 
 func (c *context) rand() io.Reader {

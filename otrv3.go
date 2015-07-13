@@ -11,3 +11,7 @@ func (v otrV3) parameterLength() int {
 func (v otrV3) isGroupElement(n *big.Int) bool {
 	return isGroupElement(n)
 }
+
+func (v otrV3) Int() int {
+	return 3
+}
