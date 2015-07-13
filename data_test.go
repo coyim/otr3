@@ -34,8 +34,15 @@ func Test_appendMPIsWillAppendTheMPIs(t *testing.T) {
 
 func Test_extractWord_extractsAllTheBytes(t *testing.T) {
 	d := []byte{0x12, 0x14, 0x15, 0x17}
-	result := extractWord(d, 0)
+	result, _ := extractWord(d, 0)
 	assertDeepEquals(t, result, uint32(0x12141517))
+}
+
+func Test_extractWord_extractsWithError(t *testing.T) {
+	d := []byte{0x12, 0x14, 0x15}
+	result, err := extractWord(d, 0)
+	assertDeepEquals(t, result, uint32(0))
+	assertDeepEquals(t, err.Error(), "extractWord failed due to length too short")
 }
 
 func Test_extractShort_extractsAllTheBytes(t *testing.T) {

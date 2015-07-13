@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"crypto/sha256"
+	"errors"
 	"hash"
 	"math/big"
 )
@@ -47,28 +48,31 @@ func hashMPIsBN(h hash.Hash, magic byte, mpis ...*big.Int) *big.Int {
 	return new(big.Int).SetBytes(hashMPIs(h, magic, mpis...))
 }
 
-func extractWord(d []byte, start int) uint32 {
-	// TODO: errors
+func extractWord(d []byte, start int) (uint32, error) {
+	if len(d)-start < 4 {
+		return 0, errors.New("extractWord failed due to length too short")
+	}
+
 	return uint32(d[start])<<24 |
 		uint32(d[start+1])<<16 |
 		uint32(d[start+2])<<8 |
-		uint32(d[start+3])
+		uint32(d[start+3]), nil
 }
 
 func extractMPI(d []byte, start int) (newIndex int, mpi *big.Int) {
 	// TODO: errors
-	mpiLen := int(extractWord(d, start))
-	newIndex = start + 4 + mpiLen
+	mpiLen, _ := extractWord(d, start)
+	newIndex = start + 4 + int(mpiLen)
 	mpi = new(big.Int).SetBytes(d[start+4 : newIndex])
 	return
 }
 
 func extractMPIs(d []byte, start int) []*big.Int {
 	// TODO: errors
-	mpiCount := int(extractWord(d, start))
-	result := make([]*big.Int, mpiCount)
+	mpiCount, _ := extractWord(d, start)
+	result := make([]*big.Int, int(mpiCount))
 	current := start + 4
-	for i := 0; i < mpiCount; i++ {
+	for i := 0; i < int(mpiCount); i++ {
 		current, result[i] = extractMPI(d, current)
 	}
 	return result
@@ -82,8 +86,8 @@ func extractShort(d []byte, start int) uint16 {
 
 func extractData(d []byte, start int) (newIndex int, data []byte) {
 	// TODO: errors
-	length := int(extractWord(d, start))
-	newIndex = start + 4 + length
+	length, _ := extractWord(d, start)
+	newIndex = start + 4 + int(length)
 	data = d[start+4 : newIndex]
 	return
 }
