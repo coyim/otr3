@@ -68,16 +68,7 @@ func parseOTRQueryMessage(msg []byte) []int {
 func (c *context) receive(message []byte) (toSend []byte, err error) {
 
 	if bytes.HasPrefix(message, []byte(queryMarker)) {
-		if err = c.receiveOTRQueryMessage(message); err != nil {
-			return
-		}
-
-		ake := AKE{
-			protocolVersion:   uint16(c.version.Int()),
-			senderInstanceTag: generateIntanceTag(),
-		}
-
-		toSend, err = ake.dhCommitMessage()
+		toSend, err = c.receiveOTRQueryMessage(message)
 		return
 	}
 
@@ -91,7 +82,20 @@ func generateIntanceTag() uint32 {
 	return 0x00000100 + 0x01
 }
 
-func (c *context) receiveOTRQueryMessage(msg []byte) error {
+func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
+	if err := c.acceptOTRRequest(message); err != nil {
+		return nil, err
+	}
+
+	ake := AKE{
+		protocolVersion:   uint16(c.version.Int()),
+		senderInstanceTag: generateIntanceTag(),
+	}
+
+	return ake.dhCommitMessage()
+}
+
+func (c *context) acceptOTRRequest(msg []byte) error {
 	version := 0
 	versions := parseOTRQueryMessage(msg)
 

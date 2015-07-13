@@ -19,27 +19,27 @@ func Test_parseOTRQueryMessage(t *testing.T) {
 	}
 }
 
-func Test_receiveOTRQueryMessageReturnsErrorForOTRV1(t *testing.T) {
+func Test_acceptOTRRequestReturnsErrorForOTRV1(t *testing.T) {
 	msg := []byte("?OTR?")
 	cxt := context{Rand: fixtureRand()}
-	err := cxt.receiveOTRQueryMessage(msg)
+	err := cxt.acceptOTRRequest(msg)
 
 	assertEquals(t, err, errUnsupportedOTRVersion)
 }
 
-func Test_receiveOTRQueryMessageAcceptsOTRV2(t *testing.T) {
+func Test_acceptOTRRequestAcceptsOTRV2(t *testing.T) {
 	msg := []byte("?OTR?v2?")
 	cxt := context{Rand: fixtureRand()}
-	err := cxt.receiveOTRQueryMessage(msg)
+	err := cxt.acceptOTRRequest(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, cxt.version, otrV2{})
 }
 
-func Test_receiveOTRQueryMessageAcceptsOTRV3EvenIfV2IsAnOption(t *testing.T) {
+func Test_acceptOTRRequestAcceptsOTRV3EvenIfV2IsAnOption(t *testing.T) {
 	msg := []byte("?OTRv32?")
 	cxt := context{Rand: fixtureRand()}
-	err := cxt.receiveOTRQueryMessage(msg)
+	err := cxt.acceptOTRRequest(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, cxt.version, otrV3{})
