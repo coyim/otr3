@@ -254,7 +254,7 @@ func (ake *AKE) processDHKey(in []byte) (isSame bool, err error) {
 }
 
 func (ake *AKE) protocolVersion() uint16 {
-	return uint16(ake.context.version.Int())
+	return ake.context.version.Int()
 }
 
 func (ake *AKE) needInstanceTag() bool {

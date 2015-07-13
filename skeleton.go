@@ -28,7 +28,7 @@ func newContext(v otrVersion, rand io.Reader) *context {
 }
 
 type otrVersion interface {
-	Int() int
+	Int() uint16
 	parameterLength() int
 	isGroupElement(n *big.Int) bool
 }
@@ -89,7 +89,7 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 	// TODO check the message instanceTag
 
 	msgProtocolVersion := extractShort(message, 0)
-	if c.version.Int() != int(msgProtocolVersion) {
+	if c.version.Int() != msgProtocolVersion {
 		return nil, errWrongProtocolVersion
 	}
 

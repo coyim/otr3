@@ -12,6 +12,6 @@ func (v otrV2) isGroupElement(n *big.Int) bool {
 	return true
 }
 
-func (v otrV2) Int() int {
+func (v otrV2) Int() uint16 {
 	return 2
 }
