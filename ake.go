@@ -14,11 +14,10 @@ import (
 // AKE is authenticated key exchange context
 type AKE struct {
 	ourKey              *PrivateKey
-	Rand                io.Reader
 	r                   [16]byte
 	x, y                *big.Int
 	gx, gy              *big.Int
-	protocolVersion     uint16
+	context             *context
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
 	revealKey, sigKey   akeKeys
@@ -39,8 +38,8 @@ const (
 )
 
 func (ake *AKE) rand() io.Reader {
-	if ake.Rand != nil {
-		return ake.Rand
+	if ake.context.Rand != nil {
+		return ake.context.Rand
 	}
 	return rand.Reader
 }
@@ -171,10 +170,12 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 		return nil, err
 	}
 
-	out = appendShort(out, ake.protocolVersion)
+	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeDHCommit)
-	out = appendWord(out, ake.senderInstanceTag)
-	out = appendWord(out, ake.receiverInstanceTag)
+	if ake.needInstanceTag() {
+		out = appendWord(out, ake.senderInstanceTag)
+		out = appendWord(out, ake.receiverInstanceTag)
+	}
 	out = appendData(out, encryptedGx)
 	out = appendData(out, ake.hashedGx())
 
@@ -190,10 +191,12 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	}
 	ake.y = y
 	ake.gy = new(big.Int).Exp(g1, ake.y, p)
-	out = appendShort(out, ake.protocolVersion)
+	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeDHKey)
-	out = appendWord(out, ake.senderInstanceTag)
-	out = appendWord(out, ake.receiverInstanceTag)
+	if ake.needInstanceTag() {
+		out = appendWord(out, ake.senderInstanceTag)
+		out = appendWord(out, ake.receiverInstanceTag)
+	}
 	out = appendMPI(out, ake.gy)
 
 	return out, nil
@@ -203,10 +206,12 @@ func (ake *AKE) revealSigMessage() []byte {
 	s := ake.calcDHSharedSecret(true)
 	ake.calcAKEKeys(s)
 	var out []byte
-	out = appendShort(out, ake.protocolVersion)
+	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeRevealSig)
-	out = appendWord(out, ake.senderInstanceTag)
-	out = appendWord(out, ake.receiverInstanceTag)
+	if ake.needInstanceTag() {
+		out = appendWord(out, ake.senderInstanceTag)
+		out = appendWord(out, ake.receiverInstanceTag)
+	}
 	out = appendData(out, ake.r[:])
 	encryptedSig := ake.generateEncryptedSignature(&ake.revealKey, true)
 	macSig := sumHMAC(ake.revealKey.m2[:], encryptedSig)
@@ -219,14 +224,24 @@ func (ake *AKE) sigMessage() []byte {
 	s := ake.calcDHSharedSecret(false)
 	ake.calcAKEKeys(s)
 	var out []byte
-	out = appendShort(out, ake.protocolVersion)
+	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeSig)
-	out = appendWord(out, ake.senderInstanceTag)
-	out = appendWord(out, ake.receiverInstanceTag)
+	if ake.needInstanceTag() {
+		out = appendWord(out, ake.senderInstanceTag)
+		out = appendWord(out, ake.receiverInstanceTag)
+	}
 
 	encryptedSig := ake.generateEncryptedSignature(&ake.sigKey, false)
 	macSig := sumHMAC(ake.sigKey.m2[:], encryptedSig)
 	out = append(out, encryptedSig...)
 	out = append(out, macSig[:20]...)
 	return out
+}
+
+func (ake *AKE) protocolVersion() uint16 {
+	return uint16(ake.context.version.Int())
+}
+
+func (ake *AKE) needInstanceTag() bool {
+	return ake.context.version.Int() == 3
 }
