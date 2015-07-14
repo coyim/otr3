@@ -21,8 +21,18 @@ type context struct {
 	version      otrVersion
 	Rand         io.Reader
 	currentState smpState
-	gx, x        *big.Int
 	privateKey   *PrivateKey
+	akeContext
+}
+
+type akeContext struct {
+	version             otrVersion
+	Rand                io.Reader
+	gx, gy, x, y        *big.Int
+	gxBytes             []byte
+	digest              [32]byte
+	senderInstanceTag   uint32
+	receiverInstanceTag uint32
 }
 
 func newContext(v otrVersion, rand io.Reader) *context {
@@ -113,25 +123,36 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 }
 
 func (c *context) receiveDHCommit(msg []byte) ([]byte, error) {
-	ake := AKE{
-		context: c,
-	}
+	ake := AKE{}
+	ake.version = otrV3{}
 
+	dataIndex := lenMsgHeader
 	if ake.needInstanceTag() {
-		receiverInstanceTag, _ := extractWord(msg[lenMsgHeader:], 0)
-		ake.senderInstanceTag = generateIntanceTag()
-		ake.receiverInstanceTag = receiverInstanceTag
+		receiverInstanceTag, _ := extractWord(msg, lenMsgHeader)
+		c.senderInstanceTag = generateIntanceTag()
+		c.receiverInstanceTag = receiverInstanceTag
+		dataIndex = dataIndex + 8
 	}
+	dataIndex, c.gxBytes = extractData(msg, dataIndex)
+	_, digest := extractData(msg, dataIndex)
+	copy(c.digest[:], digest)
+
+	ake.gxBytes = c.gxBytes
+	ake.digest = c.digest
+	ake.receiverInstanceTag = c.receiverInstanceTag
+	ake.senderInstanceTag = c.senderInstanceTag
 
 	return ake.dhKeyMessage()
 }
 
 func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
 	ake := AKE{
-		context: c,
-		x:       c.x,
-		gx:      c.gx,
-		ourKey:  c.privateKey,
+		akeContext: akeContext{
+			x:       c.x,
+			gx:      c.gx,
+			version: c.version,
+		},
+		ourKey: c.privateKey,
 	}
 
 	gyPos := 3
@@ -154,8 +175,11 @@ func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
 	}
 
 	ake := AKE{
-		context:           c,
-		senderInstanceTag: generateIntanceTag(),
+		akeContext: akeContext{
+			version:           c.version,
+			Rand:              c.Rand,
+			senderInstanceTag: generateIntanceTag(),
+		},
 	}
 
 	ret, err := ake.dhCommitMessage()
@@ -166,6 +190,7 @@ func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
 	//TODO find a proper place for this
 	c.x = ake.x
 	c.gx = ake.gx
+	c.senderInstanceTag = ake.senderInstanceTag
 
 	return ret, nil
 }

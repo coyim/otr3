@@ -25,12 +25,9 @@ var (
 )
 
 func Test_dhCommitMessage(t *testing.T) {
-	c := context{
-		version: otrV3{},
-		Rand:    fixedRand([]string{hex.EncodeToString(x.Bytes()), hex.EncodeToString(r[:])}),
-	}
 	var ake AKE
-	ake.context = &c
+	ake.Rand = fixedRand([]string{hex.EncodeToString(x.Bytes()), hex.EncodeToString(r[:])})
+	ake.version = otrV3{}
 	ake.ourKey = bobPrivateKey
 	ake.senderInstanceTag = 0x00000001
 	ake.receiverInstanceTag = 0x00000001
@@ -49,12 +46,9 @@ func Test_dhCommitMessage(t *testing.T) {
 }
 
 func Test_dhKeyMessage(t *testing.T) {
-	c := context{
-		version: otrV3{},
-		Rand:    fixedRand([]string{hex.EncodeToString(x.Bytes()), hex.EncodeToString(r[:])}),
-	}
 	var ake AKE
-	ake.context = &c
+	ake.Rand = fixedRand([]string{hex.EncodeToString(x.Bytes()), hex.EncodeToString(r[:])})
+	ake.version = otrV3{}
 	ake.ourKey = alicePrivateKey
 	ake.senderInstanceTag = 0x00000001
 	ake.receiverInstanceTag = 0x00000001
@@ -73,7 +67,8 @@ func Test_dhKeyMessage(t *testing.T) {
 }
 
 func Test_processDHKey(t *testing.T) {
-	ake := AKE{gy: bnFromHex("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")}
+	ake := AKE{}
+	ake.gy = bnFromHex("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 	in := appendMPI([]byte{}, bnFromHex("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d"))
 
 	isSame, err := ake.processDHKey(in)
@@ -82,7 +77,8 @@ func Test_processDHKey(t *testing.T) {
 }
 
 func Test_processDHKeyNotSame(t *testing.T) {
-	ake := AKE{gy: bnFromHex("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")}
+	ake := AKE{}
+	ake.gy = bnFromHex("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 	in := appendMPI([]byte{}, bnFromHex("76dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d"))
 
 	isSame, err := ake.processDHKey(in)
@@ -91,7 +87,8 @@ func Test_processDHKeyNotSame(t *testing.T) {
 }
 
 func Test_processDHKeyHavingError(t *testing.T) {
-	ake := AKE{gy: bnFromHex("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")}
+	ake := AKE{}
+	ake.gy = bnFromHex("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 	in := appendMPI([]byte{}, bnFromHex("751234566dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d"))
 
 	isSame, err := ake.processDHKey(in)
@@ -100,15 +97,12 @@ func Test_processDHKeyHavingError(t *testing.T) {
 }
 
 func Test_revealSigMessage(t *testing.T) {
-	c := context{
-		version: otrV3{},
-		Rand:    fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}),
-	}
 	var ake AKE
-	ake.context = &c
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
 	ake.ourKey = bobPrivateKey
+	ake.version = otrV3{}
+	ake.Rand = fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	copy(ake.r[:], r)
 	ake.x = x
 	ake.gx = gx
@@ -132,15 +126,12 @@ func Test_revealSigMessage(t *testing.T) {
 }
 
 func Test_sigMessage(t *testing.T) {
-	c := context{
-		version: otrV3{},
-		Rand:    fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}),
-	}
 	var ake AKE
-	ake.context = &c
 	ake.ourKey = alicePrivateKey
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
+	ake.version = otrV3{}
+	ake.Rand = fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	ake.y = y
 	ake.gx = gx
 	ake.gy = gy
@@ -163,14 +154,11 @@ func Test_sigMessage(t *testing.T) {
 }
 
 func Test_encryptedGx(t *testing.T) {
-	c := context{
-		version: otrV3{},
-		Rand:    fixedRand([]string{hex.EncodeToString(x.Bytes())}),
-	}
 	var ake AKE
-	ake.context = &c
+	ake.version = otrV3{}
+	ake.Rand = fixedRand([]string{hex.EncodeToString(x.Bytes())})
 	ake.gx = gx
-	encryptGx, err := ake.encryptedGx()
+	encryptGx, err := ake.encryptGx()
 	assertEquals(t, err, nil)
 	assertEquals(t, len(encryptGx), len(appendMPI([]byte{}, ake.gx)))
 }
@@ -202,19 +190,19 @@ func Test_calcDHSharedSecret(t *testing.T) {
 }
 
 func Test_calcDHSharedSecretExpectsGy(t *testing.T) {
-	ake := AKE{
-		context: newContext(otrV3{}, fixtureRand()),
-	}
+	ake := AKE{}
+	ake.version = otrV3{}
+	ake.Rand = fixtureRand()
 
 	_, err := ake.calcDHSharedSecret(true)
 	assertDeepEquals(t, err, errors.New("missing gy"))
 }
 
 func Test_calcDHSharedSecretExpectsX(t *testing.T) {
-	ake := AKE{
-		context: newContext(otrV3{}, fixtureRand()),
-		gy:      gy,
-	}
+	ake := AKE{}
+	ake.version = otrV3{}
+	ake.Rand = fixtureRand()
+	ake.gy = gy
 
 	_, err := ake.calcDHSharedSecret(true)
 	assertDeepEquals(t, err, errors.New("missing x"))
@@ -255,12 +243,9 @@ func Test_calcAKEKeys(t *testing.T) {
 }
 
 func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
-	c := context{
-		version: otrV3{},
-		Rand:    fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}),
-	}
 	var ake AKE
-	ake.context = &c
+	ake.version = otrV3{}
+	ake.Rand = fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	ake.ourKey = bobPrivateKey
 	ake.x = x
 	ake.gx = gx
@@ -280,12 +265,9 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 }
 
 func Test_generateSigKeyEncryptedSignature(t *testing.T) {
-	c := context{
-		version: otrV3{},
-		Rand:    fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}),
-	}
 	var ake AKE
-	ake.context = &c
+	ake.version = otrV3{}
+	ake.Rand = fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	ake.ourKey = alicePrivateKey
 	ake.y = y
 	ake.gx = gx
@@ -319,28 +301,25 @@ func Test_generateVerifyData(t *testing.T) {
 }
 
 func Test_generateVerifyDataExpectsGy(t *testing.T) {
-	ake := AKE{
-		gx:     gx,
-		ourKey: bobPrivateKey,
-	}
+	ake := AKE{}
+	ake.gx = gx
+	ake.ourKey = bobPrivateKey
 	_, err := ake.generateVerifyData(true)
 	assertDeepEquals(t, err, errors.New("missing gy"))
 }
 
 func Test_generateVerifyDataExpectsGx(t *testing.T) {
-	ake := AKE{
-		gy:     gy,
-		ourKey: bobPrivateKey,
-	}
+	ake := AKE{}
+	ake.gy = gy
+	ake.ourKey = bobPrivateKey
 	_, err := ake.generateVerifyData(true)
 	assertDeepEquals(t, err, errors.New("missing gx"))
 }
 
 func Test_generateVerifyDataExpectsOurKey(t *testing.T) {
-	ake := AKE{
-		gx: gx,
-		gy: gy,
-	}
+	ake := AKE{}
+	ake.gx = gx
+	ake.gy = gy
 	_, err := ake.generateVerifyData(true)
 	assertDeepEquals(t, err, errors.New("missing ourKey"))
 }

@@ -91,9 +91,8 @@ func Test_receiveDHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	}
 
 	cxt := newContext(otrV3{}, fixtureRand())
-	ake := AKE{
-		context: cxt,
-	}
+	ake := AKE{}
+	ake.version = otrV3{}
 
 	dhCommitMsg, _ := ake.dhCommitMessage()
 	dhKeyMsg, err := cxt.receiveDHCommit(dhCommitMsg)
@@ -107,10 +106,9 @@ func Test_receiveDHCommitMessageGeneratesDHKeyMessageWithCorrectInstanceTags(t *
 	senderInstanceTag := uint32(0x00000101)
 	posReceiverInsTag := 7
 
-	ake := AKE{
-		context:           cxt,
-		senderInstanceTag: senderInstanceTag,
-	}
+	ake := AKE{}
+	ake.version = otrV3{}
+	ake.senderInstanceTag = senderInstanceTag
 
 	dhCommitMsg, _ := ake.dhCommitMessage()
 	dhKeyMsg, err := cxt.receiveDHCommit(dhCommitMsg)
@@ -131,9 +129,8 @@ func Test_receiveDHKeyMessageGeneratesDHRevealSigMessage(t *testing.T) {
 	cxt.gx = fixtureGx
 	cxt.privateKey = bobPrivateKey
 
-	ake := AKE{
-		context: cxt,
-	}
+	ake := AKE{}
+	ake.version = otrV3{}
 
 	dhKeyMsg, _ := ake.dhKeyMessage()
 

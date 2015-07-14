@@ -6,6 +6,7 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"errors"
 	"hash"
 	"io"
@@ -14,16 +15,12 @@ import (
 
 // AKE is authenticated key exchange context
 type AKE struct {
-	ourKey              *PrivateKey
-	r                   [16]byte
-	x, y                *big.Int
-	gx, gy              *big.Int
-	context             *context
-	senderInstanceTag   uint32
-	receiverInstanceTag uint32
-	revealKey, sigKey   akeKeys
-	ssid                [8]byte
-	myKeyID             uint32
+	akeContext
+	ourKey            *PrivateKey
+	r                 [16]byte
+	revealKey, sigKey akeKeys
+	ssid              [8]byte
+	myKeyID           uint32
 }
 
 type akeKeys struct {
@@ -39,8 +36,8 @@ const (
 )
 
 func (ake *AKE) rand() io.Reader {
-	if ake.context.Rand != nil {
-		return ake.context.Rand
+	if ake.Rand != nil {
+		return ake.Rand
 	}
 	return rand.Reader
 }
@@ -54,7 +51,7 @@ func (ake *AKE) generateRand() (*big.Int, error) {
 	return new(big.Int).SetBytes(randx[:]), nil
 }
 
-func (ake *AKE) encryptedGx() ([]byte, error) {
+func (ake *AKE) encryptGx() ([]byte, error) {
 	_, err := io.ReadFull(ake.rand(), ake.r[:])
 
 	aesCipher, err := aes.NewCipher(ake.r[:])
@@ -69,6 +66,18 @@ func (ake *AKE) encryptedGx() ([]byte, error) {
 	stream.XORKeyStream(ciphertext, gxMPI)
 
 	return ciphertext, nil
+}
+
+func (ake *AKE) decryptGx(r []byte, encryptGx []byte) error {
+	// aes decryption gx
+	aesCipher, err := aes.NewCipher(r)
+	if err != nil {
+		return errors.New("otr: cannot create AES cipher from reveal signature message: " + err.Error())
+	}
+	var iv [aes.BlockSize]byte
+	ctr := cipher.NewCTR(aesCipher, iv[:])
+	ctr.XORKeyStream(ake.gxBytes, ake.gxBytes)
+	return nil
 }
 
 func (ake *AKE) hashedGx() []byte {
@@ -192,7 +201,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 
 	ake.x = x
 	ake.gx = new(big.Int).Exp(g1, ake.x, p)
-	encryptedGx, err := ake.encryptedGx()
+	ake.gxBytes, err = ake.encryptGx()
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +212,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 		out = appendWord(out, ake.senderInstanceTag)
 		out = appendWord(out, ake.receiverInstanceTag)
 	}
-	out = appendData(out, encryptedGx)
+	out = appendData(out, ake.gxBytes)
 	out = appendData(out, ake.hashedGx())
 
 	return out, nil
@@ -304,10 +313,51 @@ func (ake *AKE) processDHKey(in []byte) (isSame bool, err error) {
 	return
 }
 
+func (ake *AKE) processRevealSig(in []byte) error {
+	index, r := extractData(in, 0)
+	index, encryptedSig := extractData(in, index)
+	theirMAC := in[index:]
+	if len(theirMAC) != 20 {
+		return errors.New("otr: corrupt reveal signature message")
+	}
+	ake.decryptGx(r, ake.gxBytes)
+
+	// sha256 gx
+	h := sha256.New()
+	h.Write(ake.gxBytes)
+	digest := h.Sum(nil)
+	if len(digest) != len(ake.digest) || subtle.ConstantTimeCompare(digest, ake.digest[:]) == 0 {
+		return errors.New("otr: bad commit MAC in reveal signature message")
+	}
+	index, ake.gx = extractMPI(ake.gxBytes, 0)
+	if len(ake.gxBytes) > index {
+		return errors.New("otr: gx corrupt after decryption")
+	}
+	if ake.gx.Cmp(g1) < 0 || ake.gx.Cmp(pMinusTwo) > 0 {
+		return errors.New("otr: DH value out of range")
+	}
+	//calc s
+	s, _ := ake.calcDHSharedSecret(false)
+	ake.calcAKEKeys(s)
+
+	if err := ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
+		return errors.New("otr: in reveal signature message: " + err.Error())
+	}
+
+	//	ake.theirCurrentDHPub = ake.gx
+	//	ake.theirLastDHPub = nil
+
+	return nil
+}
+
+func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, revealKey *akeKeys, xFirst bool) error {
+	return nil
+}
+
 func (ake *AKE) protocolVersion() uint16 {
-	return ake.context.version.Int()
+	return ake.version.Int()
 }
 
 func (ake *AKE) needInstanceTag() bool {
-	return ake.context.version.Int() == 3
+	return ake.version.Int() == 3
 }
