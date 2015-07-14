@@ -288,12 +288,16 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 
 func (ake *AKE) processDHKey(in []byte) (isSame bool, err error) {
 	_, gy := extractMPI(in, 0)
-	if gy.Cmp(g1) < 0 || gy.Cmp(pMinusTwo) > 0 {
+	if lt(gy, g1) || gt(gy, pMinusTwo) {
 		err = errors.New("otr: DH value out of range")
 		return
 	}
+
+	//NOTE: This keeps only the first Gy received
+	//Not sure if this is part of the spec,
+	//or simply a crypto/otr safeguard
 	if ake.gy != nil {
-		isSame = ake.gy.Cmp(gy) == 0
+		isSame = eq(ake.gy, gy)
 		return
 	}
 	ake.gy = gy
