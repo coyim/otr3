@@ -21,6 +21,8 @@ type context struct {
 	version      otrVersion
 	Rand         io.Reader
 	currentState smpState
+	gx, x        *big.Int
+	privateKey   *PrivateKey
 }
 
 func newContext(v otrVersion, rand io.Reader) *context {
@@ -74,6 +76,7 @@ func isQueryMessage(msg []byte) bool {
 
 var (
 	dhCommitMsg = 0x02
+	dhKeyMsg    = 0x0A
 	dataMsg     = 0x03
 )
 
@@ -98,6 +101,8 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 	switch msgType {
 	case dhCommitMsg:
 		toSend, err = c.receiveDHCommit(message)
+	case dhKeyMsg:
+		toSend, err = c.receiveDHKey(message)
 	case dataMsg:
 		//TODO: extract message from the encripted DATA
 		//msg := decrypt(message)
@@ -108,7 +113,6 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 }
 
 func (c *context) receiveDHCommit(msg []byte) ([]byte, error) {
-	//TODO store this state somewhere
 	ake := AKE{
 		context: c,
 	}
@@ -122,6 +126,23 @@ func (c *context) receiveDHCommit(msg []byte) ([]byte, error) {
 	return ake.dhKeyMessage()
 }
 
+func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
+	ake := AKE{
+		context: c,
+		x:       c.x,
+		gx:      c.gx,
+		ourKey:  c.privateKey,
+	}
+
+	gyPos := 3
+	if ake.needInstanceTag() {
+		gyPos = 11
+	}
+
+	_, ake.gy = extractMPI(msg, gyPos)
+
+	return ake.revealSigMessage()
+}
 func generateIntanceTag() uint32 {
 	//TODO generate this
 	return 0x00000100 + 0x01
@@ -132,13 +153,21 @@ func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	//TODO store this state somewhere
 	ake := AKE{
 		context:           c,
 		senderInstanceTag: generateIntanceTag(),
 	}
 
-	return ake.dhCommitMessage()
+	ret, err := ake.dhCommitMessage()
+	if err != nil {
+		return ret, err
+	}
+
+	//TODO find a proper place for this
+	c.x = ake.x
+	c.gx = ake.gx
+
+	return ret, nil
 }
 
 func (c *context) acceptOTRRequest(msg []byte) error {

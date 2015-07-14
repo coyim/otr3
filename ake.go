@@ -211,19 +211,22 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	var out []byte
-	y, err := ake.generateRand()
 
+	y, err := ake.generateRand()
 	if err != nil {
 		return nil, err
 	}
+
 	ake.y = y
 	ake.gy = new(big.Int).Exp(g1, ake.y, p)
 	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeDHKey)
+
 	if ake.needInstanceTag() {
 		out = appendWord(out, ake.senderInstanceTag)
 		out = appendWord(out, ake.receiverInstanceTag)
 	}
+
 	out = appendMPI(out, ake.gy)
 
 	return out, nil
