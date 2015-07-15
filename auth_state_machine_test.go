@@ -95,6 +95,47 @@ func Test_receiveDHCommit_AtAuthAwaitingSigTransitionsToAwaitingRevSigAndSendsNe
 	assertEquals(t, dhMsgType(msg), msgTypeDHKey)
 }
 
+func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMsgIfOurHashIsHigher(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHMsg, _ := ourDHCommitAKE.dhCommitMessage()
+
+	//make sure we store the same alues when creating the DH commit
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.encryptedGx = ourDHCommitAKE.encryptedGx
+	c.gx = ourDHCommitAKE.gx
+
+	// force their hashedGx to be lower than ours
+	msg := fixtureDHCommitMsg()
+	i, _ := extractData(msg, 11)
+	msg[i+4] = 0x00
+
+	state, newMsg, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
+	assertEquals(t, err, nil)
+	assertEquals(t, state, authStateAwaitingRevealSig{})
+	assertDeepEquals(t, newMsg, ourDHMsg)
+}
+
+func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaitingRevealSig(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	//make sure we store the same values when creating the DH commit
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.gx = ourDHCommitAKE.gx
+
+	// force their hashedGx to be higher than ours
+	msg := fixtureDHCommitMsg()
+	i, _ := extractData(msg, 11)
+	msg[i+4] = 0xFF
+
+	state, newMsg, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
+	assertEquals(t, err, nil)
+	assertEquals(t, state, authStateAwaitingRevealSig{})
+	assertDeepEquals(t, dhMsgType(newMsg), msgTypeDHKey)
+	assertDeepEquals(t, c.gy, fixtureGy)
+	assertDeepEquals(t, c.y, fixtureY)
+}
+
 func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 	senderInstanceTag := uint32(0x00000101)
 

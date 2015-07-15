@@ -1,5 +1,9 @@
 package otr3
 
+import (
+	"bytes"
+)
+
 type authStateNone struct{}
 type authStateAwaitingDHKey struct{}
 type authStateAwaitingRevealSig struct{}
@@ -23,6 +27,7 @@ func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authStat
 
 	msg, err := ake.dhKeyMessage()
 
+	//TODO should we reset myKeyID? Why?
 	c.y = ake.y
 	c.gy = ake.gy
 
@@ -62,8 +67,19 @@ func (authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []by
 }
 
 func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	//This is the trickest transition in the whole protocol
-	return nil, nil, nil
+	ake := AKE{
+		akeContext: *c,
+	}
+
+	index, _ := extractData(msg, 11)
+	_, theirHashedGx := extractData(msg, index)
+
+	if bytes.Compare(ake.hashedGx(), theirHashedGx) == 1 {
+		//NOTE what about the sender and receiver instance tags?
+		return authStateAwaitingRevealSig{}, ake.serializeDHCommit(), nil
+	}
+
+	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
 func (authStateAwaitingSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
