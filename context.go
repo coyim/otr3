@@ -27,8 +27,6 @@ type context struct {
 
 type akeContext struct {
 	otrContext
-	version               otrVersion
-	Rand                  io.Reader
 	gx, gy, x, y          *big.Int
 	hashedGx, encryptedGx []byte
 	digest                [32]byte
