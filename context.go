@@ -28,7 +28,6 @@ type akeContext struct {
 	otrContext
 	authState             authState
 	gx, gy, x, y          *big.Int
-	gxBytes               []byte
 	encryptedGx, hashedGx []byte
 	digest                [32]byte
 	senderInstanceTag     uint32
