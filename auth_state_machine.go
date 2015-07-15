@@ -46,6 +46,10 @@ func (authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []by
 	//TODO: error when gy = nil when we define the error strategy
 	//TODO: error when y = nil when we define the error strategy
 
+	index, encryptedGx := extractData(msg, 11)
+	c.encryptedGx = encryptedGx
+	_, c.hashedGx = extractData(msg, index)
+
 	ake := &AKE{
 		akeContext: *c,
 	}
@@ -65,3 +69,5 @@ func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) 
 func (authStateAwaitingSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
+
+//TODO need to implements AUTHSTATE_V1_SETUP
