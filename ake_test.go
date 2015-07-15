@@ -163,13 +163,6 @@ func Test_encryptedGx(t *testing.T) {
 	assertEquals(t, len(encryptGx), len(appendMPI([]byte{}, ake.gx)))
 }
 
-func Test_hashedGx(t *testing.T) {
-	var ake AKE
-	ake.gx = gx
-	hashedGx := ake.hashedGx()
-	assertDeepEquals(t, hashedGx, expectedHashedGxValue)
-}
-
 func Test_calcDHSharedSecret(t *testing.T) {
 	var bob AKE
 	bob.x = x

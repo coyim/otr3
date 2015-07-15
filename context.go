@@ -27,11 +27,13 @@ type context struct {
 
 type akeContext struct {
 	otrContext
-	gx, gy, x, y        *big.Int
-	gxBytes             []byte
-	digest              [32]byte
-	senderInstanceTag   uint32
-	receiverInstanceTag uint32
+	version               otrVersion
+	Rand                  io.Reader
+	gx, gy, x, y          *big.Int
+	hashedGx, encryptedGx []byte
+	digest                [32]byte
+	senderInstanceTag     uint32
+	receiverInstanceTag   uint32
 }
 
 type otrContext struct {
