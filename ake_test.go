@@ -177,9 +177,7 @@ func Test_decrypt(t *testing.T) {
 }
 
 func Test_hashedGx(t *testing.T) {
-	var ake AKE
-	ake.gx = gx
-	hashedGx := ake.hashedGx()
+	hashedGx := sha256Sum(gx)
 	assertDeepEquals(t, hashedGx, expectedHashedGxValue)
 }
 

@@ -80,8 +80,8 @@ func decrypt(r, dst, src []byte) error {
 	return nil
 }
 
-func (ake *AKE) hashedGx() []byte {
-	out := sha256.Sum256(ake.gx.Bytes())
+func sha256Sum(x *big.Int) []byte {
+	out := sha256.Sum256(x.Bytes())
 	return out[:]
 }
 
@@ -218,7 +218,8 @@ func (ake *AKE) serializeDHCommit() []byte {
 		out = appendWord(out, ake.receiverInstanceTag)
 	}
 	out = appendData(out, ake.encryptedGx)
-	out = appendData(out, ake.hashedGx())
+	ake.hashedGx = sha256Sum(ake.gx)
+	out = appendData(out, ake.hashedGx)
 
 	return out
 }
@@ -361,8 +362,6 @@ func (ake *AKE) processRevealSig(in []byte) (err error) {
 	if err = ake.storeGx(decryptedGx); err != nil {
 		return
 	}
-
-	//calc s
 	var s *big.Int
 	if s, err = ake.calcDHSharedSecret(false); err != nil {
 		return
