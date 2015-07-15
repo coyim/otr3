@@ -191,7 +191,6 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 }
 
 func (ake *AKE) dhCommitMessage() ([]byte, error) {
-	var out []byte
 	ake.myKeyID = 0
 
 	x, err := ake.generateRand()
@@ -206,6 +205,12 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 		return nil, err
 	}
 
+	return ake.serializeDHCommit(), nil
+}
+
+func (ake *AKE) serializeDHCommit() []byte {
+	var out []byte
+
 	out = appendShort(out, ake.versionNum())
 	out = append(out, msgTypeDHCommit)
 	if ake.needInstanceTag() {
@@ -215,7 +220,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	out = appendData(out, ake.encryptedGx)
 	out = appendData(out, ake.hashedGx())
 
-	return out, nil
+	return out
 }
 
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
