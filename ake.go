@@ -29,10 +29,10 @@ type akeKeys struct {
 }
 
 const (
-	msgTypeDHCommit  = 2
-	msgTypeDHKey     = 10
-	msgTypeRevealSig = 17
-	msgTypeSig       = 18
+	msgTypeDHCommit  = byte(2)
+	msgTypeDHKey     = byte(10)
+	msgTypeRevealSig = byte(17)
+	msgTypeSig       = byte(18)
 )
 
 func (ake *AKE) rand() io.Reader {
