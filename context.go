@@ -28,7 +28,8 @@ type context struct {
 type akeContext struct {
 	otrContext
 	gx, gy, x, y          *big.Int
-	hashedGx, encryptedGx []byte
+	gxBytes               []byte
+	encryptedGx, hashedGx []byte
 	digest                [32]byte
 	senderInstanceTag     uint32
 	receiverInstanceTag   uint32
