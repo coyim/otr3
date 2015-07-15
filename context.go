@@ -124,7 +124,7 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 
 	switch msgType {
 	case dhCommitMsg:
-		c.authState, toSend, err = c.authState.receiveDHCommitMessage(c.akeContext, message)
+		c.authState, toSend, err = c.authState.receiveDHCommitMessage(&c.akeContext, message)
 	case dhKeyMsg:
 		toSend, err = c.receiveDHKey(message)
 	case dataMsg:
@@ -137,7 +137,6 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 }
 
 func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
-
 
 	ake := AKE{
 		akeContext: akeContext{

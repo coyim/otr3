@@ -32,30 +32,35 @@ func fixtureDHCommitMsg() []byte {
 
 func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHCommitMsg(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
-	msg := fixtureDHCommitMsg()
-	state := authStateNone{}
-	nextState, nextMsg, err := state.receiveDHCommitMessage(c, msg)
+	nextState, nextMsg, err := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
 	assertEquals(t, err, nil)
 	assertEquals(t, nextState, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(nextMsg), msgTypeDHKey)
 }
 
+func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
+	c := newAkeContext(otrV3{}, fixtureRand())
+	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
+
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, c.gy, fixtureGy)
+	assertDeepEquals(t, c.y, fixtureY)
+}
+
 func Test_receiveDHCommit_ResendPreviousDHCommitMsgFromAwaitingRevealSig(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
-	//Should be done by ReceiveOTRQueryMsg
-	c.gy = fixtureGy
 
-	msg := fixtureDHCommitMsg()
-	_, dhKeyMsg, err := authStateNone{}.receiveDHCommitMessage(c, msg)
+	authAwaitingRevSig, prevDHKeyMsg, err := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 	assertEquals(t, err, nil)
+	assertEquals(t, authAwaitingRevSig, authStateAwaitingRevealSig{})
 
-	nextState, nextMsg, err := authStateAwaitingRevealSig{}.receiveDHCommitMessage(c, msg)
+	nextState, msg, err := authAwaitingRevSig.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
 	assertEquals(t, err, nil)
 	assertEquals(t, nextState, authStateAwaitingRevealSig{})
-	assertEquals(t, dhMsgType(nextMsg), msgTypeDHKey)
-	assertDeepEquals(t, dhKeyMsg, nextMsg)
+	assertEquals(t, dhMsgType(msg), msgTypeDHKey)
+	assertDeepEquals(t, prevDHKeyMsg, msg)
 }
 
 func Test_generateCommitMsgInstanceTags(t *testing.T) {
