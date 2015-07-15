@@ -43,6 +43,8 @@ type otrVersion interface {
 	Int() uint16
 	parameterLength() int
 	isGroupElement(n *big.Int) bool
+	isFragmented(data []byte) bool
+	makeFragment(data []byte, n, total int, itags uint32, itagr uint32) []byte
 }
 
 type conversation interface {
