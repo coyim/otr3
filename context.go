@@ -53,7 +53,7 @@ func newOtrContext(v otrVersion, rand io.Reader) otrContext {
 }
 
 type otrVersion interface {
-	versionNum() uint16
+	protocolVersion() uint16
 	parameterLength() int
 	isGroupElement(n *big.Int) bool
 	isFragmented(data []byte) bool
@@ -120,7 +120,7 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 	// I should ignore the message if it is not for my conversation
 
 	msgProtocolVersion := extractShort(message, 0)
-	if c.versionNum() != msgProtocolVersion {
+	if c.protocolVersion() != msgProtocolVersion {
 		return nil, errWrongProtocolVersion
 	}
 

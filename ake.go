@@ -209,7 +209,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 func (ake *AKE) serializeDHCommit() []byte {
 	var out []byte
 
-	out = appendShort(out, ake.versionNum())
+	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeDHCommit)
 	if ake.needInstanceTag() {
 		out = appendWord(out, ake.senderInstanceTag)
@@ -236,7 +236,7 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 func (ake *AKE) serializeDHKey() ([]byte, error) {
 	var out []byte
 
-	out = appendShort(out, ake.versionNum())
+	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeDHKey)
 
 	if ake.needInstanceTag() {
@@ -257,7 +257,7 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 
 	ake.calcAKEKeys(s)
 	var out []byte
-	out = appendShort(out, ake.versionNum())
+	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeRevealSig)
 	if ake.needInstanceTag() {
 		out = appendWord(out, ake.senderInstanceTag)
@@ -284,7 +284,7 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 
 	ake.calcAKEKeys(s)
 	var out []byte
-	out = appendShort(out, ake.versionNum())
+	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeSig)
 	if ake.needInstanceTag() {
 		out = appendWord(out, ake.senderInstanceTag)

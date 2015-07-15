@@ -26,7 +26,7 @@ func (v otrV3) makeFragment(data []byte, n, total int, itags uint32, itagr uint3
 	return append([]byte(fmt.Sprintf("%s%x|%x,%05d,%05d,", string(otrv3FragmentationPrefix), itags, itagr, n+1, total)), data...)
 }
 
-func (v otrV3) versionNum() uint16 {
+func (v otrV3) protocolVersion() uint16 {
 	return 3
 }
 
