@@ -329,16 +329,15 @@ func (ake *AKE) checkDecryptedGx(decryptedGx []byte) error {
 	return nil
 }
 
-func (ake *AKE) storeGx(decryptedGx []byte) error {
+func (ake *AKE) extractGx(decryptedGx []byte) (*big.Int, error) {
 	index, gx := extractMPI(decryptedGx, 0)
-	ake.gx = gx
-	if len(ake.encryptedGx) > index {
-		return errors.New("otr: gx corrupt after decryption")
+	if len(decryptedGx) > index {
+		return gx, errors.New("otr: gx corrupt after decryption")
 	}
-	if ake.gx.Cmp(g1) < 0 || ake.gx.Cmp(pMinusTwo) > 0 {
-		return errors.New("otr: DH value out of range")
+	if gx.Cmp(g1) < 0 || gx.Cmp(pMinusTwo) > 0 {
+		return gx, errors.New("otr: DH value out of range")
 	}
-	return nil
+	return gx, nil
 }
 
 func (ake *AKE) processRevealSig(in []byte) (err error) {
@@ -355,7 +354,7 @@ func (ake *AKE) processRevealSig(in []byte) (err error) {
 	if err = ake.checkDecryptedGx(decryptedGx); err != nil {
 		return
 	}
-	if err = ake.storeGx(decryptedGx); err != nil {
+	if ake.gx, err = ake.extractGx(decryptedGx); err != nil {
 		return
 	}
 	var s *big.Int
@@ -364,7 +363,7 @@ func (ake *AKE) processRevealSig(in []byte) (err error) {
 	}
 	ake.calcAKEKeys(s)
 
-	if err := ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
+	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
 		return errors.New("otr: in reveal signature message: " + err.Error())
 	}
 
