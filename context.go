@@ -18,6 +18,7 @@ var (
 )
 
 type context struct {
+	otrContext
 	smpState   smpState
 	authState  authState
 	privateKey *PrivateKey
@@ -25,8 +26,7 @@ type context struct {
 }
 
 type akeContext struct {
-	otrVersion
-	Rand                io.Reader
+	otrContext
 	gx, gy, x, y        *big.Int
 	gxBytes             []byte
 	digest              [32]byte
@@ -34,13 +34,22 @@ type akeContext struct {
 	receiverInstanceTag uint32
 }
 
+type otrContext struct {
+	otrVersion
+	Rand io.Reader
+}
+
 func newContext(v otrVersion, rand io.Reader) *context {
 	c := context{}
-	c.otrVersion = v
-	c.Rand = rand
+	c.otrContext = newOtrContext(v, rand)
+	c.akeContext.otrContext = c.otrContext
 	c.smpState = smpStateExpect1{}
 	c.authState = authStateNone{}
 	return &c
+}
+
+func newOtrContext(v otrVersion, rand io.Reader) otrContext {
+	return otrContext{otrVersion: v, Rand: rand}
 }
 
 type otrVersion interface {
@@ -152,8 +161,7 @@ func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
 	}
 
 	ake := AKE{}
-	ake.otrVersion = c.otrVersion
-	ake.akeContext = c.akeContext
+	ake.otrContext = c.otrContext
 	ake.senderInstanceTag = generateIntanceTag()
 
 	ret, err := ake.dhCommitMessage()

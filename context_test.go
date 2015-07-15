@@ -55,9 +55,7 @@ func Test_acceptOTRRequestAcceptsOTRV3EvenIfV2IsAnOption(t *testing.T) {
 
 func Test_receiveSendsDHCommitMessageAfterReceivingAnOTRQueryMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
-	cxt := context{}
-	cxt.otrVersion = otrV3{}
-	cxt.Rand = fixtureRand()
+	cxt := newContext(otrV3{}, fixtureRand())
 
 	exp := []byte{
 		0x00, 0x03, // protocol version
@@ -72,8 +70,7 @@ func Test_receiveSendsDHCommitMessageAfterReceivingAnOTRQueryMessage(t *testing.
 
 func Test_receiveOTRQueryMessageStoresXAndGx(t *testing.T) {
 	msg := []byte("?OTRv3?")
-	cxt := context{}
-	cxt.Rand = fixtureRand()
+	cxt := newContext(nil, fixtureRand())
 
 	_, err := cxt.receiveOTRQueryMessage(msg)
 	assertEquals(t, err, nil)

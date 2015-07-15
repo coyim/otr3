@@ -15,7 +15,12 @@ func dhMsgType(msg []byte) byte {
 }
 
 func newAkeContext(v otrVersion, r io.Reader) akeContext {
-	return akeContext{otrVersion: v, Rand: r}
+	return akeContext{
+		otrContext: otrContext{
+			otrVersion: v,
+			Rand:       r,
+		},
+	}
 }
 
 func fixtureAKE() AKE {
