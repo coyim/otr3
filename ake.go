@@ -347,7 +347,7 @@ func (ake *AKE) processRevealSig(in []byte) error {
 	if len(theirMAC) != 20 {
 		return errors.New("otr: corrupt reveal signature message")
 	}
-	decryptedGx := ake.encryptedGx
+	decryptedGx := make([]byte, len(ake.encryptedGx))
 	err := decrypt(r, decryptedGx, ake.encryptedGx)
 	if err != nil {
 		return err
