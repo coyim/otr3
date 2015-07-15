@@ -20,13 +20,13 @@ var (
 type context struct {
 	otrContext
 	smpState   smpState
-	authState  authState
 	privateKey *PrivateKey
 	akeContext
 }
 
 type akeContext struct {
 	otrContext
+	authState             authState
 	gx, gy, x, y          *big.Int
 	gxBytes               []byte
 	encryptedGx, hashedGx []byte

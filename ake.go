@@ -68,15 +68,15 @@ func (ake *AKE) encryptGx() ([]byte, error) {
 	return ciphertext, nil
 }
 
-func (ake *AKE) decryptGx(r []byte, encryptGx []byte) error {
-	// aes decryption gx
+func decrypt(r, dst, src []byte) error {
+	// aes decryption
 	aesCipher, err := aes.NewCipher(r)
 	if err != nil {
 		return errors.New("otr: cannot create AES cipher from reveal signature message: " + err.Error())
 	}
 	var iv [aes.BlockSize]byte
 	ctr := cipher.NewCTR(aesCipher, iv[:])
-	ctr.XORKeyStream(ake.gxBytes, ake.gxBytes)
+	ctr.XORKeyStream(dst, src)
 	return nil
 }
 
@@ -201,7 +201,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 
 	ake.x = x
 	ake.gx = new(big.Int).Exp(g1, ake.x, p)
-	ake.gxBytes, err = ake.encryptGx()
+	ake.encryptedGx, err = ake.encryptGx()
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 		out = appendWord(out, ake.senderInstanceTag)
 		out = appendWord(out, ake.receiverInstanceTag)
 	}
-	out = appendData(out, ake.gxBytes)
+	out = appendData(out, ake.encryptedGx)
 	out = appendData(out, ake.hashedGx())
 
 	return out, nil
@@ -317,6 +317,24 @@ func (ake *AKE) processDHKey(in []byte) (isSame bool, err error) {
 	return
 }
 
+func (ake *AKE) checkDecryptedGx(decryptedGx []byte) error {
+	h := sha256.New()
+	h.Write(decryptedGx)
+	digest := h.Sum(nil)
+	if len(digest) != len(ake.digest) || subtle.ConstantTimeCompare(digest, ake.digest[:]) == 0 {
+		return errors.New("otr: bad commit MAC in reveal signature message")
+	}
+	index, gx := extractMPI(decryptedGx, 0)
+	ake.gx = gx
+	if len(ake.encryptedGx) > index {
+		return errors.New("otr: gx corrupt after decryption")
+	}
+	if ake.gx.Cmp(g1) < 0 || ake.gx.Cmp(pMinusTwo) > 0 {
+		return errors.New("otr: DH value out of range")
+	}
+	return nil
+}
+
 func (ake *AKE) processRevealSig(in []byte) error {
 	index, r := extractData(in, 0)
 	index, encryptedSig := extractData(in, index)
@@ -324,21 +342,15 @@ func (ake *AKE) processRevealSig(in []byte) error {
 	if len(theirMAC) != 20 {
 		return errors.New("otr: corrupt reveal signature message")
 	}
-	ake.decryptGx(r, ake.gxBytes)
+	decryptedGx := ake.encryptedGx
+	err := decrypt(r, decryptedGx, ake.encryptedGx)
+	if err != nil {
+		return err
+	}
 
-	// sha256 gx
-	h := sha256.New()
-	h.Write(ake.gxBytes)
-	digest := h.Sum(nil)
-	if len(digest) != len(ake.digest) || subtle.ConstantTimeCompare(digest, ake.digest[:]) == 0 {
-		return errors.New("otr: bad commit MAC in reveal signature message")
-	}
-	index, ake.gx = extractMPI(ake.gxBytes, 0)
-	if len(ake.gxBytes) > index {
-		return errors.New("otr: gx corrupt after decryption")
-	}
-	if ake.gx.Cmp(g1) < 0 || ake.gx.Cmp(pMinusTwo) > 0 {
-		return errors.New("otr: DH value out of range")
+	err = ake.checkDecryptedGx(decryptedGx)
+	if err != nil {
+		return err
 	}
 	//calc s
 	s, _ := ake.calcDHSharedSecret(false)
