@@ -37,8 +37,12 @@ type akeContext struct {
 
 func newContext(v otrVersion, rand io.Reader) *context {
 	return &context{
-		version:  v,
-		Rand:     rand,
+		version: v,
+		Rand:    rand,
+		akeContext: akeContext{
+			version: v,
+			Rand:    rand,
+		},
 		smpState: smpStateExpect1{},
 	}
 }
