@@ -364,5 +364,5 @@ func (ake *AKE) protocolVersion() uint16 {
 }
 
 func (ake *AKE) needInstanceTag() bool {
-	return ake.version.Int() == 3
+	return ake.version == otrV3{}
 }

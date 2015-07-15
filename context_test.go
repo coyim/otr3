@@ -90,32 +90,14 @@ func Test_receiveDHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 		0x0A, //DH message type
 	}
 
-	cxt := newContext(otrV3{}, fixtureRand())
-	ake := AKE{}
-	ake.version = otrV3{}
+	dhCommitAKE := fixtureAKE()
+	dhCommitMsg, _ := dhCommitAKE.dhCommitMessage()
 
-	dhCommitMsg, _ := ake.dhCommitMessage()
-	dhKeyMsg, err := cxt.receiveDHCommit(dhCommitMsg)
+	cxt := newContext(otrV3{}, fixtureRand())
+	dhKeyMsg, err := cxt.receive(dhCommitMsg)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhKeyMsg[:lenMsgHeader], exp)
-}
-
-func Test_receiveDHCommitMessageGeneratesDHKeyMessageWithCorrectInstanceTags(t *testing.T) {
-	cxt := newContext(otrV3{}, fixtureRand())
-	senderInstanceTag := uint32(0x00000101)
-	posReceiverInsTag := 7
-
-	ake := AKE{}
-	ake.version = otrV3{}
-	ake.senderInstanceTag = senderInstanceTag
-
-	dhCommitMsg, _ := ake.dhCommitMessage()
-	dhKeyMsg, err := cxt.receiveDHCommit(dhCommitMsg)
-	instTag, _ := extractWord(dhKeyMsg, posReceiverInsTag)
-
-	assertEquals(t, err, nil)
-	assertEquals(t, instTag, senderInstanceTag)
 }
 
 func Test_receiveDHKeyMessageGeneratesDHRevealSigMessage(t *testing.T) {

@@ -21,6 +21,7 @@ type context struct {
 	version    otrVersion
 	Rand       io.Reader
 	smpState   smpState
+	authState  authState
 	privateKey *PrivateKey
 	akeContext
 }
@@ -43,7 +44,8 @@ func newContext(v otrVersion, rand io.Reader) *context {
 			version: v,
 			Rand:    rand,
 		},
-		smpState: smpStateExpect1{},
+		smpState:  smpStateExpect1{},
+		authState: authStateNone{},
 	}
 }
 
@@ -94,6 +96,7 @@ func isQueryMessage(msg []byte) bool {
 	return bytes.HasPrefix(msg, []byte(queryMarker))
 }
 
+//TODO replace this by values in ake.go
 var (
 	dhCommitMsg = 0x02
 	dhKeyMsg    = 0x0A
@@ -109,7 +112,8 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 		return
 	}
 
-	// TODO check the message instanceTag
+	// TODO check the message instanceTag for V3
+	// I should ignore the message if it is not for my conversation
 
 	msgProtocolVersion := extractShort(message, 0)
 	if c.version.Int() != msgProtocolVersion {
@@ -120,7 +124,7 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 
 	switch msgType {
 	case dhCommitMsg:
-		toSend, err = c.receiveDHCommit(message)
+		c.authState, toSend, err = c.authState.receiveDHCommitMessage(c.akeContext, message)
 	case dhKeyMsg:
 		toSend, err = c.receiveDHKey(message)
 	case dataMsg:
@@ -132,30 +136,9 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 	return
 }
 
-func (c *context) receiveDHCommit(msg []byte) ([]byte, error) {
-	ake := AKE{}
-	ake.version = otrV3{}
-
-	dataIndex := lenMsgHeader
-	if ake.needInstanceTag() {
-		receiverInstanceTag, _ := extractWord(msg, lenMsgHeader)
-		c.senderInstanceTag = generateIntanceTag()
-		c.receiverInstanceTag = receiverInstanceTag
-		dataIndex = dataIndex + 8
-	}
-	dataIndex, c.gxBytes = extractData(msg, dataIndex)
-	_, digest := extractData(msg, dataIndex)
-	copy(c.digest[:], digest)
-
-	ake.gxBytes = c.gxBytes
-	ake.digest = c.digest
-	ake.receiverInstanceTag = c.receiverInstanceTag
-	ake.senderInstanceTag = c.senderInstanceTag
-
-	return ake.dhKeyMessage()
-}
-
 func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
+
+
 	ake := AKE{
 		akeContext: akeContext{
 			x:       c.x,
@@ -173,10 +156,6 @@ func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
 	_, ake.gy = extractMPI(msg, gyPos)
 
 	return ake.revealSigMessage()
-}
-func generateIntanceTag() uint32 {
-	//TODO generate this
-	return 0x00000100 + 0x01
 }
 
 func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
