@@ -180,8 +180,22 @@ func Test_decrypt(t *testing.T) {
 }
 
 func Test_hashedGx(t *testing.T) {
-	hashedGx := sha256Sum(gx)
+	hashedGx := sha256Sum(gx.Bytes())
 	assertDeepEquals(t, hashedGx, expectedHashedGxValue)
+}
+
+func Test_checkDecryptedGxWithoutError(t *testing.T) {
+	var ake AKE
+	copy(ake.digest[:], sha256Sum(appendMPI([]byte{}, gx)))
+	err := ake.checkDecryptedGx(appendMPI([]byte{}, gx))
+	assertDeepEquals(t, err, nil)
+}
+
+func Test_checkDecryptedGxWithError(t *testing.T) {
+	var ake AKE
+	copy(ake.digest[:], sha256Sum(appendMPI([]byte{}, gy)))
+	err := ake.checkDecryptedGx(appendMPI([]byte{}, gx))
+	assertDeepEquals(t, err.Error(), "otr: bad commit MAC in reveal signature message")
 }
 
 func Test_calcDHSharedSecret(t *testing.T) {
