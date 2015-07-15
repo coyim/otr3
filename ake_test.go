@@ -153,12 +153,14 @@ func Test_sigMessage(t *testing.T) {
 	assertDeepEquals(t, result, out)
 }
 
-func Test_encryptGx(t *testing.T) {
+func Test_encrypt(t *testing.T) {
 	var ake AKE
 	ake.otrVersion = otrV3{}
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x.Bytes())})
 	ake.gx = gx
-	encryptedGx, err := ake.encryptGx()
+	ake.generateRandBytes(ake.r[:])
+	var encryptedGx []byte
+	encryptedGx, err := encrypt(ake.r[:], ake.gx.Bytes())
 	assertEquals(t, err, nil)
 	assertEquals(t, len(encryptedGx), len(appendMPI([]byte{}, ake.gx)))
 }
@@ -168,9 +170,10 @@ func Test_decrypt(t *testing.T) {
 	ake.otrVersion = otrV3{}
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x.Bytes())})
 	ake.gx = gx
-	encryptedGx, _ := ake.encryptGx()
+	ake.generateRandBytes(ake.r[:])
+	encryptedGx, _ := encrypt(ake.r[:], ake.gx.Bytes())
 	decryptedGx := encryptedGx
-	err := decrypt(ake.r[:], decryptedGx[:], encryptedGx)
+	err := decrypt(ake.r[:], decryptedGx, encryptedGx)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, decryptedGx, appendMPI([]byte{}, ake.gx))

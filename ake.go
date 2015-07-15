@@ -42,7 +42,14 @@ func (ake *AKE) rand() io.Reader {
 	return rand.Reader
 }
 
-func (ake *AKE) generateRand() (*big.Int, error) {
+func (ake *AKE) generateRandBytes(dst []byte) error {
+	if _, err := io.ReadFull(ake.rand(), dst[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ake *AKE) generateRandBigInt() (*big.Int, error) {
 	var randx [40]byte
 	_, err := io.ReadFull(ake.rand(), randx[:])
 	if err != nil {
@@ -51,21 +58,19 @@ func (ake *AKE) generateRand() (*big.Int, error) {
 	return new(big.Int).SetBytes(randx[:]), nil
 }
 
-func (ake *AKE) encryptGx() ([]byte, error) {
-	_, err := io.ReadFull(ake.rand(), ake.r[:])
-
-	aesCipher, err := aes.NewCipher(ake.r[:])
+func encrypt(r, src []byte) (dst []byte, err error) {
+	aesCipher, err := aes.NewCipher(r)
 	if err != nil {
 		return nil, err
 	}
 
-	var gxMPI = appendMPI([]byte{}, ake.gx)
-	ciphertext := make([]byte, len(gxMPI))
-	iv := ciphertext[:aes.BlockSize]
+	var gxMPI = appendMPI([]byte{}, new(big.Int).SetBytes(src))
+	dst = make([]byte, len(gxMPI))
+	iv := dst[:aes.BlockSize]
 	stream := cipher.NewCTR(aesCipher, iv)
-	stream.XORKeyStream(ciphertext, gxMPI)
+	stream.XORKeyStream(dst, gxMPI)
 
-	return ciphertext, nil
+	return dst, nil
 }
 
 func decrypt(r, dst, src []byte) error {
@@ -193,15 +198,15 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.myKeyID = 0
 
-	x, err := ake.generateRand()
+	x, err := ake.generateRandBigInt()
 	if err != nil {
 		return nil, err
 	}
 
 	ake.x = x
 	ake.gx = new(big.Int).Exp(g1, ake.x, p)
-	ake.encryptedGx, err = ake.encryptGx()
-	if err != nil {
+	ake.generateRandBytes(ake.r[:])
+	if ake.encryptedGx, err = encrypt(ake.r[:], ake.gx.Bytes()); err != nil {
 		return nil, err
 	}
 
@@ -225,7 +230,7 @@ func (ake *AKE) serializeDHCommit() []byte {
 }
 
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
-	y, err := ake.generateRand()
+	y, err := ake.generateRandBigInt()
 	if err != nil {
 		return nil, err
 	}
