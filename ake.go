@@ -329,6 +329,10 @@ func (ake *AKE) checkDecryptedGx(decryptedGx []byte) error {
 	if len(digest) != len(ake.digest) || subtle.ConstantTimeCompare(digest, ake.digest[:]) == 0 {
 		return errors.New("otr: bad commit MAC in reveal signature message")
 	}
+	return nil
+}
+
+func (ake *AKE) storeGx(decryptedGx []byte) error {
 	index, gx := extractMPI(decryptedGx, 0)
 	ake.gx = gx
 	if len(ake.encryptedGx) > index {
@@ -340,7 +344,7 @@ func (ake *AKE) checkDecryptedGx(decryptedGx []byte) error {
 	return nil
 }
 
-func (ake *AKE) processRevealSig(in []byte) error {
+func (ake *AKE) processRevealSig(in []byte) (err error) {
 	index, r := extractData(in, 0)
 	index, encryptedSig := extractData(in, index)
 	theirMAC := in[index:]
@@ -348,17 +352,21 @@ func (ake *AKE) processRevealSig(in []byte) error {
 		return errors.New("otr: corrupt reveal signature message")
 	}
 	decryptedGx := make([]byte, len(ake.encryptedGx))
-	err := decrypt(r, decryptedGx, ake.encryptedGx)
-	if err != nil {
-		return err
+	if err = decrypt(r, decryptedGx, ake.encryptedGx); err != nil {
+		return
+	}
+	if err = ake.checkDecryptedGx(decryptedGx); err != nil {
+		return
+	}
+	if err = ake.storeGx(decryptedGx); err != nil {
+		return
 	}
 
-	err = ake.checkDecryptedGx(decryptedGx)
-	if err != nil {
-		return err
-	}
 	//calc s
-	s, _ := ake.calcDHSharedSecret(false)
+	var s *big.Int
+	if s, err = ake.calcDHSharedSecret(false); err != nil {
+		return
+	}
 	ake.calcAKEKeys(s)
 
 	if err := ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {

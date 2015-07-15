@@ -163,7 +163,7 @@ func Test_encryptGx(t *testing.T) {
 	assertEquals(t, len(encryptedGx), len(appendMPI([]byte{}, ake.gx)))
 }
 
-func Test_decryptGx(t *testing.T) {
+func Test_decrypt(t *testing.T) {
 	var ake AKE
 	ake.otrVersion = otrV3{}
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x.Bytes())})
