@@ -219,8 +219,6 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 }
 
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
-	var out []byte
-
 	y, err := ake.generateRand()
 	if err != nil {
 		return nil, err
@@ -228,6 +226,13 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 
 	ake.y = y
 	ake.gy = new(big.Int).Exp(g1, ake.y, p)
+
+	return ake.serializeDHKey()
+}
+
+func (ake *AKE) serializeDHKey() ([]byte, error) {
+	var out []byte
+
 	out = appendShort(out, ake.protocolVersion())
 	out = append(out, msgTypeDHKey)
 
