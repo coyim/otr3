@@ -18,10 +18,10 @@ var (
 )
 
 type context struct {
-	version      otrVersion
-	Rand         io.Reader
-	currentState smpState
-	privateKey   *PrivateKey
+	version    otrVersion
+	Rand       io.Reader
+	smpState   smpState
+	privateKey *PrivateKey
 	akeContext
 }
 
@@ -36,7 +36,11 @@ type akeContext struct {
 }
 
 func newContext(v otrVersion, rand io.Reader) *context {
-	return &context{version: v, Rand: rand, currentState: smpStateExpect1{}}
+	return &context{
+		version:  v,
+		Rand:     rand,
+		smpState: smpStateExpect1{},
+	}
 }
 
 type otrVersion interface {
@@ -222,7 +226,7 @@ func (c *context) acceptOTRRequest(msg []byte) error {
 func (c *context) receiveSMPMessage(message []byte) error {
 	var err error
 	m := parseTLV(message)
-	c.currentState, err = m.receivedMessage(c.currentState)
+	c.smpState, err = m.receivedMessage(c.smpState)
 	return err
 }
 
