@@ -100,11 +100,12 @@ func isQueryMessage(msg []byte) bool {
 	return bytes.HasPrefix(msg, []byte(queryMarker))
 }
 
-//TODO replace this by values in ake.go
-var (
-	dhCommitMsg = 0x02
-	dhKeyMsg    = 0x0A
-	dataMsg     = 0x03
+const (
+	msgTypeDHCommit  = byte(2)
+	msgData          = byte(3)
+	msgTypeDHKey     = byte(10)
+	msgTypeRevealSig = byte(17)
+	msgTypeSig       = byte(18)
 )
 
 // This should be used by the xmpp-client to received OTR messages in plain
@@ -123,10 +124,10 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 		return nil, errWrongProtocolVersion
 	}
 
-	msgType := int(message[2])
+	msgType := message[2]
 
 	switch msgType {
-	case dataMsg:
+	case msgData:
 		//TODO: extract message from the encripted DATA
 		//msg := decrypt(message)
 		//err = c.receiveSMPMessage(msg)
