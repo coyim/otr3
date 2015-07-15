@@ -4,6 +4,19 @@ import (
 	"bytes"
 )
 
+func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
+	msgType := msg[2]
+
+	switch msgType {
+	case msgTypeDHCommit:
+		c.authState, toSend, _ = c.authState.receiveDHCommitMessage(c, msg)
+	case msgTypeDHKey:
+		//c.authState, toSend, _ = c.receiveDHKey(message)
+	}
+
+	return
+}
+
 type authStateNone struct{}
 type authStateAwaitingDHKey struct{}
 type authStateAwaitingRevealSig struct{}

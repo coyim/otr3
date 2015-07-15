@@ -126,14 +126,12 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 	msgType := int(message[2])
 
 	switch msgType {
-	case dhCommitMsg:
-		c.authState, toSend, err = c.authState.receiveDHCommitMessage(&c.akeContext, message)
-	case dhKeyMsg:
-		toSend, err = c.receiveDHKey(message)
 	case dataMsg:
 		//TODO: extract message from the encripted DATA
 		//msg := decrypt(message)
 		//err = c.receiveSMPMessage(msg)
+	default:
+		toSend = c.akeContext.receiveMessage(message)
 	}
 
 	return
