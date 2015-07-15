@@ -30,7 +30,7 @@ func fixtureDHCommitMsg() []byte {
 	return msg
 }
 
-func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHCommitMsg(t *testing.T) {
+func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHKeyMsg(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 	nextState, nextMsg, err := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
@@ -48,7 +48,7 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 	assertDeepEquals(t, c.y, fixtureY)
 }
 
-func Test_receiveDHCommit_ResendPreviousDHCommitMsgFromAwaitingRevealSig(t *testing.T) {
+func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 
 	authAwaitingRevSig, prevDHKeyMsg, err := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
@@ -63,7 +63,16 @@ func Test_receiveDHCommit_ResendPreviousDHCommitMsgFromAwaitingRevealSig(t *test
 	assertDeepEquals(t, prevDHKeyMsg, msg)
 }
 
-func Test_generateCommitMsgInstanceTags(t *testing.T) {
+func Test_receiveDHCommit_AtAuthAwaitingSigTransitionsToAwaitingRevSigAndSendsNewDHKeyMsg(t *testing.T) {
+	c := newAkeContext(otrV3{}, fixtureRand())
+
+	authAwaitingRevSig, msg, err := authStateAwaitingSig{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
+	assertEquals(t, err, nil)
+	assertEquals(t, authAwaitingRevSig, authStateAwaitingRevealSig{})
+	assertEquals(t, dhMsgType(msg), msgTypeDHKey)
+}
+
+func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 	senderInstanceTag := uint32(0x00000101)
 
 	dhCommitAke := fixtureAKE()

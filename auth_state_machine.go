@@ -35,7 +35,6 @@ func generateCommitMsgInstanceTags(ake *AKE, msg []byte) {
 		ake.senderInstanceTag = generateIntanceTag()
 		ake.receiverInstanceTag = receiverInstanceTag
 	}
-
 }
 
 func generateIntanceTag() uint32 {
