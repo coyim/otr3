@@ -1,9 +1,5 @@
 package otr3
 
-func (c *context) isFragmented(data []byte) bool {
-	return c.version.isFragmented(data)
-}
-
 func min(l, r int) int {
 	if l < r {
 		return l
@@ -21,7 +17,7 @@ func (c *context) fragment(data []byte, fraglen int, itags uint32, itagr uint32)
 		numFragments := (len / fraglen) + 1
 		ret = make([][]byte, numFragments)
 		for i := 0; i < numFragments; i++ {
-			ret[i] = c.version.makeFragment(data[(i*fraglen):min(((i+1)*fraglen), len)], i, numFragments, itags, itagr)
+			ret[i] = c.makeFragment(data[(i*fraglen):min(((i+1)*fraglen), len)], i, numFragments, itags, itagr)
 		}
 	}
 

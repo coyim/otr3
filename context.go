@@ -18,8 +18,6 @@ var (
 )
 
 type context struct {
-	version    otrVersion
-	Rand       io.Reader
 	smpState   smpState
 	authState  authState
 	privateKey *PrivateKey
@@ -27,7 +25,7 @@ type context struct {
 }
 
 type akeContext struct {
-	version             otrVersion
+	otrVersion
 	Rand                io.Reader
 	gx, gy, x, y        *big.Int
 	gxBytes             []byte
@@ -37,24 +35,21 @@ type akeContext struct {
 }
 
 func newContext(v otrVersion, rand io.Reader) *context {
-	return &context{
-		version: v,
-		Rand:    rand,
-		akeContext: akeContext{
-			version: v,
-			Rand:    rand,
-		},
-		smpState:  smpStateExpect1{},
-		authState: authStateNone{},
-	}
+	c := context{}
+	c.otrVersion = v
+	c.Rand = rand
+	c.smpState = smpStateExpect1{}
+	c.authState = authStateNone{}
+	return &c
 }
 
 type otrVersion interface {
-	Int() uint16
+	versionNum() uint16
 	parameterLength() int
 	isGroupElement(n *big.Int) bool
 	isFragmented(data []byte) bool
 	makeFragment(data []byte, n, total int, itags uint32, itagr uint32) []byte
+	needInstanceTag() bool
 }
 
 type conversation interface {
@@ -106,7 +101,6 @@ var (
 // This should be used by the xmpp-client to received OTR messages in plain
 //TODO toSend needs fragmentation to be implemented
 func (c *context) receive(message []byte) (toSend []byte, err error) {
-
 	if isQueryMessage(message) {
 		toSend, err = c.receiveOTRQueryMessage(message)
 		return
@@ -116,7 +110,7 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 	// I should ignore the message if it is not for my conversation
 
 	msgProtocolVersion := extractShort(message, 0)
-	if c.version.Int() != msgProtocolVersion {
+	if c.versionNum() != msgProtocolVersion {
 		return nil, errWrongProtocolVersion
 	}
 
@@ -137,15 +131,10 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 }
 
 func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
-
-	ake := AKE{
-		akeContext: akeContext{
-			x:       c.x,
-			gx:      c.gx,
-			version: c.version,
-		},
-		ourKey: c.privateKey,
-	}
+	ake := AKE{}
+	ake.otrVersion = c.otrVersion
+	ake.akeContext = c.akeContext
+	ake.ourKey = c.privateKey
 
 	gyPos := 3
 	if ake.needInstanceTag() {
@@ -162,13 +151,10 @@ func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	ake := AKE{
-		akeContext: akeContext{
-			version:           c.version,
-			Rand:              c.Rand,
-			senderInstanceTag: generateIntanceTag(),
-		},
-	}
+	ake := AKE{}
+	ake.otrVersion = c.otrVersion
+	ake.akeContext = c.akeContext
+	ake.senderInstanceTag = generateIntanceTag()
 
 	ret, err := ake.dhCommitMessage()
 	if err != nil {
@@ -176,9 +162,7 @@ func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
 	}
 
 	//TODO find a proper place for this
-	c.x = ake.x
-	c.gx = ake.gx
-	c.senderInstanceTag = ake.senderInstanceTag
+	c.akeContext = ake.akeContext
 
 	return ret, nil
 }
@@ -195,9 +179,9 @@ func (c *context) acceptOTRRequest(msg []byte) error {
 
 	switch version {
 	case 2:
-		c.version = otrV2{}
+		c.otrVersion = otrV2{}
 	case 3:
-		c.version = otrV3{}
+		c.otrVersion = otrV3{}
 	default:
 		return errUnsupportedOTRVersion
 	}
@@ -214,14 +198,6 @@ func (c *context) receiveSMPMessage(message []byte) error {
 
 func (c *context) rand() io.Reader {
 	return c.Rand
-}
-
-func (c *context) parameterLength() int {
-	return c.version.parameterLength()
-}
-
-func (c *context) isGroupElement(n *big.Int) bool {
-	return c.version.isGroupElement(n)
 }
 
 func (c *context) randMPI(buf []byte) *big.Int {

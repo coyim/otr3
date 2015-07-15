@@ -26,7 +26,8 @@ func Test_parseOTRQueryMessage(t *testing.T) {
 
 func Test_acceptOTRRequestReturnsErrorForOTRV1(t *testing.T) {
 	msg := []byte("?OTR?")
-	cxt := context{Rand: fixtureRand()}
+	cxt := context{}
+	cxt.Rand = fixtureRand()
 	err := cxt.acceptOTRRequest(msg)
 
 	assertEquals(t, err, errUnsupportedOTRVersion)
@@ -34,25 +35,29 @@ func Test_acceptOTRRequestReturnsErrorForOTRV1(t *testing.T) {
 
 func Test_acceptOTRRequestAcceptsOTRV2(t *testing.T) {
 	msg := []byte("?OTR?v2?")
-	cxt := context{Rand: fixtureRand()}
+	cxt := context{}
+	cxt.Rand = fixtureRand()
 	err := cxt.acceptOTRRequest(msg)
 
 	assertEquals(t, err, nil)
-	assertEquals(t, cxt.version, otrV2{})
+	assertEquals(t, cxt.otrVersion, otrV2{})
 }
 
 func Test_acceptOTRRequestAcceptsOTRV3EvenIfV2IsAnOption(t *testing.T) {
 	msg := []byte("?OTRv32?")
-	cxt := context{Rand: fixtureRand()}
+	cxt := context{}
+	cxt.Rand = fixtureRand()
 	err := cxt.acceptOTRRequest(msg)
 
 	assertEquals(t, err, nil)
-	assertEquals(t, cxt.version, otrV3{})
+	assertEquals(t, cxt.otrVersion, otrV3{})
 }
 
 func Test_receiveSendsDHCommitMessageAfterReceivingAnOTRQueryMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
-	cxt := context{Rand: fixtureRand()}
+	cxt := context{}
+	cxt.otrVersion = otrV3{}
+	cxt.Rand = fixtureRand()
 
 	exp := []byte{
 		0x00, 0x03, // protocol version
@@ -67,7 +72,8 @@ func Test_receiveSendsDHCommitMessageAfterReceivingAnOTRQueryMessage(t *testing.
 
 func Test_receiveOTRQueryMessageStoresXAndGx(t *testing.T) {
 	msg := []byte("?OTRv3?")
-	cxt := context{Rand: fixtureRand()}
+	cxt := context{}
+	cxt.Rand = fixtureRand()
 
 	_, err := cxt.receiveOTRQueryMessage(msg)
 	assertEquals(t, err, nil)
@@ -92,8 +98,10 @@ func Test_receiveDHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 
 	dhCommitAKE := fixtureAKE()
 	dhCommitMsg, _ := dhCommitAKE.dhCommitMessage()
-
 	cxt := newContext(otrV3{}, fixtureRand())
+	ake := AKE{}
+	ake.otrVersion = otrV3{}
+
 	dhKeyMsg, err := cxt.receive(dhCommitMsg)
 
 	assertEquals(t, err, nil)
@@ -112,7 +120,7 @@ func Test_receiveDHKeyMessageGeneratesDHRevealSigMessage(t *testing.T) {
 	cxt.privateKey = bobPrivateKey
 
 	ake := AKE{}
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 
 	dhKeyMsg, _ := ake.dhKeyMessage()
 

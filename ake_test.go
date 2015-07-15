@@ -27,13 +27,13 @@ var (
 func Test_dhCommitMessage(t *testing.T) {
 	var ake AKE
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x.Bytes()), hex.EncodeToString(r[:])})
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 	ake.ourKey = bobPrivateKey
 	ake.senderInstanceTag = 0x00000001
 	ake.receiverInstanceTag = 0x00000001
 
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.versionNum())
 	out = append(out, msgTypeDHCommit)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -48,14 +48,14 @@ func Test_dhCommitMessage(t *testing.T) {
 func Test_dhKeyMessage(t *testing.T) {
 	var ake AKE
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x.Bytes()), hex.EncodeToString(r[:])})
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 	ake.ourKey = alicePrivateKey
 	ake.senderInstanceTag = 0x00000001
 	ake.receiverInstanceTag = 0x00000001
 	expectedGyValue := bnFromHex("075dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.versionNum())
 	out = append(out, msgTypeDHKey)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -101,7 +101,7 @@ func Test_revealSigMessage(t *testing.T) {
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
 	ake.ourKey = bobPrivateKey
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 	ake.Rand = fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	copy(ake.r[:], r)
 	ake.x = x
@@ -112,7 +112,7 @@ func Test_revealSigMessage(t *testing.T) {
 	expedctedMACSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.versionNum())
 	out = append(out, msgTypeRevealSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -130,7 +130,7 @@ func Test_sigMessage(t *testing.T) {
 	ake.ourKey = alicePrivateKey
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 	ake.Rand = fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	ake.y = y
 	ake.gx = gx
@@ -141,7 +141,7 @@ func Test_sigMessage(t *testing.T) {
 	expedctedMACSignature, _ := hex.DecodeString("66b47e29be91a7cf4803d731921482fd514b4a53a9dd1639b17705c90185f91d")
 
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.versionNum())
 	out = append(out, msgTypeSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -155,7 +155,7 @@ func Test_sigMessage(t *testing.T) {
 
 func Test_encryptedGx(t *testing.T) {
 	var ake AKE
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 	ake.Rand = fixedRand([]string{hex.EncodeToString(x.Bytes())})
 	ake.gx = gx
 	encryptGx, err := ake.encryptGx()
@@ -191,7 +191,7 @@ func Test_calcDHSharedSecret(t *testing.T) {
 
 func Test_calcDHSharedSecretExpectsGy(t *testing.T) {
 	ake := AKE{}
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 	ake.Rand = fixtureRand()
 
 	_, err := ake.calcDHSharedSecret(true)
@@ -200,7 +200,7 @@ func Test_calcDHSharedSecretExpectsGy(t *testing.T) {
 
 func Test_calcDHSharedSecretExpectsX(t *testing.T) {
 	ake := AKE{}
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 	ake.Rand = fixtureRand()
 	ake.gy = gy
 
@@ -244,7 +244,7 @@ func Test_calcAKEKeys(t *testing.T) {
 
 func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 	var ake AKE
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 	ake.Rand = fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	ake.ourKey = bobPrivateKey
 	ake.x = x
@@ -266,7 +266,7 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 
 func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 	var ake AKE
-	ake.version = otrV3{}
+	ake.otrVersion = otrV3{}
 	ake.Rand = fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	ake.ourKey = alicePrivateKey
 	ake.y = y

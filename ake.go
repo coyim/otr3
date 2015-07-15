@@ -206,7 +206,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 		return nil, err
 	}
 
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.versionNum())
 	out = append(out, msgTypeDHCommit)
 	if ake.needInstanceTag() {
 		out = appendWord(out, ake.senderInstanceTag)
@@ -226,14 +226,13 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 
 	ake.y = y
 	ake.gy = new(big.Int).Exp(g1, ake.y, p)
-
 	return ake.serializeDHKey()
 }
 
 func (ake *AKE) serializeDHKey() ([]byte, error) {
 	var out []byte
 
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.versionNum())
 	out = append(out, msgTypeDHKey)
 
 	if ake.needInstanceTag() {
@@ -254,7 +253,7 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 
 	ake.calcAKEKeys(s)
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.versionNum())
 	out = append(out, msgTypeRevealSig)
 	if ake.needInstanceTag() {
 		out = appendWord(out, ake.senderInstanceTag)
@@ -281,7 +280,7 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 
 	ake.calcAKEKeys(s)
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.versionNum())
 	out = append(out, msgTypeSig)
 	if ake.needInstanceTag() {
 		out = appendWord(out, ake.senderInstanceTag)
@@ -357,12 +356,4 @@ func (ake *AKE) processRevealSig(in []byte) error {
 
 func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, revealKey *akeKeys, xFirst bool) error {
 	return nil
-}
-
-func (ake *AKE) protocolVersion() uint16 {
-	return ake.version.Int()
-}
-
-func (ake *AKE) needInstanceTag() bool {
-	return ake.version == otrV3{}
 }

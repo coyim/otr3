@@ -26,6 +26,10 @@ func (v otrV2) makeFragment(data []byte, n, total int, itags uint32, itagr uint3
 	return append([]byte(fmt.Sprintf("%s%05d,%05d,", string(otrv2FragmentationPrefix), n+1, total)), data...)
 }
 
-func (v otrV2) Int() uint16 {
+func (v otrV2) versionNum() uint16 {
 	return 2
+}
+
+func (v otrV2) needInstanceTag() bool {
+	return false
 }
