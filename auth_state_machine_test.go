@@ -37,18 +37,16 @@ func fixtureDHCommitMsg() []byte {
 
 func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHKeyMsg(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
-	nextState, nextMsg, err := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
+	nextState, nextMsg := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
-	assertEquals(t, err, nil)
 	assertEquals(t, nextState, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(nextMsg), msgTypeDHKey)
 }
 
 func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
-	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
+	authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
-	assertEquals(t, err, nil)
 	assertDeepEquals(t, c.gy, fixtureGy)
 	assertDeepEquals(t, c.y, fixtureY)
 }
@@ -56,13 +54,11 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 
-	authAwaitingRevSig, prevDHKeyMsg, err := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
-	assertEquals(t, err, nil)
+	authAwaitingRevSig, prevDHKeyMsg := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 	assertEquals(t, authAwaitingRevSig, authStateAwaitingRevealSig{})
 
-	nextState, msg, err := authAwaitingRevSig.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
+	nextState, msg := authAwaitingRevSig.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
-	assertEquals(t, err, nil)
 	assertEquals(t, nextState, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(msg), msgTypeDHKey)
 	assertDeepEquals(t, prevDHKeyMsg, msg)
@@ -80,8 +76,7 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 
 	authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
-	_, _, err := authStateAwaitingRevealSig{}.receiveDHCommitMessage(&c, newDHCommitMsg)
-	assertEquals(t, err, nil)
+	authStateAwaitingRevealSig{}.receiveDHCommitMessage(&c, newDHCommitMsg)
 	assertDeepEquals(t, c.encryptedGx, newEncryptedGx)
 	assertDeepEquals(t, c.hashedGx, newHashedGx)
 }
@@ -89,8 +84,7 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 func Test_receiveDHCommit_AtAuthAwaitingSigTransitionsToAwaitingRevSigAndSendsNewDHKeyMsg(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 
-	authAwaitingRevSig, msg, err := authStateAwaitingSig{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
-	assertEquals(t, err, nil)
+	authAwaitingRevSig, msg := authStateAwaitingSig{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 	assertEquals(t, authAwaitingRevSig, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(msg), msgTypeDHKey)
 }
@@ -109,8 +103,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 	i, _ := extractData(msg, 11)
 	msg[i+4] = 0x00
 
-	state, newMsg, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
-	assertEquals(t, err, nil)
+	state, newMsg := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, newMsg, ourDHMsg)
 }
@@ -128,8 +121,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 	i, _ := extractData(msg, 11)
 	msg[i+4] = 0xFF
 
-	state, newMsg, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
-	assertEquals(t, err, nil)
+	state, newMsg := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, dhMsgType(newMsg), msgTypeDHKey)
 	assertDeepEquals(t, c.gy, fixtureGy)
