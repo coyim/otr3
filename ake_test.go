@@ -25,9 +25,11 @@ var (
 )
 
 func Test_dhCommitMessage(t *testing.T) {
-	var ake AKE
-	ake.Rand = fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
-	ake.otrVersion = otrV3{}
+	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+
 	ake.ourKey = bobPrivateKey
 	ake.senderInstanceTag = 0x00000001
 	ake.receiverInstanceTag = 0x00000001
@@ -46,9 +48,11 @@ func Test_dhCommitMessage(t *testing.T) {
 }
 
 func Test_dhKeyMessage(t *testing.T) {
-	var ake AKE
-	ake.Rand = fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
-	ake.otrVersion = otrV3{}
+	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+
 	ake.ourKey = alicePrivateKey
 	ake.senderInstanceTag = 0x00000001
 	ake.receiverInstanceTag = 0x00000001
@@ -97,12 +101,14 @@ func Test_processDHKeyHavingError(t *testing.T) {
 }
 
 func Test_revealSigMessage(t *testing.T) {
-	var ake AKE
+	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
 	ake.ourKey = bobPrivateKey
-	ake.otrVersion = otrV3{}
-	ake.Rand = fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	copy(ake.r[:], fixedr)
 	ake.x = fixedx
 	ake.gx = fixedgx
@@ -126,12 +132,14 @@ func Test_revealSigMessage(t *testing.T) {
 }
 
 func Test_sigMessage(t *testing.T) {
-	var ake AKE
+	rnd := fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+
 	ake.ourKey = alicePrivateKey
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
-	ake.otrVersion = otrV3{}
-	ake.Rand = fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	ake.y = fixedy
 	ake.gx = fixedgx
 	ake.gy = fixedgy
@@ -154,11 +162,14 @@ func Test_sigMessage(t *testing.T) {
 }
 
 func Test_encrypt(t *testing.T) {
-	var ake AKE
-	ake.otrVersion = otrV3{}
-	ake.Rand = fixedRand([]string{hex.EncodeToString(fixedx.Bytes())})
+	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes())})
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+
 	ake.gx = fixedgx
 	ake.generateRandBytes(ake.r[:])
+
 	var encryptedGx []byte
 	encryptedGx, err := encrypt(ake.r[:], ake.gx.Bytes())
 	assertEquals(t, err, nil)
@@ -166,9 +177,11 @@ func Test_encrypt(t *testing.T) {
 }
 
 func Test_decrypt(t *testing.T) {
-	var ake AKE
-	ake.otrVersion = otrV3{}
-	ake.Rand = fixedRand([]string{hex.EncodeToString(fixedx.Bytes())})
+	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes())})
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+
 	ake.gx = fixedgx
 	ake.generateRandBytes(ake.r[:])
 	encryptedGx, _ := encrypt(ake.r[:], ake.gx.Bytes())
@@ -218,18 +231,18 @@ func Test_calcDHSharedSecret(t *testing.T) {
 }
 
 func Test_calcDHSharedSecretExpectsGy(t *testing.T) {
-	ake := AKE{}
-	ake.otrVersion = otrV3{}
-	ake.Rand = fixtureRand()
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, fixtureRand()),
+	}
 
 	_, err := ake.calcDHSharedSecret(true)
 	assertDeepEquals(t, err, errors.New("missing gy"))
 }
 
 func Test_calcDHSharedSecretExpectsX(t *testing.T) {
-	ake := AKE{}
-	ake.otrVersion = otrV3{}
-	ake.Rand = fixtureRand()
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, fixtureRand()),
+	}
 	ake.gy = fixedgy
 
 	_, err := ake.calcDHSharedSecret(true)
@@ -237,7 +250,10 @@ func Test_calcDHSharedSecretExpectsX(t *testing.T) {
 }
 
 func Test_calcAKEKeys(t *testing.T) {
-	var bob AKE
+	bob := AKE{
+		akeContext: newAkeContext(otrV3{}, fixtureRand()),
+	}
+
 	bob.x = fixedx
 	bob.gy = fixedgy
 
@@ -271,9 +287,11 @@ func Test_calcAKEKeys(t *testing.T) {
 }
 
 func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
-	var ake AKE
-	ake.otrVersion = otrV3{}
-	ake.Rand = fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
+	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+
 	ake.ourKey = bobPrivateKey
 	ake.x = fixedx
 	ake.gx = fixedgx
@@ -293,9 +311,11 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 }
 
 func Test_generateSigKeyEncryptedSignature(t *testing.T) {
-	var ake AKE
-	ake.otrVersion = otrV3{}
-	ake.Rand = fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
+	rnd := fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+
 	ake.ourKey = alicePrivateKey
 	ake.y = fixedy
 	ake.gx = fixedgx

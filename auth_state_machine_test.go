@@ -16,11 +16,8 @@ func dhMsgType(msg []byte) byte {
 
 func newAkeContext(v otrVersion, r io.Reader) akeContext {
 	return akeContext{
-		otrContext: otrContext{
-			otrVersion: v,
-			Rand:       r,
-		},
-		authState: authStateNone{},
+		otrContext: newOtrContext(v, r),
+		authState:  authStateNone{},
 	}
 }
 

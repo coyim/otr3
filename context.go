@@ -18,14 +18,14 @@ var (
 )
 
 type context struct {
-	otrContext
+	*otrContext
 	smpState   smpState
 	privateKey *PrivateKey
 	akeContext
 }
 
 type akeContext struct {
-	otrContext
+	*otrContext
 	authState             authState
 	gx, gy, x, y          *big.Int
 	encryptedGx, hashedGx []byte
@@ -48,8 +48,8 @@ func newContext(v otrVersion, rand io.Reader) *context {
 	return &c
 }
 
-func newOtrContext(v otrVersion, rand io.Reader) otrContext {
-	return otrContext{otrVersion: v, Rand: rand}
+func newOtrContext(v otrVersion, rand io.Reader) *otrContext {
+	return &otrContext{otrVersion: v, Rand: rand}
 }
 
 type otrVersion interface {
@@ -64,6 +64,12 @@ type otrVersion interface {
 type conversation interface {
 	send(message []byte)
 	receive(message []byte) error
+}
+
+func (c *context) AKE() AKE {
+	return AKE{
+		akeContext: c.akeContext,
+	}
 }
 
 func (c *context) send(message []byte) {
@@ -139,9 +145,7 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 }
 
 func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
-	ake := AKE{}
-	ake.otrVersion = c.otrVersion
-	ake.akeContext = c.akeContext
+	ake := c.AKE()
 	ake.ourKey = c.privateKey
 
 	gyPos := 3
@@ -161,11 +165,12 @@ func (c *context) receiveSMPMessage(message []byte) error {
 	return err
 }
 
-func (c *context) rand() io.Reader {
+func (c *otrContext) rand() io.Reader {
+	//WHY?
 	return c.Rand
 }
 
-func (c *context) randMPI(buf []byte) *big.Int {
+func (c *otrContext) randMPI(buf []byte) *big.Int {
 	io.ReadFull(c.rand(), buf)
 	// TODO: errors here
 	return new(big.Int).SetBytes(buf)
