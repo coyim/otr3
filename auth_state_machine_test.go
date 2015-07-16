@@ -57,7 +57,7 @@ func fixtureRevealSigMsg() []byte {
 	ake.x = fixedx
 	ake.gx = fixedgx
 	ake.gy = fixedgy
-	ake.myKeyID = 1
+	ake.ourKeyID = 1
 	msg, _ := ake.revealSigMessage()
 
 	return msg
