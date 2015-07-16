@@ -50,6 +50,19 @@ func fixtureDHKeyMsg(v otrVersion) []byte {
 	return msg
 }
 
+func fixtureRevealSigMsg() []byte {
+	ake := fixtureAKEWithVersion(otrV3{})
+	ake.ourKey = bobPrivateKey
+	copy(ake.r[:], fixedr)
+	ake.x = fixedx
+	ake.gx = fixedgx
+	ake.gy = fixedgy
+	ake.myKeyID = 1
+	msg, _ := ake.revealSigMessage()
+
+	return msg
+}
+
 func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *testing.T) {
 	states := []authState{
 		authStateNone{},
@@ -248,5 +261,16 @@ func Test_receiveMessage_ignoresDHKeyIfItsVersionIsNotInThePolicy(t *testing.T) 
 	assertDeepEquals(t, toSend, nilB)
 
 	toSend = cV3.receiveMessage(msgV2)
+	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receiveMessage_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
+	var nilB []byte
+	cV3 := newAkeContext(otrV3{}, fixtureRand())
+	cV3.addPolicy(allowV3)
+
+	msg := fixtureRevealSigMsg()
+
+	toSend := cV3.receiveMessage(msg)
 	assertDeepEquals(t, toSend, nilB)
 }
