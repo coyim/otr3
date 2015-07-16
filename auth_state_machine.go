@@ -45,10 +45,7 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 	//TODO set the version for every existing otrContext
 	c.otrVersion = v
 
-	ake := &AKE{
-		akeContext: *c,
-	}
-
+	ake := c.newAKE()
 	ake.senderInstanceTag = generateIntanceTag()
 
 	//TODO errors
@@ -94,11 +91,9 @@ func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (auth
 }
 
 func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
-	ake := &AKE{
-		akeContext: *c,
-	}
+	ake := c.newAKE()
 
-	generateCommitMsgInstanceTags(ake, msg)
+	generateCommitMsgInstanceTags(&ake, msg)
 
 	//TODO error
 	msg, _ = ake.dhKeyMessage()
@@ -132,12 +127,10 @@ func (authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []by
 	c.encryptedGx = encryptedGx
 	_, c.hashedGx = extractData(msg, index)
 
-	ake := &AKE{
-		akeContext: *c,
-	}
+	ake := c.newAKE()
 
 	//TODO: this should not change my instanceTag, since this is supposed to be a retransmit
-	generateCommitMsgInstanceTags(ake, msg)
+	generateCommitMsgInstanceTags(&ake, msg)
 
 	//TODO error
 	msg, _ = ake.serializeDHKey()
@@ -145,9 +138,7 @@ func (authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []by
 }
 
 func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
-	ake := AKE{
-		akeContext: *c,
-	}
+	ake := c.newAKE()
 
 	//TODO error
 	index, _ := extractData(msg, 11)

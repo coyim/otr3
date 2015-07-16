@@ -66,9 +66,9 @@ type conversation interface {
 	receive(message []byte) error
 }
 
-func (c *context) AKE() AKE {
+func (c *akeContext) newAKE() AKE {
 	return AKE{
-		akeContext: c.akeContext,
+		akeContext: *c,
 	}
 }
 
@@ -145,7 +145,7 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 }
 
 func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
-	ake := c.AKE()
+	ake := c.newAKE()
 	ake.ourKey = c.privateKey
 
 	gyPos := 3
