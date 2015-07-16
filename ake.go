@@ -24,7 +24,6 @@ const (
 // AKE is authenticated key exchange context
 type AKE struct {
 	akeContext
-	theirKey             *PublicKey
 	r                    [16]byte
 	revealKey, sigKey    akeKeys
 	ssid                 [8]byte
