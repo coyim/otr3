@@ -31,7 +31,7 @@ func (m *smpMessage2) tlv() []byte {
 	return genSMPTLV(3, m.g2b, m.c2, m.d2, m.g3b, m.c3, m.d3, m.pb, m.qb, m.cp, m.d5, m.d6)
 }
 
-func (c *context) generateSecondaryParameters() smp2 {
+func (c *otrContext) generateSecondaryParameters() smp2 {
 	b := make([]byte, c.parameterLength())
 	s := smp2{}
 	s.b2 = c.randMPI(b)
@@ -70,7 +70,7 @@ func generateMessageTwoFor(s *smp2, s1 smpMessage1) smpMessage2 {
 	return m
 }
 
-func (c *context) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) smp2 {
+func (c *otrContext) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) smp2 {
 	s := c.generateSecondaryParameters()
 	s.y = secret
 	s.msg = generateMessageTwoFor(&s, s1)
@@ -78,7 +78,7 @@ func (c *context) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) s
 	return s
 }
 
-func (c *context) verifySMPSecondParameters(s1 smp1, msg smpMessage2) error {
+func (c *otrContext) verifySMPSecondParameters(s1 smp1, msg smpMessage2) error {
 	if !c.isGroupElement(msg.g2b) {
 		return errors.New("g2b is an invalid group element")
 	}

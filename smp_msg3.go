@@ -28,7 +28,7 @@ func (m *smpMessage3) tlv() []byte {
 	return genSMPTLV(4, m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
 }
 
-func (c *context) generateThirdParameters() smp3 {
+func (c *otrContext) generateThirdParameters() smp3 {
 	b := make([]byte, c.parameterLength())
 	s := smp3{}
 	s.r4 = c.randMPI(b)
@@ -63,14 +63,14 @@ func calculateMessageThree(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
 	return m
 }
 
-func (c *context) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMessage2) smp3 {
+func (c *otrContext) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMessage2) smp3 {
 	s := c.generateThirdParameters()
 	s.x = secret
 	s.msg = calculateMessageThree(&s, s1, m2)
 	return s
 }
 
-func (c *context) verifySMP3Parameters(s2 smp2, msg smpMessage3) error {
+func (c *otrContext) verifySMP3Parameters(s2 smp2, msg smpMessage3) error {
 	if !c.isGroupElement(msg.pa) {
 		return errors.New("Pa is an invalid group element")
 	}
@@ -97,7 +97,7 @@ func (c *context) verifySMP3Parameters(s2 smp2, msg smpMessage3) error {
 	return nil
 }
 
-func (c *context) verifySMP3ProtocolSuccess(s2 smp2, msg smpMessage3) error {
+func (c *otrContext) verifySMP3ProtocolSuccess(s2 smp2, msg smpMessage3) error {
 	papb := divMod(msg.pa, s2.msg.pb, p)
 
 	rab := modExp(msg.ra, s2.b3)

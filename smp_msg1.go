@@ -21,7 +21,7 @@ func (m *smpMessage1) tlv() []byte {
 	return genSMPTLV(2, m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
 }
 
-func (c *context) generateInitialParameters() smp1 {
+func (c *otrContext) generateInitialParameters() smp1 {
 	b := make([]byte, c.parameterLength())
 	s := smp1{}
 	s.a2 = c.randMPI(b)
@@ -42,13 +42,13 @@ func generateMessageOneFor(s smp1) smpMessage1 {
 	return m
 }
 
-func (c *context) generateSMPStartParameters() smp1 {
+func (c *otrContext) generateSMPStartParameters() smp1 {
 	s := c.generateInitialParameters()
 	s.msg = generateMessageOneFor(s)
 	return s
 }
 
-func (c *context) verifySMPStartParameters(msg smpMessage1) error {
+func (c *otrContext) verifySMPStartParameters(msg smpMessage1) error {
 	if !c.isGroupElement(msg.g2a) {
 		return errors.New("g2a is an invalid group element")
 	}
