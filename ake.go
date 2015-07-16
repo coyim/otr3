@@ -13,6 +13,14 @@ import (
 	"math/big"
 )
 
+const (
+	msgTypeDHCommit  = byte(2)
+	msgData          = byte(3)
+	msgTypeDHKey     = byte(10)
+	msgTypeRevealSig = byte(17)
+	msgTypeSig       = byte(18)
+)
+
 // AKE is authenticated key exchange context
 type AKE struct {
 	akeContext
