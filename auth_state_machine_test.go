@@ -18,6 +18,7 @@ func newAkeContext(v otrVersion, r io.Reader) akeContext {
 	return akeContext{
 		otrContext: newOtrContext(v, r),
 		authState:  authStateNone{},
+		policies:   policies{},
 	}
 }
 
@@ -46,6 +47,7 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 
 	for _, s := range states {
 		c := newAkeContext(nil, fixtureRand())
+		c.addPolicy(allowV3)
 		state, msg := s.receiveQueryMessage(&c, queryMsg)
 
 		assertEquals(t, state, authStateAwaitingDHKey{})
@@ -56,6 +58,7 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 func Test_receiveQueryMessage_StoresXAndGx(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	cxt := newAkeContext(nil, fixtureRand())
+	cxt.addPolicy(allowV3)
 
 	cxt.receiveQueryMessage(msg)
 	assertDeepEquals(t, cxt.x, fixtureX)
@@ -63,24 +66,30 @@ func Test_receiveQueryMessage_StoresXAndGx(t *testing.T) {
 }
 
 func Test_acceptOTRRequest_returnsNilForUnsupportedVersions(t *testing.T) {
+	p := policies{}
 	msg := []byte("?OTR?")
-	v := authStateNone{}.acceptOTRRequest(msg)
+	v := authStateNone{}.acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, nil)
 }
 
-func Test_acceptOTRRequest_acceptsOTRV2(t *testing.T) {
-	msg := []byte("?OTR?v2?")
-	v := authStateNone{}.acceptOTRRequest(msg)
-
-	assertEquals(t, v, otrV2{})
-}
-
-func Test_acceptOTRRequest_acceptsOTRV3EvenIfV2IsAnOption(t *testing.T) {
+func Test_acceptOTRRequest_acceptsOTRV3IfHasAllowV3Policy(t *testing.T) {
 	msg := []byte("?OTRv32?")
-	v := authStateNone{}.acceptOTRRequest(msg)
+	p := policies{}
+	p.allowV2()
+	p.allowV3()
+	v := authStateNone{}.acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, otrV3{})
+}
+
+func Test_acceptOTRRequest_acceptsOTRV2IfHasOnlyAllowV2Policy(t *testing.T) {
+	msg := []byte("?OTRv32?")
+	p := policies{}
+	p.allowV2()
+	v := authStateNone{}.acceptOTRRequest(p, msg)
+
+	assertEquals(t, v, otrV2{})
 }
 
 func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHKeyMsg(t *testing.T) {

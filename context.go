@@ -32,6 +32,7 @@ type akeContext struct {
 	digest                [32]byte
 	senderInstanceTag     uint32
 	receiverInstanceTag   uint32
+	policies
 }
 
 type otrContext struct {
@@ -46,6 +47,7 @@ func newConversation(v otrVersion, rand io.Reader) *conversation {
 		akeContext: akeContext{
 			otrContext: c,
 			authState:  authStateNone{},
+			policies:   policies{},
 		},
 		smpState: smpStateExpect1{},
 	}

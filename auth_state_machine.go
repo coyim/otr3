@@ -37,9 +37,11 @@ type authState interface {
 }
 
 func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
-	v := s.acceptOTRRequest(msg)
+	v := s.acceptOTRRequest(c.policies, msg)
 	if v == nil {
 		//TODO errors
+		//version could not be accepted by the given policy
+		return nil, nil
 	}
 
 	//TODO set the version for every existing otrContext
@@ -57,22 +59,16 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 	return authStateAwaitingDHKey{}, out
 }
 
-func (authStateNone) acceptOTRRequest(msg []byte) otrVersion {
-	//TODO implement policy
-	version := 0
+func (authStateNone) acceptOTRRequest(p policies, msg []byte) otrVersion {
 	versions := parseOTRQueryMessage(msg)
 
 	for _, v := range versions {
-		if v > version {
-			version = v
+		switch {
+		case v == 3 && p.has(allowV3):
+			return otrV3{}
+		case v == 2 && p.has(allowV2):
+			return otrV2{}
 		}
-	}
-
-	switch version {
-	case 2:
-		return otrV2{}
-	case 3:
-		return otrV3{}
 	}
 
 	return nil

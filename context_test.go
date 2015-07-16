@@ -24,9 +24,10 @@ func Test_parseOTRQueryMessage(t *testing.T) {
 	}
 }
 
-func Test_receiveSendsDHCommitMessageAfterReceivingAnOTRQueryMessage(t *testing.T) {
+func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
-	c := newConversation(otrV3{}, fixtureRand())
+	c := newConversation(nil, fixtureRand())
+	c.addPolicy(allowV3)
 
 	exp := []byte{
 		0x00, 0x03, // protocol version
@@ -42,6 +43,7 @@ func Test_receiveSendsDHCommitMessageAfterReceivingAnOTRQueryMessage(t *testing.
 func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	cxt := newConversation(nil, fixtureRand())
+	cxt.addPolicy(allowV3)
 
 	cxt.receive(msg)
 
