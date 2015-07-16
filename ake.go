@@ -150,7 +150,7 @@ func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, e
 	return appendData(nil, xb), nil
 }
 
-func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyId uint32) []byte {
+func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyID uint32) []byte {
 	var verifyData []byte
 
 	if xFirst {
@@ -163,7 +163,7 @@ func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyId uint
 
 	verifyData = append(verifyData, publicKey.serialize()...)
 
-	return appendWord(verifyData, keyId)
+	return appendWord(verifyData, keyID)
 }
 
 func sumHMAC(key, data []byte) []byte {
@@ -391,13 +391,13 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	}
 
 	index := ake.theirKey.parse(encryptedSig)
-	keyId, err := extractWord(encryptedSig[index:], 0)
+	keyID, err := extractWord(encryptedSig[index:], 0)
 	if err != nil {
 		return errors.New("otr: corrupt encrypted signature")
 	}
 	sig := encryptedSig[index+4:]
 
-	verifyData := ake.generateVerifyData(xFirst, ake.theirKey, keyId)
+	verifyData := ake.generateVerifyData(xFirst, ake.theirKey, keyID)
 	tomac = append(keys.m1[:], verifyData...)
 	mb := sha256Sum(tomac)
 
@@ -409,7 +409,7 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 		return errors.New("corrupt encrypted signature")
 	}
 
-	ake.theirKeyID = keyId
+	ake.theirKeyID = keyID
 	//zero(ake.theirLastCtr[:])
 	return nil
 }
