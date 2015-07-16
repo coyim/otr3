@@ -24,35 +24,6 @@ func Test_parseOTRQueryMessage(t *testing.T) {
 	}
 }
 
-func Test_acceptOTRRequestReturnsErrorForOTRV1(t *testing.T) {
-	msg := []byte("?OTR?")
-	cxt := context{}
-	cxt.Rand = fixtureRand()
-	err := cxt.acceptOTRRequest(msg)
-
-	assertEquals(t, err, errUnsupportedOTRVersion)
-}
-
-func Test_acceptOTRRequestAcceptsOTRV2(t *testing.T) {
-	msg := []byte("?OTR?v2?")
-	cxt := context{}
-	cxt.Rand = fixtureRand()
-	err := cxt.acceptOTRRequest(msg)
-
-	assertEquals(t, err, nil)
-	assertEquals(t, cxt.otrVersion, otrV2{})
-}
-
-func Test_acceptOTRRequestAcceptsOTRV3EvenIfV2IsAnOption(t *testing.T) {
-	msg := []byte("?OTRv32?")
-	cxt := context{}
-	cxt.Rand = fixtureRand()
-	err := cxt.acceptOTRRequest(msg)
-
-	assertEquals(t, err, nil)
-	assertEquals(t, cxt.otrVersion, otrV3{})
-}
-
 func Test_receiveSendsDHCommitMessageAfterReceivingAnOTRQueryMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	cxt := newContext(otrV3{}, fixtureRand())
@@ -66,16 +37,6 @@ func Test_receiveSendsDHCommitMessageAfterReceivingAnOTRQueryMessage(t *testing.
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, toSend[:3], exp)
-}
-
-func Test_receiveOTRQueryMessageStoresXAndGx(t *testing.T) {
-	msg := []byte("?OTRv3?")
-	cxt := newContext(nil, fixtureRand())
-
-	_, err := cxt.receiveOTRQueryMessage(msg)
-	assertEquals(t, err, nil)
-	assertDeepEquals(t, cxt.x, fixtureX)
-	assertDeepEquals(t, cxt.gx, fixtureGx)
 }
 
 func Test_receiveVerifiesMessageProtocolVersion(t *testing.T) {

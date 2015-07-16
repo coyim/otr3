@@ -17,6 +17,11 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
 	return
 }
 
+func (c *akeContext) receiveQueryMessage(msg []byte) (toSend []byte) {
+	c.authState, toSend = c.authState.receiveQueryMessage(c, msg)
+	return
+}
+
 type authStateNone struct{}
 type authStateAwaitingDHKey struct{}
 type authStateAwaitingRevealSig struct{}
@@ -24,11 +29,68 @@ type authStateAwaitingSig struct{}
 type authStateV1Setup struct{}
 
 type authState interface {
-	//receiveQueryMessage(*akeContext, []byte) (authState, []byte)
+	receiveQueryMessage(*akeContext, []byte) (authState, []byte)
 	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte)
 	//receiveDHKeyMessage(*akeContext, []byte) (authState, []byte)
 	//receiveRevealSigMessage(*akeContext, []byte) (authState, []byte)
 	//receiveSigMessage(*akeContext, []byte) (authState, []byte)
+}
+
+func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
+	v := s.acceptOTRRequest(msg)
+	if v == nil {
+		//TODO errors
+	}
+
+	//TODO set the version for every existing otrContext
+	c.otrVersion = v
+
+	ake := &AKE{
+		akeContext: *c,
+	}
+
+	ake.senderInstanceTag = generateIntanceTag()
+
+	//TODO errors
+	out, _ := ake.dhCommitMessage()
+
+	c.x = ake.x
+	c.gx = ake.gx
+
+	return authStateAwaitingDHKey{}, out
+}
+
+func (authStateNone) acceptOTRRequest(msg []byte) otrVersion {
+	//TODO implement policy
+	version := 0
+	versions := parseOTRQueryMessage(msg)
+
+	for _, v := range versions {
+		if v > version {
+			version = v
+		}
+	}
+
+	switch version {
+	case 2:
+		return otrV2{}
+	case 3:
+		return otrV3{}
+	}
+
+	return nil
+}
+
+func (authStateAwaitingDHKey) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return authStateNone{}.receiveQueryMessage(c, msg)
+}
+
+func (authStateAwaitingRevealSig) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return authStateNone{}.receiveQueryMessage(c, msg)
+}
+
+func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return authStateNone{}.receiveQueryMessage(c, msg)
 }
 
 func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {

@@ -112,7 +112,7 @@ const (
 //TODO toSend needs fragmentation to be implemented
 func (c *context) receive(message []byte) (toSend []byte, err error) {
 	if isQueryMessage(message) {
-		toSend, err = c.receiveOTRQueryMessage(message)
+		toSend = c.akeContext.receiveQueryMessage(message)
 		return
 	}
 
@@ -152,48 +152,6 @@ func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
 	_, ake.gy = extractMPI(msg, gyPos)
 
 	return ake.revealSigMessage()
-}
-
-func (c *context) receiveOTRQueryMessage(message []byte) ([]byte, error) {
-	if err := c.acceptOTRRequest(message); err != nil {
-		return nil, err
-	}
-
-	ake := AKE{}
-	ake.otrContext = c.otrContext
-	ake.senderInstanceTag = generateIntanceTag()
-
-	ret, err := ake.dhCommitMessage()
-	if err != nil {
-		return ret, err
-	}
-
-	//TODO find a proper place for this
-	c.akeContext = ake.akeContext
-
-	return ret, nil
-}
-
-func (c *context) acceptOTRRequest(msg []byte) error {
-	version := 0
-	versions := parseOTRQueryMessage(msg)
-
-	for _, v := range versions {
-		if v > version {
-			version = v
-		}
-	}
-
-	switch version {
-	case 2:
-		c.otrVersion = otrV2{}
-	case 3:
-		c.otrVersion = otrV3{}
-	default:
-		return errUnsupportedOTRVersion
-	}
-
-	return nil
 }
 
 func (c *context) receiveSMPMessage(message []byte) error {
