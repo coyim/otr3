@@ -213,6 +213,37 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 	assertDeepEquals(t, c.y, fixtureY)
 }
 
+func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *testing.T) {
+	var nilB []byte
+	c := newAkeContext(otrV3{}, fixtureRand())
+	dhKeymsg := fixtureDHKeyMsg(otrV3{})
+
+	state, msg := authStateNone{}.receiveDHKeyMessage(&c, dhKeymsg)
+	assertEquals(t, state, authStateNone{})
+	assertDeepEquals(t, msg, nilB)
+
+	state, msg = authStateAwaitingRevealSig{}.receiveDHKeyMessage(&c, dhKeymsg)
+	assertEquals(t, state, authStateAwaitingRevealSig{})
+	assertDeepEquals(t, msg, nilB)
+}
+
+func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSig(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.x = ourDHCommitAKE.x
+	c.gx = ourDHCommitAKE.gx
+	c.ourKey = bobPrivateKey
+
+	state, msg := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
+
+	//TODO before generate rev si need to extract their gy from DH commit
+	assertEquals(t, state, authStateAwaitingSig{})
+	assertDeepEquals(t, c.gy, fixtureGy)
+	assertDeepEquals(t, dhMsgType(msg), msgTypeRevealSig)
+}
+
 func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 	senderInstanceTag := uint32(0x00000101)
 

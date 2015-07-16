@@ -1,8 +1,6 @@
 package otr3
 
-import (
-	"bytes"
-)
+import "bytes"
 
 func (c *akeContext) ignoreMessage(msg []byte) bool {
 	protocolVersion := extractShort(msg, 0)
@@ -53,7 +51,7 @@ type authStateV1Setup struct{}
 type authState interface {
 	receiveQueryMessage(*akeContext, []byte) (authState, []byte)
 	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte)
-	//receiveDHKeyMessage(*akeContext, []byte) (authState, []byte)
+	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte)
 	//receiveRevealSigMessage(*akeContext, []byte) (authState, []byte)
 	//receiveSigMessage(*akeContext, []byte) (authState, []byte)
 }
@@ -172,6 +170,30 @@ func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) 
 
 func (authStateAwaitingSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
+}
+
+func (s authStateNone) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return s, nil
+}
+
+func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return s, nil
+}
+
+func (authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
+	_, c.gy = extractMPI(msg, 11)
+
+	ake := AKE{
+		akeContext: *c,
+	}
+	msg, _ = ake.revealSigMessage()
+	//TODO handle error
+
+	return authStateAwaitingSig{}, msg
+}
+
+func (authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return nil, nil
 }
 
 //TODO need to implements AUTHSTATE_V1_SETUP

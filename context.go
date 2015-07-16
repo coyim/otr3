@@ -19,8 +19,7 @@ var (
 
 type conversation struct {
 	*otrContext
-	smpState   smpState
-	privateKey *PrivateKey
+	smpState smpState
 	akeContext
 }
 
@@ -32,6 +31,7 @@ type akeContext struct {
 	digest                [32]byte
 	senderInstanceTag     uint32
 	receiverInstanceTag   uint32
+	ourKey                *PrivateKey
 	policies
 }
 
@@ -134,20 +134,6 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	}
 
 	return
-}
-
-func (c *conversation) receiveDHKey(msg []byte) ([]byte, error) {
-	ake := c.newAKE()
-	ake.ourKey = c.privateKey
-
-	gyPos := 3
-	if ake.needInstanceTag() {
-		gyPos = 11
-	}
-
-	_, ake.gy = extractMPI(msg, gyPos)
-
-	return ake.revealSigMessage()
 }
 
 //NOTE: this is a candidate for an smpContext that would manage the smp state machine

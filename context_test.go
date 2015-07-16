@@ -77,23 +77,3 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhKeyMsg[:lenMsgHeader], exp)
 }
-
-func Test_receiveDHKeyMessageGeneratesDHRevealSigMessage(t *testing.T) {
-	exp := []byte{
-		0x00, 0x03, // protocol version
-		msgTypeRevealSig, // type
-	}
-
-	c := newConversation(otrV3{}, fixtureRand())
-	c.privateKey = bobPrivateKey
-
-	c.x = fixtureX
-	c.gx = fixtureGx
-
-	ake := fixtureAKE()
-	dhKeyMsg, _ := ake.dhKeyMessage()
-
-	dhRevealSigMsg, err := c.receiveDHKey(dhKeyMsg)
-	assertEquals(t, err, nil)
-	assertDeepEquals(t, dhRevealSigMsg[:lenMsgHeader], exp)
-}
