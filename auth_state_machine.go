@@ -111,7 +111,7 @@ func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authStat
 	//TODO error
 	msg, _ = ake.dhKeyMessage()
 
-	//TODO should we reset myKeyID? Why?
+	//TODO should we reset ourKeyID? Why?
 	c.y = ake.y
 	c.gy = ake.gy
 

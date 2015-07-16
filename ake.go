@@ -16,12 +16,12 @@ import (
 // AKE is authenticated key exchange context
 type AKE struct {
 	akeContext
-	ourKey            *PrivateKey
-	theirKey          *PublicKey
-	r                 [16]byte
-	revealKey, sigKey akeKeys
-	ssid              [8]byte
-	myKeyID           uint32
+	ourKey               *PrivateKey
+	theirKey             *PublicKey
+	r                    [16]byte
+	revealKey, sigKey    akeKeys
+	ssid                 [8]byte
+	ourKeyID, theirKeyID uint32
 }
 
 type akeKeys struct {
@@ -136,17 +136,14 @@ func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, e
 		return nil, errors.New("missing ourKey")
 	}
 
-	verifyData, err := ake.generateVerifyData(xFirst, &ake.ourKey.PublicKey, ake.myKeyID)
-	if err != nil {
-		return nil, err
-	}
+	verifyData := ake.generateVerifyData(xFirst, &ake.ourKey.PublicKey, ake.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
 	xb := ake.calcXb(key, mb, xFirst)
 	return appendData(nil, xb), nil
 }
 
-func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyId uint32) ([]byte, error) {
+func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyId uint32) []byte {
 	var verifyData []byte
 
 	if xFirst {
@@ -159,7 +156,7 @@ func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyId uint
 
 	verifyData = append(verifyData, publicKey.serialize()...)
 
-	return appendWord(verifyData, keyId), nil
+	return appendWord(verifyData, keyId)
 }
 
 func sumHMAC(key, data []byte) []byte {
@@ -172,7 +169,7 @@ func sumHMAC(key, data []byte) []byte {
 func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 	var sigb []byte
 	xb := ake.ourKey.PublicKey.serialize()
-	xb = appendWord(xb, ake.myKeyID)
+	xb = appendWord(xb, ake.ourKeyID)
 
 	sigb, _ = ake.ourKey.sign(ake.rand(), mb)
 	xb = append(xb, sigb...)
@@ -190,7 +187,7 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 }
 
 func (ake *AKE) dhCommitMessage() ([]byte, error) {
-	ake.myKeyID = 0
+	ake.ourKeyID = 0
 
 	x, err := ake.generateRandBigInt()
 	if err != nil {
@@ -375,49 +372,37 @@ func (ake *AKE) processRevealSig(in []byte) (err error) {
 }
 
 func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys, xFirst bool) error {
-	/*
-		tomac := appendData(keys.m2[:], encryptedSig)
-		myMAC := sha256Sum(tomac)[:20]
+	tomac := appendData(keys.m2[:], encryptedSig)
+	myMAC := sha256Sum(tomac)[:20]
 
-		if len(myMAC) != len(theirMAC) || subtle.ConstantTimeCompare(myMAC, theirMAC) == 0 {
-			return errors.New("bad signature MAC in encrypted signature")
-		}
+	if len(myMAC) != len(theirMAC) || subtle.ConstantTimeCompare(myMAC, theirMAC) == 0 {
+		return errors.New("bad signature MAC in encrypted signature")
+	}
 
-		if err := decrypt(keys.c[:], encryptedSig, encryptedSig); err != nil {
-			return err
-		}
+	if err := decrypt(keys.c[:], encryptedSig, encryptedSig); err != nil {
+		return err
+	}
 
-		sig := encryptedSig
-		sig, ok1 := ake.theirKey.parse(sig)
-		keyId, sig, ok2 := getU32(sig)
-		if !ok1 || !ok2 {
-			return errors.New("otr: corrupt encrypted signature")
-		}
+	index := ake.theirKey.parse(encryptedSig)
+	keyId, err := extractWord(encryptedSig[index:], 0)
+	if err != nil {
+		return errors.New("otr: corrupt encrypted signature")
+	}
+	sig := encryptedSig[index+4:]
 
-		var verifyData []byte
-		if xFirst {
-			verifyData = appendMPI(verifyData, ake.gx)
-			verifyData = appendMPI(verifyData, ake.gy)
-		} else {
-			verifyData = appendMPI(verifyData, ake.gy)
-			verifyData = appendMPI(verifyData, ake.gx)
-		}
-		verifyData = append(verifyData, ake.theirKey.serialize()...)
-		verifyData = appendU32(verifyData, keyId)
-		generateVerifyData
-		tomac = append(keys.m1[:], verifyData...)
-		mb := sha256Sum(tomac)
+	verifyData := ake.generateVerifyData(xFirst, ake.theirKey, keyId)
+	tomac = append(keys.m1[:], verifyData...)
+	mb := sha256Sum(tomac)
 
-		sig, ok1 = c.theirKey.Verify(mb, sig)
-		if !ok1 {
-			return errors.New("bad signature in encrypted signature")
-		}
-		if len(sig) > 0 {
-			return errors.New("corrupt encrypted signature")
-		}
+	sig, ok := ake.theirKey.Verify(mb, sig)
+	if !ok {
+		return errors.New("bad signature in encrypted signature")
+	}
+	if len(sig) > 0 {
+		return errors.New("corrupt encrypted signature")
+	}
 
-		c.theirKeyId = keyId
-		zero(c.theirLastCtr[:])
-	*/
+	ake.theirKeyID = keyId
+	//zero(ake.theirLastCtr[:])
 	return nil
 }
