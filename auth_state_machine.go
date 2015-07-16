@@ -24,6 +24,10 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
 
 		c.authState, toSend = c.authState.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
+		if c.ignoreMessage(msg) {
+			//TODO error?
+			return
+		}
 		//c.authState, toSend, _ = c.receiveDHKey(message)
 	}
 

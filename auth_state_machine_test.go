@@ -23,14 +23,14 @@ func newAkeContext(v otrVersion, r io.Reader) akeContext {
 }
 
 func fixtureAKE() AKE {
-	return fixtureAKWWithVersion(otrV3{})
+	return fixtureAKEWithVersion(otrV3{})
 }
 
 func fixtureAKEV2() AKE {
-	return fixtureAKWWithVersion(otrV2{})
+	return fixtureAKEWithVersion(otrV2{})
 }
 
-func fixtureAKWWithVersion(v otrVersion) AKE {
+func fixtureAKEWithVersion(v otrVersion) AKE {
 	return AKE{
 		akeContext: newAkeContext(v, fixtureRand()),
 	}
@@ -40,6 +40,13 @@ func fixtureDHCommitMsg() []byte {
 	ake := fixtureAKE()
 	ake.senderInstanceTag = generateIntanceTag()
 	msg, _ := ake.dhCommitMessage()
+	return msg
+}
+
+func fixtureDHKeyMsg(v otrVersion) []byte {
+	ake := fixtureAKEWithVersion(v)
+	ake.ourKey = alicePrivateKey
+	msg, _ := ake.dhKeyMessage()
 	return msg
 }
 
@@ -218,6 +225,24 @@ func Test_receiveMessage_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.
 	ake := fixtureAKEV2()
 	msgV2, _ := ake.dhCommitMessage()
 	msgV3 := fixtureDHCommitMsg()
+
+	toSend := cV2.receiveMessage(msgV3)
+	assertDeepEquals(t, toSend, nilB)
+
+	toSend = cV3.receiveMessage(msgV2)
+	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receiveMessage_ignoresDHKeyIfItsVersionIsNotInThePolicy(t *testing.T) {
+	var nilB []byte
+	cV2 := newAkeContext(otrV2{}, fixtureRand())
+	cV2.addPolicy(allowV2)
+
+	cV3 := newAkeContext(otrV3{}, fixtureRand())
+	cV3.addPolicy(allowV3)
+
+	msgV2 := fixtureDHKeyMsg(otrV2{})
+	msgV3 := fixtureDHKeyMsg(otrV3{})
 
 	toSend := cV2.receiveMessage(msgV3)
 	assertDeepEquals(t, toSend, nilB)
