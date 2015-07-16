@@ -1,9 +1,14 @@
 package otr3
 
+import (
+	"bytes"
+	"strconv"
+)
+
 // fragmentationContext store the current fragmentation running. A fragmentationContext is zero-valid and can be immediately used without initialization.
 // In order to follow the fragmentation rules, when the context needs to be reset, just create a new one - don't bother resetting variables
 type fragmentationContext struct {
-	frag                     string
+	frag                     []byte
 	currentIndex, currentLen uint16
 }
 
@@ -36,9 +41,25 @@ func (c *context) fragment(data []byte, fraglen uint16, itags uint32, itagr uint
 		numFragments := (len / int(fraglen)) + 1
 		ret = make([][]byte, numFragments)
 		for i := 0; i < numFragments; i++ {
-			ret[i] = c.makeFragment(fragmentData(data, i, fraglen, uint16(len)), i, numFragments, itags, itagr)
+			prefix := c.fragmentPrefix(i, numFragments, itags, itagr)
+			ret[i] = append(append(prefix, fragmentData(data, i, fraglen, uint16(len))...), []byte(",")...)
 		}
 	}
 
+	return ret
+}
+
+func bytesToUint16(d []byte) (uint16, error) {
+	res, e := strconv.Atoi(string(d))
+	return uint16(res), e
+}
+
+func receiveFragment(fctx fragmentationContext, data []byte) fragmentationContext {
+	ret := fctx
+	dataWithoutPrefix := data[5:]
+	parts := bytes.Split(dataWithoutPrefix, []byte(",")) // this should always be safe, since the real data will always be base64 encoded
+	ret.currentIndex, _ = bytesToUint16(parts[0])
+	ret.currentLen, _ = bytesToUint16(parts[1])
+	ret.frag = parts[2]
 	return ret
 }

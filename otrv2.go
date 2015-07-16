@@ -22,8 +22,8 @@ func (v otrV2) isFragmented(data []byte) bool {
 	return bytes.HasPrefix(data, otrv2FragmentationPrefix)
 }
 
-func (v otrV2) makeFragment(data []byte, n, total int, itags uint32, itagr uint32) []byte {
-	return append([]byte(fmt.Sprintf("%s%05d,%05d,", string(otrv2FragmentationPrefix), n+1, total)), data...)
+func (v otrV2) fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte {
+	return []byte(fmt.Sprintf("%s%05d,%05d,", string(otrv2FragmentationPrefix), n+1, total))
 }
 
 func (v otrV2) protocolVersion() uint16 {

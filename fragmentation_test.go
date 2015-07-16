@@ -48,10 +48,10 @@ func Test_fragment_returnsFragmentsForNeededFragmentation(t *testing.T) {
 	data := []byte("one two three")
 
 	assertDeepEquals(t, ctx.fragment(data, 4, defaultInstanceTag, defaultInstanceTag+2), [][]byte{
-		[]byte("?OTR|00000100|00000102,00001,00004,one "),
-		[]byte("?OTR|00000100|00000102,00002,00004,two "),
-		[]byte("?OTR|00000100|00000102,00003,00004,thre"),
-		[]byte("?OTR|00000100|00000102,00004,00004,e"),
+		[]byte("?OTR|00000100|00000102,00001,00004,one ,"),
+		[]byte("?OTR|00000100|00000102,00002,00004,two ,"),
+		[]byte("?OTR|00000100|00000102,00003,00004,thre,"),
+		[]byte("?OTR|00000100|00000102,00004,00004,e,"),
 	})
 }
 
@@ -61,11 +61,20 @@ func Test_fragment_returnsFragmentsForNeededFragmentationForV2(t *testing.T) {
 	data := []byte("one two three")
 
 	assertDeepEquals(t, ctx.fragment(data, 4, defaultInstanceTag, defaultInstanceTag+1), [][]byte{
-		[]byte("?OTR,00001,00004,one "),
-		[]byte("?OTR,00002,00004,two "),
-		[]byte("?OTR,00003,00004,thre"),
-		[]byte("?OTR,00004,00004,e"),
+		[]byte("?OTR,00001,00004,one ,"),
+		[]byte("?OTR,00002,00004,two ,"),
+		[]byte("?OTR,00003,00004,thre,"),
+		[]byte("?OTR,00004,00004,e,"),
 	})
 }
 
-// TODO: MINIMUM FRAGMENT SIZE
+func Test_receiveFragment_returnsANewFragmentationContextForANewMessage(t *testing.T) {
+	//	ctx := newContext(otrV2{}, nil)
+	data := []byte("?OTR,00001,00004,one ,")
+
+	fctx := receiveFragment(fragmentationContext{}, data)
+
+	assertDeepEquals(t, fctx.frag, []byte("one "))
+	assertEquals(t, fctx.currentIndex, uint16(1))
+	assertEquals(t, fctx.currentLen, uint16(4))
+}
