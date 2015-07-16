@@ -52,15 +52,27 @@ func fixtureDHKeyMsg(v otrVersion) []byte {
 
 func fixtureRevealSigMsg() []byte {
 	ake := fixtureAKEWithVersion(otrV3{})
-	ake.ourKey = bobPrivateKey
+	ake.akeContext = fixtureContextToReceiveDHKey()
+
 	copy(ake.r[:], fixedr)
-	ake.x = fixedx
-	ake.gx = fixedgx
 	ake.gy = fixedgy
 	ake.ourKeyID = 1
+
 	msg, _ := ake.revealSigMessage()
 
 	return msg
+}
+
+func fixtureContextToReceiveDHKey() akeContext {
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.addPolicy(allowV3)
+	c.authState = authStateAwaitingDHKey{}
+
+	c.x = fixtureX
+	c.gx = fixtureGx
+	c.ourKey = bobPrivateKey
+
+	return c
 }
 
 func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *testing.T) {
@@ -248,10 +260,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 	ourDHCommitAKE := fixtureAKE()
 	ourDHCommitAKE.dhCommitMessage()
 
-	c := newAkeContext(otrV3{}, fixtureRand())
-	c.x = ourDHCommitAKE.x
-	c.gx = ourDHCommitAKE.gx
-	c.ourKey = bobPrivateKey
+	c := fixtureContextToReceiveDHKey()
 
 	state, msg := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
 

@@ -14,7 +14,7 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 
 	exp := []byte{
 		0x00, 0x03, // protocol version
-		0x02, //DH message type
+		msgTypeDHCommit,
 	}
 
 	toSend, err := c.receive(msg)
@@ -46,7 +46,7 @@ func Test_receiveVerifiesMessageProtocolVersion(t *testing.T) {
 func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	exp := []byte{
 		0x00, 0x03, // protocol version
-		0x0A, //DH message type
+		msgTypeDHKey,
 	}
 
 	dhCommitAKE := fixtureAKE()
@@ -59,4 +59,17 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhKeyMsg[:lenMsgHeader], exp)
+}
+
+func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
+	v := otrV3{}
+
+	c := newConversation(v, fixtureRand())
+	msg := fixtureDHKeyMsg(v)
+	c.akeContext = fixtureContextToReceiveDHKey()
+
+	toSend, err := c.receive(msg)
+
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, dhMsgType(toSend), msgTypeRevealSig)
 }

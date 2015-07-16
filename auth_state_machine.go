@@ -29,7 +29,8 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
 			//TODO error?
 			return
 		}
-		//c.authState, toSend, _ = c.receiveDHKey(message)
+
+		c.authState, toSend = c.authState.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
 		if !c.has(allowV2) {
 			//TODO error?
