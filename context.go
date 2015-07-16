@@ -17,7 +17,7 @@ var (
 	errWrongProtocolVersion  = errors.New("wrong protocol version")
 )
 
-type context struct {
+type conversation struct {
 	*otrContext
 	smpState   smpState
 	privateKey *PrivateKey
@@ -39,13 +39,16 @@ type otrContext struct {
 	Rand io.Reader
 }
 
-func newContext(v otrVersion, rand io.Reader) *context {
-	c := context{}
-	c.otrContext = newOtrContext(v, rand)
-	c.akeContext.otrContext = c.otrContext
-	c.smpState = smpStateExpect1{}
-	c.authState = authStateNone{}
-	return &c
+func newConversation(v otrVersion, rand io.Reader) *conversation {
+	c := newOtrContext(v, rand)
+	return &conversation{
+		otrContext: c,
+		akeContext: akeContext{
+			otrContext: c,
+			authState:  authStateNone{},
+		},
+		smpState: smpStateExpect1{},
+	}
 }
 
 func newOtrContext(v otrVersion, rand io.Reader) *otrContext {
@@ -61,18 +64,13 @@ type otrVersion interface {
 	needInstanceTag() bool
 }
 
-type conversation interface {
-	send(message []byte)
-	receive(message []byte) error
-}
-
 func (c *akeContext) newAKE() AKE {
 	return AKE{
 		akeContext: *c,
 	}
 }
 
-func (c *context) send(message []byte) {
+func (c *conversation) send(message []byte) {
 	// FIXME Dummy for now
 }
 
@@ -116,7 +114,7 @@ const (
 
 // This should be used by the xmpp-client to received OTR messages in plain
 //TODO toSend needs fragmentation to be implemented
-func (c *context) receive(message []byte) (toSend []byte, err error) {
+func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	if isQueryMessage(message) {
 		toSend = c.akeContext.receiveQueryMessage(message)
 		return
@@ -144,7 +142,7 @@ func (c *context) receive(message []byte) (toSend []byte, err error) {
 	return
 }
 
-func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
+func (c *conversation) receiveDHKey(msg []byte) ([]byte, error) {
 	ake := c.newAKE()
 	ake.ourKey = c.privateKey
 
@@ -158,7 +156,9 @@ func (c *context) receiveDHKey(msg []byte) ([]byte, error) {
 	return ake.revealSigMessage()
 }
 
-func (c *context) receiveSMPMessage(message []byte) error {
+//NOTE: this is a candidate for an smpContext that would manage the smp state machine
+// (just like the akeContext)
+func (c *conversation) receiveSMPMessage(message []byte) error {
 	var err error
 	m := parseTLV(message)
 	c.smpState, err = m.receivedMessage(c.smpState)

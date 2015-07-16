@@ -31,7 +31,7 @@ func fragmentData(data []byte, i int, fraglen, l uint16) []byte {
 	return data[fragmentStart(uint16(i), fraglen):fragmentEnd(uint16(i), fraglen, l)]
 }
 
-func (c *context) fragment(data []byte, fraglen uint16, itags uint32, itagr uint32) [][]byte {
+func (c *conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr uint32) [][]byte {
 	var ret [][]byte
 	len := len(data)
 

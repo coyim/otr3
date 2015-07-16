@@ -7,8 +7,8 @@ import (
 
 func TestFullSMPHandshake(t *testing.T) {
 	secret := bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
-	alice := newContext(otrV3{}, rand.Reader)
-	bob := newContext(otrV3{}, rand.Reader)
+	alice := newConversation(otrV3{}, rand.Reader)
+	bob := newConversation(otrV3{}, rand.Reader)
 
 	// Alice -> Bob
 	// Stores: x, a2, and a3
