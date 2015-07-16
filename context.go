@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"math/big"
-	"strconv"
 )
 
 const (
@@ -77,30 +76,6 @@ func (c *conversation) send(message []byte) {
 }
 
 var queryMarker = []byte("?OTR")
-
-func parseOTRQueryMessage(msg []byte) []int {
-	ret := []int{}
-
-	if bytes.HasPrefix(msg, queryMarker) {
-		var p int
-		versions := msg[len(queryMarker):]
-
-		if versions[p] == '?' {
-			ret = append(ret, 1)
-			p++
-		}
-
-		if len(versions) > p && versions[p] == 'v' {
-			for _, c := range versions[p:] {
-				if v, err := strconv.Atoi(string(c)); err == nil {
-					ret = append(ret, v)
-				}
-			}
-		}
-	}
-
-	return ret
-}
 
 func isQueryMessage(msg []byte) bool {
 	return bytes.HasPrefix(msg, []byte(queryMarker))

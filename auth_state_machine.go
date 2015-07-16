@@ -1,6 +1,9 @@
 package otr3
 
-import "bytes"
+import (
+	"bytes"
+	"strconv"
+)
 
 func (c *akeContext) ignoreMessage(msg []byte) bool {
 	protocolVersion := extractShort(msg, 0)
@@ -79,8 +82,32 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 	return authStateAwaitingDHKey{}, out
 }
 
-func (authStateNone) acceptOTRRequest(p policies, msg []byte) otrVersion {
-	versions := parseOTRQueryMessage(msg)
+func (authStateNone) parseOTRQueryMessage(msg []byte) []int {
+	ret := []int{}
+
+	if bytes.HasPrefix(msg, queryMarker) {
+		var p int
+		versions := msg[len(queryMarker):]
+
+		if versions[p] == '?' {
+			ret = append(ret, 1)
+			p++
+		}
+
+		if len(versions) > p && versions[p] == 'v' {
+			for _, c := range versions[p:] {
+				if v, err := strconv.Atoi(string(c)); err == nil {
+					ret = append(ret, v)
+				}
+			}
+		}
+	}
+
+	return ret
+}
+
+func (s authStateNone) acceptOTRRequest(p policies, msg []byte) otrVersion {
+	versions := s.parseOTRQueryMessage(msg)
 
 	for _, v := range versions {
 		switch {
