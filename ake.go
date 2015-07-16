@@ -378,8 +378,9 @@ func (ake *AKE) processRevealSig(in []byte) (err error) {
 }
 
 func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys, xFirst bool) error {
-	tomac := appendData(keys.m2[:], encryptedSig)
-	myMAC := sha256Sum(tomac)[:20]
+
+	tomac := appendData(nil, encryptedSig)
+	myMAC := sumHMAC(keys.m2[:], tomac)[:20]
 
 	if len(myMAC) != len(theirMAC) || subtle.ConstantTimeCompare(myMAC, theirMAC) == 0 {
 		return errors.New("bad signature MAC in encrypted signature")
@@ -397,8 +398,7 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	sig := encryptedSig[index+4:]
 
 	verifyData := ake.generateVerifyData(xFirst, ake.theirKey, keyID)
-	tomac = append(keys.m1[:], verifyData...)
-	mb := sha256Sum(tomac)
+	mb := sumHMAC(keys.m1[:], verifyData)
 
 	sig, ok := ake.theirKey.verify(mb, sig)
 	if !ok {
