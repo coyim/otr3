@@ -35,8 +35,8 @@ type akeContext struct {
 }
 
 type otrContext struct {
-	otrVersion
-	Rand io.Reader
+	otrVersion // TODO: this is extremely brittle and can cause unexpected interactions. We should revisit the decision to embed here
+	Rand       io.Reader
 }
 
 func newConversation(v otrVersion, rand io.Reader) *conversation {

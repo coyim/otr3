@@ -5,6 +5,7 @@ import (
 	"errors"
 	"hash"
 	"math/big"
+	"strconv"
 )
 
 func appendWord(l []byte, r uint32) []byte {
@@ -90,4 +91,9 @@ func extractData(d []byte, start int) (newIndex int, data []byte) {
 	newIndex = start + 4 + int(length)
 	data = d[start+4 : newIndex]
 	return
+}
+
+func bytesToUint16(d []byte) (uint16, error) {
+	res, e := strconv.Atoi(string(d))
+	return uint16(res), e
 }

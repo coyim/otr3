@@ -1,9 +1,6 @@
 package otr3
 
-import (
-	"bytes"
-	"strconv"
-)
+import "bytes"
 
 // fragmentationContext store the current fragmentation running. A fragmentationContext is zero-valid and can be immediately used without initialization.
 // In order to follow the fragmentation rules, when the context needs to be reset, just create a new one - don't bother resetting variables
@@ -47,11 +44,6 @@ func (c *conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr
 	}
 
 	return ret
-}
-
-func bytesToUint16(d []byte) (uint16, error) {
-	res, e := strconv.Atoi(string(d))
-	return uint16(res), e
 }
 
 func receiveFragment(fctx fragmentationContext, data []byte) fragmentationContext {
