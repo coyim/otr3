@@ -401,7 +401,7 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	tomac = append(keys.m1[:], verifyData...)
 	mb := sha256Sum(tomac)
 
-	sig, ok := ake.theirKey.Verify(mb, sig)
+	sig, ok := ake.theirKey.verify(mb, sig)
 	if !ok {
 		return errors.New("bad signature in encrypted signature")
 	}

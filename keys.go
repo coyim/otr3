@@ -215,7 +215,7 @@ func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
 	return nil, err
 }
 
-func (pub *PublicKey) Verify(hashed, sig []byte) ([]byte, bool) {
+func (pub *PublicKey) verify(hashed, sig []byte) ([]byte, bool) {
 	if len(sig) != 2*20 {
 		return nil, false
 	}
