@@ -3,6 +3,7 @@ package otr3
 import (
 	"encoding/hex"
 	"errors"
+	"math/big"
 	"testing"
 )
 
@@ -192,7 +193,7 @@ func Test_decrypt(t *testing.T) {
 	assertDeepEquals(t, decryptedGx, appendMPI([]byte{}, ake.gx))
 }
 
-func Test_hashedGx(t *testing.T) {
+func Test_sha256Sum(t *testing.T) {
 	hashedGx := sha256Sum(fixedgx.Bytes())
 	assertDeepEquals(t, hashedGx, expectedHashedGxValue)
 }
@@ -209,6 +210,24 @@ func Test_checkDecryptedGxWithError(t *testing.T) {
 	copy(ake.digest[:], sha256Sum(appendMPI([]byte{}, fixedgy)))
 	err := ake.checkDecryptedGx(appendMPI([]byte{}, fixedgx))
 	assertDeepEquals(t, err.Error(), "otr: bad commit MAC in reveal signature message")
+}
+
+func Test_extractGxWithoutError(t *testing.T) {
+	gx, err := extractGx(appendMPI([]byte{}, fixedgx))
+	assertDeepEquals(t, err, nil)
+	assertDeepEquals(t, gx, fixedgx)
+}
+
+func Test_extractGxWithCorruptError(t *testing.T) {
+	gx, err := extractGx(appendMPI(appendMPI([]byte{}, fixedgx), fixedy))
+	assertDeepEquals(t, err.Error(), "otr: gx corrupt after decryption")
+	assertDeepEquals(t, gx, fixedgx)
+}
+
+func Test_extractGxWithRangeError(t *testing.T) {
+	gx, err := extractGx(appendMPI([]byte{}, big.NewInt(1)))
+	assertDeepEquals(t, gx, big.NewInt(1))
+	assertDeepEquals(t, err.Error(), "otr: DH value out of range")
 }
 
 func Test_calcDHSharedSecret(t *testing.T) {

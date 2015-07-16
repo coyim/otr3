@@ -329,7 +329,7 @@ func (ake *AKE) checkDecryptedGx(decryptedGx []byte) error {
 	return nil
 }
 
-func (ake *AKE) extractGx(decryptedGx []byte) (*big.Int, error) {
+func extractGx(decryptedGx []byte) (*big.Int, error) {
 	index, gx := extractMPI(decryptedGx, 0)
 	if len(decryptedGx) > index {
 		return gx, errors.New("otr: gx corrupt after decryption")
@@ -354,7 +354,7 @@ func (ake *AKE) processRevealSig(in []byte) (err error) {
 	if err = ake.checkDecryptedGx(decryptedGx); err != nil {
 		return
 	}
-	if ake.gx, err = ake.extractGx(decryptedGx); err != nil {
+	if ake.gx, err = extractGx(decryptedGx); err != nil {
 		return
 	}
 	var s *big.Int
