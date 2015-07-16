@@ -4,11 +4,24 @@ import (
 	"bytes"
 )
 
+func (c *akeContext) ignoreMessage(msg []byte) bool {
+	protocolVersion := extractShort(msg, 0)
+	unexpectedV2Msg := protocolVersion == 2 && !c.has(allowV2)
+	unexpectedV3Msg := protocolVersion == 3 && !c.has(allowV3)
+
+	return unexpectedV2Msg || unexpectedV3Msg
+}
+
 func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
 	msgType := msg[2]
 
 	switch msgType {
 	case msgTypeDHCommit:
+		if c.ignoreMessage(msg) {
+			//TODO error?
+			return
+		}
+
 		c.authState, toSend = c.authState.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
 		//c.authState, toSend, _ = c.receiveDHKey(message)

@@ -60,7 +60,7 @@ func Test_receiveVerifiesMessageProtocolVersion(t *testing.T) {
 	assertEquals(t, err, errWrongProtocolVersion)
 }
 
-func Test_receiveDHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
+func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	exp := []byte{
 		0x00, 0x03, // protocol version
 		0x0A, //DH message type
@@ -70,6 +70,7 @@ func Test_receiveDHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	dhCommitMsg, _ := dhCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
+	c.addPolicy(allowV3)
 
 	dhKeyMsg, err := c.receive(dhCommitMsg)
 

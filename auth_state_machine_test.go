@@ -23,8 +23,16 @@ func newAkeContext(v otrVersion, r io.Reader) akeContext {
 }
 
 func fixtureAKE() AKE {
+	return fixtureAKWWithVersion(otrV3{})
+}
+
+func fixtureAKEV2() AKE {
+	return fixtureAKWWithVersion(otrV2{})
+}
+
+func fixtureAKWWithVersion(v otrVersion) AKE {
 	return AKE{
-		akeContext: newAkeContext(otrV3{}, fixtureRand()),
+		akeContext: newAkeContext(v, fixtureRand()),
 	}
 }
 
@@ -197,4 +205,23 @@ func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 
 	assertEquals(t, ake.receiverInstanceTag, senderInstanceTag)
 	assertEquals(t, ake.senderInstanceTag, generateIntanceTag())
+}
+
+func Test_receiveMessage_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.T) {
+	var nilB []byte
+	cV2 := newAkeContext(otrV2{}, fixtureRand())
+	cV2.addPolicy(allowV2)
+
+	cV3 := newAkeContext(otrV3{}, fixtureRand())
+	cV3.addPolicy(allowV3)
+
+	ake := fixtureAKEV2()
+	msgV2, _ := ake.dhCommitMessage()
+	msgV3 := fixtureDHCommitMsg()
+
+	toSend := cV2.receiveMessage(msgV3)
+	assertDeepEquals(t, toSend, nilB)
+
+	toSend = cV3.receiveMessage(msgV2)
+	assertDeepEquals(t, toSend, nilB)
 }
