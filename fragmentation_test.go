@@ -48,10 +48,10 @@ func Test_fragment_returnsFragmentsForNeededFragmentation(t *testing.T) {
 	data := []byte("one two three")
 
 	assertDeepEquals(t, ctx.fragment(data, 4, defaultInstanceTag, defaultInstanceTag+2), [][]byte{
-		[]byte("?OTR|100|102,00001,00004,one "),
-		[]byte("?OTR|100|102,00002,00004,two "),
-		[]byte("?OTR|100|102,00003,00004,thre"),
-		[]byte("?OTR|100|102,00004,00004,e"),
+		[]byte("?OTR|00000100|00000102,00001,00004,one "),
+		[]byte("?OTR|00000100|00000102,00002,00004,two "),
+		[]byte("?OTR|00000100|00000102,00003,00004,thre"),
+		[]byte("?OTR|00000100|00000102,00004,00004,e"),
 	})
 }
 

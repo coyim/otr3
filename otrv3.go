@@ -23,7 +23,7 @@ func (v otrV3) isFragmented(data []byte) bool {
 }
 
 func (v otrV3) makeFragment(data []byte, n, total int, itags uint32, itagr uint32) []byte {
-	return append([]byte(fmt.Sprintf("%s%x|%x,%05d,%05d,", string(otrv3FragmentationPrefix), itags, itagr, n+1, total)), data...)
+	return append([]byte(fmt.Sprintf("%s%08x|%08x,%05d,%05d,", string(otrv3FragmentationPrefix), itags, itagr, n+1, total)), data...)
 }
 
 func (v otrV3) protocolVersion() uint16 {
