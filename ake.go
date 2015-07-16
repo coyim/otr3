@@ -17,6 +17,7 @@ import (
 type AKE struct {
 	akeContext
 	ourKey            *PrivateKey
+	theirKey          *PublicKey
 	r                 [16]byte
 	revealKey, sigKey akeKeys
 	ssid              [8]byte
@@ -122,19 +123,7 @@ func (ake *AKE) calcDHSharedSecret(xKnown bool) (*big.Int, error) {
 }
 
 func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, error) {
-	verifyData, err := ake.generateVerifyData(xFirst)
-	if err != nil {
-		return nil, err
-	}
-
-	mb := sumHMAC(key.m1[:], verifyData)
-	xb := ake.calcXb(key, mb, xFirst)
-	return appendData(nil, xb), nil
-}
-
-func (ake *AKE) generateVerifyData(xFirst bool) ([]byte, error) {
-	var verifyData []byte
-
+	//TODO: Is this error necessary? can we check values before calling each functions instead of having them in processes?
 	if ake.gy == nil {
 		return nil, errors.New("missing gy")
 	}
@@ -147,6 +136,19 @@ func (ake *AKE) generateVerifyData(xFirst bool) ([]byte, error) {
 		return nil, errors.New("missing ourKey")
 	}
 
+	verifyData, err := ake.generateVerifyData(xFirst, &ake.ourKey.PublicKey, ake.myKeyID)
+	if err != nil {
+		return nil, err
+	}
+
+	mb := sumHMAC(key.m1[:], verifyData)
+	xb := ake.calcXb(key, mb, xFirst)
+	return appendData(nil, xb), nil
+}
+
+func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyId uint32) ([]byte, error) {
+	var verifyData []byte
+
 	if xFirst {
 		verifyData = appendMPI(verifyData, ake.gx)
 		verifyData = appendMPI(verifyData, ake.gy)
@@ -155,10 +157,9 @@ func (ake *AKE) generateVerifyData(xFirst bool) ([]byte, error) {
 		verifyData = appendMPI(verifyData, ake.gx)
 	}
 
-	publicKey := ake.ourKey.PublicKey.serialize()
-	verifyData = append(verifyData, publicKey...)
+	verifyData = append(verifyData, publicKey.serialize()...)
 
-	return appendWord(verifyData, ake.myKeyID), nil
+	return appendWord(verifyData, keyId), nil
 }
 
 func sumHMAC(key, data []byte) []byte {
@@ -373,6 +374,50 @@ func (ake *AKE) processRevealSig(in []byte) (err error) {
 	return nil
 }
 
-func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, revealKey *akeKeys, xFirst bool) error {
+func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys, xFirst bool) error {
+	/*
+		tomac := appendData(keys.m2[:], encryptedSig)
+		myMAC := sha256Sum(tomac)[:20]
+
+		if len(myMAC) != len(theirMAC) || subtle.ConstantTimeCompare(myMAC, theirMAC) == 0 {
+			return errors.New("bad signature MAC in encrypted signature")
+		}
+
+		if err := decrypt(keys.c[:], encryptedSig, encryptedSig); err != nil {
+			return err
+		}
+
+		sig := encryptedSig
+		sig, ok1 := ake.theirKey.parse(sig)
+		keyId, sig, ok2 := getU32(sig)
+		if !ok1 || !ok2 {
+			return errors.New("otr: corrupt encrypted signature")
+		}
+
+		var verifyData []byte
+		if xFirst {
+			verifyData = appendMPI(verifyData, ake.gx)
+			verifyData = appendMPI(verifyData, ake.gy)
+		} else {
+			verifyData = appendMPI(verifyData, ake.gy)
+			verifyData = appendMPI(verifyData, ake.gx)
+		}
+		verifyData = append(verifyData, ake.theirKey.serialize()...)
+		verifyData = appendU32(verifyData, keyId)
+		generateVerifyData
+		tomac = append(keys.m1[:], verifyData...)
+		mb := sha256Sum(tomac)
+
+		sig, ok1 = c.theirKey.Verify(mb, sig)
+		if !ok1 {
+			return errors.New("bad signature in encrypted signature")
+		}
+		if len(sig) > 0 {
+			return errors.New("corrupt encrypted signature")
+		}
+
+		c.theirKeyId = keyId
+		zero(c.theirLastCtr[:])
+	*/
 	return nil
 }

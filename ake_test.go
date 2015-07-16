@@ -360,33 +360,9 @@ func Test_generateVerifyData(t *testing.T) {
 	ake.gy = fixedgy
 	ake.myKeyID = 1
 
-	verifyData, err := ake.generateVerifyData(true)
+	verifyData, err := ake.generateVerifyData(true, &ake.ourKey.PublicKey, ake.myKeyID)
 	expectedVerifyData, _ := hex.DecodeString("000000c0075dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d000000c02cdacabb00e63d8949aa85f7e6a095b1ee81a60779e58f8938ff1a7ed1e651d954bd739162e699cc73b820728af53aae60a46d529620792ddf839c5d03d2d4e92137a535b27500e3b3d34d59d0cd460d1f386b5eb46a7404b15c1ef84840697d2d3d2405dcdda351014d24a8717f7b9c51f6c84de365fea634737ae18ba22253a8e15249d9beb2dded640c6c0d74e4f7e19161cf828ce3ffa9d425fb68c0fddcaa7cbe81a7a5c2c595cce69a255059d9e5c04b49fb15901c087e225da850ff27000000000080a5138eb3d3eb9c1d85716faecadb718f87d31aaed1157671d7fee7e488f95e8e0ba60ad449ec732710a7dec5190f7182af2e2f98312d98497221dff160fd68033dd4f3a33b7c078d0d9f66e26847e76ca7447d4bab35486045090572863d9e4454777f24d6706f63e02548dfec2d0a620af37bbc1d24f884708a212c343b480d00000014e9c58f0ea21a5e4dfd9f44b6a9f7f6a9961a8fa9000000803c4d111aebd62d3c50c2889d420a32cdf1e98b70affcc1fcf44d59cca2eb019f6b774ef88153fb9b9615441a5fe25ea2d11b74ce922ca0232bd81b3c0fcac2a95b20cb6e6c0c5c1ace2e26f65dc43c751af0edbb10d669890e8ab6beea91410b8b2187af1a8347627a06ecea7e0f772c28aae9461301e83884860c9b656c722f0000008065af8625a555ea0e008cd04743671a3cda21162e83af045725db2eb2bb52712708dc0cc1a84c08b3649b88a966974bde27d8612c2861792ec9f08786a246fcadd6d8d3a81a32287745f309238f47618c2bd7612cb8b02d940571e0f30b96420bcd462ff542901b46109b1e5ad6423744448d20a57818a8cbb1647d0fea3b664e00000001")
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, verifyData, expectedVerifyData)
-}
-
-func Test_generateVerifyDataExpectsGy(t *testing.T) {
-	ake := AKE{}
-	ake.gx = fixedgx
-	ake.ourKey = bobPrivateKey
-	_, err := ake.generateVerifyData(true)
-	assertDeepEquals(t, err, errors.New("missing gy"))
-}
-
-func Test_generateVerifyDataExpectsGx(t *testing.T) {
-	ake := AKE{}
-	ake.gy = fixedgy
-	ake.ourKey = bobPrivateKey
-	_, err := ake.generateVerifyData(true)
-	assertDeepEquals(t, err, errors.New("missing gx"))
-}
-
-func Test_generateVerifyDataExpectsOurKey(t *testing.T) {
-	ake := AKE{}
-	ake.gx = fixedgx
-	ake.gy = fixedgy
-	_, err := ake.generateVerifyData(true)
-	assertDeepEquals(t, err, errors.New("missing ourKey"))
 }
