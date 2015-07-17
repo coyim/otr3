@@ -176,6 +176,19 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 	assertDeepEquals(t, c.y, fixedy)
 }
 
+func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing.T) {
+	c := newAkeContext(otrV3{}, fixtureRand())
+
+	dhCommitMsg := fixtureDHCommitMsg()
+	i, encryptedGx := extractData(dhCommitMsg, 11)
+	_, hashedGx := extractData(dhCommitMsg, i)
+
+	authStateNone{}.receiveDHCommitMessage(&c, dhCommitMsg)
+
+	assertDeepEquals(t, c.hashedGx[:], hashedGx)
+	assertDeepEquals(t, c.encryptedGx, encryptedGx)
+}
+
 func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 
@@ -196,7 +209,7 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 	c.hashedGx = [sha256.Size]byte{0x05} //some hashedGx
 
 	newDHCommitMsg := fixtureDHCommitMsg()
-	hashedGxIndex, newEncryptedGx := extractData(newDHCommitMsg, 11)
+	hashedGxIndex, newEncryptedGx := extractData(newDHCommitMsg, c.headerLen())
 	_, newHashedGx := extractData(newDHCommitMsg, hashedGxIndex)
 
 	authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())

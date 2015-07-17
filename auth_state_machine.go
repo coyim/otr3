@@ -147,19 +147,28 @@ func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (auth
 	return authStateNone{}.receiveQueryMessage(c, msg)
 }
 
+func storeValuesFromDHCommit(c *akeContext, msg []byte) {
+	//Store encryptedGX and hashedGX received
+	var pos int
+	pos, c.encryptedGx = extractData(msg, c.headerLen())
+	_, h := extractData(msg, pos)
+	copy(c.hashedGx[:], h)
+}
+
 func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
 	ake := c.newAKE()
 
 	generateCommitMsgInstanceTags(&ake, msg)
 
 	//TODO error
-	msg, _ = ake.dhKeyMessage()
+	ret, _ := ake.dhKeyMessage()
 
 	//TODO should we reset ourKeyID? Why?
 	c.y = ake.y
 	c.gy = ake.gy
+	storeValuesFromDHCommit(c, msg)
 
-	return authStateAwaitingRevealSig{}, msg
+	return authStateAwaitingRevealSig{}, ret
 }
 
 func generateCommitMsgInstanceTags(ake *AKE, msg []byte) {
@@ -176,14 +185,13 @@ func generateIntanceTag() uint32 {
 	return 0x00000100 + 0x01
 }
 
-func (authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
-	//TODO: error when gy = nil when we define the error strategy
-	//TODO: error when y = nil when we define the error strategy
+func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
+	//Forget the DH-commit received before we sent the DH-Key
 
-	index, encryptedGx := extractData(msg, 11)
-	c.encryptedGx = encryptedGx
-	_, h := extractData(msg, index)
-	copy(c.hashedGx[:], h)
+	//TODO: error if gy OR y = nil when we define the error strategy
+	//They should have been stored when we sent the previous DH-Key
+
+	storeValuesFromDHCommit(c, msg)
 
 	ake := c.newAKE()
 
@@ -196,14 +204,13 @@ func (authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []by
 }
 
 func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
-	ake := c.newAKE()
-
 	//TODO error
-	index, _ := extractData(msg, 11)
+	index, _ := extractData(msg, c.headerLen())
 	_, theirHashedGx := extractData(msg, index)
 
-	hashedGx := sha256Sum(ake.gx.Bytes())
+	hashedGx := sha256Sum(c.gx.Bytes())
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
+		ake := c.newAKE()
 		//NOTE what about the sender and receiver instance tags?
 		return authStateAwaitingRevealSig{}, ake.serializeDHCommit()
 	}
