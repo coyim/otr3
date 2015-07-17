@@ -334,11 +334,11 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	verifyData := ake.generateVerifyData(xFirst, ake.theirKey, keyID)
 	mb := sumHMAC(keys.m1[:], verifyData)
 
-	sig, ok := ake.theirKey.verify(mb, sig)
+	rest, ok := ake.theirKey.verify(mb, sig)
 	if !ok {
 		return errors.New("bad signature in encrypted signature")
 	}
-	if len(sig) > 0 {
+	if len(rest) > 0 {
 		return errors.New("corrupt encrypted signature")
 	}
 
