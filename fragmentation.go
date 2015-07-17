@@ -91,17 +91,15 @@ func receiveFragment(beforeCtx fragmentationContext, data []byte) fragmentationC
 
 	resultData, ix, l := parseFragment(data)
 
-	if fragmentIsInvalid(ix, l) {
+	switch {
+	case fragmentIsInvalid(ix, l):
 		return beforeCtx.discardFragment()
-	}
-
-	if fragmentIsFirstMessage(ix, l) {
+	case fragmentIsFirstMessage(ix, l):
 		return restartFragment(resultData, ix, l)
-	}
-
-	if fragmentIsNextMessage(beforeCtx, ix, l) {
+	case fragmentIsNextMessage(beforeCtx, ix, l):
 		return beforeCtx.appendFragment(resultData, ix, l)
+	default:
+		return forgetFragment()
 	}
 
-	return forgetFragment()
 }
