@@ -155,8 +155,6 @@ func Test_processEncryptedSig(t *testing.T) {
 	ake := AKE{
 		akeContext: newAkeContext(otrV3{}, rnd),
 	}
-	ake.ourKey = bobPrivateKey
-	ake.theirKey = &bobPrivateKey.PublicKey
 	ake.x = fixedx
 	ake.gx = fixedgx
 	ake.gy = fixedgy
