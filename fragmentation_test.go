@@ -69,7 +69,6 @@ func Test_fragment_returnsFragmentsForNeededFragmentationForV2(t *testing.T) {
 }
 
 func Test_receiveFragment_returnsANewFragmentationContextForANewMessage(t *testing.T) {
-	//	ctx := newConversation(otrV2{}, nil)
 	data := []byte("?OTR,00001,00004,one ,")
 
 	fctx := receiveFragment(fragmentationContext{}, data)
@@ -77,4 +76,56 @@ func Test_receiveFragment_returnsANewFragmentationContextForANewMessage(t *testi
 	assertDeepEquals(t, fctx.frag, []byte("one "))
 	assertEquals(t, fctx.currentIndex, uint16(1))
 	assertEquals(t, fctx.currentLen, uint16(4))
+}
+
+func Test_receiveFragment_returnsTheSameContextIfMessageNumberIsZero(t *testing.T) {
+	data := []byte("?OTR,00000,00004,one ,")
+	fctx := receiveFragment(fragmentationContext{}, data)
+	assertDeepEquals(t, fctx, fragmentationContext{})
+}
+
+func Test_receiveFragment_returnsTheSameContextIfMessageCountIsZero(t *testing.T) {
+	data := []byte("?OTR,00001,00000,one ,")
+	fctx := receiveFragment(fragmentationContext{}, data)
+	assertDeepEquals(t, fctx, fragmentationContext{})
+}
+
+func Test_receiveFragment_returnsTheSameContextIfMessageNumberIsAboveMessageCount(t *testing.T) {
+	data := []byte("?OTR,00005,00004,one ,")
+	fctx := receiveFragment(fragmentationContext{}, data)
+	assertDeepEquals(t, fctx, fragmentationContext{})
+}
+
+func Test_receiveFragment_returnsTheNextContextIfMessageNumberIsOneMoreThanThePreviousOne(t *testing.T) {
+	data := []byte("?OTR,00003,00004, one,")
+	fctx := receiveFragment(fragmentationContext{[]byte("blarg one two"), 2, 4}, data)
+	assertDeepEquals(t, fctx, fragmentationContext{[]byte("blarg one two one"), 3, 4})
+}
+
+func Test_receiveFragment_resetsTheContextIfTheMessageCountIsNotTheSame(t *testing.T) {
+	data := []byte("?OTR,00003,00005, one,")
+	fctx := receiveFragment(fragmentationContext{[]byte("blarg one two"), 2, 4}, data)
+	assertDeepEquals(t, fctx, fragmentationContext{})
+}
+
+func Test_receiveFragment_resetsTheContextIfTheMessageNumberIsNotExactlyOnePlus(t *testing.T) {
+	data := []byte("?OTR,00004,00005, one,")
+	fctx := receiveFragment(fragmentationContext{[]byte("blarg one two"), 2, 5}, data)
+	assertDeepEquals(t, fctx, fragmentationContext{})
+}
+
+func Test_fragmentFinished_isFalseIfThereAreNoFragments(t *testing.T) {
+	assertDeepEquals(t, fragmentsFinished(fragmentationContext{[]byte{}, 0, 0}), false)
+}
+
+func Test_fragmentFinished_isFalseIfTheNumberOfFragmentsIsNotTheSame(t *testing.T) {
+	assertDeepEquals(t, fragmentsFinished(fragmentationContext{[]byte{}, 1, 2}), false)
+}
+
+func Test_fragmentFinished_isFalseIfTheNumberOfFragmentsIsNotTheSameWhereTheNumberIsHigher(t *testing.T) {
+	assertDeepEquals(t, fragmentsFinished(fragmentationContext{[]byte{}, 3, 2}), false)
+}
+
+func Test_fragmentFinished_isTrueIfTheNumberIsTheSameAsTheCount(t *testing.T) {
+	assertDeepEquals(t, fragmentsFinished(fragmentationContext{[]byte{}, 3, 3}), true)
 }
