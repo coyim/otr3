@@ -56,7 +56,7 @@ type authState interface {
 	receiveQueryMessage(*akeContext, []byte) (authState, []byte)
 	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte)
 	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte)
-	//receiveRevealSigMessage(*akeContext, []byte) (authState, []byte)
+	receiveRevealSigMessage(*akeContext, []byte) (authState, []byte)
 	//receiveSigMessage(*akeContext, []byte) (authState, []byte)
 }
 
@@ -223,6 +223,33 @@ func (authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (au
 }
 
 func (authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return nil, nil
+}
+
+func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return nil, nil
+}
+
+func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	ake := c.newAKE()
+	err := ake.processRevealSig(msg)
+
+	if err != nil {
+		//TODO errors
+		return nil, nil
+	}
+
+	//TODO errors
+	ret, err := ake.sigMessage()
+
+	return authStateNone{}, ret
+}
+
+func (authStateAwaitingDHKey) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return nil, nil
+}
+
+func (authStateAwaitingSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
 	return nil, nil
 }
 

@@ -271,6 +271,27 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 	assertDeepEquals(t, dhMsgType(msg), msgTypeRevealSig)
 }
 
+func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *testing.T) {
+	revealSignMsg := fixtureRevealSigMsg()
+	_, r := extractData(revealSignMsg, 11)
+
+	c := newAkeContext(otrV3{}, fixtureRand())
+	gxMPI := appendMPI([]byte{}, fixtureGx)
+	c.hashedGx = sha256Sum(gxMPI)
+	c.encryptedGx, _ = encrypt(r[:], fixtureGx.Bytes())
+
+	//TODO make sure they be stored by the state machine
+	c.gx = fixtureGx
+	c.gy = fixtureGy
+	c.y = fixedy
+	c.ourKey = bobPrivateKey
+
+	state, msg := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, revealSignMsg)
+
+	assertEquals(t, state, authStateNone{})
+	assertDeepEquals(t, dhMsgType(msg), msgTypeSig)
+}
+
 func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 	senderInstanceTag := uint32(0x00000101)
 

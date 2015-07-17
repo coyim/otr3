@@ -346,7 +346,17 @@ func extractGx(decryptedGx []byte) (*big.Int, error) {
 	return gx, nil
 }
 
-func (ake *AKE) processRevealSig(in []byte) (err error) {
+func (c akeContext) headerLen() int {
+	if c.needInstanceTag() {
+		return 11
+	}
+
+	return 3
+}
+
+func (ake *AKE) processRevealSig(msg []byte) (err error) {
+	in := msg[ake.headerLen():]
+
 	index, r := extractData(in, 0)
 	index, encryptedSig := extractData(in, index)
 	theirMAC := in[index:]
@@ -392,8 +402,11 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 		return err
 	}
 
+	ake.theirKey = &PublicKey{}
 	index := ake.theirKey.parse(encryptedSig)
+
 	keyID, err := extractWord(encryptedSig[index:], 0)
+
 	if err != nil {
 		return errors.New("otr: corrupt encrypted signature")
 	}
