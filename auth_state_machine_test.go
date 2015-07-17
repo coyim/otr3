@@ -6,11 +6,6 @@ import (
 	"testing"
 )
 
-var (
-	fixtureY  = bnFromHex("abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
-	fixtureGy = bnFromHex("2cdacabb00e63d8949aa85f7e6a095b1ee81a60779e58f8938ff1a7ed1e651d954bd739162e699cc73b820728af53aae60a46d529620792ddf839c5d03d2d4e92137a535b27500e3b3d34d59d0cd460d1f386b5eb46a7404b15c1ef84840697d2d3d2405dcdda351014d24a8717f7b9c51f6c84de365fea634737ae18ba22253a8e15249d9beb2dded640c6c0d74e4f7e19161cf828ce3ffa9d425fb68c0fddcaa7cbe81a7a5c2c595cce69a255059d9e5c04b49fb15901c087e225da850ff27")
-)
-
 func dhMsgType(msg []byte) byte {
 	return msg[2]
 }
@@ -69,8 +64,8 @@ func fixtureContextToReceiveDHKey() akeContext {
 	c.addPolicy(allowV3)
 	c.authState = authStateAwaitingDHKey{}
 
-	c.x = fixtureX
-	c.gx = fixtureGx
+	c.x = fixedx
+	c.gx = fixedgx
 	c.ourKey = bobPrivateKey
 
 	return c
@@ -97,13 +92,16 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 }
 
 func Test_receiveQueryMessage_StoresXAndGx(t *testing.T) {
+	fixture := fixtureAKE()
+	fixture.dhCommitMessage()
+
 	msg := []byte("?OTRv3?")
 	cxt := newAkeContext(nil, fixtureRand())
 	cxt.addPolicy(allowV3)
 
 	cxt.receiveQueryMessage(msg)
-	assertDeepEquals(t, cxt.x, fixtureX)
-	assertDeepEquals(t, cxt.gx, fixtureGx)
+	assertDeepEquals(t, cxt.x, fixture.x)
+	assertDeepEquals(t, cxt.gx, fixture.gx)
 }
 
 func Test_parseOTRQueryMessage(t *testing.T) {
@@ -162,8 +160,8 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 	authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
-	assertDeepEquals(t, c.gy, fixtureGy)
-	assertDeepEquals(t, c.y, fixtureY)
+	assertDeepEquals(t, c.gy, fixedgy)
+	assertDeepEquals(t, c.y, fixedy)
 }
 
 func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing.T) {
@@ -239,8 +237,8 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 	state, newMsg := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, dhMsgType(newMsg), msgTypeDHKey)
-	assertDeepEquals(t, c.gy, fixtureGy)
-	assertDeepEquals(t, c.y, fixtureY)
+	assertDeepEquals(t, c.gy, fixedgy)
+	assertDeepEquals(t, c.y, fixedy)
 }
 
 func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *testing.T) {
@@ -267,7 +265,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 
 	//TODO before generate rev si need to extract their gy from DH commit
 	assertEquals(t, state, authStateAwaitingSig{})
-	assertDeepEquals(t, c.gy, fixtureGy)
+	assertDeepEquals(t, c.gy, fixedgy)
 	assertDeepEquals(t, dhMsgType(msg), msgTypeRevealSig)
 }
 
@@ -276,13 +274,13 @@ func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *te
 	_, r := extractData(revealSignMsg, 11)
 
 	c := newAkeContext(otrV3{}, fixtureRand())
-	gxMPI := appendMPI([]byte{}, fixtureGx)
+	gxMPI := appendMPI([]byte{}, fixedgx)
 	c.hashedGx = sha256Sum(gxMPI)
-	c.encryptedGx, _ = encrypt(r[:], fixtureGx.Bytes())
+	c.encryptedGx, _ = encrypt(r[:], fixedgx.Bytes())
 
 	//TODO make sure they be stored by the state machine
-	c.gx = fixtureGx
-	c.gy = fixtureGy
+	c.gx = fixedgx
+	c.gy = fixedgy
 	c.y = fixedy
 	c.ourKey = bobPrivateKey
 
