@@ -33,37 +33,6 @@ type akeKeys struct {
 	m1, m2 [32]byte
 }
 
-func encrypt(r, src []byte) (dst []byte, err error) {
-	aesCipher, err := aes.NewCipher(r)
-	if err != nil {
-		return nil, err
-	}
-
-	var gxMPI = appendMPI([]byte{}, new(big.Int).SetBytes(src))
-	dst = make([]byte, len(gxMPI))
-	iv := dst[:aes.BlockSize]
-	stream := cipher.NewCTR(aesCipher, iv)
-	stream.XORKeyStream(dst, gxMPI)
-
-	return dst, nil
-}
-
-func decrypt(r, dst, src []byte) error {
-	// aes decryption
-	aesCipher, err := aes.NewCipher(r)
-	if err != nil {
-		return errors.New("otr: cannot create AES cipher from reveal signature message: " + err.Error())
-	}
-	var iv [aes.BlockSize]byte
-	ctr := cipher.NewCTR(aesCipher, iv[:])
-	ctr.XORKeyStream(dst, src)
-	return nil
-}
-
-func sha256Sum(x []byte) [sha256.Size]byte {
-	return sha256.Sum256(x)
-}
-
 func (ake *AKE) calcAKEKeys(s *big.Int) {
 	secbytes := appendMPI(nil, s)
 	h := sha256.New()
@@ -75,13 +44,6 @@ func (ake *AKE) calcAKEKeys(s *big.Int) {
 	copy(ake.revealKey.m2[:], h2(0x03, secbytes, h))
 	copy(ake.sigKey.m1[:], h2(0x04, secbytes, h))
 	copy(ake.sigKey.m2[:], h2(0x05, secbytes, h))
-}
-
-func h2(b byte, secbytes []byte, h hash.Hash) []byte {
-	h.Reset()
-	h.Write([]byte{b})
-	h.Write(secbytes[:])
-	return h.Sum(nil)
 }
 
 func (ake *AKE) calcDHSharedSecret(xKnown bool) (*big.Int, error) {
@@ -135,13 +97,6 @@ func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyID uint
 	verifyData = append(verifyData, publicKey.serialize()...)
 
 	return appendWord(verifyData, keyID)
-}
-
-func sumHMAC(key, data []byte) []byte {
-	mac := hmac.New(sha256.New, key)
-	mac.Write(data)
-
-	return mac.Sum(nil)
 }
 
 func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
@@ -299,25 +254,6 @@ func (ake *AKE) checkDecryptedGx(decryptedGx []byte) error {
 	return nil
 }
 
-func extractGx(decryptedGx []byte) (*big.Int, error) {
-	index, gx := extractMPI(decryptedGx, 0)
-	if len(decryptedGx) > index {
-		return gx, errors.New("otr: gx corrupt after decryption")
-	}
-	if gx.Cmp(g1) < 0 || gx.Cmp(pMinusTwo) > 0 {
-		return gx, errors.New("otr: DH value out of range")
-	}
-	return gx, nil
-}
-
-func (c akeContext) headerLen() int {
-	if c.needInstanceTag() {
-		return 11
-	}
-
-	return 3
-}
-
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	in := msg[ake.headerLen():]
 
@@ -408,5 +344,69 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 
 	ake.theirKeyID = keyID
 	//zero(ake.theirLastCtr[:])
+	return nil
+}
+
+func (c akeContext) headerLen() int {
+	if c.needInstanceTag() {
+		return 11
+	}
+
+	return 3
+}
+
+func extractGx(decryptedGx []byte) (*big.Int, error) {
+	index, gx := extractMPI(decryptedGx, 0)
+	if len(decryptedGx) > index {
+		return gx, errors.New("otr: gx corrupt after decryption")
+	}
+	if gx.Cmp(g1) < 0 || gx.Cmp(pMinusTwo) > 0 {
+		return gx, errors.New("otr: DH value out of range")
+	}
+	return gx, nil
+}
+
+func sumHMAC(key, data []byte) []byte {
+	mac := hmac.New(sha256.New, key)
+	mac.Write(data)
+
+	return mac.Sum(nil)
+}
+
+func sha256Sum(x []byte) [sha256.Size]byte {
+	return sha256.Sum256(x)
+}
+
+func h2(b byte, secbytes []byte, h hash.Hash) []byte {
+	h.Reset()
+	h.Write([]byte{b})
+	h.Write(secbytes[:])
+	return h.Sum(nil)
+}
+
+func encrypt(r, src []byte) (dst []byte, err error) {
+	aesCipher, err := aes.NewCipher(r)
+	if err != nil {
+		return nil, err
+	}
+
+	var gxMPI = appendMPI([]byte{}, new(big.Int).SetBytes(src))
+	dst = make([]byte, len(gxMPI))
+	iv := dst[:aes.BlockSize]
+	stream := cipher.NewCTR(aesCipher, iv)
+	stream.XORKeyStream(dst, gxMPI)
+
+	return dst, nil
+}
+
+func decrypt(r, dst, src []byte) error {
+	// aes decryption
+	aesCipher, err := aes.NewCipher(r)
+	if err != nil {
+		return errors.New("otr: cannot create AES cipher from reveal signature message: " + err.Error())
+	}
+	var iv [aes.BlockSize]byte
+	ctr := cipher.NewCTR(aesCipher, iv[:])
+	ctr.XORKeyStream(dst, src)
 	return nil
 }
