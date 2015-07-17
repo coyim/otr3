@@ -26,6 +26,7 @@ type conversation struct {
 type akeContext struct {
 	*otrContext
 	authState           authState
+	r                   [16]byte
 	gx, gy, x, y        *big.Int
 	encryptedGx         []byte
 	hashedGx            [sha256.Size]byte
