@@ -246,13 +246,16 @@ func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *te
 	c := newAkeContext(otrV3{}, fixtureRand())
 	dhKeymsg := fixtureDHKeyMsg(otrV3{})
 
-	state, msg := authStateNone{}.receiveDHKeyMessage(&c, dhKeymsg)
-	assertEquals(t, state, authStateNone{})
-	assertDeepEquals(t, msg, nilB)
+	states := []authState{
+		authStateNone{},
+		authStateAwaitingRevealSig{},
+	}
 
-	state, msg = authStateAwaitingRevealSig{}.receiveDHKeyMessage(&c, dhKeymsg)
-	assertEquals(t, state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, msg, nilB)
+	for _, s := range states {
+		state, msg := s.receiveDHKeyMessage(&c, dhKeymsg)
+		assertEquals(t, state, s)
+		assertDeepEquals(t, msg, nilB)
+	}
 }
 
 func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSig(t *testing.T) {
@@ -337,37 +340,45 @@ func Test_receiveMessage_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.
 	msgV3 := fixtureDHCommitMsg()
 
 	toSend := cV2.receiveMessage(msgV3)
+	assertEquals(t, cV2.authState, authStateNone{})
 	assertDeepEquals(t, toSend, nilB)
 
 	toSend = cV3.receiveMessage(msgV2)
+	assertEquals(t, cV3.authState, authStateNone{})
 	assertDeepEquals(t, toSend, nilB)
 }
 
 func Test_receiveMessage_ignoresDHKeyIfItsVersionIsNotInThePolicy(t *testing.T) {
 	var nilB []byte
 	cV2 := newAkeContext(otrV2{}, fixtureRand())
+	cV2.authState = authStateAwaitingDHKey{}
 	cV2.addPolicy(allowV2)
 
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
+	cV3.authState = authStateAwaitingDHKey{}
 	cV3.addPolicy(allowV3)
 
 	msgV2 := fixtureDHKeyMsg(otrV2{})
 	msgV3 := fixtureDHKeyMsg(otrV3{})
 
 	toSend := cV2.receiveMessage(msgV3)
+	assertEquals(t, cV2.authState, authStateAwaitingDHKey{})
 	assertDeepEquals(t, toSend, nilB)
 
 	toSend = cV3.receiveMessage(msgV2)
+	assertEquals(t, cV3.authState, authStateAwaitingDHKey{})
 	assertDeepEquals(t, toSend, nilB)
 }
 
 func Test_receiveMessage_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
 	var nilB []byte
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
+	cV3.authState = authStateAwaitingRevealSig{}
 	cV3.addPolicy(allowV3)
 
 	msg := fixtureRevealSigMsg()
 
 	toSend := cV3.receiveMessage(msg)
+	assertEquals(t, cV3.authState, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, toSend, nilB)
 }
