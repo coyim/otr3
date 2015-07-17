@@ -3,6 +3,7 @@ package otr3
 import (
 	"encoding/hex"
 	"errors"
+	"io"
 	"math/big"
 	"testing"
 )
@@ -211,7 +212,7 @@ func Test_encrypt(t *testing.T) {
 	}
 
 	ake.gx = fixedgx
-	ake.generateRandBytes(ake.r[:])
+	io.ReadFull(ake.rand(), ake.r[:])
 
 	var encryptedGx []byte
 	encryptedGx, err := encrypt(ake.r[:], ake.gx.Bytes())
@@ -226,7 +227,7 @@ func Test_decrypt(t *testing.T) {
 	}
 
 	ake.gx = fixedgx
-	ake.generateRandBytes(ake.r[:])
+	io.ReadFull(ake.rand(), ake.r[:])
 	encryptedGx, _ := encrypt(ake.r[:], ake.gx.Bytes())
 	decryptedGx := encryptedGx
 	err := decrypt(ake.r[:], decryptedGx, encryptedGx)

@@ -123,7 +123,9 @@ func (c *conversation) receiveSMPMessage(message []byte) error {
 }
 
 func (c *otrContext) rand() io.Reader {
-	//WHY?
+	if c.Rand != nil {
+		return c.Rand
+	}
 	return c.Rand
 }
 

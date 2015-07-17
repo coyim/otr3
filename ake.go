@@ -4,7 +4,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"errors"
@@ -33,29 +32,6 @@ type AKE struct {
 type akeKeys struct {
 	c      [16]byte
 	m1, m2 [32]byte
-}
-
-func (ake *AKE) rand() io.Reader {
-	if ake.Rand != nil {
-		return ake.Rand
-	}
-	return rand.Reader
-}
-
-func (ake *AKE) generateRandBytes(dst []byte) error {
-	if _, err := io.ReadFull(ake.rand(), dst[:]); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (ake *AKE) generateRandBigInt() (*big.Int, error) {
-	var randx [40]byte
-	_, err := io.ReadFull(ake.rand(), randx[:])
-	if err != nil {
-		return nil, err
-	}
-	return new(big.Int).SetBytes(randx[:]), nil
 }
 
 func encrypt(r, src []byte) (dst []byte, err error) {
@@ -92,9 +68,10 @@ func sha256Sum(x []byte) [sha256.Size]byte {
 func (ake *AKE) calcAKEKeys(s *big.Int) {
 	secbytes := appendMPI(nil, s)
 	h := sha256.New()
+	keys := h2(0x01, secbytes, h)
 	copy(ake.ssid[:], h2(0x00, secbytes, h)[:8])
-	copy(ake.revealKey.c[:], h2(0x01, secbytes, h)[:16])
-	copy(ake.sigKey.c[:], h2(0x01, secbytes, h)[16:])
+	copy(ake.revealKey.c[:], keys[:16])
+	copy(ake.sigKey.c[:], keys[16:])
 	copy(ake.revealKey.m1[:], h2(0x02, secbytes, h))
 	copy(ake.revealKey.m2[:], h2(0x03, secbytes, h))
 	copy(ake.sigKey.m1[:], h2(0x04, secbytes, h))
@@ -103,12 +80,9 @@ func (ake *AKE) calcAKEKeys(s *big.Int) {
 
 func h2(b byte, secbytes []byte, h hash.Hash) []byte {
 	h.Reset()
-	var p [1]byte
-	p[0] = b
-	h.Write(p[:])
+	h.Write([]byte{b})
 	h.Write(secbytes[:])
-	out := h.Sum(nil)
-	return out[:]
+	return h.Sum(nil)
 }
 
 func (ake *AKE) calcDHSharedSecret(xKnown bool) (*big.Int, error) {
@@ -194,18 +168,12 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.ourKeyID = 0
 
-	x, err := ake.generateRandBigInt()
-	if err != nil {
-		return nil, err
-	}
+	x := ake.randMPI(make([]byte, 40)[:])
 
 	ake.x = x
 	ake.gx = new(big.Int).Exp(g1, ake.x, p)
-	ake.generateRandBytes(ake.r[:])
-	if ake.encryptedGx, err = encrypt(ake.r[:], ake.gx.Bytes()); err != nil {
-		return nil, err
-	}
-
+	io.ReadFull(ake.rand(), ake.r[:])
+	ake.encryptedGx, _ = encrypt(ake.r[:], ake.gx.Bytes())
 	return ake.serializeDHCommit(), nil
 }
 
@@ -226,10 +194,7 @@ func (ake *AKE) serializeDHCommit() []byte {
 }
 
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
-	y, err := ake.generateRandBigInt()
-	if err != nil {
-		return nil, err
-	}
+	y := ake.randMPI(make([]byte, 40)[:])
 
 	ake.y = y
 	ake.gy = new(big.Int).Exp(g1, ake.y, p)
