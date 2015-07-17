@@ -244,16 +244,6 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	return
 }
 
-func (ake *AKE) checkDecryptedGx(decryptedGx []byte) error {
-	digest := sha256Sum(decryptedGx)
-
-	if subtle.ConstantTimeCompare(digest[:], ake.hashedGx[:]) == 0 {
-		return errors.New("otr: bad commit MAC in reveal signature message")
-	}
-
-	return nil
-}
-
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	in := msg[ake.headerLen():]
 
@@ -267,7 +257,7 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	if err = decrypt(r, decryptedGx, ake.encryptedGx); err != nil {
 		return
 	}
-	if err = ake.checkDecryptedGx(decryptedGx); err != nil {
+	if err = checkDecryptedGx(decryptedGx, ake.hashedGx[:]); err != nil {
 		return
 	}
 	if ake.gx, err = extractGx(decryptedGx); err != nil {
@@ -408,5 +398,15 @@ func decrypt(r, dst, src []byte) error {
 	var iv [aes.BlockSize]byte
 	ctr := cipher.NewCTR(aesCipher, iv[:])
 	ctr.XORKeyStream(dst, src)
+	return nil
+}
+
+func checkDecryptedGx(decryptedGx, hashedGx []byte) error {
+	digest := sha256Sum(decryptedGx)
+
+	if subtle.ConstantTimeCompare(digest[:], hashedGx[:]) == 0 {
+		return errors.New("otr: bad commit MAC in reveal signature message")
+	}
+
 	return nil
 }
