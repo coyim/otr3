@@ -354,8 +354,26 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	return nil
 }
 
-func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys, xFirst bool) error {
+func (ake *AKE) processSig(msg []byte) error {
+	in := msg[ake.headerLen():]
 
+	index, encryptedSig := extractData(in, 0)
+	theirMAC := in[index:]
+	if len(theirMAC) != 20 {
+		return errors.New("otr: corrupt signature message")
+	}
+
+	if err := ake.processEncryptedSig(encryptedSig, theirMAC, &ake.sigKey, false /* gy comes first */); err != nil {
+		return errors.New("otr: in signature message: " + err.Error())
+	}
+
+	//ake.theirCurrentDHPub = ake.gy
+	//ake.theirLastDHPub = nil
+
+	return nil
+}
+
+func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys, xFirst bool) error {
 	tomac := appendData(nil, encryptedSig)
 	myMAC := sumHMAC(keys.m2[:], tomac)[:20]
 

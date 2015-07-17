@@ -198,8 +198,6 @@ func Test_processRevealSig(t *testing.T) {
 		akeContext: newAkeContext(otrV3{}, rnd),
 	}
 
-	ake.senderInstanceTag = 0x000000010
-	ake.receiverInstanceTag = 0x00000001
 	ake.ourKey = bobPrivateKey
 	copy(ake.r[:], fixedr)
 	ake.x = fixedx
@@ -214,6 +212,26 @@ func Test_processRevealSig(t *testing.T) {
 	err = ake.processRevealSig(result)
 
 	assertEquals(t, err, nil)
+	assertEquals(t, ake.theirKeyID, uint32(1))
+}
+
+func Test_processSig(t *testing.T) {
+	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
+	ake := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+
+	ake.ourKey = bobPrivateKey
+	ake.y = fixedy
+	ake.gx = fixedgx
+	ake.gy = fixedgy
+	ake.ourKeyID = 1
+	result, err := ake.sigMessage()
+
+	err = ake.processSig(result)
+
+	assertEquals(t, err, nil)
+	assertEquals(t, ake.theirKeyID, uint32(1))
 }
 
 func Test_sigMessage(t *testing.T) {
