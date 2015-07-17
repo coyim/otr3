@@ -30,6 +30,7 @@ type akeContext struct {
 	gx, gy, x, y        *big.Int
 	encryptedGx         []byte
 	hashedGx            [sha256.Size]byte
+	sigKey              akeKeys
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
 	ourKey              *PrivateKey
