@@ -127,7 +127,9 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.x = x
 	ake.gx = new(big.Int).Exp(g1, ake.x, p)
 	io.ReadFull(ake.rand(), ake.r[:])
-	ake.encryptedGx, _ = encrypt(ake.r[:], ake.gx.Bytes())
+
+	var gxMPI = appendMPI([]byte{}, ake.gx)
+	ake.encryptedGx, _ = encrypt(ake.r[:], gxMPI)
 	return ake.serializeDHCommit(), nil
 }
 
@@ -374,13 +376,12 @@ func h2(b byte, secbytes []byte, h hash.Hash) []byte {
 	return h.Sum(nil)
 }
 
-func encrypt(r, src []byte) (dst []byte, err error) {
+func encrypt(r, gxMPI []byte) (dst []byte, err error) {
 	aesCipher, err := aes.NewCipher(r)
 	if err != nil {
 		return nil, err
 	}
 
-	var gxMPI = appendMPI([]byte{}, new(big.Int).SetBytes(src))
 	dst = make([]byte, len(gxMPI))
 	iv := dst[:aes.BlockSize]
 	stream := cipher.NewCTR(aesCipher, iv)
@@ -390,7 +391,6 @@ func encrypt(r, src []byte) (dst []byte, err error) {
 }
 
 func decrypt(r, dst, src []byte) error {
-	// aes decryption
 	aesCipher, err := aes.NewCipher(r)
 	if err != nil {
 		return errors.New("otr: cannot create AES cipher from reveal signature message: " + err.Error())

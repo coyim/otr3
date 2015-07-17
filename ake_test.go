@@ -287,10 +287,9 @@ func Test_encrypt(t *testing.T) {
 	ake.gx = fixedgx
 	io.ReadFull(ake.rand(), ake.r[:])
 
-	var encryptedGx []byte
-	encryptedGx, err := encrypt(ake.r[:], ake.gx.Bytes())
+	encryptedGx, err := encrypt(ake.r[:], appendMPI(nil, ake.gx))
 	assertEquals(t, err, nil)
-	assertEquals(t, len(encryptedGx), len(appendMPI([]byte{}, ake.gx)))
+	assertDeepEquals(t, len(encryptedGx), len(appendMPI([]byte{}, ake.gx)))
 }
 
 func Test_decrypt(t *testing.T) {
@@ -301,7 +300,8 @@ func Test_decrypt(t *testing.T) {
 
 	ake.gx = fixedgx
 	io.ReadFull(ake.rand(), ake.r[:])
-	encryptedGx, _ := encrypt(ake.r[:], ake.gx.Bytes())
+
+	encryptedGx, _ := encrypt(ake.r[:], appendMPI(nil, ake.gx))
 	decryptedGx := encryptedGx
 	err := decrypt(ake.r[:], decryptedGx, encryptedGx)
 
