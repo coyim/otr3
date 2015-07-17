@@ -204,25 +204,29 @@ func Test_processEncryptedSigWithBadSignatureError(t *testing.T) {
 
 func Test_processRevealSig(t *testing.T) {
 	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
-	ake := AKE{
+	bob := AKE{
+		akeContext: newAkeContext(otrV3{}, rnd),
+	}
+	alice := AKE{
 		akeContext: newAkeContext(otrV3{}, rnd),
 	}
 
-	ake.ourKey = bobPrivateKey
-	copy(ake.r[:], fixedr)
-	ake.x = fixedx
-	ake.gx = fixedgx
-	ake.gy = fixedgy
-	ake.ourKeyID = 1
-	result, err := ake.revealSigMessage()
+	bob.ourKey = bobPrivateKey
+	copy(bob.r[:], fixedr)
+	bob.x = fixedx
+	bob.gx = fixedgx
+	bob.gy = fixedgy
+	bob.ourKeyID = 1
+	msg, err := bob.revealSigMessage()
 
-	ake.y = fixedy
-	ake.encryptedGx = bytesFromHex("5dd6a5999be73a99b80bdb78194a125f3067bd79e69c648b76a068117a8c4d0f36f275305423a933541937145d85ab4618094cbafbe4db0c0081614c1ff0f516c3dc4f352e9c92f88e4883166f12324d82240a8f32874c3d6bc35acedb8d501aa0111937a4859f33aa9b43ec342d78c3a45a5939c1e58e6b4f02725c1922f3df8754d1e1ab7648f558e9043ad118e63603b3ba2d8cbfea99a481835e42e73e6cd6019840f4470b606e168b1cd4a1f401c3dc52525d79fa6b959a80d4e11f1ec3a7984cf9")
-	copy(ake.hashedGx[:], bytesFromHex("a3f2c4b9e3a7d1f565157ae7b0e71c721d59d3c79d39e5e4e8d08cb8464ff857"))
-	err = ake.processRevealSig(result)
+	alice.y = fixedy
+	alice.gy = fixedgy
+	alice.encryptedGx = bytesFromHex("5dd6a5999be73a99b80bdb78194a125f3067bd79e69c648b76a068117a8c4d0f36f275305423a933541937145d85ab4618094cbafbe4db0c0081614c1ff0f516c3dc4f352e9c92f88e4883166f12324d82240a8f32874c3d6bc35acedb8d501aa0111937a4859f33aa9b43ec342d78c3a45a5939c1e58e6b4f02725c1922f3df8754d1e1ab7648f558e9043ad118e63603b3ba2d8cbfea99a481835e42e73e6cd6019840f4470b606e168b1cd4a1f401c3dc52525d79fa6b959a80d4e11f1ec3a7984cf9")
+	copy(alice.hashedGx[:], bytesFromHex("a3f2c4b9e3a7d1f565157ae7b0e71c721d59d3c79d39e5e4e8d08cb8464ff857"))
+	err = alice.processRevealSig(msg)
 
 	assertEquals(t, err, nil)
-	assertEquals(t, ake.theirKeyID, uint32(1))
+	assertEquals(t, alice.theirKeyID, uint32(1))
 }
 
 func Test_processSig(t *testing.T) {
