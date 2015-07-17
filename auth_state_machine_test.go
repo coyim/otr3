@@ -47,11 +47,12 @@ func fixtureDHKeyMsg(v otrVersion) []byte {
 }
 
 func fixtureRevealSigMsg() []byte {
-	ake := fixtureAKEWithVersion(otrV3{})
-	ake.akeContext = fixtureContextToReceiveDHKey()
+	ake := fixtureAKEWithVersion(nil)
+	ake.akeContext = bobStateAtReceiveDHKey()
 
-	copy(ake.r[:], fixedr)
-	ake.gy = fixedgy
+	//revealSig is V2 only
+	ake.otrVersion = otrV2{}
+	ake.addPolicy(allowV2)
 
 	msg, _ := ake.revealSigMessage()
 
@@ -71,14 +72,37 @@ func fixtureSigMsg() []byte {
 	return msg
 }
 
-func fixtureContextToReceiveDHKey() akeContext {
+func bobStateAtReceiveDHKey() akeContext {
+	c := bobStateAtAwaitingDHKey()
+	c.gy = fixedgy // stored at receiveDHKey
+
+	return c
+}
+
+func bobStateAtAwaitingDHKey() akeContext {
 	c := newAkeContext(otrV3{}, fixtureRand())
 	c.addPolicy(allowV3)
 	c.authState = authStateAwaitingDHKey{}
-
-	c.x = fixedx
-	c.gx = fixedgx
 	c.ourKey = bobPrivateKey
+
+	copy(c.r[:], fixedr) // stored at sendDHCommit
+	c.x = fixedx         // stored at sendDHCommit
+	c.gx = fixedgx       // stored at sendDHCommit
+
+	return c
+}
+
+func aliceContextAtAwaitingRevealSig() akeContext {
+	c := newAkeContext(otrV2{}, fixtureRand())
+	c.addPolicy(allowV2)
+	c.authState = authStateAwaitingRevealSig{}
+	c.ourKey = alicePrivateKey
+
+	copy(c.hashedGx[:], expectedHashedGxValue) //stored at receiveDHCommit
+	c.encryptedGx = expectedEncryptedGxValue   //stored at receiveDHCommit
+
+	c.gy = fixedgy //stored at sendDHKey
+	c.y = fixedy   //stored at sendDHKey
 
 	return c
 }
@@ -287,7 +311,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 	ourDHCommitAKE := fixtureAKE()
 	ourDHCommitAKE.dhCommitMessage()
 
-	c := fixtureContextToReceiveDHKey()
+	c := bobStateAtAwaitingDHKey()
 
 	state, msg := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
 
@@ -329,17 +353,8 @@ func Test_receiveDHKey_AtAuthAwaitingSigIgnoresMsgIfIsNotSameDHKeyMsg(t *testing
 
 func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *testing.T) {
 	revealSignMsg := fixtureRevealSigMsg()
-	_, r := extractData(revealSignMsg, 11)
 
-	c := newAkeContext(otrV3{}, fixtureRand())
-	gxMPI := appendMPI([]byte{}, fixedgx)
-	c.hashedGx = sha256Sum(gxMPI)
-	c.encryptedGx, _ = encrypt(r[:], fixedgx.Bytes())
-
-	c.gx = fixedgx
-	c.gy = fixedgy
-	c.y = fixedy
-	c.ourKey = bobPrivateKey
+	c := aliceContextAtAwaitingRevealSig()
 
 	state, msg := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, revealSignMsg)
 
