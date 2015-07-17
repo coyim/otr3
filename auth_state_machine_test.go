@@ -1,6 +1,7 @@
 package otr3
 
 import (
+	"crypto/sha256"
 	"io"
 	"testing"
 )
@@ -181,8 +182,8 @@ func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing
 func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedGx(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 	//TODO needs to stores encryptedGx and hashedGx when it is generated
-	c.encryptedGx = []byte{0x02} //some encryptedGx
-	c.hashedGx = []byte{0x05}    //some hashedGx
+	c.encryptedGx = []byte{0x02}         //some encryptedGx
+	c.hashedGx = [sha256.Size]byte{0x05} //some hashedGx
 
 	newDHCommitMsg := fixtureDHCommitMsg()
 	hashedGxIndex, newEncryptedGx := extractData(newDHCommitMsg, 11)
@@ -192,7 +193,7 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 
 	authStateAwaitingRevealSig{}.receiveDHCommitMessage(&c, newDHCommitMsg)
 	assertDeepEquals(t, c.encryptedGx, newEncryptedGx)
-	assertDeepEquals(t, c.hashedGx, newHashedGx)
+	assertDeepEquals(t, c.hashedGx[:], newHashedGx)
 }
 
 func Test_receiveDHCommit_AtAuthAwaitingSigTransitionsToAwaitingRevSigAndSendsNewDHKeyMsg(t *testing.T) {

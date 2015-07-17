@@ -237,19 +237,19 @@ func Test_decrypt(t *testing.T) {
 
 func Test_sha256Sum(t *testing.T) {
 	hashedGx := sha256Sum(fixedgx.Bytes())
-	assertDeepEquals(t, hashedGx, expectedHashedGxValue)
+	assertDeepEquals(t, hashedGx[:], expectedHashedGxValue)
 }
 
 func Test_checkDecryptedGxWithoutError(t *testing.T) {
 	var ake AKE
-	copy(ake.digest[:], sha256Sum(appendMPI([]byte{}, fixedgx)))
+	ake.hashedGx = sha256Sum(appendMPI([]byte{}, fixedgx))
 	err := ake.checkDecryptedGx(appendMPI([]byte{}, fixedgx))
 	assertDeepEquals(t, err, nil)
 }
 
 func Test_checkDecryptedGxWithError(t *testing.T) {
 	var ake AKE
-	copy(ake.digest[:], sha256Sum(appendMPI([]byte{}, fixedgy)))
+	ake.hashedGx = sha256Sum(appendMPI([]byte{}, fixedgy))
 	err := ake.checkDecryptedGx(appendMPI([]byte{}, fixedgx))
 	assertDeepEquals(t, err.Error(), "otr: bad commit MAC in reveal signature message")
 }

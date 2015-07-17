@@ -85,9 +85,8 @@ func decrypt(r, dst, src []byte) error {
 	return nil
 }
 
-func sha256Sum(x []byte) []byte {
-	out := sha256.Sum256(x)
-	return out[:]
+func sha256Sum(x []byte) [sha256.Size]byte {
+	return sha256.Sum256(x)
 }
 
 func (ake *AKE) calcAKEKeys(s *big.Int) {
@@ -221,7 +220,7 @@ func (ake *AKE) serializeDHCommit() []byte {
 	}
 	out = appendData(out, ake.encryptedGx)
 	ake.hashedGx = sha256Sum(ake.gx.Bytes())
-	out = appendData(out, ake.hashedGx)
+	out = appendData(out, ake.hashedGx[:])
 
 	return out
 }
@@ -327,9 +326,12 @@ func (ake *AKE) processDHKey(in []byte) (isSame bool, err error) {
 
 func (ake *AKE) checkDecryptedGx(decryptedGx []byte) error {
 	digest := sha256Sum(decryptedGx)
-	if len(digest) != len(ake.digest) || subtle.ConstantTimeCompare(digest, ake.digest[:]) == 0 {
+
+	//FIXME: How can they have different len() if they are both [sha256.Size]byte
+	if len(digest) != len(ake.hashedGx) || subtle.ConstantTimeCompare(digest[:], ake.hashedGx[:]) == 0 {
 		return errors.New("otr: bad commit MAC in reveal signature message")
 	}
+
 	return nil
 }
 

@@ -169,7 +169,8 @@ func (authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []by
 
 	index, encryptedGx := extractData(msg, 11)
 	c.encryptedGx = encryptedGx
-	_, c.hashedGx = extractData(msg, index)
+	_, h := extractData(msg, index)
+	copy(c.hashedGx[:], h)
 
 	ake := c.newAKE()
 
@@ -188,7 +189,8 @@ func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) 
 	index, _ := extractData(msg, 11)
 	_, theirHashedGx := extractData(msg, index)
 
-	if bytes.Compare(sha256Sum(ake.gx.Bytes()), theirHashedGx) == 1 {
+	hashedGx := sha256Sum(ake.gx.Bytes())
+	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
 		//NOTE what about the sender and receiver instance tags?
 		return authStateAwaitingRevealSig{}, ake.serializeDHCommit()
 	}

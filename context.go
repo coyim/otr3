@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"io"
 	"math/big"
@@ -24,14 +25,14 @@ type conversation struct {
 
 type akeContext struct {
 	*otrContext
-	authState             authState
-	gx, gy, x, y          *big.Int
-	encryptedGx, hashedGx []byte
-	digest                [32]byte
-	senderInstanceTag     uint32
-	receiverInstanceTag   uint32
-	ourKey                *PrivateKey
-	theirKey              *PublicKey
+	authState           authState
+	gx, gy, x, y        *big.Int
+	encryptedGx         []byte
+	hashedGx            [sha256.Size]byte
+	senderInstanceTag   uint32
+	receiverInstanceTag uint32
+	ourKey              *PrivateKey
+	theirKey            *PublicKey
 	policies
 }
 
