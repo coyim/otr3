@@ -363,19 +363,20 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 		return errors.New("bad signature MAC in encrypted signature")
 	}
 
-	if err := decrypt(keys.c[:], encryptedSig, encryptedSig); err != nil {
+	decryptedSig := encryptedSig
+	if err := decrypt(keys.c[:], decryptedSig, encryptedSig); err != nil {
 		return err
 	}
 
 	ake.theirKey = &PublicKey{}
-	index := ake.theirKey.parse(encryptedSig)
+	index := ake.theirKey.parse(decryptedSig)
 
-	keyID, err := extractWord(encryptedSig[index:], 0)
+	keyID, err := extractWord(decryptedSig[index:], 0)
 
 	if err != nil {
 		return errors.New("otr: corrupt encrypted signature")
 	}
-	sig := encryptedSig[index+4:]
+	sig := decryptedSig[index+4:]
 
 	verifyData := ake.generateVerifyData(xFirst, ake.theirKey, keyID)
 	mb := sumHMAC(keys.m1[:], verifyData)
