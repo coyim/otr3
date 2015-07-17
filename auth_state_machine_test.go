@@ -52,9 +52,21 @@ func fixtureRevealSigMsg() []byte {
 
 	copy(ake.r[:], fixedr)
 	ake.gy = fixedgy
-	ake.ourKeyID = 1
 
 	msg, _ := ake.revealSigMessage()
+
+	return msg
+}
+
+func fixtureSigMsg() []byte {
+	ake := fixtureAKEWithVersion(otrV3{})
+
+	ake.y = fixedy
+	ake.gy = fixedgy
+	ake.gx = fixedgx
+	ake.ourKey = bobPrivateKey
+
+	msg, _ := ake.sigMessage()
 
 	return msg
 }
@@ -380,5 +392,18 @@ func Test_receiveMessage_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
 
 	toSend := cV3.receiveMessage(msg)
 	assertEquals(t, cV3.authState, authStateAwaitingRevealSig{})
+	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receiveMessage_ignoresSignaureIfDoesNotAllowV2(t *testing.T) {
+	var nilB []byte
+	cV3 := newAkeContext(otrV3{}, fixtureRand())
+	cV3.authState = authStateAwaitingSig{}
+	cV3.addPolicy(allowV3)
+
+	msg := fixtureSigMsg()
+
+	toSend := cV3.receiveMessage(msg)
+	assertEquals(t, cV3.authState, authStateAwaitingSig{})
 	assertDeepEquals(t, toSend, nilB)
 }

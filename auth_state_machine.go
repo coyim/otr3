@@ -41,6 +41,14 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
 		c.authState, toSend = c.authState.receiveRevealSigMessage(c, msg)
 
 		//TODO set msgState = encrypted
+	case msgTypeSig:
+		if !c.has(allowV2) {
+			//TODO error?
+			return
+		}
+
+		//TODO error
+		c.authState, toSend = c.authState.receiveSigMessage(c, msg)
 	}
 
 	return
@@ -62,7 +70,7 @@ type authState interface {
 	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte)
 	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte)
 	receiveRevealSigMessage(*akeContext, []byte) (authState, []byte)
-	//receiveSigMessage(*akeContext, []byte) (authState, []byte)
+	receiveSigMessage(*akeContext, []byte) (authState, []byte)
 }
 
 func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
@@ -256,6 +264,23 @@ func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *akeContext, msg []byt
 
 func (s authStateAwaitingSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
 	return s, nil
+}
+
+func (s authStateNone) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return nil, nil
+}
+
+func (s authStateAwaitingRevealSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return nil, nil
+}
+
+func (s authStateAwaitingDHKey) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return nil, nil
+}
+
+func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	//do something
+	return nil, nil
 }
 
 func (authStateNone) String() string              { return "AUTHSTATE_NONE" }
