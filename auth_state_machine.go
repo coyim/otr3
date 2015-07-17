@@ -36,6 +36,11 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
 			//TODO error?
 			return
 		}
+
+		//TODO error
+		c.authState, toSend = c.authState.receiveRevealSigMessage(c, msg)
+
+		//TODO set msgState = encrypted
 	}
 
 	return
