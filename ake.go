@@ -271,7 +271,8 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 	return out, nil
 }
 
-func (ake *AKE) processDHKey(in []byte) (isSame bool, err error) {
+func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
+	in := msg[ake.headerLen():]
 	_, gy := extractMPI(in, 0)
 	if lt(gy, g1) || gt(gy, pMinusTwo) {
 		err = errors.New("otr: DH value out of range")
