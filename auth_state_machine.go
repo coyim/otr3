@@ -229,13 +229,22 @@ func (authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (au
 	ake := AKE{
 		akeContext: *c,
 	}
-	msg, _ = ake.revealSigMessage()
+
+	c.revealSigMsg, _ = ake.revealSigMessage()
 	//TODO handle error
 
-	return authStateAwaitingSig{}, msg
+	return authStateAwaitingSig{}, c.revealSigMsg
 }
 
-func (authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
+func (s authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
+	ake := c.newAKE()
+	isSame, _ := ake.processDHKey(msg)
+	//TODO handle errors
+
+	if isSame {
+		return s, c.revealSigMsg
+	}
+
 	return nil, nil
 }
 

@@ -293,7 +293,6 @@ func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *te
 	c.hashedGx = sha256Sum(gxMPI)
 	c.encryptedGx, _ = encrypt(r[:], fixedgx.Bytes())
 
-	//TODO make sure they be stored by the state machine
 	c.gx = fixedgx
 	c.gy = fixedgy
 	c.y = fixedy
@@ -323,6 +322,24 @@ func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
 	}
+}
+
+func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.x = ourDHCommitAKE.x
+	c.gx = ourDHCommitAKE.gx
+	c.ourKey = bobPrivateKey
+
+	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
+	sigState, previousRevealSig := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, sameDHKeyMsg)
+
+	state, msg := sigState.receiveDHKeyMessage(&c, sameDHKeyMsg)
+
+	assertEquals(t, state, authStateAwaitingSig{})
+	assertDeepEquals(t, msg, previousRevealSig)
 }
 
 func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {

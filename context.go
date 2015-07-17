@@ -33,6 +33,7 @@ type akeContext struct {
 	receiverInstanceTag uint32
 	ourKey              *PrivateKey
 	theirKey            *PublicKey
+	revealSigMsg        []byte
 	policies
 }
 
