@@ -48,7 +48,7 @@ func fixtureDHKeyMsg(v otrVersion) []byte {
 
 func fixtureRevealSigMsg() []byte {
 	ake := fixtureAKEWithVersion(nil)
-	ake.akeContext = bobStateAtReceiveDHKey()
+	ake.akeContext = bobContextAtReceiveDHKey()
 
 	//revealSig is V2 only
 	ake.otrVersion = otrV2{}
@@ -60,26 +60,34 @@ func fixtureRevealSigMsg() []byte {
 }
 
 func fixtureSigMsg() []byte {
-	ake := fixtureAKEWithVersion(otrV3{})
-
-	ake.y = fixedy
-	ake.gy = fixedgy
-	ake.gx = fixedgx
-	ake.ourKey = bobPrivateKey
+	ake := fixtureAKEWithVersion(otrV2{})
+	ake.akeContext = aliceContextAtReceiveRevealSig()
 
 	msg, _ := ake.sigMessage()
 
 	return msg
 }
 
-func bobStateAtReceiveDHKey() akeContext {
-	c := bobStateAtAwaitingDHKey()
-	c.gy = fixedgy // stored at receiveDHKey
+func bobContextAtAwaitingSig() akeContext {
+	c := bobContextAtReceiveDHKey()
+	c.otrVersion = otrV2{}
+	c.addPolicy(allowV2)
 
 	return c
 }
 
-func bobStateAtAwaitingDHKey() akeContext {
+func bobContextAtReceiveDHKey() akeContext {
+	c := bobContextAtAwaitingDHKey()
+	c.gy = fixedgy // stored at receiveDHKey
+
+	copy(c.sigKey.c[:], bytesFromHex("d942cc80b66503414c05e3752d9ba5c4"))
+	copy(c.sigKey.m1[:], bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
+	copy(c.sigKey.m2[:], bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5"))
+
+	return c
+}
+
+func bobContextAtAwaitingDHKey() akeContext {
 	c := newAkeContext(otrV3{}, fixtureRand())
 	c.addPolicy(allowV3)
 	c.authState = authStateAwaitingDHKey{}
@@ -88,6 +96,13 @@ func bobStateAtAwaitingDHKey() akeContext {
 	copy(c.r[:], fixedr) // stored at sendDHCommit
 	c.x = fixedx         // stored at sendDHCommit
 	c.gx = fixedgx       // stored at sendDHCommit
+
+	return c
+}
+
+func aliceContextAtReceiveRevealSig() akeContext {
+	c := aliceContextAtAwaitingRevealSig()
+	c.gx = fixedgx // Alice decrypts encryptedGx using r
 
 	return c
 }
@@ -311,7 +326,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 	ourDHCommitAKE := fixtureAKE()
 	ourDHCommitAKE.dhCommitMessage()
 
-	c := bobStateAtAwaitingDHKey()
+	c := bobContextAtAwaitingDHKey()
 
 	state, msg := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
 
@@ -380,6 +395,17 @@ func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
 	}
+}
+
+func Test_receiveSig_TransitionsFromAwaitingSigToNoneOnSuccess(t *testing.T) {
+	var nilB []byte
+	sigMsg := fixtureSigMsg()
+	c := bobContextAtAwaitingSig()
+
+	state, msg := authStateAwaitingSig{}.receiveSigMessage(&c, sigMsg)
+
+	assertEquals(t, state, authStateNone{})
+	assertDeepEquals(t, msg, nilB)
 }
 
 func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {

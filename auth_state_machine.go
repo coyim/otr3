@@ -293,8 +293,17 @@ func (s authStateAwaitingDHKey) receiveSigMessage(c *akeContext, msg []byte) (au
 }
 
 func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	//do something
-	return nil, nil
+	ake := c.newAKE()
+
+	err := ake.processSig(msg)
+	if err != nil {
+		//TODO error
+		return nil, nil
+	}
+
+	//TODO: msgState = encrypted
+
+	return authStateNone{}, nil
 }
 
 func (authStateNone) String() string              { return "AUTHSTATE_NONE" }

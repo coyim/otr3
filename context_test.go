@@ -61,7 +61,7 @@ func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
 
 	c := newConversation(v, fixtureRand())
 	msg := fixtureDHKeyMsg(v)
-	c.akeContext = bobStateAtAwaitingDHKey()
+	c.akeContext = bobContextAtAwaitingDHKey()
 
 	toSend, err := c.receive(msg)
 
