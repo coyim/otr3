@@ -284,6 +284,36 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 	assertDeepEquals(t, dhMsgType(msg), msgTypeRevealSig)
 }
 
+func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.x = ourDHCommitAKE.x
+	c.gx = ourDHCommitAKE.gx
+	c.ourKey = bobPrivateKey
+
+	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
+	sigState, previousRevealSig := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, sameDHKeyMsg)
+
+	state, msg := sigState.receiveDHKeyMessage(&c, sameDHKeyMsg)
+
+	assertEquals(t, state, authStateAwaitingSig{})
+	assertDeepEquals(t, msg, previousRevealSig)
+}
+
+func Test_receiveDHKey_AtAuthAwaitingSigIgnoresMsgIfIsNotSameDHKeyMsg(t *testing.T) {
+	var nilB []byte
+
+	newDHKeyMsg := fixtureDHKeyMsg(otrV3{})
+	c := newAkeContext(otrV3{}, fixtureRand())
+
+	state, msg := authStateAwaitingSig{}.receiveDHKeyMessage(&c, newDHKeyMsg)
+
+	assertEquals(t, state, authStateAwaitingSig{})
+	assertDeepEquals(t, msg, nilB)
+}
+
 func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *testing.T) {
 	revealSignMsg := fixtureRevealSigMsg()
 	_, r := extractData(revealSignMsg, 11)
@@ -322,24 +352,6 @@ func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
 	}
-}
-
-func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
-	ourDHCommitAKE := fixtureAKE()
-	ourDHCommitAKE.dhCommitMessage()
-
-	c := newAkeContext(otrV3{}, fixtureRand())
-	c.x = ourDHCommitAKE.x
-	c.gx = ourDHCommitAKE.gx
-	c.ourKey = bobPrivateKey
-
-	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
-	sigState, previousRevealSig := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, sameDHKeyMsg)
-
-	state, msg := sigState.receiveDHKeyMessage(&c, sameDHKeyMsg)
-
-	assertEquals(t, state, authStateAwaitingSig{})
-	assertDeepEquals(t, msg, previousRevealSig)
 }
 
 func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {

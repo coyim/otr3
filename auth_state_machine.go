@@ -224,14 +224,12 @@ func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *akeContext, msg []byt
 }
 
 func (authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
-	_, c.gy = extractMPI(msg, 11)
-
-	ake := AKE{
-		akeContext: *c,
-	}
+	ake := c.newAKE()
+	ake.processDHKey(msg)
 
 	c.revealSigMsg, _ = ake.revealSigMessage()
-	//TODO handle error
+
+	c.gy = ake.gy
 
 	return authStateAwaitingSig{}, c.revealSigMsg
 }
@@ -245,7 +243,7 @@ func (s authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (au
 		return s, c.revealSigMsg
 	}
 
-	return nil, nil
+	return s, nil
 }
 
 func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
