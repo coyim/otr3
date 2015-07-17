@@ -204,7 +204,7 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing
 	c := newAkeContext(otrV3{}, fixtureRand())
 
 	dhCommitMsg := fixtureDHCommitMsg()
-	i, encryptedGx := extractData(dhCommitMsg, 11)
+	i, encryptedGx := extractData(dhCommitMsg, c.headerLen())
 	_, hashedGx := extractData(dhCommitMsg, i)
 
 	authStateNone{}.receiveDHCommitMessage(&c, dhCommitMsg)
@@ -262,7 +262,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 
 	// force their hashedGx to be lower than ours
 	msg := fixtureDHCommitMsg()
-	i, _ := extractData(msg, 11)
+	i, _ := extractData(msg, c.headerLen())
 	msg[i+4] = 0x00
 
 	state, newMsg := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
@@ -280,7 +280,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 
 	// force their hashedGx to be higher than ours
 	msg := fixtureDHCommitMsg()
-	i, _ := extractData(msg, 11)
+	i, _ := extractData(msg, c.headerLen())
 	msg[i+4] = 0xFF
 
 	state, newMsg := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
