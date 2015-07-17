@@ -2,6 +2,10 @@ package otr3
 
 import "bytes"
 
+var (
+	fragmentSeparator = []byte{','}
+)
+
 // fragmentationContext store the current fragmentation running. A fragmentationContext is zero-valid and can be immediately used without initialization.
 // In order to follow the fragmentation rules, when the context needs to be reset, just create a new one - don't bother resetting variables
 type fragmentationContext struct {
@@ -39,7 +43,7 @@ func (c *conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr
 	ret := make([][]byte, numFragments)
 	for i := 0; i < numFragments; i++ {
 		prefix := c.fragmentPrefix(i, numFragments, itags, itagr)
-		ret[i] = append(append(prefix, fragmentData(data, i, fraglen, uint16(len))...), []byte(",")...)
+		ret[i] = append(append(prefix, fragmentData(data, i, fraglen, uint16(len))...), fragmentSeparator[0])
 	}
 	return ret
 }
@@ -50,7 +54,7 @@ func fragmentsFinished(fctx fragmentationContext) bool {
 
 func parseFragment(data []byte) (resultData []byte, ix uint16, length uint16) {
 	dataWithoutPrefix := data[5:]
-	parts := bytes.Split(dataWithoutPrefix, []byte(",")) // this should always be safe, since the real data will always be base64 encoded
+	parts := bytes.Split(dataWithoutPrefix, fragmentSeparator) // this should always be safe, since the real data will always be base64 encoded
 	ix, _ = bytesToUint16(parts[0])
 	length, _ = bytesToUint16(parts[1])
 	resultData = parts[2]
