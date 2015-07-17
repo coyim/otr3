@@ -325,6 +325,26 @@ func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing
 	}
 }
 
+func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {
+	var nilB []byte
+
+	states := []authState{
+		authStateNone{},
+		authStateAwaitingDHKey{},
+		authStateAwaitingRevealSig{},
+	}
+
+	revealSignMsg := fixtureRevealSigMsg()
+
+	for _, s := range states {
+		c := newAkeContext(otrV3{}, fixtureRand())
+		state, msg := s.receiveSigMessage(&c, revealSignMsg)
+
+		assertEquals(t, state, s)
+		assertDeepEquals(t, msg, nilB)
+	}
+}
+
 func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 	senderInstanceTag := uint32(0x00000101)
 

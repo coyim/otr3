@@ -267,15 +267,15 @@ func (s authStateAwaitingSig) receiveRevealSigMessage(c *akeContext, msg []byte)
 }
 
 func (s authStateNone) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return nil, nil
+	return s, nil
 }
 
 func (s authStateAwaitingRevealSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return nil, nil
+	return s, nil
 }
 
 func (s authStateAwaitingDHKey) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return nil, nil
+	return s, nil
 }
 
 func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
