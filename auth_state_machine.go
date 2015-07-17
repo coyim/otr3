@@ -227,7 +227,7 @@ func (authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (auth
 }
 
 func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return nil, nil
+	return s, nil
 }
 
 func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
@@ -245,12 +245,12 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg [
 	return authStateNone{}, ret
 }
 
-func (authStateAwaitingDHKey) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return nil, nil
+func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return s, nil
 }
 
-func (authStateAwaitingSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return nil, nil
+func (s authStateAwaitingSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	return s, nil
 }
 
 //TODO need to implements AUTHSTATE_V1_SETUP
