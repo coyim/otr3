@@ -18,10 +18,12 @@ type smpMessage1 struct {
 }
 
 func (m *smpMessage1) tlv() []byte {
+	// TODO: errors?
 	return genSMPTLV(2, m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
 }
 
 func (c *otrContext) generateInitialParameters() smp1 {
+	// TODO: errors?
 	b := make([]byte, c.parameterLength())
 	s := smp1{}
 	s.a2 = c.randMPI(b)
@@ -32,6 +34,7 @@ func (c *otrContext) generateInitialParameters() smp1 {
 }
 
 func generateMessageOneFor(s smp1) smpMessage1 {
+	// TODO: errors?
 	var m smpMessage1
 
 	m.g2a = modExp(g1, s.a2)
@@ -43,12 +46,14 @@ func generateMessageOneFor(s smp1) smpMessage1 {
 }
 
 func (c *otrContext) generateSMPStartParameters() smp1 {
+	// TODO: errors?
 	s := c.generateInitialParameters()
 	s.msg = generateMessageOneFor(s)
 	return s
 }
 
 func (c *otrContext) verifySMPStartParameters(msg smpMessage1) error {
+	// TODO: errors?
 	if !c.isGroupElement(msg.g2a) {
 		return errors.New("g2a is an invalid group element")
 	}

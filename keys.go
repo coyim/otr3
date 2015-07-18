@@ -42,6 +42,7 @@ func ImportKeysFromFile(fname string) ([]*Account, error) {
 
 // ImportKeys will read the libotr formatted data given and return all accounts defined in it
 func ImportKeys(r io.Reader) []*Account {
+	// TODO: errors?
 	return readAccounts(bufio.NewReader(r))
 }
 
@@ -51,6 +52,7 @@ func readSymbolAndExpect(r *bufio.Reader, s string) bool {
 }
 
 func assignParameter(k *dsa.PrivateKey, s string, v *big.Int) {
+	// TODO: errors?
 	switch s {
 	case "g":
 		k.G = v
@@ -66,6 +68,7 @@ func assignParameter(k *dsa.PrivateKey, s string, v *big.Int) {
 }
 
 func readAccounts(r *bufio.Reader) []*Account {
+	// TODO: errors?
 	sexp.ReadListStart(r)
 	readSymbolAndExpect(r, "privkeys")
 	var as []*Account
@@ -81,6 +84,7 @@ func readAccounts(r *bufio.Reader) []*Account {
 }
 
 func readAccountName(r *bufio.Reader) string {
+	// TODO: errors?
 	sexp.ReadListStart(r)
 	readSymbolAndExpect(r, "name")
 	nm := sexp.ReadString(r).Value().(string)
@@ -89,6 +93,7 @@ func readAccountName(r *bufio.Reader) string {
 }
 
 func readAccountProtocol(r *bufio.Reader) string {
+	// TODO: errors?
 	sexp.ReadListStart(r)
 	readSymbolAndExpect(r, "protocol")
 	nm := sexp.ReadSymbol(r).Value().(string)
@@ -97,6 +102,7 @@ func readAccountProtocol(r *bufio.Reader) string {
 }
 
 func readAccount(r *bufio.Reader) *Account {
+	// TODO: errors?
 	if !sexp.ReadListStart(r) {
 		return nil
 	}
@@ -114,6 +120,7 @@ func readAccount(r *bufio.Reader) *Account {
 }
 
 func readPrivateKey(r *bufio.Reader) *PrivateKey {
+	// TODO: errors?
 	sexp.ReadListStart(r)
 	readSymbolAndExpect(r, "private-key")
 	k := new(PrivateKey)
@@ -123,6 +130,7 @@ func readPrivateKey(r *bufio.Reader) *PrivateKey {
 }
 
 func readDSAPrivateKey(r *bufio.Reader) *dsa.PrivateKey {
+	// TODO: errors?
 	sexp.ReadListStart(r)
 	readSymbolAndExpect(r, "dsa")
 	k := new(dsa.PrivateKey)
@@ -138,6 +146,7 @@ func readDSAPrivateKey(r *bufio.Reader) *dsa.PrivateKey {
 }
 
 func readParameter(r *bufio.Reader) (tag string, value *big.Int, end bool) {
+	// TODO: errors?
 	if !sexp.ReadListStart(r) {
 		return "", nil, true
 	}
@@ -181,6 +190,7 @@ func parseIntoPrivateKey(hexString string) *PrivateKey {
 var dsaKeyType = []byte{0x00, 0x00}
 
 func (priv *PrivateKey) serialize() []byte {
+	// TODO: errors?
 	result := priv.PublicKey.serialize()
 	return appendMPI(result, priv.PrivateKey.X)
 }
@@ -195,6 +205,7 @@ func (pub *PublicKey) serialize() []byte {
 }
 
 func (pub *PublicKey) fingerprint() []byte {
+	// TODO: errors?
 	b := pub.serialize()
 	h := sha1.New() // TODO: this instance should be configurable
 	h.Write(b[2:])  // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
@@ -202,6 +213,7 @@ func (pub *PublicKey) fingerprint() []byte {
 }
 
 func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
+	// TODO: errors?
 	r, s, err := dsa.Sign(rand, &priv.PrivateKey, hashed)
 	if err == nil {
 		rBytes := r.Bytes()
@@ -216,6 +228,7 @@ func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
 }
 
 func (pub *PublicKey) verify(hashed, sig []byte) ([]byte, bool) {
+	// TODO: errors?
 	if len(sig) != 2*20 {
 		return nil, false
 	}

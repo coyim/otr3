@@ -14,7 +14,7 @@ func newAkeContext(v otrVersion, r io.Reader) akeContext {
 	return akeContext{
 		otrContext: newOtrContext(v, r),
 		authState:  authStateNone{},
-		policies:   policies{},
+		policies:   0,
 	}
 }
 
@@ -173,7 +173,7 @@ func Test_parseOTRQueryMessage(t *testing.T) {
 }
 
 func Test_acceptOTRRequest_returnsNilForUnsupportedVersions(t *testing.T) {
-	p := policies{}
+	p := policies(0)
 	msg := []byte("?OTR?")
 	v := authStateNone{}.acceptOTRRequest(p, msg)
 
@@ -182,7 +182,7 @@ func Test_acceptOTRRequest_returnsNilForUnsupportedVersions(t *testing.T) {
 
 func Test_acceptOTRRequest_acceptsOTRV3IfHasAllowV3Policy(t *testing.T) {
 	msg := []byte("?OTRv32?")
-	p := policies{}
+	p := policies(0)
 	p.allowV2()
 	p.allowV3()
 	v := authStateNone{}.acceptOTRRequest(p, msg)
@@ -192,7 +192,7 @@ func Test_acceptOTRRequest_acceptsOTRV3IfHasAllowV3Policy(t *testing.T) {
 
 func Test_acceptOTRRequest_acceptsOTRV2IfHasOnlyAllowV2Policy(t *testing.T) {
 	msg := []byte("?OTRv32?")
-	p := policies{}
+	p := policies(0)
 	p.allowV2()
 	v := authStateNone{}.acceptOTRRequest(p, msg)
 

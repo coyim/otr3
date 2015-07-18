@@ -8,6 +8,7 @@ import (
 const smpVersion = 1
 
 func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) []byte {
+	// TODO: errors?
 	h := sha256.New()
 	h.Write([]byte{smpVersion})
 	h.Write(initiatorFingerprint)
@@ -62,6 +63,7 @@ func verifyZKP4(cr, g3a, d7, qaqb, ra *big.Int, ix byte) bool {
 }
 
 func genSMPTLV(tp byte, mpis ...*big.Int) []byte {
+	// TODO: errors?
 	data := make([]byte, 0, 1000)
 
 	data = appendWord(data, uint32(len(mpis)))

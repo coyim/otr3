@@ -32,6 +32,7 @@ func appendMPIs(l []byte, r ...*big.Int) []byte {
 }
 
 func hashMPIs(h hash.Hash, magic byte, mpis ...*big.Int) []byte {
+	// TODO: errors?
 	if h != nil {
 		h.Reset()
 	} else {
@@ -50,6 +51,7 @@ func hashMPIsBN(h hash.Hash, magic byte, mpis ...*big.Int) *big.Int {
 }
 
 func extractWord(d []byte, start int) (uint32, error) {
+	// TODO: errors?
 	if len(d)-start < 4 {
 		return 0, errors.New("extractWord failed due to length too short")
 	}
@@ -61,6 +63,7 @@ func extractWord(d []byte, start int) (uint32, error) {
 }
 
 func extractMPI(d []byte, start int) (newIndex int, mpi *big.Int) {
+	// TODO: errors?
 	// TODO: errors
 	mpiLen, _ := extractWord(d, start)
 	newIndex = start + 4 + int(mpiLen)
@@ -69,6 +72,7 @@ func extractMPI(d []byte, start int) (newIndex int, mpi *big.Int) {
 }
 
 func extractMPIs(d []byte, start int) []*big.Int {
+	// TODO: errors?
 	// TODO: errors
 	mpiCount, _ := extractWord(d, start)
 	result := make([]*big.Int, int(mpiCount))
@@ -80,12 +84,14 @@ func extractMPIs(d []byte, start int) []*big.Int {
 }
 
 func extractShort(d []byte, start int) uint16 {
+	// TODO: errors?
 	// TODO: errors
 	return uint16(d[start])<<8 |
 		uint16(d[start+1])
 }
 
 func extractData(d []byte, start int) (newIndex int, data []byte) {
+	// TODO: errors?
 	// TODO: errors
 	length, _ := extractWord(d, start)
 	newIndex = start + 4 + int(length)

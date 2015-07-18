@@ -28,10 +28,12 @@ type smpMessage2 struct {
 }
 
 func (m *smpMessage2) tlv() []byte {
+	// TODO: errors?
 	return genSMPTLV(3, m.g2b, m.c2, m.d2, m.g3b, m.c3, m.d3, m.pb, m.qb, m.cp, m.d5, m.d6)
 }
 
 func (c *otrContext) generateSecondaryParameters() smp2 {
+	// TODO: errors?
 	b := make([]byte, c.parameterLength())
 	s := smp2{}
 	s.b2 = c.randMPI(b)
@@ -45,6 +47,7 @@ func (c *otrContext) generateSecondaryParameters() smp2 {
 }
 
 func generateMessageTwoFor(s *smp2, s1 smpMessage1) smpMessage2 {
+	// TODO: errors?
 	var m smpMessage2
 
 	m.g2b = modExp(g1, s.b2)
@@ -71,6 +74,7 @@ func generateMessageTwoFor(s *smp2, s1 smpMessage1) smpMessage2 {
 }
 
 func (c *otrContext) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) smp2 {
+	// TODO: errors?
 	s := c.generateSecondaryParameters()
 	s.y = secret
 	s.msg = generateMessageTwoFor(&s, s1)
@@ -79,6 +83,7 @@ func (c *otrContext) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1
 }
 
 func (c *otrContext) verifySMPSecondParameters(s1 smp1, msg smpMessage2) error {
+	// TODO: errors?
 	if !c.isGroupElement(msg.g2b) {
 		return errors.New("g2b is an invalid group element")
 	}

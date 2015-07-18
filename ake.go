@@ -34,6 +34,7 @@ type akeKeys struct {
 }
 
 func (ake *AKE) calcAKEKeys(s *big.Int) {
+	// TODO: errors?
 	secbytes := appendMPI(nil, s)
 	h := sha256.New()
 	keys := h2(0x01, secbytes, h)
@@ -47,6 +48,7 @@ func (ake *AKE) calcAKEKeys(s *big.Int) {
 }
 
 func (ake *AKE) calcDHSharedSecret(xKnown bool) (*big.Int, error) {
+	// TODO: errors?
 	if xKnown {
 		if ake.gy == nil {
 			return nil, errors.New("missing gy")
@@ -63,6 +65,7 @@ func (ake *AKE) calcDHSharedSecret(xKnown bool) (*big.Int, error) {
 }
 
 func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, error) {
+	// TODO: errors?
 	//TODO: Is this error necessary? can we check values before calling each functions instead of having them in processes?
 	if ake.gy == nil {
 		return nil, errors.New("missing gy")
@@ -84,6 +87,7 @@ func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, e
 }
 
 func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyID uint32) []byte {
+	// TODO: errors?
 	var verifyData []byte
 
 	if xFirst {
@@ -100,6 +104,7 @@ func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyID uint
 }
 
 func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
+	// TODO: errors?
 	var sigb []byte
 	xb := ake.ourKey.PublicKey.serialize()
 	xb = appendWord(xb, ake.ourKeyID)
@@ -120,6 +125,7 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
 }
 
 func (ake *AKE) dhCommitMessage() ([]byte, error) {
+	// TODO: errors?
 	ake.ourKeyID = 0
 
 	x := ake.randMPI(make([]byte, 40)[:])
@@ -134,6 +140,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 }
 
 func (ake *AKE) serializeDHCommit() []byte {
+	// TODO: errors?
 	var out []byte
 
 	out = appendShort(out, ake.protocolVersion())
@@ -150,6 +157,7 @@ func (ake *AKE) serializeDHCommit() []byte {
 }
 
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
+	// TODO: errors?
 	y := ake.randMPI(make([]byte, 40)[:])
 
 	ake.y = y
@@ -158,6 +166,7 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 }
 
 func (ake *AKE) serializeDHKey() ([]byte, error) {
+	// TODO: errors?
 	var out []byte
 
 	out = appendShort(out, ake.protocolVersion())
@@ -174,6 +183,7 @@ func (ake *AKE) serializeDHKey() ([]byte, error) {
 }
 
 func (ake *AKE) revealSigMessage() ([]byte, error) {
+	// TODO: errors?
 	s, err := ake.calcDHSharedSecret(true)
 	if err != nil {
 		return nil, err
@@ -201,6 +211,7 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 }
 
 func (ake *AKE) sigMessage() ([]byte, error) {
+	// TODO: errors?
 	s, err := ake.calcDHSharedSecret(false)
 	if err != nil {
 		return nil, err
@@ -228,6 +239,7 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 }
 
 func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
+	// TODO: errors?
 	in := msg[ake.headerLen():]
 	_, gy := extractMPI(in, 0)
 	if lt(gy, g1) || gt(gy, pMinusTwo) {
@@ -247,6 +259,7 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 }
 
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
+	// TODO: errors?
 	in := msg[ake.headerLen():]
 
 	index, r := extractData(in, 0)
@@ -282,6 +295,7 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 }
 
 func (ake *AKE) processSig(msg []byte) error {
+	// TODO: errors?
 	in := msg[ake.headerLen():]
 
 	index, encryptedSig := extractData(in, 0)
@@ -301,6 +315,7 @@ func (ake *AKE) processSig(msg []byte) error {
 }
 
 func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys, xFirst bool) error {
+	// TODO: errors?
 	tomac := appendData(nil, encryptedSig)
 	myMAC := sumHMAC(keys.m2[:], tomac)[:20]
 
@@ -348,6 +363,7 @@ func (c akeContext) headerLen() int {
 }
 
 func extractGx(decryptedGx []byte) (*big.Int, error) {
+	// TODO: errors?
 	index, gx := extractMPI(decryptedGx, 0)
 	if len(decryptedGx) > index {
 		return gx, errors.New("otr: gx corrupt after decryption")
@@ -377,6 +393,7 @@ func h2(b byte, secbytes []byte, h hash.Hash) []byte {
 }
 
 func encrypt(r, gxMPI []byte) (dst []byte, err error) {
+	// TODO: errors?
 	aesCipher, err := aes.NewCipher(r)
 	if err != nil {
 		return nil, err
@@ -391,6 +408,7 @@ func encrypt(r, gxMPI []byte) (dst []byte, err error) {
 }
 
 func decrypt(r, dst, src []byte) error {
+	// TODO: errors?
 	aesCipher, err := aes.NewCipher(r)
 	if err != nil {
 		return errors.New("otr: cannot create AES cipher from reveal signature message: " + err.Error())
@@ -402,6 +420,7 @@ func decrypt(r, dst, src []byte) error {
 }
 
 func checkDecryptedGx(decryptedGx, hashedGx []byte) error {
+	// TODO: errors?
 	digest := sha256Sum(decryptedGx)
 
 	if subtle.ConstantTimeCompare(digest[:], hashedGx[:]) == 0 {

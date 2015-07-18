@@ -6,6 +6,7 @@ import (
 )
 
 func (c *akeContext) ignoreMessage(msg []byte) bool {
+	// TODO: errors?
 	protocolVersion := extractShort(msg, 0)
 	unexpectedV2Msg := protocolVersion == 2 && !c.has(allowV2)
 	unexpectedV3Msg := protocolVersion == 3 && !c.has(allowV3)
@@ -14,6 +15,7 @@ func (c *akeContext) ignoreMessage(msg []byte) bool {
 }
 
 func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
+	// TODO: errors?
 	msgType := msg[2]
 
 	switch msgType {
@@ -55,6 +57,7 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
 }
 
 func (c *akeContext) receiveQueryMessage(msg []byte) (toSend []byte) {
+	// TODO: errors?
 	c.authState, toSend = c.authState.receiveQueryMessage(c, msg)
 	return
 }
@@ -74,6 +77,7 @@ type authState interface {
 }
 
 func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
+	// TODO: errors?
 	v := s.acceptOTRRequest(c.policies, msg)
 	if v == nil {
 		//TODO errors
@@ -97,6 +101,7 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 }
 
 func (authStateNone) parseOTRQueryMessage(msg []byte) []int {
+	// TODO: errors?
 	ret := []int{}
 
 	if bytes.HasPrefix(msg, queryMarker) {
@@ -121,6 +126,7 @@ func (authStateNone) parseOTRQueryMessage(msg []byte) []int {
 }
 
 func (s authStateNone) acceptOTRRequest(p policies, msg []byte) otrVersion {
+	// TODO: errors?
 	versions := s.parseOTRQueryMessage(msg)
 
 	for _, v := range versions {
@@ -148,6 +154,7 @@ func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (auth
 }
 
 func storeValuesFromDHCommit(c *akeContext, msg []byte) {
+	// TODO: errors?
 	//Store encryptedGX and hashedGX received
 	var pos int
 	pos, c.encryptedGx = extractData(msg, c.headerLen())
@@ -156,6 +163,7 @@ func storeValuesFromDHCommit(c *akeContext, msg []byte) {
 }
 
 func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
+	// TODO: errors?
 	ake := c.newAKE()
 
 	generateCommitMsgInstanceTags(&ake, msg)
@@ -172,6 +180,7 @@ func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authStat
 }
 
 func generateCommitMsgInstanceTags(ake *AKE, msg []byte) {
+	// TODO: errors?
 	if ake.needInstanceTag() {
 		//TODO error
 		receiverInstanceTag, _ := extractWord(msg[lenMsgHeader:], 0)
@@ -186,6 +195,7 @@ func generateIntanceTag() uint32 {
 }
 
 func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
+	// TODO: errors?
 	//Forget the DH-commit received before we sent the DH-Key
 
 	//TODO: error if gy OR y = nil when we define the error strategy
@@ -231,6 +241,7 @@ func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *akeContext, msg []byt
 }
 
 func (authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
+	// TODO: errors?
 	ake := c.newAKE()
 	ake.processDHKey(msg)
 
@@ -242,6 +253,7 @@ func (authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (au
 }
 
 func (s authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
+	// TODO: errors?
 	ake := c.newAKE()
 	isSame, _ := ake.processDHKey(msg)
 	//TODO handle errors
@@ -258,6 +270,7 @@ func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authS
 }
 
 func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	// TODO: errors?
 	ake := c.newAKE()
 	err := ake.processRevealSig(msg)
 
@@ -293,6 +306,7 @@ func (s authStateAwaitingDHKey) receiveSigMessage(c *akeContext, msg []byte) (au
 }
 
 func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
+	// TODO: errors?
 	ake := c.newAKE()
 
 	err := ake.processSig(msg)

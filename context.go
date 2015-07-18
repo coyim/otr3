@@ -51,7 +51,7 @@ func newConversation(v otrVersion, rand io.Reader) *conversation {
 		akeContext: akeContext{
 			otrContext: c,
 			authState:  authStateNone{},
-			policies:   policies{},
+			policies:   policies(0),
 		},
 		smpState: smpStateExpect1{},
 	}
@@ -89,6 +89,7 @@ func isQueryMessage(msg []byte) bool {
 // This should be used by the xmpp-client to received OTR messages in plain
 //TODO toSend needs fragmentation to be implemented
 func (c *conversation) receive(message []byte) (toSend []byte, err error) {
+	// TODO: errors?
 	if isQueryMessage(message) {
 		toSend = c.akeContext.receiveQueryMessage(message)
 		return
@@ -119,6 +120,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 //NOTE: this is a candidate for an smpContext that would manage the smp state machine
 // (just like the akeContext)
 func (c *conversation) receiveSMPMessage(message []byte) error {
+	// TODO: errors?
 	var err error
 	m := parseTLV(message)
 	c.smpState, err = m.receivedMessage(c.smpState)
@@ -133,6 +135,7 @@ func (c *otrContext) rand() io.Reader {
 }
 
 func (c *otrContext) randMPI(buf []byte) *big.Int {
+	// TODO: errors?
 	io.ReadFull(c.rand(), buf)
 	// TODO: errors here
 	return new(big.Int).SetBytes(buf)

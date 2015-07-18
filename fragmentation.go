@@ -29,10 +29,12 @@ func fragmentEnd(i, fraglen, l uint16) uint16 {
 }
 
 func fragmentData(data []byte, i int, fraglen, l uint16) []byte {
+	// TODO: errors?
 	return data[fragmentStart(uint16(i), fraglen):fragmentEnd(uint16(i), fraglen, l)]
 }
 
 func (c *conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr uint32) [][]byte {
+	// TODO: errors?
 	len := len(data)
 
 	if len <= int(fraglen) {
@@ -49,10 +51,12 @@ func (c *conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr
 }
 
 func fragmentsFinished(fctx fragmentationContext) bool {
+	// TODO: errors?
 	return fctx.currentIndex > 0 && fctx.currentIndex == fctx.currentLen
 }
 
 func parseFragment(data []byte) (resultData []byte, ix uint16, length uint16) {
+	// TODO: errors?
 	dataWithoutPrefix := data[5:]
 	parts := bytes.Split(dataWithoutPrefix, fragmentSeparator) // this should always be safe, since the real data will always be base64 encoded
 	ix, _ = bytesToUint16(parts[0])
@@ -90,6 +94,7 @@ func forgetFragment() fragmentationContext {
 }
 
 func receiveFragment(beforeCtx fragmentationContext, data []byte) fragmentationContext {
+	// TODO: errors?
 	// TODO: check instance tags, and optionally warn the user
 	// TODO: check for malformed data
 
