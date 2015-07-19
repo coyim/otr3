@@ -63,12 +63,12 @@ func extractMPI(d []byte) (newPoint []byte, mpi *big.Int, ok bool) {
 	d, mpiLen, ok := extractWord(d)
 	if !ok || len(d) < int(mpiLen) {
 		return nil, nil, false
-	} else {
-		mpi = new(big.Int).SetBytes(d[:int(mpiLen)])
-		newPoint = d[int(mpiLen):]
-		ok = true
-		return
 	}
+
+	mpi = new(big.Int).SetBytes(d[:int(mpiLen)])
+	newPoint = d[int(mpiLen):]
+	ok = true
+	return
 }
 
 func extractMPIs(d []byte) ([]byte, []*big.Int, bool) {
@@ -100,6 +100,7 @@ func extractData(d []byte) (newPoint []byte, data []byte, ok bool) {
 	if !ok || len(newPoint) < int(length) {
 		return d, nil, false
 	}
+
 	data = newPoint[:int(length)]
 	newPoint = newPoint[int(length):]
 	ok = true
