@@ -98,7 +98,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	// TODO check the message instanceTag for V3
 	// I should ignore the message if it is not for my conversation
 
-	msgProtocolVersion, _ := extractShort(message)
+	_, msgProtocolVersion, _ := extractShort(message)
 	if c.protocolVersion() != msgProtocolVersion {
 		return nil, errWrongProtocolVersion
 	}

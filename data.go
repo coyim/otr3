@@ -71,28 +71,27 @@ func extractMPI(d []byte) (newPoint []byte, mpi *big.Int, ok bool) {
 	}
 }
 
-func extractMPIs(d []byte, start int) ([]*big.Int, bool) {
-	_, mpiCount, ok := extractWord(d[start:])
+func extractMPIs(d []byte) ([]byte, []*big.Int, bool) {
+	current, mpiCount, ok := extractWord(d)
 	if !ok {
-		return nil, false
+		return nil, nil, false
 	}
 	result := make([]*big.Int, int(mpiCount))
-	current := d[start+4:]
 	for i := 0; i < int(mpiCount); i++ {
 		current, result[i], ok = extractMPI(current)
 		if !ok {
-			return nil, false
+			return nil, nil, false
 		}
 	}
-	return result, true
+	return current, result, true
 }
 
-func extractShort(d []byte) (uint16, bool) {
+func extractShort(d []byte) ([]byte, uint16, bool) {
 	if len(d) < 2 {
-		return 0, false
+		return nil, 0, false
 	}
 
-	return uint16(d[0])<<8 |
+	return d[2:], uint16(d[0])<<8 |
 		uint16(d[1]), true
 }
 

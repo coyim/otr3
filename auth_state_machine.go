@@ -7,7 +7,7 @@ import (
 
 func (c *akeContext) ignoreMessage(msg []byte) bool {
 	// TODO: errors?
-	protocolVersion, _ := extractShort(msg)
+	_, protocolVersion, _ := extractShort(msg)
 	unexpectedV2Msg := protocolVersion == 2 && !c.has(allowV2)
 	unexpectedV3Msg := protocolVersion == 3 && !c.has(allowV3)
 

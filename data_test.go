@@ -47,14 +47,14 @@ func Test_extractWord_extractsWithError(t *testing.T) {
 
 func Test_extractShort_extractsAllTheBytes(t *testing.T) {
 	d := []byte{0x12, 0x14}
-	result, ok := extractShort(d)
+	_, result, ok := extractShort(d)
 	assertDeepEquals(t, result, uint16(0x1214))
 	assertDeepEquals(t, ok, true)
 }
 
 func Test_extractShort_isNotOKIfThereIsNotEnoughData(t *testing.T) {
 	d := []byte{0x12}
-	result, ok := extractShort(d)
+	_, result, ok := extractShort(d)
 	assertDeepEquals(t, result, uint16(0))
 	assertDeepEquals(t, ok, false)
 }
@@ -93,24 +93,24 @@ func Test_extractMPI_returnsNotOKIfThereIsNotEnoughBytesForTheMPI(t *testing.T) 
 
 func Test_extractMPIs_returnsNotOKIfThereIsNotEnoughBytesForLength(t *testing.T) {
 	d := []byte{0x00, 0x00, 0x01}
-	_, ok := extractMPIs(d, 0)
+	_, _, ok := extractMPIs(d)
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_extractMPIs_returnsNotOKIfOneOfTheMPIsInsideIsNotValid(t *testing.T) {
 	d := []byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01}
-	_, ok := extractMPIs(d, 0)
+	_, _, ok := extractMPIs(d)
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_extractMPIs_returnsNotOKIfThereAreNotEnoughMPIs(t *testing.T) {
 	d := []byte{0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01, 0x01}
-	_, ok := extractMPIs(d, 0)
+	_, _, ok := extractMPIs(d)
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_extractMPIs_returnsOKIfAnMPIIsReadCorrectly(t *testing.T) {
 	d := []byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01}
-	_, ok := extractMPIs(d, 0)
+	_, _, ok := extractMPIs(d)
 	assertDeepEquals(t, ok, true)
 }
