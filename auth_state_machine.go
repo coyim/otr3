@@ -248,6 +248,7 @@ func (authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (au
 	c.revealSigMsg, _ = ake.revealSigMessage()
 
 	c.gy = ake.gy
+	c.sigKey = ake.sigKey
 
 	return authStateAwaitingSig{}, c.revealSigMsg
 }

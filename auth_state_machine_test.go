@@ -332,8 +332,21 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 
 	//TODO before generate rev si need to extract their gy from DH commit
 	assertEquals(t, state, authStateAwaitingSig{})
-	assertDeepEquals(t, c.gy, fixedgy)
 	assertDeepEquals(t, dhMsgType(msg), msgTypeRevealSig)
+}
+
+func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := bobContextAtAwaitingDHKey()
+
+	authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
+
+	assertDeepEquals(t, c.gy, fixedgy)
+	assertDeepEquals(t, c.sigKey.c[:], expectedC)
+	assertDeepEquals(t, c.sigKey.m1[:], expectedM1)
+	assertDeepEquals(t, c.sigKey.m2[:], expectedM2)
 }
 
 func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
@@ -350,6 +363,7 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 
 	state, msg := sigState.receiveDHKeyMessage(&c, sameDHKeyMsg)
 
+	//FIXME: What about gy and sigKey?
 	assertEquals(t, state, authStateAwaitingSig{})
 	assertDeepEquals(t, msg, previousRevealSig)
 }
