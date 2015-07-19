@@ -217,7 +217,8 @@ func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) 
 	newMsg, _, _ := extractData(msg[c.headerLen():])
 	_, theirHashedGx, _ := extractData(newMsg)
 
-	hashedGx := sha256Sum(c.gx.Bytes())
+	gxMPI := appendMPI(nil, c.gx)
+	hashedGx := sha256Sum(gxMPI)
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
 		ake := c.newAKE()
 		//NOTE what about the sender and receiver instance tags?
