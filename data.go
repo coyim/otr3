@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"crypto/sha256"
-	"errors"
 	"hash"
 	"math/big"
 	"strconv"
@@ -32,7 +31,6 @@ func appendMPIs(l []byte, r ...*big.Int) []byte {
 }
 
 func hashMPIs(h hash.Hash, magic byte, mpis ...*big.Int) []byte {
-	// TODO: errors?
 	if h != nil {
 		h.Reset()
 	} else {
@@ -50,52 +48,62 @@ func hashMPIsBN(h hash.Hash, magic byte, mpis ...*big.Int) *big.Int {
 	return new(big.Int).SetBytes(hashMPIs(h, magic, mpis...))
 }
 
-func extractWord(d []byte, start int) (uint32, error) {
-	// TODO: errors?
-	if len(d)-start < 4 {
-		return 0, errors.New("extractWord failed due to length too short")
+func extractWord(d []byte) ([]byte, uint32, bool) {
+	if len(d) < 4 {
+		return nil, 0, false
 	}
 
-	return uint32(d[start])<<24 |
-		uint32(d[start+1])<<16 |
-		uint32(d[start+2])<<8 |
-		uint32(d[start+3]), nil
+	return d[4:], uint32(d[0])<<24 |
+		uint32(d[1])<<16 |
+		uint32(d[2])<<8 |
+		uint32(d[3]), true
 }
 
-func extractMPI(d []byte, start int) (newIndex int, mpi *big.Int) {
-	// TODO: errors?
-	// TODO: errors
-	mpiLen, _ := extractWord(d, start)
-	newIndex = start + 4 + int(mpiLen)
-	mpi = new(big.Int).SetBytes(d[start+4 : newIndex])
-	return
+func extractMPI(d []byte) (newPoint []byte, mpi *big.Int, ok bool) {
+	d, mpiLen, ok := extractWord(d)
+	if !ok || len(d) < int(mpiLen) {
+		return nil, nil, false
+	} else {
+		mpi = new(big.Int).SetBytes(d[:int(mpiLen)])
+		newPoint = d[int(mpiLen):]
+		ok = true
+		return
+	}
 }
 
-func extractMPIs(d []byte, start int) []*big.Int {
-	// TODO: errors?
-	// TODO: errors
-	mpiCount, _ := extractWord(d, start)
+func extractMPIs(d []byte, start int) ([]*big.Int, bool) {
+	_, mpiCount, ok := extractWord(d[start:])
+	if !ok {
+		return nil, false
+	}
 	result := make([]*big.Int, int(mpiCount))
-	current := start + 4
+	current := d[start+4:]
 	for i := 0; i < int(mpiCount); i++ {
-		current, result[i] = extractMPI(d, current)
+		current, result[i], ok = extractMPI(current)
+		if !ok {
+			return nil, false
+		}
 	}
-	return result
+	return result, true
 }
 
-func extractShort(d []byte, start int) uint16 {
-	// TODO: errors?
-	// TODO: errors
-	return uint16(d[start])<<8 |
-		uint16(d[start+1])
+func extractShort(d []byte) (uint16, bool) {
+	if len(d) < 2 {
+		return 0, false
+	}
+
+	return uint16(d[0])<<8 |
+		uint16(d[1]), true
 }
 
-func extractData(d []byte, start int) (newIndex int, data []byte) {
-	// TODO: errors?
-	// TODO: errors
-	length, _ := extractWord(d, start)
-	newIndex = start + 4 + int(length)
-	data = d[start+4 : newIndex]
+func extractData(d []byte) (newPoint []byte, data []byte, ok bool) {
+	newPoint, length, ok := extractWord(d)
+	if !ok || len(newPoint) < int(length) {
+		return d, nil, false
+	}
+	data = newPoint[:int(length)]
+	newPoint = newPoint[int(length):]
+	ok = true
 	return
 }
 

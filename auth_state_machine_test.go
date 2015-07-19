@@ -219,8 +219,8 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing
 	c := newAkeContext(otrV3{}, fixtureRand())
 
 	dhCommitMsg := fixtureDHCommitMsg()
-	i, encryptedGx := extractData(dhCommitMsg, c.headerLen())
-	_, hashedGx := extractData(dhCommitMsg, i)
+	newMsg, encryptedGx, _ := extractData(dhCommitMsg[c.headerLen():])
+	_, hashedGx, _ := extractData(newMsg)
 
 	authStateNone{}.receiveDHCommitMessage(&c, dhCommitMsg)
 
@@ -248,8 +248,8 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 	c.hashedGx = [sha256.Size]byte{0x05} //some hashedGx
 
 	newDHCommitMsg := fixtureDHCommitMsg()
-	hashedGxIndex, newEncryptedGx := extractData(newDHCommitMsg, c.headerLen())
-	_, newHashedGx := extractData(newDHCommitMsg, hashedGxIndex)
+	newMsg, newEncryptedGx, _ := extractData(newDHCommitMsg[c.headerLen():])
+	_, newHashedGx, _ := extractData(newMsg)
 
 	authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
@@ -277,8 +277,8 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 
 	// force their hashedGx to be lower than ours
 	msg := fixtureDHCommitMsg()
-	i, _ := extractData(msg, c.headerLen())
-	msg[i+4] = 0x00
+	newPoint, _, _ := extractData(msg[c.headerLen():])
+	newPoint[4] = 0x00
 
 	state, newMsg := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
@@ -295,8 +295,8 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 
 	// force their hashedGx to be higher than ours
 	msg := fixtureDHCommitMsg()
-	i, _ := extractData(msg, c.headerLen())
-	msg[i+4] = 0xFF
+	newPoint, _, _ := extractData(msg[c.headerLen():])
+	newPoint[4] = 0xFF
 
 	state, newMsg := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
 	assertEquals(t, state, authStateAwaitingRevealSig{})

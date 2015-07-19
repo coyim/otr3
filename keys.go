@@ -161,14 +161,13 @@ func readParameter(r *bufio.Reader) (tag string, value *big.Int, end bool) {
 
 func (pub *PublicKey) parse(in []byte) int {
 	//TODO Error handling
-	//extractShort(in, 0)
-
-	index := 2
-	index, pub.P = extractMPI(in, index)
-	index, pub.Q = extractMPI(in, index)
-	index, pub.G = extractMPI(in, index)
-	index, pub.Y = extractMPI(in, index)
-	return index
+	//extractShort(in)
+	index := in[2:]
+	index, pub.P, _ = extractMPI(index)
+	index, pub.Q, _ = extractMPI(index)
+	index, pub.G, _ = extractMPI(index)
+	index, pub.Y, _ = extractMPI(index)
+	return len(in) - len(index)
 }
 
 func (priv *PrivateKey) parse(in []byte) {
@@ -176,7 +175,7 @@ func (priv *PrivateKey) parse(in []byte) {
 
 	index := priv.PublicKey.parse(in)
 	priv.PrivateKey.PublicKey = priv.PublicKey.PublicKey
-	index, priv.X = extractMPI(in, index)
+	_, priv.X, _ = extractMPI(in[index:])
 }
 
 func parseIntoPrivateKey(hexString string) *PrivateKey {

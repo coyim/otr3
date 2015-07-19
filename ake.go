@@ -241,7 +241,7 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	// TODO: errors?
 	in := msg[ake.headerLen():]
-	_, gy := extractMPI(in, 0)
+	_, gy, _ := extractMPI(in)
 	if lt(gy, g1) || gt(gy, pMinusTwo) {
 		err = errors.New("otr: DH value out of range")
 		return
@@ -262,9 +262,9 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	// TODO: errors?
 	in := msg[ake.headerLen():]
 
-	index, r := extractData(in, 0)
-	index, encryptedSig := extractData(in, index)
-	theirMAC := in[index:]
+	in, r, _ := extractData(in)
+	in, encryptedSig, _ := extractData(in)
+	theirMAC := in
 	if len(theirMAC) != 20 {
 		return errors.New("otr: corrupt reveal signature message")
 	}
@@ -298,8 +298,8 @@ func (ake *AKE) processSig(msg []byte) error {
 	// TODO: errors?
 	in := msg[ake.headerLen():]
 
-	index, encryptedSig := extractData(in, 0)
-	theirMAC := in[index:]
+	in, encryptedSig, _ := extractData(in)
+	theirMAC := in
 	if len(theirMAC) != 20 {
 		return errors.New("otr: corrupt signature message")
 	}
@@ -331,9 +331,9 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	ake.theirKey = &PublicKey{}
 	index := ake.theirKey.parse(decryptedSig)
 
-	keyID, err := extractWord(decryptedSig[index:], 0)
+	_, keyID, ok := extractWord(decryptedSig[index:])
 
-	if err != nil {
+	if !ok {
 		return errors.New("otr: corrupt encrypted signature")
 	}
 	sig := decryptedSig[index+4:]
@@ -364,8 +364,8 @@ func (c akeContext) headerLen() int {
 
 func extractGx(decryptedGx []byte) (*big.Int, error) {
 	// TODO: errors?
-	index, gx := extractMPI(decryptedGx, 0)
-	if len(decryptedGx) > index {
+	newData, gx, _ := extractMPI(decryptedGx)
+	if len(newData) > 0 {
 		return gx, errors.New("otr: gx corrupt after decryption")
 	}
 	if gx.Cmp(g1) < 0 || gx.Cmp(pMinusTwo) > 0 {

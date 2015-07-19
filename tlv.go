@@ -3,7 +3,8 @@ package otr3
 const tlvHeaderLength = 4
 
 func parseTLV(data []byte) smpMessage {
-	tlvType := extractShort(data, 0)
+	// TODO: errors
+	tlvType, _ := extractShort(data)
 	switch tlvType {
 	case 0x02:
 		return parseSMP1TLV(data)
@@ -21,7 +22,7 @@ func parseTLV(data []byte) smpMessage {
 func parseSMP1TLV(data []byte) *smpMessage1 {
 	// TODO: errors
 	var msg smpMessage1
-	mpis := extractMPIs(data, tlvHeaderLength)
+	mpis, _ := extractMPIs(data, tlvHeaderLength)
 	msg.g2a = mpis[0]
 	msg.c2 = mpis[1]
 	msg.d2 = mpis[2]
@@ -34,7 +35,7 @@ func parseSMP1TLV(data []byte) *smpMessage1 {
 func parseSMP2TLV(data []byte) *smpMessage2 {
 	// TODO: errors
 	var msg smpMessage2
-	mpis := extractMPIs(data, tlvHeaderLength)
+	mpis, _ := extractMPIs(data, tlvHeaderLength)
 	msg.g2b = mpis[0]
 	msg.c2 = mpis[1]
 	msg.d2 = mpis[2]
@@ -52,7 +53,7 @@ func parseSMP2TLV(data []byte) *smpMessage2 {
 func parseSMP3TLV(data []byte) *smpMessage3 {
 	// TODO: errors
 	var msg smpMessage3
-	mpis := extractMPIs(data, tlvHeaderLength)
+	mpis, _ := extractMPIs(data, tlvHeaderLength)
 	msg.pa = mpis[0]
 	msg.qa = mpis[1]
 	msg.cp = mpis[2]
@@ -67,7 +68,7 @@ func parseSMP3TLV(data []byte) *smpMessage3 {
 func parseSMP4TLV(data []byte) *smpMessage4 {
 	// TODO: errors
 	var msg smpMessage4
-	mpis := extractMPIs(data, tlvHeaderLength)
+	mpis, _ := extractMPIs(data, tlvHeaderLength)
 	msg.rb = mpis[0]
 	msg.cr = mpis[1]
 	msg.d7 = mpis[2]

@@ -3,6 +3,7 @@ package otr3
 import (
 	"encoding/hex"
 	"io"
+	"math/big"
 	"reflect"
 	"testing"
 )
@@ -41,4 +42,10 @@ func (frr *fixedRandReader) Read(p []byte) (n int, err error) {
 		return
 	}
 	return 0, io.EOF
+}
+
+// bnFromHex is a test utility that doesn't take into account possible errors. Thus, make sure to only call it with valid hexadecimal strings (of even length)
+func bnFromHex(s string) *big.Int {
+	res, _ := new(big.Int).SetString(s, 16)
+	return res
 }

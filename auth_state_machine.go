@@ -7,7 +7,7 @@ import (
 
 func (c *akeContext) ignoreMessage(msg []byte) bool {
 	// TODO: errors?
-	protocolVersion := extractShort(msg, 0)
+	protocolVersion, _ := extractShort(msg)
 	unexpectedV2Msg := protocolVersion == 2 && !c.has(allowV2)
 	unexpectedV3Msg := protocolVersion == 3 && !c.has(allowV3)
 
@@ -156,9 +156,8 @@ func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (auth
 func storeValuesFromDHCommit(c *akeContext, msg []byte) {
 	// TODO: errors?
 	//Store encryptedGX and hashedGX received
-	var pos int
-	pos, c.encryptedGx = extractData(msg, c.headerLen())
-	_, h := extractData(msg, pos)
+	msg, c.encryptedGx, _ = extractData(msg[c.headerLen():])
+	_, h, _ := extractData(msg)
 	copy(c.hashedGx[:], h)
 }
 
@@ -183,7 +182,7 @@ func generateCommitMsgInstanceTags(ake *AKE, msg []byte) {
 	// TODO: errors?
 	if ake.needInstanceTag() {
 		//TODO error
-		receiverInstanceTag, _ := extractWord(msg[lenMsgHeader:], 0)
+		_, receiverInstanceTag, _ := extractWord(msg[lenMsgHeader:])
 		ake.senderInstanceTag = generateIntanceTag()
 		ake.receiverInstanceTag = receiverInstanceTag
 	}
@@ -215,8 +214,8 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []
 
 func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
 	//TODO error
-	index, _ := extractData(msg, c.headerLen())
-	_, theirHashedGx := extractData(msg, index)
+	newMsg, _, _ := extractData(msg[c.headerLen():])
+	_, theirHashedGx, _ := extractData(newMsg)
 
 	hashedGx := sha256Sum(c.gx.Bytes())
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
