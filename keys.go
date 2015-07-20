@@ -264,13 +264,11 @@ func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
 }
 
 func (pub *PublicKey) verify(hashed, sig []byte) (nextPoint []byte, sigOk bool) {
-	// TODO: errors?
-	if len(sig) != 2*20 {
-		// TODO: this is likely to be incorrect. We need only to see if it's _less_ than the expected signature length
+	if len(sig) < 2*20 {
 		return nil, false
 	}
 	r := new(big.Int).SetBytes(sig[:20])
-	s := new(big.Int).SetBytes(sig[20:])
+	s := new(big.Int).SetBytes(sig[20:40])
 	ok := dsa.Verify(&pub.PublicKey, hashed, r, s)
 	return sig[20*2:], ok
 }
