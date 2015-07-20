@@ -135,7 +135,7 @@ func readDSAPrivateKey(r *bufio.Reader) *dsa.PrivateKey {
 	readSymbolAndExpect(r, "dsa")
 	k := new(dsa.PrivateKey)
 	for {
-		tag, value, end := readParameter(r)
+		tag, value, end, _ := readParameter(r)
 		if end {
 			break
 		}
@@ -145,16 +145,36 @@ func readDSAPrivateKey(r *bufio.Reader) *dsa.PrivateKey {
 	return k
 }
 
-func readParameter(r *bufio.Reader) (tag string, value *big.Int, end bool) {
-	// TODO: errors?
-	if !sexp.ReadListStart(r) {
-		return "", nil, true
+func readPotentialBigNum(r *bufio.Reader) (*big.Int, bool) {
+	res, _ := sexp.ReadValue(r)
+	if res != nil {
+		if tres, ok := res.(sexp.BigNum); ok {
+			return tres.Value().(*big.Int), true
+		}
 	}
-	tag = sexp.ReadSymbol(r).Value().(string)
-	value = sexp.ReadBigNum(r).Value().(*big.Int)
+	return nil, false
+}
+
+func readPotentialSymbol(r *bufio.Reader) (string, bool) {
+	res, _ := sexp.ReadValue(r)
+	if res != nil {
+		if tres, ok := res.(sexp.Symbol); ok {
+			return tres.Value().(string), true
+		}
+	}
+	return "", false
+}
+
+func readParameter(r *bufio.Reader) (tag string, value *big.Int, end bool, ok bool) {
+	if !sexp.ReadListStart(r) {
+		return "", nil, true, true
+	}
+	tag, ok1 := readPotentialSymbol(r)
+	value, ok2 := readPotentialBigNum(r)
+	ok = ok1 && ok2
 	end = false
 	if !sexp.ReadListEnd(r) {
-		return "", nil, true
+		return "", nil, true, true
 	}
 	return
 }

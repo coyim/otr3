@@ -67,15 +67,31 @@ func inp(s string) *bufio.Reader {
 }
 
 func Test_readParameter_willReturnTheParameterRead(t *testing.T) {
-	tag, value, _ := readParameter(inp(`(p #00FC07ABCF0DC916AFF6E9A0D450A9B7A857#)`))
+	tag, value, _, _ := readParameter(inp(`(p #00FC07ABCF0DC916AFF6E9A0D450A9B7A857#)`))
 	assertDeepEquals(t, tag, "p")
 	assertDeepEquals(t, value, bnFromHex("00FC07ABCF0DC916AFF6E9A0D450A9B7A857"))
 }
 
 func Test_readParameter_willReturnAnotherParameterRead(t *testing.T) {
-	tag, value, _ := readParameter(inp(`(quux #00FC07ABCF0DC916AFF6E9A0D450A9B7A858#)`))
+	tag, value, _, _ := readParameter(inp(`(quux #00FC07ABCF0DC916AFF6E9A0D450A9B7A858#)`))
 	assertDeepEquals(t, tag, "quux")
 	assertDeepEquals(t, value, bnFromHex("00FC07ABCF0DC916AFF6E9A0D450A9B7A858"))
+}
+
+func Test_readParameter_willReturnNotOKIfAskedToParseATooShortList(t *testing.T) {
+	_, _, _, ok := readParameter(inp(`()`))
+	assertDeepEquals(t, ok, false)
+
+	_, _, _, ok = readParameter(inp(`(quux)`))
+	assertDeepEquals(t, ok, false)
+}
+
+func Test_readParameter_willReturnNotOKIfAskedToParseSomethingOfTheWrongType(t *testing.T) {
+	_, _, _, ok := readParameter(inp(`("quux" #00FC07ABCF0DC916AFF6E9A0D450A9B7A858#)`))
+	assertDeepEquals(t, ok, false)
+
+	_, _, _, ok = readParameter(inp(`(quux "00FC07ABCF0DC916AFF6E9A0D450A9B7A858")`))
+	assertDeepEquals(t, ok, false)
 }
 
 func Test_readDSAPrivateKey_willReturnADSAPrivateKey(t *testing.T) {
