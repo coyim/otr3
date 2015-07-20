@@ -329,14 +329,14 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	}
 
 	ake.theirKey = &PublicKey{}
-	index := ake.theirKey.parse(decryptedSig)
+	nextPoint, _ := ake.theirKey.parse(decryptedSig)
 
-	_, keyID, ok := extractWord(decryptedSig[index:])
+	_, keyID, ok := extractWord(nextPoint)
 
 	if !ok {
 		return errors.New("otr: corrupt encrypted signature")
 	}
-	sig := decryptedSig[index+4:]
+	sig := nextPoint[4:]
 
 	verifyData := ake.generateVerifyData(xFirst, ake.theirKey, keyID)
 	mb := sumHMAC(keys.m1[:], verifyData)
