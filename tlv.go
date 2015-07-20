@@ -2,9 +2,11 @@ package otr3
 
 const tlvHeaderLength = 4
 
-func parseTLV(data []byte) smpMessage {
-	// TODO: errors
-	_, tlvType, _ := extractShort(data)
+func parseTLV(data []byte) (smpMessage, bool) {
+	_, tlvType, ok := extractShort(data)
+	if !ok {
+		return nil, false
+	}
 	switch tlvType {
 	case 0x02:
 		return parseSMP1TLV(data)
@@ -16,26 +18,28 @@ func parseTLV(data []byte) smpMessage {
 		return parseSMP4TLV(data)
 	}
 
-	return nil
+	return nil, false
 }
 
-func parseSMP1TLV(data []byte) *smpMessage1 {
-	// TODO: errors
-	var msg smpMessage1
-	_, mpis, _ := extractMPIs(data[tlvHeaderLength:])
+func parseSMP1TLV(data []byte) (msg smpMessage1, ok bool) {
+	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
+	if !ok || len(mpis) < 6 {
+		return msg, false
+	}
 	msg.g2a = mpis[0]
 	msg.c2 = mpis[1]
 	msg.d2 = mpis[2]
 	msg.g3a = mpis[3]
 	msg.c3 = mpis[4]
 	msg.d3 = mpis[5]
-	return &msg
+	return msg, true
 }
 
-func parseSMP2TLV(data []byte) *smpMessage2 {
-	// TODO: errors
-	var msg smpMessage2
-	_, mpis, _ := extractMPIs(data[tlvHeaderLength:])
+func parseSMP2TLV(data []byte) (msg smpMessage2, ok bool) {
+	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
+	if !ok || len(mpis) < 11 {
+		return msg, false
+	}
 	msg.g2b = mpis[0]
 	msg.c2 = mpis[1]
 	msg.d2 = mpis[2]
@@ -47,13 +51,14 @@ func parseSMP2TLV(data []byte) *smpMessage2 {
 	msg.cp = mpis[8]
 	msg.d5 = mpis[9]
 	msg.d6 = mpis[10]
-	return &msg
+	return msg, true
 }
 
-func parseSMP3TLV(data []byte) *smpMessage3 {
-	// TODO: errors
-	var msg smpMessage3
-	_, mpis, _ := extractMPIs(data[tlvHeaderLength:])
+func parseSMP3TLV(data []byte) (msg smpMessage3, ok bool) {
+	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
+	if !ok || len(mpis) < 8 {
+		return msg, false
+	}
 	msg.pa = mpis[0]
 	msg.qa = mpis[1]
 	msg.cp = mpis[2]
@@ -62,15 +67,16 @@ func parseSMP3TLV(data []byte) *smpMessage3 {
 	msg.ra = mpis[5]
 	msg.cr = mpis[6]
 	msg.d7 = mpis[7]
-	return &msg
+	return msg, true
 }
 
-func parseSMP4TLV(data []byte) *smpMessage4 {
-	// TODO: errors
-	var msg smpMessage4
-	_, mpis, _ := extractMPIs(data[tlvHeaderLength:])
+func parseSMP4TLV(data []byte) (msg smpMessage4, ok bool) {
+	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
+	if !ok || len(mpis) < 3 {
+		return msg, false
+	}
 	msg.rb = mpis[0]
 	msg.cr = mpis[1]
 	msg.d7 = mpis[2]
-	return &msg
+	return msg, true
 }

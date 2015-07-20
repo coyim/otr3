@@ -125,7 +125,7 @@ func (c *conversation) receiveSMPMessage(message []byte) error {
 
 	// TODO: errors?
 	var err error
-	m := parseTLV(message)
+	m, _ := parseTLV(message)
 	c.smpState, err = m.receivedMessage(c.smpState)
 	return err
 }
