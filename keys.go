@@ -104,7 +104,7 @@ func readAccounts(r *bufio.Reader) []*Account {
 	readSymbolAndExpect(r, "privkeys")
 	var as []*Account
 	for {
-		a := readAccount(r)
+		a, _ := readAccount(r)
 		if a == nil {
 			break
 		}
@@ -130,33 +130,29 @@ func readAccountProtocol(r *bufio.Reader) (string, bool) {
 	return nm, ok1 && ok2 && ok3
 }
 
-func readAccount(r *bufio.Reader) *Account {
-	// TODO: errors?
-	if !sexp.ReadListStart(r) {
-		return nil
-	}
-	if !readSymbolAndExpect(r, "account") {
-		return nil
-	}
+func readAccount(r *bufio.Reader) (*Account, bool) {
+	sexp.ReadListStart(r)
+	ok1 := readSymbolAndExpect(r, "account")
 	a := new(Account)
-	a.name, _ = readAccountName(r)
-	a.protocol, _ = readAccountProtocol(r)
-	a.key = readPrivateKey(r)
-	if !sexp.ReadListEnd(r) {
-		return nil
+	var ok2, ok3, ok4 bool
+	a.name, ok2 = readAccountName(r)
+	a.protocol, ok3 = readAccountProtocol(r)
+	a.key, ok4 = readPrivateKey(r)
+	ok5 := sexp.ReadListEnd(r)
+	if ok1 && ok2 && ok3 && ok4 && ok5 {
+		return a, true
 	}
-	return a
+	return nil, false
 }
 
-func readPrivateKey(r *bufio.Reader) *PrivateKey {
-	// TODO: errors?
+func readPrivateKey(r *bufio.Reader) (*PrivateKey, bool) {
 	sexp.ReadListStart(r)
-	readSymbolAndExpect(r, "private-key")
+	ok1 := readSymbolAndExpect(r, "private-key")
 	k := new(PrivateKey)
-	res, _ := readDSAPrivateKey(r)
+	res, ok2 := readDSAPrivateKey(r)
 	k.PrivateKey = *res
-	sexp.ReadListEnd(r)
-	return k
+	ok3 := sexp.ReadListEnd(r)
+	return k, ok1 && ok2 && ok3
 }
 
 func readDSAPrivateKey(r *bufio.Reader) (*dsa.PrivateKey, bool) {
