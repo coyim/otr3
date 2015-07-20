@@ -142,7 +142,7 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 	}
 }
 
-func Test_receiveQueryMessage_StoresXAndGx(t *testing.T) {
+func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 	fixture := fixtureAKE()
 	fixture.dhCommitMessage()
 
@@ -151,6 +151,7 @@ func Test_receiveQueryMessage_StoresXAndGx(t *testing.T) {
 	cxt.addPolicy(allowV3)
 
 	cxt.receiveQueryMessage(msg)
+	assertDeepEquals(t, cxt.r, fixture.r)
 	assertDeepEquals(t, cxt.x, fixture.x)
 	assertDeepEquals(t, cxt.gx, fixture.gx)
 }

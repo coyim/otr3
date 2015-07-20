@@ -94,6 +94,7 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 	//TODO errors
 	out, _ := ake.dhCommitMessage()
 
+	c.r = ake.r
 	c.x = ake.x
 	c.gx = ake.gx
 
