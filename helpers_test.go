@@ -49,3 +49,11 @@ func bnFromHex(s string) *big.Int {
 	res, _ := new(big.Int).SetString(s, 16)
 	return res
 }
+
+// parseIntoPrivateKey is a test utility that doesn't take into account possible errors. Thus, make sure to only call it with valid values
+func parseIntoPrivateKey(hexString string) *PrivateKey {
+	b, _ := hex.DecodeString(hexString)
+	var pk PrivateKey
+	pk.parse(b)
+	return &pk
+}
