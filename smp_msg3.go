@@ -25,23 +25,20 @@ type smpMessage3 struct {
 }
 
 func (m *smpMessage3) tlv() []byte {
-	// TODO: errors?
 	return genSMPTLV(4, m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
 }
 
-func (c *otrContext) generateThirdParameters() smp3 {
-	// TODO: errors?
+func (c *otrContext) generateThirdParameters() (s smp3, ok bool) {
 	b := make([]byte, c.parameterLength())
-	s := smp3{}
-	s.r4, _ = c.randMPI(b)
-	s.r5, _ = c.randMPI(b)
-	s.r6, _ = c.randMPI(b)
-	s.r7, _ = c.randMPI(b)
-	return s
+	var ok1, ok2, ok3, ok4 bool
+	s.r4, ok1 = c.randMPI(b)
+	s.r5, ok2 = c.randMPI(b)
+	s.r6, ok3 = c.randMPI(b)
+	s.r7, ok4 = c.randMPI(b)
+	return s, ok1 && ok2 && ok3 && ok4
 }
 
 func calculateMessageThree(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
-	// TODO: errors?
 	var m smpMessage3
 
 	g2 := modExp(m2.g2b, s1.a2)
@@ -66,16 +63,16 @@ func calculateMessageThree(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
 	return m
 }
 
-func (c *otrContext) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMessage2) smp3 {
-	// TODO: errors?
-	s := c.generateThirdParameters()
+func (c *otrContext) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMessage2) (s smp3, ok bool) {
+	if s, ok = c.generateThirdParameters(); !ok {
+		return s, false
+	}
 	s.x = secret
 	s.msg = calculateMessageThree(&s, s1, m2)
-	return s
+	return s, true
 }
 
 func (c *otrContext) verifySMP3Parameters(s2 smp2, msg smpMessage3) error {
-	// TODO: errors?
 	if !c.isGroupElement(msg.pa) {
 		return errors.New("Pa is an invalid group element")
 	}
@@ -103,7 +100,6 @@ func (c *otrContext) verifySMP3Parameters(s2 smp2, msg smpMessage3) error {
 }
 
 func (c *otrContext) verifySMP3ProtocolSuccess(s2 smp2, msg smpMessage3) error {
-	// TODO: errors?
 	papb := divMod(msg.pa, s2.msg.pb, p)
 
 	rab := modExp(msg.ra, s2.b3)

@@ -21,38 +21,33 @@ func (m *smpMessage1) tlv() []byte {
 	return genSMPTLV(2, m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
 }
 
-func (c *otrContext) generateInitialParameters() smp1 {
-	// TODO: errors?
+func (c *otrContext) generateInitialParameters() (s smp1, ok bool) {
 	b := make([]byte, c.parameterLength())
-	s := smp1{}
-	s.a2, _ = c.randMPI(b)
-	s.a3, _ = c.randMPI(b)
-	s.r2, _ = c.randMPI(b)
-	s.r3, _ = c.randMPI(b)
-	return s
+	var ok1, ok2, ok3, ok4 bool
+	s.a2, ok1 = c.randMPI(b)
+	s.a3, ok2 = c.randMPI(b)
+	s.r2, ok3 = c.randMPI(b)
+	s.r3, ok4 = c.randMPI(b)
+	return s, ok1 && ok2 && ok3 && ok4
 }
 
-func generateMessageOneFor(s smp1) smpMessage1 {
-	// TODO: errors?
-	var m smpMessage1
-
+func generateMessageOneFor(s smp1) (m smpMessage1) {
 	m.g2a = modExp(g1, s.a2)
 	m.g3a = modExp(g1, s.a3)
 	m.c2, m.d2 = generateZKP(s.r2, s.a2, 1)
 	m.c3, m.d3 = generateZKP(s.r3, s.a3, 2)
-
-	return m
+	return
 }
 
-func (c *otrContext) generateSMPStartParameters() smp1 {
-	// TODO: errors?
-	s := c.generateInitialParameters()
+func (c *otrContext) generateSMPStartParameters() (s smp1, ok bool) {
+	if s, ok = c.generateInitialParameters(); !ok {
+		return s, false
+	}
 	s.msg = generateMessageOneFor(s)
-	return s
+	return s, true
 }
 
 func (c *otrContext) verifySMPStartParameters(msg smpMessage1) error {
-	// TODO: errors?
 	if !c.isGroupElement(msg.g2a) {
 		return errors.New("g2a is an invalid group element")
 	}

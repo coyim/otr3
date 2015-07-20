@@ -28,26 +28,23 @@ type smpMessage2 struct {
 }
 
 func (m *smpMessage2) tlv() []byte {
-	// TODO: errors?
 	return genSMPTLV(3, m.g2b, m.c2, m.d2, m.g3b, m.c3, m.d3, m.pb, m.qb, m.cp, m.d5, m.d6)
 }
 
-func (c *otrContext) generateSecondaryParameters() smp2 {
-	// TODO: errors?
+func (c *otrContext) generateSecondaryParameters() (s smp2, ok bool) {
 	b := make([]byte, c.parameterLength())
-	s := smp2{}
-	s.b2, _ = c.randMPI(b)
-	s.b3, _ = c.randMPI(b)
-	s.r2, _ = c.randMPI(b)
-	s.r3, _ = c.randMPI(b)
-	s.r4, _ = c.randMPI(b)
-	s.r5, _ = c.randMPI(b)
-	s.r6, _ = c.randMPI(b)
-	return s
+	var ok1, ok2, ok3, ok4, ok5, ok6, ok7 bool
+	s.b2, ok1 = c.randMPI(b)
+	s.b3, ok2 = c.randMPI(b)
+	s.r2, ok3 = c.randMPI(b)
+	s.r3, ok4 = c.randMPI(b)
+	s.r4, ok5 = c.randMPI(b)
+	s.r5, ok6 = c.randMPI(b)
+	s.r6, ok7 = c.randMPI(b)
+	return s, ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7
 }
 
 func generateMessageTwoFor(s *smp2, s1 smpMessage1) smpMessage2 {
-	// TODO: errors?
 	var m smpMessage2
 
 	m.g2b = modExp(g1, s.b2)
@@ -73,17 +70,17 @@ func generateMessageTwoFor(s *smp2, s1 smpMessage1) smpMessage2 {
 	return m
 }
 
-func (c *otrContext) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) smp2 {
-	// TODO: errors?
-	s := c.generateSecondaryParameters()
+func (c *otrContext) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) (s smp2, ok bool) {
+	if s, ok = c.generateSecondaryParameters(); !ok {
+		return s, false
+	}
 	s.y = secret
 	s.msg = generateMessageTwoFor(&s, s1)
 	s.qb = s.msg.qb
-	return s
+	return s, ok
 }
 
 func (c *otrContext) verifySMPSecondParameters(s1 smp1, msg smpMessage2) error {
-	// TODO: errors?
 	if !c.isGroupElement(msg.g2b) {
 		return errors.New("g2b is an invalid group element")
 	}

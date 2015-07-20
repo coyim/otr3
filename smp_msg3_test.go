@@ -8,98 +8,153 @@ import (
 
 func Test_generateSMPThirdParameters_generatesLongerValuesForR4WithProtocolV3(t *testing.T) {
 	otr := newOtrContext(otrV3{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, ok := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.r4, fixtureLong1)
+	assertDeepEquals(t, ok, true)
 }
 
 func Test_generateSMPThirdParameters_generatesLongerValuesForR5WithProtocolV3(t *testing.T) {
 	otr := newOtrContext(otrV3{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.r5, fixtureLong2)
 }
 
 func Test_generateSMPThirdParameters_generatesLongerValuesForR6WithProtocolV3(t *testing.T) {
 	otr := newOtrContext(otrV3{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.r6, fixtureLong3)
 }
 
 func Test_generateSMPThirdParameters_generatesLongerValuesForR7WithProtocolV3(t *testing.T) {
 	otr := newOtrContext(otrV3{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.r7, fixtureLong4)
 }
 
 func Test_generateSMPThirdParameters_generatesShorterValuesForR4WithProtocolV2(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.r4, fixtureShort1)
 }
 
 func Test_generateSMPThirdParameters_computesPaCorrectly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.msg.pa, fixtureMessage3().pa)
 }
 
 func Test_generateSMPThirdParameters_computesQaCorrectly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.msg.qa, fixtureMessage3().qa)
 }
 
 func Test_generateSMPThirdParameters_computesPaPbCorrectly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.papb, fixtureSmp3().papb)
 }
 
 func Test_generateSMPThirdParameters_computesQaQbCorrectly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.qaqb, fixtureSmp3().qaqb)
 }
 
 func Test_generateSMPThirdParameters_storesG3b(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.g3b, fixtureMessage2().g3b)
 }
 
 func Test_generateSMPThirdParameters_computesCPCorrectly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.msg.cp, fixtureMessage3().cp)
 }
 
 func Test_generateSMPThirdParameters_computesD5Correctly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.msg.d5, fixtureMessage3().d5)
 }
 
 func Test_generateSMPThirdParameters_computesD6Correctly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.msg.d6, fixtureMessage3().d6)
 }
 
 func Test_generateSMPThirdParameters_computesRaCorrectly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.msg.ra, fixtureMessage3().ra)
 }
 
 func Test_generateSMPThirdParameters_computesCrCorrectly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.msg.cr, fixtureMessage3().cr)
 }
 
 func Test_generateSMPThirdParameters_computesD7Correctly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	smp, _ := otr.generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.msg.d7, fixtureMessage3().d7)
+}
+
+func Test_generateThirdParameters_returnsNotOKIfThereIsntRandomnessToGenerate_r4(t *testing.T) {
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
+	})).generateThirdParameters()
+	assertDeepEquals(t, ok, false)
+}
+
+func Test_generateThirdParameters_returnsNotOKIfThereIsntRandomnessToGenerate_r5(t *testing.T) {
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
+	})).generateThirdParameters()
+	assertDeepEquals(t, ok, false)
+}
+
+func Test_generateThirdParameters_returnsNotOKIfThereIsntRandomnessToGenerate_r6(t *testing.T) {
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
+	})).generateThirdParameters()
+	assertDeepEquals(t, ok, false)
+}
+
+func Test_generateThirdParameters_returnsNotOKIfThereIsntRandomnessToGenerate_r7(t *testing.T) {
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
+	})).generateThirdParameters()
+	assertDeepEquals(t, ok, false)
+}
+
+func Test_generateThirdParameters_returnsOKIfThereIsEnoughRandomnessToGenerateBlindingFactors(t *testing.T) {
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+	})).generateThirdParameters()
+	assertDeepEquals(t, ok, true)
+}
+
+func Test_generateSMPThirdParameters_returnsNotOKIfThereIsNotEnoughRandomnessForBlinding(t *testing.T) {
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
+	})).generateSMPThirdParameters(fixtureSecret(), fixtureSmp1(), fixtureMessage2())
+	assertDeepEquals(t, ok, false)
 }
 
 func Test_verifySMP3Parameters_failsIfPaIsNotInTheGroupForProtocolV3(t *testing.T) {

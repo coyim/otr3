@@ -8,31 +8,47 @@ import (
 
 func Test_generateSMPFourthParameters_generatesLongerValuesForR7WithProtocolV3(t *testing.T) {
 	otr := newOtrContext(otrV3{}, fixtureRand())
-	smp := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, ok := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.r7, fixtureLong1)
+	assertDeepEquals(t, ok, true)
+}
+
+func Test_generateFourthParameters_returnsNotOKIfThereIsntEnoughRandomnessToGenerateBlindingFactor(t *testing.T) {
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
+	})).generateFourthParameters()
+	assertDeepEquals(t, ok, false)
+}
+
+func Test_generateSMPFourthParameters_returnsNotOKIfGenerationOfFourthParametersFails(t *testing.T) {
+	otr := newOtrContext(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
+	}))
+	_, ok := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	assertDeepEquals(t, ok, false)
 }
 
 func Test_generateSMPFourthParameters_generatesShorterValuesForR7WithProtocolV3(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, _ := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.r7, fixtureShort1)
 }
 
 func Test_generateSMPFourthParameters_computesRbCorrectly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, _ := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.msg.rb, fixtureMessage4().rb)
 }
 
 func Test_generateSMPFourthParameters_computesCrCorrectly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, _ := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.msg.cr, fixtureMessage4().cr)
 }
 
 func Test_generateSMPFourthParameters_computesD7Correctly(t *testing.T) {
 	otr := newOtrContext(otrV2{}, fixtureRand())
-	smp := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, _ := otr.generateSMPFourthParameters(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.msg.d7, fixtureMessage4().d7)
 }
 
