@@ -33,10 +33,10 @@ func (c *otrContext) generateThirdParameters() smp3 {
 	// TODO: errors?
 	b := make([]byte, c.parameterLength())
 	s := smp3{}
-	s.r4 = c.randMPI(b)
-	s.r5 = c.randMPI(b)
-	s.r6 = c.randMPI(b)
-	s.r7 = c.randMPI(b)
+	s.r4, _ = c.randMPI(b)
+	s.r5, _ = c.randMPI(b)
+	s.r6, _ = c.randMPI(b)
+	s.r7, _ = c.randMPI(b)
 	return s
 }
 

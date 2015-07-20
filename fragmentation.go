@@ -29,12 +29,10 @@ func fragmentEnd(i, fraglen, l uint16) uint16 {
 }
 
 func fragmentData(data []byte, i int, fraglen, l uint16) []byte {
-	// TODO: errors?
 	return data[fragmentStart(uint16(i), fraglen):fragmentEnd(uint16(i), fraglen, l)]
 }
 
 func (c *conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr uint32) [][]byte {
-	// TODO: errors?
 	len := len(data)
 
 	if len <= int(fraglen) {
@@ -51,7 +49,6 @@ func (c *conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr
 }
 
 func fragmentsFinished(fctx fragmentationContext) bool {
-	// TODO: errors?
 	return fctx.currentIndex > 0 && fctx.currentIndex == fctx.currentLen
 }
 

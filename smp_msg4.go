@@ -47,7 +47,7 @@ func (c *otrContext) generateFourthParameters() smp4 {
 	// TODO: errors?
 	b := make([]byte, c.parameterLength())
 	s := smp4{}
-	s.r7 = c.randMPI(b)
+	s.r7, _ = c.randMPI(b)
 	return s
 }
 

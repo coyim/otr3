@@ -18,7 +18,6 @@ type smpMessage1 struct {
 }
 
 func (m *smpMessage1) tlv() []byte {
-	// TODO: errors?
 	return genSMPTLV(2, m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
 }
 
@@ -26,10 +25,10 @@ func (c *otrContext) generateInitialParameters() smp1 {
 	// TODO: errors?
 	b := make([]byte, c.parameterLength())
 	s := smp1{}
-	s.a2 = c.randMPI(b)
-	s.a3 = c.randMPI(b)
-	s.r2 = c.randMPI(b)
-	s.r3 = c.randMPI(b)
+	s.a2, _ = c.randMPI(b)
+	s.a3, _ = c.randMPI(b)
+	s.r2, _ = c.randMPI(b)
+	s.r3, _ = c.randMPI(b)
 	return s
 }
 

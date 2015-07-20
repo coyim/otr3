@@ -134,9 +134,12 @@ func (c *otrContext) rand() io.Reader {
 	return c.Rand
 }
 
-func (c *otrContext) randMPI(buf []byte) *big.Int {
-	// TODO: errors?
-	io.ReadFull(c.rand(), buf)
-	// TODO: errors here
-	return new(big.Int).SetBytes(buf)
+func (c *otrContext) randMPI(buf []byte) (*big.Int, bool) {
+	_, err := io.ReadFull(c.rand(), buf)
+
+	if err != nil {
+		return nil, false
+	}
+
+	return new(big.Int).SetBytes(buf), true
 }

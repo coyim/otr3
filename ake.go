@@ -128,7 +128,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	// TODO: errors?
 	ake.ourKeyID = 0
 
-	x := ake.randMPI(make([]byte, 40)[:])
+	x, _ := ake.randMPI(make([]byte, 40)[:])
 
 	ake.x = x
 	ake.gx = new(big.Int).Exp(g1, ake.x, p)
@@ -158,7 +158,7 @@ func (ake *AKE) serializeDHCommit() []byte {
 
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	// TODO: errors?
-	y := ake.randMPI(make([]byte, 40)[:])
+	y, _ := ake.randMPI(make([]byte, 40)[:])
 
 	ake.y = y
 	ake.gy = new(big.Int).Exp(g1, ake.y, p)

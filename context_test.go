@@ -68,3 +68,19 @@ func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhMsgType(toSend), msgTypeRevealSig)
 }
+
+func Test_randMPI_returnsNotOKForAShortRead(t *testing.T) {
+	c := newOtrContext(otrV3{}, fixedRand([]string{"ABCD"}))
+	var buf [3]byte
+
+	_, ok := c.randMPI(buf[:])
+	assertEquals(t, ok, false)
+}
+
+func Test_randMPI_returnsOKForARealRead(t *testing.T) {
+	c := newOtrContext(otrV3{}, fixedRand([]string{"ABCD"}))
+	var buf [2]byte
+
+	_, ok := c.randMPI(buf[:])
+	assertEquals(t, ok, true)
+}
