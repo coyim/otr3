@@ -258,6 +258,12 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	return
 }
 
+func (ake *AKE) processDHCommit(msg []byte) {
+	msg, ake.encryptedGx, _ = extractData(msg[ake.headerLen():])
+	_, h, _ := extractData(msg)
+	copy(ake.hashedGx[:], h)
+}
+
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	// TODO: errors?
 	in := msg[ake.headerLen():]

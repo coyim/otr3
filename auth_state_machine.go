@@ -153,14 +153,6 @@ func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (auth
 	return authStateNone{}.receiveQueryMessage(c, msg)
 }
 
-func storeValuesFromDHCommit(c *akeContext, msg []byte) {
-	// TODO: errors?
-	//Store encryptedGX and hashedGX received
-	msg, c.encryptedGx, _ = extractData(msg[c.headerLen():])
-	_, h, _ := extractData(msg)
-	copy(c.hashedGx[:], h)
-}
-
 func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
 	// TODO: errors?
 	ake := c.newAKE()
@@ -173,7 +165,9 @@ func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authStat
 	//TODO should we reset ourKeyID? Why?
 	c.y = ake.y
 	c.gy = ake.gy
-	storeValuesFromDHCommit(c, msg)
+	ake.processDHCommit(msg)
+	c.encryptedGx = ake.encryptedGx
+	c.hashedGx = ake.hashedGx
 
 	return authStateAwaitingRevealSig{}, ret
 }
@@ -200,9 +194,11 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []
 	//TODO: error if gy OR y = nil when we define the error strategy
 	//They should have been stored when we sent the previous DH-Key
 
-	storeValuesFromDHCommit(c, msg)
-
 	ake := c.newAKE()
+
+	ake.processDHCommit(msg)
+	c.encryptedGx = ake.encryptedGx
+	c.hashedGx = ake.hashedGx
 
 	//TODO: this should not change my instanceTag, since this is supposed to be a retransmit
 	generateCommitMsgInstanceTags(&ake, msg)
