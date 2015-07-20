@@ -120,6 +120,9 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 //NOTE: this is a candidate for an smpContext that would manage the smp state machine
 // (just like the akeContext)
 func (c *conversation) receiveSMPMessage(message []byte) error {
+	//TODO if msgState != encrypted
+	//must abandon SMP state and restart the machine
+
 	// TODO: errors?
 	var err error
 	m := parseTLV(message)

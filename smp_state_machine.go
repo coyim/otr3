@@ -24,31 +24,7 @@ func (smpStateExpect1) receiveMessage1(m smpMessage1) (smpState, error) {
 	return smpStateExpect3{}, nil
 }
 
-func (smpStateExpect1) receiveMessage2(m smpMessage2) (smpState, error) {
-	return nil, errUnexpectedMessage
-}
-
-func (smpStateExpect1) receiveMessage3(m smpMessage3) (smpState, error) {
-	return nil, errUnexpectedMessage
-}
-
-func (smpStateExpect1) receiveMessage4(m smpMessage4) (smpState, error) {
-	return nil, errUnexpectedMessage
-}
-
 func (smpStateExpect2) receiveMessage1(m smpMessage1) (smpState, error) {
-	return nil, errUnexpectedMessage
-}
-
-func (smpStateExpect2) receiveMessage2(m smpMessage2) (smpState, error) {
-	return smpStateExpect4{}, nil
-}
-
-func (smpStateExpect2) receiveMessage3(m smpMessage3) (smpState, error) {
-	return nil, errUnexpectedMessage
-}
-
-func (smpStateExpect2) receiveMessage4(m smpMessage4) (smpState, error) {
 	return nil, errUnexpectedMessage
 }
 
@@ -56,19 +32,19 @@ func (smpStateExpect3) receiveMessage1(m smpMessage1) (smpState, error) {
 	return nil, errUnexpectedMessage
 }
 
-func (smpStateExpect3) receiveMessage2(m smpMessage2) (smpState, error) {
-	return nil, errUnexpectedMessage
-}
-
-func (smpStateExpect3) receiveMessage3(m smpMessage3) (smpState, error) {
-	return smpStateExpect1{}, nil
-}
-
-func (smpStateExpect3) receiveMessage4(m smpMessage4) (smpState, error) {
-	return nil, errUnexpectedMessage
-}
-
 func (smpStateExpect4) receiveMessage1(m smpMessage1) (smpState, error) {
+	return nil, errUnexpectedMessage
+}
+
+func (smpStateExpect1) receiveMessage2(m smpMessage2) (smpState, error) {
+	return nil, errUnexpectedMessage
+}
+
+func (smpStateExpect2) receiveMessage2(m smpMessage2) (smpState, error) {
+	return smpStateExpect4{}, nil
+}
+
+func (smpStateExpect3) receiveMessage2(m smpMessage2) (smpState, error) {
 	return nil, errUnexpectedMessage
 }
 
@@ -76,7 +52,31 @@ func (smpStateExpect4) receiveMessage2(m smpMessage2) (smpState, error) {
 	return nil, errUnexpectedMessage
 }
 
+func (smpStateExpect1) receiveMessage3(m smpMessage3) (smpState, error) {
+	return nil, errUnexpectedMessage
+}
+
+func (smpStateExpect2) receiveMessage3(m smpMessage3) (smpState, error) {
+	return nil, errUnexpectedMessage
+}
+
+func (smpStateExpect3) receiveMessage3(m smpMessage3) (smpState, error) {
+	return smpStateExpect1{}, nil
+}
+
 func (smpStateExpect4) receiveMessage3(m smpMessage3) (smpState, error) {
+	return nil, errUnexpectedMessage
+}
+
+func (smpStateExpect1) receiveMessage4(m smpMessage4) (smpState, error) {
+	return nil, errUnexpectedMessage
+}
+
+func (smpStateExpect2) receiveMessage4(m smpMessage4) (smpState, error) {
+	return nil, errUnexpectedMessage
+}
+
+func (smpStateExpect3) receiveMessage4(m smpMessage4) (smpState, error) {
 	return nil, errUnexpectedMessage
 }
 
