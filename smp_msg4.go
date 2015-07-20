@@ -17,7 +17,7 @@ type smpMessage4 struct {
 	rb *big.Int
 }
 
-func (m *smpMessage4) tlv() []byte {
+func (m smpMessage4) tlv() []byte {
 	return genSMPTLV(5, m.rb, m.cr, m.d7)
 }
 

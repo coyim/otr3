@@ -27,7 +27,7 @@ type smpMessage2 struct {
 	d5, d6   *big.Int
 }
 
-func (m *smpMessage2) tlv() []byte {
+func (m smpMessage2) tlv() []byte {
 	return genSMPTLV(3, m.g2b, m.c2, m.d2, m.g3b, m.c3, m.d3, m.pb, m.qb, m.cp, m.d5, m.d6)
 }
 

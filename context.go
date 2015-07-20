@@ -23,6 +23,10 @@ type conversation struct {
 	akeContext
 }
 
+type smpContext struct {
+	smpState
+}
+
 type akeContext struct {
 	*otrContext
 	authState           authState
@@ -119,15 +123,20 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 
 //NOTE: this is a candidate for an smpContext that would manage the smp state machine
 // (just like the akeContext)
-func (c *conversation) receiveSMPMessage(message []byte) error {
+func (c *conversation) receiveSMPMessage(message []byte) []byte {
+	var msg smpMessage
+
 	//TODO if msgState != encrypted
 	//must abandon SMP state and restart the machine
 
 	// TODO: errors?
-	var err error
 	m, _ := parseTLV(message)
-	c.smpState, err = m.receivedMessage(c.smpState)
-	return err
+	c.smpState, msg = m.receivedMessage(c.smpState)
+	if msg != nil {
+		return msg.tlv()
+	}
+
+	return nil
 }
 
 func (c *otrContext) rand() io.Reader {
