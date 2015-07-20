@@ -19,12 +19,14 @@ var (
 
 type conversation struct {
 	*otrContext
-	smpState smpState
+	smpContext
 	akeContext
 }
 
 type smpContext struct {
+	*otrContext
 	smpState
+	secret *big.Int
 }
 
 type akeContext struct {
@@ -57,7 +59,10 @@ func newConversation(v otrVersion, rand io.Reader) *conversation {
 			authState:  authStateNone{},
 			policies:   policies(0),
 		},
-		smpState: smpStateExpect1{},
+		smpContext: smpContext{
+			otrContext: c,
+			smpState:   smpStateExpect1{},
+		},
 	}
 }
 
@@ -113,30 +118,12 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	case msgData:
 		//TODO: extract message from the encripted DATA
 		//msg := decrypt(message)
-		//err = c.receiveSMPMessage(msg)
+		c.smpContext.receive(message)
 	default:
 		toSend = c.akeContext.receiveMessage(message)
 	}
 
 	return
-}
-
-//NOTE: this is a candidate for an smpContext that would manage the smp state machine
-// (just like the akeContext)
-func (c *conversation) receiveSMPMessage(message []byte) []byte {
-	var msg smpMessage
-
-	//TODO if msgState != encrypted
-	//must abandon SMP state and restart the machine
-
-	// TODO: errors?
-	m, _ := parseTLV(message)
-	c.smpState, msg = m.receivedMessage(c.smpState)
-	if msg != nil {
-		return msg.tlv()
-	}
-
-	return nil
 }
 
 func (c *otrContext) rand() io.Reader {

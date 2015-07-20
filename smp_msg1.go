@@ -47,7 +47,7 @@ func (c *otrContext) generateSMPStartParameters() (s smp1, ok bool) {
 	return s, true
 }
 
-func (c *otrContext) verifySMPStartParameters(msg smpMessage1) error {
+func (c *smpContext) verifySMPStartParameters(msg smpMessage1) error {
 	if !c.isGroupElement(msg.g2a) {
 		return errors.New("g2a is an invalid group element")
 	}
