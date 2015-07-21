@@ -111,7 +111,22 @@ func (smpStateExpect2) receiveMessage3(c *smpContext, m smpMessage3) (smpState, 
 }
 
 func (smpStateExpect3) receiveMessage3(c *smpContext, m smpMessage3) (smpState, smpMessage) {
-	return smpStateExpect1{}, nil
+	//TODO: make sure c.s2 is stored when it is generated
+	//TODO: c.s2 could be merged into the smpContext, the same way akeContext works
+
+	err := c.verifySMP3(c.s2, m)
+	if err != nil {
+		//TODO errors
+		return smpStateExpect1{}, smpMessageAbort{}
+	}
+
+	ret, ok := c.generateSMP4(c.secret, c.s2, m)
+	if !ok {
+		//TODO error
+		return smpStateExpect1{}, smpMessageAbort{}
+	}
+
+	return smpStateExpect1{}, ret.msg
 }
 
 func (smpStateExpect4) receiveMessage3(c *smpContext, m smpMessage3) (smpState, smpMessage) {
