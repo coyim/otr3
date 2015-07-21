@@ -39,7 +39,7 @@ func generateMessageOneFor(s smp1) (m smpMessage1) {
 	return
 }
 
-func (c *otrContext) generateSMPStartParameters() (s smp1, ok bool) {
+func (c *otrContext) generateSMP1() (s smp1, ok bool) {
 	if s, ok = c.generateInitialParameters(); !ok {
 		return s, false
 	}
@@ -47,7 +47,7 @@ func (c *otrContext) generateSMPStartParameters() (s smp1, ok bool) {
 	return s, true
 }
 
-func (c *smpContext) verifySMPStartParameters(msg smpMessage1) error {
+func (c *smpContext) verifySMP1(msg smpMessage1) error {
 	if !c.isGroupElement(msg.g2a) {
 		return errors.New("g2a is an invalid group element")
 	}

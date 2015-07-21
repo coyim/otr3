@@ -70,7 +70,7 @@ func generateMessageTwoFor(s *smp2, s1 smpMessage1) smpMessage2 {
 	return m
 }
 
-func (c *otrContext) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1) (s smp2, ok bool) {
+func (c *otrContext) generateSMP2(secret *big.Int, s1 smpMessage1) (s smp2, ok bool) {
 	if s, ok = c.generateSecondaryParameters(); !ok {
 		return s, false
 	}
@@ -80,7 +80,7 @@ func (c *otrContext) generateSMPSecondParameters(secret *big.Int, s1 smpMessage1
 	return s, ok
 }
 
-func (c *otrContext) verifySMPSecondParameters(s1 smp1, msg smpMessage2) error {
+func (c *otrContext) verifySMP2(s1 smp1, msg smpMessage2) error {
 	if !c.isGroupElement(msg.g2b) {
 		return errors.New("g2b is an invalid group element")
 	}

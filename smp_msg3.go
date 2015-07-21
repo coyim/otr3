@@ -63,7 +63,7 @@ func calculateMessageThree(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
 	return m
 }
 
-func (c *otrContext) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smpMessage2) (s smp3, ok bool) {
+func (c *otrContext) generateSMP3(secret *big.Int, s1 smp1, m2 smpMessage2) (s smp3, ok bool) {
 	if s, ok = c.generateThirdParameters(); !ok {
 		return s, false
 	}
@@ -72,7 +72,7 @@ func (c *otrContext) generateSMPThirdParameters(secret *big.Int, s1 smp1, m2 smp
 	return s, true
 }
 
-func (c *otrContext) verifySMP3Parameters(s2 smp2, msg smpMessage3) error {
+func (c *otrContext) verifySMP3(s2 smp2, msg smpMessage3) error {
 	if !c.isGroupElement(msg.pa) {
 		return errors.New("Pa is an invalid group element")
 	}

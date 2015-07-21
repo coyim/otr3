@@ -21,7 +21,7 @@ func (m smpMessage4) tlv() []byte {
 	return genSMPTLV(5, m.rb, m.cr, m.d7)
 }
 
-func (c *otrContext) generateSMPFourthParameters(secret *big.Int, s2 smp2, msg3 smpMessage3) (smp4, bool) {
+func (c *otrContext) generateSMP4(secret *big.Int, s2 smp2, msg3 smpMessage3) (smp4, bool) {
 	s, ok := c.generateFourthParameters()
 	if !ok {
 		return s, false
@@ -31,7 +31,7 @@ func (c *otrContext) generateSMPFourthParameters(secret *big.Int, s2 smp2, msg3 
 	return s, true
 }
 
-func (c *otrContext) verifySMP4Parameters(s3 smp3, msg smpMessage4) error {
+func (c *otrContext) verifySMP4(s3 smp3, msg smpMessage4) error {
 	if !c.isGroupElement(msg.rb) {
 		return errors.New("Rb is an invalid group element")
 	}
