@@ -81,7 +81,7 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 	ake.senderInstanceTag = generateIntanceTag()
 
 	//TODO errors
-	out, _ := ake.dhCommitMessage()
+	out, _ := ake.generateDHCommitMessage()
 
 	c.r = ake.r
 	c.x = ake.x
@@ -150,7 +150,7 @@ func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authStat
 	generateCommitMsgInstanceTags(&ake, msg)
 
 	//TODO error
-	ret, _ := ake.dhKeyMessage()
+	ret, _ := ake.generateDHKeyMessage()
 
 	//TODO should we reset ourKeyID? Why?
 	c.y = ake.y
@@ -229,7 +229,7 @@ func (authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (au
 	ake := c.newAKE()
 	ake.processDHKey(msg)
 
-	c.revealSigMsg, _ = ake.revealSigMessage()
+	c.revealSigMsg, _ = ake.generateRevealSigMessage()
 
 	c.gy = ake.gy
 	c.sigKey = ake.sigKey
@@ -266,7 +266,7 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg [
 		return nil, nil, err
 	}
 
-	ret, err := ake.sigMessage()
+	ret, err := ake.generateSigMessage()
 
 	return authStateNone{}, ret, err
 }

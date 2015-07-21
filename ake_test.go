@@ -47,7 +47,7 @@ func Test_dhCommitMessage(t *testing.T) {
 	out = appendData(out, expectedEncryptedGxValue)
 	out = appendData(out, expectedHashedGxValue)
 
-	result, err := ake.dhCommitMessage()
+	result, err := ake.generateDHCommitMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
@@ -70,7 +70,7 @@ func Test_dhKeyMessage(t *testing.T) {
 	out = appendWord(out, ake.receiverInstanceTag)
 	out = appendMPI(out, expectedGyValue)
 
-	result, err := ake.dhKeyMessage()
+	result, err := ake.generateDHKeyMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
@@ -78,7 +78,7 @@ func Test_dhKeyMessage(t *testing.T) {
 func Test_dhKeyMessage_returnsAnErrorIfTheresNotEnoughRandomnessForAnMPI(t *testing.T) {
 	rnd := fixedRand([]string{"0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A"})
 	ake := AKE{akeContext: newAkeContext(otrV3{}, rnd)}
-	_, err := ake.dhKeyMessage()
+	_, err := ake.generateDHKeyMessage()
 	assertDeepEquals(t, err, errors.New("otr: short read from random source"))
 }
 
@@ -108,7 +108,7 @@ func Test_revealSigMessage(t *testing.T) {
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 
-	result, err := ake.revealSigMessage()
+	result, err := ake.generateRevealSigMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
@@ -225,7 +225,7 @@ func Test_processRevealSig(t *testing.T) {
 	bob.gx = fixedgx
 	bob.gy = fixedgy
 	bob.ourKeyID = 1
-	msg, err := bob.revealSigMessage()
+	msg, err := bob.generateRevealSigMessage()
 
 	alice.y = fixedy
 	alice.gy = fixedgy
@@ -248,7 +248,7 @@ func Test_processSig(t *testing.T) {
 	ake.gx = fixedgx
 	ake.gy = fixedgy
 	ake.ourKeyID = 1
-	result, err := ake.sigMessage()
+	result, err := ake.generateSigMessage()
 
 	err = ake.processSig(result)
 
@@ -311,7 +311,7 @@ func Test_sigMessage(t *testing.T) {
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 
-	result, err := ake.sigMessage()
+	result, err := ake.generateSigMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
