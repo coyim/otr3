@@ -13,8 +13,8 @@ import (
 )
 
 const (
+	msgTypeData      = byte(3)
 	msgTypeDHCommit  = byte(2)
-	msgData          = byte(3)
 	msgTypeDHKey     = byte(10)
 	msgTypeRevealSig = byte(17)
 	msgTypeSig       = byte(18)

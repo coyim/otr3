@@ -34,9 +34,10 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 		c.authState, toSend = c.authState.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
 		c.authState, toSend, _ = c.authState.receiveRevealSigMessage(c, msg)
-		//TODO set msgState = encrypted
+		c.msgState = encrypted
 	case msgTypeSig:
 		c.authState, toSend, _ = c.authState.receiveSigMessage(c, msg)
+		c.msgState = encrypted
 	default:
 		err = fmt.Errorf("otr: unknown message type 0x%X", msg[2])
 	}
@@ -301,8 +302,6 @@ func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (auth
 	if err != nil {
 		return nil, nil, err
 	}
-
-	//TODO: msgState = encrypted
 
 	return authStateNone{}, nil, nil
 }

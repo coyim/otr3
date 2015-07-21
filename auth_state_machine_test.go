@@ -15,6 +15,7 @@ func newAkeContext(v otrVersion, r io.Reader) akeContext {
 	return akeContext{
 		otrContext: newOtrContext(v, r),
 		authState:  authStateNone{},
+		msgState:   0,
 		policies:   0,
 	}
 }
@@ -618,4 +619,26 @@ func Test_authStateAwaitingRevealSig_receiveRevealSigMessage_returnsErrorIfProce
 	c.addPolicy(allowV2)
 	_, _, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, []byte{0x00, 0x00})
 	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+}
+
+func Test_receiveMessage_receiveRevealSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
+	c := aliceContextAtAwaitingRevealSig()
+	msg := fixtureRevealSigMsg(otrV2{})
+	assertEquals(t, c.msgState, plainText)
+
+	_, err := c.receiveMessage(msg)
+
+	assertEquals(t, err, nil)
+	assertEquals(t, c.msgState, encrypted)
+}
+
+func Test_receiveMessage_receiveSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
+	c := bobContextAtAwaitingSig()
+	msg := fixtureSigMsg(otrV2{})
+	assertEquals(t, c.msgState, plainText)
+
+	_, err := c.receiveMessage(msg)
+
+	assertEquals(t, err, nil)
+	assertEquals(t, c.msgState, encrypted)
 }

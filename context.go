@@ -45,8 +45,17 @@ type akeContext struct {
 	ourKey              *PrivateKey
 	theirKey            *PublicKey
 	revealSigMsg        []byte
+	msgState            msgState
 	policies
 }
+
+type msgState int
+
+const (
+	plainText msgState = iota
+	encrypted
+	finished
+)
 
 type otrContext struct {
 	otrVersion // TODO: this is extremely brittle and can cause unexpected interactions. We should revisit the decision to embed here
@@ -124,7 +133,12 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	}
 
 	switch message[2] {
-	case msgData:
+	case msgTypeData:
+		if c.msgState != encrypted {
+			//TODO error?
+			return c.smpContext.restart(), nil
+		}
+
 		//TODO: extract message from the encripted DATA
 		//msg := decrypt(message)
 		c.smpContext.receive(message)

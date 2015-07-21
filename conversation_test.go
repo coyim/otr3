@@ -5,9 +5,29 @@ import (
 	"testing"
 )
 
-func Test_contextSMPStateMachineStartsAtSmpExpect1(t *testing.T) {
+func Test_conversation_SMPStateMachineStartsAtSmpExpect1(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	assertEquals(t, c.smpState, smpStateExpect1{})
+}
+
+func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T) {
+	states := []msgState{
+		plainText, finished,
+	}
+
+	c := newConversation(otrV3{}, fixtureRand())
+	smpMsg := fixtureMessage1()
+	m := c.genDataMsg(smpMsg.tlv())
+	smpAbortMsg := smpMessageAbort{}.tlv()
+
+	for _, s := range states {
+		c.msgState = s
+
+		toSend, err := c.receive(m)
+		assertEquals(t, err, nil)
+		assertEquals(t, c.smpState, smpStateExpect1{})
+		assertDeepEquals(t, toSend, smpAbortMsg)
+	}
 }
 
 func Test_AKEHappyPath(t *testing.T) {
