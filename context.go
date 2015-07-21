@@ -29,6 +29,7 @@ type smpContext struct {
 	secret *big.Int
 	s1     smp1
 	s2     smp2
+	s3     smp3
 }
 
 type akeContext struct {
