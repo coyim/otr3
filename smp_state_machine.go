@@ -120,6 +120,12 @@ func (smpStateExpect3) receiveMessage3(c *smpContext, m smpMessage3) (smpState, 
 		return smpStateExpect1{}, smpMessageAbort{}
 	}
 
+	err = c.verifySMP3ProtocolSuccess(c.s2, m)
+	if err != nil {
+		//TODO errors
+		return smpStateExpect1{}, smpMessageAbort{}
+	}
+
 	ret, ok := c.generateSMP4(c.secret, c.s2, m)
 	if !ok {
 		//TODO error
