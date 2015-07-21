@@ -2,11 +2,13 @@ package otr3
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"strconv"
 )
 
+// ignoreMessage should never be called with a too small message buffer, it is assumed the caller will have checked this before calling it
 func (c *akeContext) ignoreMessage(msg []byte) bool {
-	// TODO: errors?
 	_, protocolVersion, _ := extractShort(msg)
 	unexpectedV2Msg := protocolVersion == 2 && !c.has(allowV2)
 	unexpectedV3Msg := protocolVersion == 3 && !c.has(allowV3)
@@ -14,43 +16,32 @@ func (c *akeContext) ignoreMessage(msg []byte) bool {
 	return unexpectedV2Msg || unexpectedV3Msg
 }
 
-func (c *akeContext) receiveMessage(msg []byte) (toSend []byte) {
-	// TODO: errors?
-	msgType := msg[2]
+const minimumMessageLength = 3 // length of protocol version (SHORT) and message type (BYTE)
 
-	switch msgType {
+func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
+	if len(msg) < minimumMessageLength {
+		return nil, errors.New("otr: invalid OTR message")
+	}
+
+	if c.ignoreMessage(msg) {
+		return
+	}
+
+	switch msg[2] {
 	case msgTypeDHCommit:
-		if c.ignoreMessage(msg) {
-			//TODO error?
-			return
-		}
-
 		c.authState, toSend = c.authState.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
-		if c.ignoreMessage(msg) {
-			//TODO error?
-			return
-		}
-
 		c.authState, toSend = c.authState.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
-		if !c.has(allowV2) {
-			//TODO error?
-			return
-		}
-
 		//TODO error
 		c.authState, toSend = c.authState.receiveRevealSigMessage(c, msg)
 
 		//TODO set msgState = encrypted
 	case msgTypeSig:
-		if !c.has(allowV2) {
-			//TODO error?
-			return
-		}
-
 		//TODO error
 		c.authState, toSend = c.authState.receiveSigMessage(c, msg)
+	default:
+		err = errors.New(fmt.Sprintf("otr: unknown message type 0x%X", msg[2]))
 	}
 
 	return

@@ -120,7 +120,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 		//msg := decrypt(message)
 		c.smpContext.receive(message)
 	default:
-		toSend = c.akeContext.receiveMessage(message)
+		toSend, _ = c.akeContext.receiveMessage(message)
 	}
 
 	return

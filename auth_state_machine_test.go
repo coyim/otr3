@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"crypto/sha256"
+	"errors"
 	"io"
 	"testing"
 )
@@ -469,11 +470,11 @@ func Test_receiveMessage_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.
 	msgV2, _ := ake.dhCommitMessage()
 	msgV3 := fixtureDHCommitMsg()
 
-	toSend := cV2.receiveMessage(msgV3)
+	toSend, _ := cV2.receiveMessage(msgV3)
 	assertEquals(t, cV2.authState, authStateNone{})
 	assertDeepEquals(t, toSend, nilB)
 
-	toSend = cV3.receiveMessage(msgV2)
+	toSend, _ = cV3.receiveMessage(msgV2)
 	assertEquals(t, cV3.authState, authStateNone{})
 	assertDeepEquals(t, toSend, nilB)
 }
@@ -491,11 +492,11 @@ func Test_receiveMessage_ignoresDHKeyIfItsVersionIsNotInThePolicy(t *testing.T) 
 	msgV2 := fixtureDHKeyMsg(otrV2{})
 	msgV3 := fixtureDHKeyMsg(otrV3{})
 
-	toSend := cV2.receiveMessage(msgV3)
+	toSend, _ := cV2.receiveMessage(msgV3)
 	assertEquals(t, cV2.authState, authStateAwaitingDHKey{})
 	assertDeepEquals(t, toSend, nilB)
 
-	toSend = cV3.receiveMessage(msgV2)
+	toSend, _ = cV3.receiveMessage(msgV2)
 	assertEquals(t, cV3.authState, authStateAwaitingDHKey{})
 	assertDeepEquals(t, toSend, nilB)
 }
@@ -508,12 +509,12 @@ func Test_receiveMessage_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
 
 	msg := fixtureRevealSigMsg()
 
-	toSend := cV3.receiveMessage(msg)
+	toSend, _ := cV3.receiveMessage(msg)
 	assertEquals(t, cV3.authState, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, toSend, nilB)
 }
 
-func Test_receiveMessage_ignoresSignaureIfDoesNotAllowV2(t *testing.T) {
+func Test_receiveMessage_ignoresSignatureIfDoesNotAllowV2(t *testing.T) {
 	var nilB []byte
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
 	cV3.authState = authStateAwaitingSig{}
@@ -521,7 +522,22 @@ func Test_receiveMessage_ignoresSignaureIfDoesNotAllowV2(t *testing.T) {
 
 	msg := fixtureSigMsg()
 
-	toSend := cV3.receiveMessage(msg)
+	toSend, _ := cV3.receiveMessage(msg)
 	assertEquals(t, cV3.authState, authStateAwaitingSig{})
 	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receiveMessage_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
+	cV3 := newAkeContext(otrV3{}, fixtureRand())
+	cV3.authState = authStateAwaitingSig{}
+	cV3.addPolicy(allowV3)
+
+	_, err := cV3.receiveMessage([]byte{})
+	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+
+	_, err = cV3.receiveMessage([]byte{0x00, 0x00})
+	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+
+	_, err = cV3.receiveMessage([]byte{0x00, 0x03, 0x56})
+	assertDeepEquals(t, err, errors.New("otr: unknown message type 0x56"))
 }
