@@ -41,7 +41,7 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 		//TODO error
 		c.authState, toSend = c.authState.receiveSigMessage(c, msg)
 	default:
-		err = errors.New(fmt.Sprintf("otr: unknown message type 0x%X", msg[2]))
+		err = fmt.Errorf("otr: unknown message type 0x%X", msg[2])
 	}
 
 	return
