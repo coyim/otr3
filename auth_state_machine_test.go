@@ -37,14 +37,14 @@ func fixtureAKEWithVersion(v otrVersion) AKE {
 func fixtureDHCommitMsg() []byte {
 	ake := fixtureAKE()
 	ake.senderInstanceTag = generateIntanceTag()
-	msg, _ := ake.generateDHCommitMessage()
+	msg, _ := ake.dhCommitMessage()
 	return msg
 }
 
 func fixtureDHKeyMsg(v otrVersion) []byte {
 	ake := fixtureAKEWithVersion(v)
 	ake.ourKey = alicePrivateKey
-	msg, _ := ake.generateDHKeyMessage()
+	msg, _ := ake.dhKeyMessage()
 	return msg
 }
 
@@ -53,7 +53,7 @@ func fixtureRevealSigMsg(v otrVersion) []byte {
 	ake.akeContext = bobContextAtReceiveDHKey()
 	ake.otrVersion = v
 
-	msg, _ := ake.generateRevealSigMessage()
+	msg, _ := ake.revealSigMessage()
 
 	return msg
 }
@@ -63,7 +63,7 @@ func fixtureSigMsg(v otrVersion) []byte {
 	ake.akeContext = aliceContextAtReceiveRevealSig()
 	ake.otrVersion = v
 
-	msg, _ := ake.generateSigMessage()
+	msg, _ := ake.sigMessage()
 
 	return msg
 }
@@ -144,7 +144,7 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 
 func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 	fixture := fixtureAKE()
-	fixture.generateDHCommitMessage()
+	fixture.dhCommitMessage()
 
 	msg := []byte("?OTRv3?")
 	cxt := newAkeContext(nil, fixtureRand())
@@ -269,7 +269,7 @@ func Test_receiveDHCommit_AtAuthAwaitingSigTransitionsToAwaitingRevSigAndSendsNe
 
 func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMsgIfOurHashIsHigher(t *testing.T) {
 	ourDHCommitAKE := fixtureAKE()
-	ourDHMsg, _ := ourDHCommitAKE.generateDHCommitMessage()
+	ourDHMsg, _ := ourDHCommitAKE.dhCommitMessage()
 
 	//make sure we store the same alues when creating the DH commit
 	c := newAkeContext(otrV3{}, fixtureRand())
@@ -288,7 +288,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 
 func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaitingRevealSig(t *testing.T) {
 	ourDHCommitAKE := fixtureAKE()
-	ourDHCommitAKE.generateDHCommitMessage()
+	ourDHCommitAKE.dhCommitMessage()
 
 	//make sure we store the same values when creating the DH commit
 	c := newAkeContext(otrV3{}, fixtureRand())
@@ -325,7 +325,7 @@ func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *te
 
 func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSig(t *testing.T) {
 	ourDHCommitAKE := fixtureAKE()
-	ourDHCommitAKE.generateDHCommitMessage()
+	ourDHCommitAKE.dhCommitMessage()
 
 	c := bobContextAtAwaitingDHKey()
 
@@ -338,7 +338,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 
 func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 	ourDHCommitAKE := fixtureAKE()
-	ourDHCommitAKE.generateDHCommitMessage()
+	ourDHCommitAKE.dhCommitMessage()
 
 	c := bobContextAtAwaitingDHKey()
 
@@ -352,7 +352,7 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 
 func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
 	ourDHCommitAKE := fixtureAKE()
-	ourDHCommitAKE.generateDHCommitMessage()
+	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV3{}, fixtureRand())
 	c.x = ourDHCommitAKE.x
@@ -452,7 +452,7 @@ func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 
 	dhCommitAke := fixtureAKE()
 	dhCommitAke.senderInstanceTag = senderInstanceTag
-	dhCommitMsg, _ := dhCommitAke.generateDHCommitMessage()
+	dhCommitMsg, _ := dhCommitAke.dhCommitMessage()
 
 	ake := fixtureAKE()
 	generateCommitMsgInstanceTags(&ake, dhCommitMsg)
@@ -470,7 +470,7 @@ func Test_receiveMessage_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.
 	cV3.addPolicy(allowV3)
 
 	ake := fixtureAKEV2()
-	msgV2, _ := ake.generateDHCommitMessage()
+	msgV2, _ := ake.dhCommitMessage()
 	msgV3 := fixtureDHCommitMsg()
 
 	toSend, _ := cV2.receiveMessage(msgV3)

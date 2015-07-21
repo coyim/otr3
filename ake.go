@@ -46,27 +46,24 @@ func (ake *AKE) calcAKEKeys(s *big.Int) {
 	copy(ake.sigKey.m2[:], h2(0x05, secbytes, h))
 }
 
-func (ake *AKE) calcDHSharedSecret(xKnown bool) (*big.Int, error) {
+func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
 	if xKnown {
-		if ake.gy == nil {
-			return nil, errors.New("missing gy")
-		}
-
-		if ake.x == nil {
-			return nil, errors.New("missing x")
-		}
-
-		return new(big.Int).Exp(ake.gy, ake.x, p), nil
+		return modExp(ake.gy, ake.x)
 	}
 
-	return new(big.Int).Exp(ake.gx, ake.y, p), nil
+	return modExp(ake.gx, ake.y)
 }
 
 func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, error) {
 	verifyData := ake.generateVerifyData(xFirst, &ake.ourKey.PublicKey, ake.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
-	xb := ake.calcXb(key, mb, xFirst)
+	xb, err := ake.calcXb(key, mb, xFirst)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return appendData(nil, xb), nil
 }
 
@@ -86,69 +83,61 @@ func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyID uint
 	return appendWord(verifyData, keyID)
 }
 
-func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) []byte {
-	// TODO: errors?
-	var sigb []byte
+func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) ([]byte, error) {
 	xb := ake.ourKey.PublicKey.serialize()
 	xb = appendWord(xb, ake.ourKeyID)
 
-	sigb, _ = ake.ourKey.sign(ake.rand(), mb)
-	xb = append(xb, sigb...)
-
-	aesCipher, err := aes.NewCipher(key.c[:])
+	sigb, err := ake.ourKey.sign(ake.rand(), mb)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
-	var iv [aes.BlockSize]byte
-	ctr := cipher.NewCTR(aesCipher, iv[:])
+	xb = append(xb, sigb...)
+
+	// this error can't happen, since key.c is fixed to the correct size
+	aesCipher, _ := aes.NewCipher(key.c[:])
+
+	ctr := cipher.NewCTR(aesCipher, make([]byte, aes.BlockSize))
 	ctr.XORKeyStream(xb, xb)
 
-	return xb
+	return xb, nil
 }
 
-func (ake *AKE) generateDHCommitMessage() ([]byte, error) {
-	// TODO: errors?
+func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.ourKeyID = 0
 
-	x, ok := ake.randMPI(make([]byte, 40)[:])
+	x, ok := ake.randMPI(make([]byte, 40))
 	if !ok {
 		return nil, errors.New("otr: short read from random source")
 	}
-	ake.x = x
-	ake.gx = new(big.Int).Exp(g1, ake.x, p)
-	io.ReadFull(ake.rand(), ake.r[:])
-	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI([]byte{}, ake.gx))
-	ake.hashedGx = sha256Sum(appendMPI(nil, ake.gx))
 
-	dhCommitMsg := dhCommit{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		gx:                  ake.gx,
-		encryptedGx:         ake.encryptedGx,
+	ake.x = x
+	ake.gx = modExp(g1, ake.x)
+
+	if _, err := io.ReadFull(ake.rand(), ake.r[:]); err != nil {
+		return nil, errors.New("otr: short read from random source")
 	}
 
-	return dhCommitMsg.serialize(), nil
+	// this can't return an error, since ake.r is of a fixed size that is always correct
+	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.gx))
+	return ake.serializeDHCommit(), nil
 }
 
 func (ake *AKE) serializeDHCommit() []byte {
-
-	dhCommitMsg := dhCommit{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		gx:                  ake.gx,
-		encryptedGx:         ake.encryptedGx,
+	out := appendShort(nil, ake.protocolVersion())
+	out = append(out, msgTypeDHCommit)
+	if ake.needInstanceTag() {
+		out = appendWord(out, ake.senderInstanceTag)
+		out = appendWord(out, ake.receiverInstanceTag)
 	}
+	out = appendData(out, ake.encryptedGx)
+	ake.hashedGx = sha256Sum(appendMPI(nil, ake.gx))
+	out = appendData(out, ake.hashedGx[:])
 
-	return dhCommitMsg.serialize()
+	return out
 }
 
-func (ake *AKE) generateDHKeyMessage() ([]byte, error) {
-	// TODO: errors?
+func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	y, ok := ake.randMPI(make([]byte, 40)[:])
 
 	if !ok {
@@ -156,49 +145,26 @@ func (ake *AKE) generateDHKeyMessage() ([]byte, error) {
 	}
 
 	ake.y = y
-	ake.gy = new(big.Int).Exp(g1, ake.y, p)
-
-	dhKeyMsg := dhKey{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		gy:                  ake.gy,
-	}
-	return dhKeyMsg.serialize(), nil
+	ake.gy = modExp(g1, ake.y)
+	return ake.serializeDHKey(), nil
 }
 
-func (ake *AKE) serializeDHKey() ([]byte, error) {
-	// TODO: errors?
+func (ake *AKE) serializeDHKey() []byte {
+	out := appendShort(nil, ake.protocolVersion())
+	out = append(out, msgTypeDHKey)
 
-	dhKeyMsg := dhKey{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		gy:                  ake.gy,
+	if ake.needInstanceTag() {
+		out = appendWord(out, ake.senderInstanceTag)
+		out = appendWord(out, ake.receiverInstanceTag)
 	}
-	return dhKeyMsg.serialize(), nil
+
+	return appendMPI(out, ake.gy)
 }
 
-func (ake *AKE) generateRevealSigMessage() ([]byte, error) {
-	// TODO: errors?
-	s, err := ake.calcDHSharedSecret(true)
-	if err != nil {
-		return nil, err
-	}
+func (ake *AKE) revealSigMessage() ([]byte, error) {
+	ake.calcAKEKeys(ake.calcDHSharedSecret(true))
 
-	ake.calcAKEKeys(s)
-	encryptedSig, err := ake.generateEncryptedSignature(&ake.revealKey, true)
-	if err != nil {
-		return nil, err
-	}
-	return ake.serializeRevealSig(encryptedSig), nil
-}
-
-func (ake *AKE) serializeRevealSig(encryptedSig []byte) []byte {
-	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out := appendShort(nil, ake.protocolVersion())
 	out = append(out, msgTypeRevealSig)
 	if ake.needInstanceTag() {
 		out = appendWord(out, ake.senderInstanceTag)
@@ -206,59 +172,53 @@ func (ake *AKE) serializeRevealSig(encryptedSig []byte) []byte {
 	}
 	out = appendData(out, ake.r[:])
 
+	encryptedSig, err := ake.generateEncryptedSignature(&ake.revealKey, true)
+	if err != nil {
+		return nil, err
+	}
+
 	macSig := sumHMAC(ake.revealKey.m2[:], encryptedSig)
 	out = append(out, encryptedSig...)
 	out = append(out, macSig[:20]...)
-	return out
+
+	return out, nil
 }
 
-func (ake *AKE) generateSigMessage() ([]byte, error) {
-	// TODO: errors?
-	s, err := ake.calcDHSharedSecret(false)
-	if err != nil {
-		return nil, err
-	}
-
-	ake.calcAKEKeys(s)
-	encryptedSig, err := ake.generateEncryptedSignature(&ake.sigKey, false)
-	if err != nil {
-		return nil, err
-	}
-
-	return ake.serializeSig(encryptedSig), nil
-}
-
-func (ake *AKE) serializeSig(encryptedSig []byte) []byte {
-	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+func (ake *AKE) sigMessage() ([]byte, error) {
+	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
+	out := appendShort(nil, ake.protocolVersion())
 	out = append(out, msgTypeSig)
 	if ake.needInstanceTag() {
 		out = appendWord(out, ake.senderInstanceTag)
 		out = appendWord(out, ake.receiverInstanceTag)
 	}
+
+	encryptedSig, err := ake.generateEncryptedSignature(&ake.sigKey, false)
+	if err != nil {
+		return nil, err
+	}
+
 	macSig := sumHMAC(ake.sigKey.m2[:], encryptedSig)
 	out = append(out, encryptedSig...)
 	out = append(out, macSig[:20]...)
-	return out
-}
 
-func (ake *AKE) processDHCommit(msg []byte) error {
-	dhCommitMsg := dhCommit{headerLen: ake.headerLen()}
-	err := dhCommitMsg.deserialize(msg)
-	ake.encryptedGx = dhCommitMsg.encryptedGx
-	ake.hashedGx = dhCommitMsg.hashedGx
-	return err
+	return out, nil
 }
 
 func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
-	// TODO: errors?
-	in := msg[ake.headerLen():]
-	_, gy, _ := extractMPI(in)
+	if len(msg) < ake.headerLen() {
+		return false, errors.New("otr: invalid OTR message")
+	}
+
+	_, gy, ok := extractMPI(msg[ake.headerLen():])
+
+	if !ok {
+		return false, errors.New("otr: corrupt DH key message")
+	}
 
 	// TODO: is this only for otrv3 or for v2 too?
 	if lt(gy, g1) || gt(gy, pMinusTwo) {
-		err = errors.New("otr: DH value out of range")
-		return
+		return false, errors.New("otr: DH value out of range")
 	}
 
 	//NOTE: This keeps only the first Gy received
@@ -270,6 +230,21 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	}
 	ake.gy = gy
 	return
+}
+
+func (ake *AKE) processDHCommit(msg []byte) error {
+	if len(msg) < ake.headerLen() {
+		return errors.New("otr: invalid OTR message")
+	}
+
+	var ok1 bool
+	msg, ake.encryptedGx, ok1 = extractData(msg[ake.headerLen():])
+	_, h, ok2 := extractData(msg)
+	if !ok1 || !ok2 {
+		return errors.New("otr: corrupt DH commit message")
+	}
+	copy(ake.hashedGx[:], h)
+	return nil
 }
 
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
@@ -294,11 +269,8 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	if ake.gx, err = extractGx(decryptedGx); err != nil {
 		return
 	}
-	var s *big.Int
-	if s, err = ake.calcDHSharedSecret(false); err != nil {
-		return
-	}
-	ake.calcAKEKeys(s)
+
+	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
 
 	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
 		return errors.New("otr: in reveal signature message: " + err.Error())
@@ -332,7 +304,6 @@ func (ake *AKE) processSig(msg []byte) error {
 }
 
 func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys, xFirst bool) error {
-	// TODO: errors?
 	tomac := appendData(nil, encryptedSig)
 	myMAC := sumHMAC(keys.m2[:], tomac)[:20]
 
@@ -346,13 +317,15 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	}
 
 	ake.theirKey = &PublicKey{}
-	nextPoint, _ := ake.theirKey.parse(decryptedSig)
 
-	_, keyID, ok := extractWord(nextPoint)
+	nextPoint, ok1 := ake.theirKey.parse(decryptedSig)
 
-	if !ok {
+	_, keyID, ok2 := extractWord(nextPoint)
+
+	if !ok1 || !ok2 || len(nextPoint) < 4 {
 		return errors.New("otr: corrupt encrypted signature")
 	}
+
 	sig := nextPoint[4:]
 
 	verifyData := ake.generateVerifyData(xFirst, ake.theirKey, keyID)
