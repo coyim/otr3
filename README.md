@@ -5,6 +5,15 @@ Implements version 3 of the OTR standard. Implements feature parity with libotr 
 ## Developing
 
 Before doing any work, if you want to separate out your GOPATH from other projects, install direnv
+```
+$ brew update
+$ brew install direnv
+$ echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+```
+Then, create a symbolic link to the OTR3 repository
+```
+ln -s /Users/ipazmino/.gopkgs/otr3/src/github.com/twstrike/ .
+```
 
 Install all dependencies:
 
