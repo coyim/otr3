@@ -1,6 +1,9 @@
 package otr3
 
-import "bytes"
+import (
+	"bytes"
+	"errors"
+)
 
 var (
 	fragmentSeparator = []byte{','}
@@ -52,13 +55,21 @@ func fragmentsFinished(fctx fragmentationContext) bool {
 	return fctx.currentIndex > 0 && fctx.currentIndex == fctx.currentLen
 }
 
-func parseFragment(data []byte) (resultData []byte, ix uint16, length uint16) {
-	// TODO: errors?
+func parseFragment(data []byte) (resultData []byte, ix uint16, length uint16, ok bool) {
+	if len(data) < 5 {
+		return nil, 0, 0, false
+	}
+
 	dataWithoutPrefix := data[5:]
-	parts := bytes.Split(dataWithoutPrefix, fragmentSeparator) // this should always be safe, since the real data will always be base64 encoded
-	ix, _ = bytesToUint16(parts[0])
-	length, _ = bytesToUint16(parts[1])
+	parts := bytes.Split(dataWithoutPrefix, fragmentSeparator)
+	if len(parts) != 4 {
+		return nil, 0, 0, false
+	}
+	var e1, e2 error
+	ix, e1 = bytesToUint16(parts[0])
+	length, e2 = bytesToUint16(parts[1])
 	resultData = parts[2]
+	ok = e1 == nil && e2 == nil
 	return
 }
 
@@ -90,22 +101,24 @@ func forgetFragment() fragmentationContext {
 	return fragmentationContext{}
 }
 
-func receiveFragment(beforeCtx fragmentationContext, data []byte) fragmentationContext {
-	// TODO: errors?
+func receiveFragment(beforeCtx fragmentationContext, data []byte) (fragmentationContext, error) {
 	// TODO: check instance tags, and optionally warn the user
 	// TODO: check for malformed data
 
-	resultData, ix, l := parseFragment(data)
+	resultData, ix, l, ok := parseFragment(data)
+
+	if !ok {
+		return beforeCtx, errors.New("otr: invalid OTR fragment")
+	}
 
 	switch {
 	case fragmentIsInvalid(ix, l):
-		return beforeCtx.discardFragment()
+		return beforeCtx.discardFragment(), nil
 	case fragmentIsFirstMessage(ix, l):
-		return restartFragment(resultData, ix, l)
+		return restartFragment(resultData, ix, l), nil
 	case fragmentIsNextMessage(beforeCtx, ix, l):
-		return beforeCtx.appendFragment(resultData, ix, l)
+		return beforeCtx.appendFragment(resultData, ix, l), nil
 	default:
-		return forgetFragment()
+		return forgetFragment(), nil
 	}
-
 }

@@ -30,7 +30,7 @@ func init() {
 			"C1B2AE91EE51D6CB0E3179AB1042A95DCF6A9483B84B4B36"+
 			"B3861AA7255E4C0278BA36046511B993FFFFFFFFFFFFFFFF", 16)
 
-	pMinusTwo = new(big.Int).Sub(p, new(big.Int).SetInt64(2))
+	pMinusTwo = sub(p, big.NewInt(2))
 	g1 = big.NewInt(2)
 }
 

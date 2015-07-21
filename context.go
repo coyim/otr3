@@ -110,7 +110,6 @@ func isQueryMessage(msg []byte) bool {
 // This should be used by the xmpp-client to received OTR messages in plain
 //TODO toSend needs fragmentation to be implemented
 func (c *conversation) receive(message []byte) (toSend []byte, err error) {
-	// TODO: errors?
 	if isQueryMessage(message) {
 		toSend = c.akeContext.receiveQueryMessage(message)
 		return
@@ -124,15 +123,13 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 		return nil, errWrongProtocolVersion
 	}
 
-	msgType := message[2]
-
-	switch msgType {
+	switch message[2] {
 	case msgData:
 		//TODO: extract message from the encripted DATA
 		//msg := decrypt(message)
 		c.smpContext.receive(message)
 	default:
-		toSend, _ = c.akeContext.receiveMessage(message)
+		return c.akeContext.receiveMessage(message)
 	}
 
 	return

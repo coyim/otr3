@@ -192,9 +192,7 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []
 	//TODO: this should not change my instanceTag, since this is supposed to be a retransmit
 	generateCommitMsgInstanceTags(&ake, msg)
 
-	//TODO error
-	msg, _ = ake.serializeDHKey()
-	return authStateAwaitingRevealSig{}, msg
+	return authStateAwaitingRevealSig{}, ake.serializeDHKey()
 }
 
 func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
