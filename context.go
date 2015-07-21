@@ -27,6 +27,7 @@ type smpContext struct {
 	*otrContext
 	smpState
 	secret *big.Int
+	s1     smp1
 }
 
 type akeContext struct {

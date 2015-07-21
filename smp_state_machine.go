@@ -76,7 +76,22 @@ func (smpStateExpect1) receiveMessage2(c *smpContext, m smpMessage2) (smpState, 
 }
 
 func (smpStateExpect2) receiveMessage2(c *smpContext, m smpMessage2) (smpState, smpMessage) {
-	return smpStateExpect4{}, nil
+	//TODO: make sure c.s1 is stored when it is generated
+	//TODO: c.s1 could be merged into the smpContext, the same way akeContext works
+
+	err := c.verifySMPSecondParameters(c.s1, m)
+	if err != nil {
+		//TODO errors
+		return smpStateExpect1{}, smpMessageAbort{}
+	}
+
+	ret, ok := c.generateSMPThirdParameters(c.secret, c.s1, m)
+	if !ok {
+		//TODO error
+		return smpStateExpect1{}, smpMessageAbort{}
+	}
+
+	return smpStateExpect4{}, ret.msg
 }
 
 func (smpStateExpect3) receiveMessage2(c *smpContext, m smpMessage2) (smpState, smpMessage) {

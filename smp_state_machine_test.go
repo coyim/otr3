@@ -26,9 +26,12 @@ func Test_smpStateExpect1_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *t
 }
 
 func Test_smpStateExpect2_goToExpectState4WhenReceivesSmpMessage2(t *testing.T) {
-	state := smpStateExpect2{}
 	c := newSmpContext(otrV3{}, fixtureRand())
-	nextState, _ := state.receiveMessage2(c, smpMessage2{})
+	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+	c.s1 = fixtureSmp1()
+
+	msg := fixtureMessage2()
+	nextState, _ := smpStateExpect2{}.receiveMessage2(c, msg)
 
 	assertEquals(t, nextState, smpStateExpect4{})
 }
@@ -101,6 +104,9 @@ func Test_contextTransitionsFromSmpExpect2ToSmpExpect4(t *testing.T) {
 	m := fixtureMessage2()
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect2{}
+	c.smpContext.s1 = fixtureSmp1()
+	c.smpContext.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+
 	c.smpContext.receive(m.tlv())
 
 	assertEquals(t, c.smpState, smpStateExpect4{})
