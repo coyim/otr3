@@ -34,7 +34,6 @@ type akeKeys struct {
 }
 
 func (ake *AKE) calcAKEKeys(s *big.Int) {
-	// TODO: errors?
 	secbytes := appendMPI(nil, s)
 	h := sha256.New()
 	keys := h2(0x01, secbytes, h)
@@ -48,7 +47,6 @@ func (ake *AKE) calcAKEKeys(s *big.Int) {
 }
 
 func (ake *AKE) calcDHSharedSecret(xKnown bool) (*big.Int, error) {
-	// TODO: errors?
 	if xKnown {
 		if ake.gy == nil {
 			return nil, errors.New("missing gy")
@@ -87,7 +85,6 @@ func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, e
 }
 
 func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyID uint32) []byte {
-	// TODO: errors?
 	var verifyData []byte
 
 	if xFirst {
@@ -157,8 +154,11 @@ func (ake *AKE) serializeDHCommit() []byte {
 }
 
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
-	// TODO: errors?
-	y, _ := ake.randMPI(make([]byte, 40)[:])
+	y, ok := ake.randMPI(make([]byte, 40)[:])
+
+	if !ok {
+		return nil, errors.New("otr: short read from random source")
+	}
 
 	ake.y = y
 	ake.gy = new(big.Int).Exp(g1, ake.y, p)
