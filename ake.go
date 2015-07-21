@@ -180,24 +180,22 @@ func (ake *AKE) serializeDHKey() []byte {
 func (ake *AKE) revealSigMessage() ([]byte, error) {
 	ake.calcAKEKeys(ake.calcDHSharedSecret(true))
 
-	out := appendShort(nil, ake.protocolVersion())
-	out = append(out, msgTypeRevealSig)
-	if ake.needInstanceTag() {
-		out = appendWord(out, ake.senderInstanceTag)
-		out = appendWord(out, ake.receiverInstanceTag)
-	}
-	out = appendData(out, ake.r[:])
-
 	encryptedSig, err := ake.generateEncryptedSignature(&ake.revealKey, true)
 	if err != nil {
 		return nil, err
 	}
-
 	macSig := sumHMAC(ake.revealKey.m2[:], encryptedSig)
-	out = append(out, encryptedSig...)
-	out = append(out, macSig[:20]...)
 
-	return out, nil
+	revealSigMsg := revealSig{
+		protocolVersion:     ake.protocolVersion(),
+		needInstanceTag:     ake.needInstanceTag(),
+		senderInstanceTag:   ake.senderInstanceTag,
+		receiverInstanceTag: ake.receiverInstanceTag,
+		r:                   ake.r,
+		encryptedSig:        encryptedSig,
+		macSig:              macSig,
+	}
+	return revealSigMsg.serialize(), nil
 }
 
 func (ake *AKE) sigMessage() ([]byte, error) {

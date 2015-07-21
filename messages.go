@@ -15,11 +15,11 @@ type dhCommit struct {
 	protocolVersion     uint16
 	headerLen           int
 	needInstanceTag     bool
-	gx                  *big.Int
-	hashedGx            [sha256.Size]byte
-	encryptedGx         []byte
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
+	gx                  *big.Int
+	encryptedGx         []byte
+	hashedGx            [sha256.Size]byte
 }
 
 func (c *dhCommit) serialize() []byte {
@@ -58,23 +58,20 @@ type dhKey struct {
 	protocolVersion     uint16
 	headerLen           int
 	needInstanceTag     bool
-	gy                  *big.Int
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
+	gy                  *big.Int
 }
 
 func (c *dhKey) serialize() []byte {
 	// TODO: errors?
 	var out []byte
-
 	out = appendShort(out, c.protocolVersion)
 	out = append(out, msgTypeDHKey)
-
 	if c.needInstanceTag {
 		out = appendWord(out, c.senderInstanceTag)
 		out = appendWord(out, c.receiverInstanceTag)
 	}
-
 	out = appendMPI(out, c.gy)
 
 	return out
@@ -99,4 +96,30 @@ func (c *dhKey) deserialize(msg []byte) error {
 
 	c.gy = gy
 	return nil
+}
+
+type revealSig struct {
+	protocolVersion     uint16
+	headerLen           int
+	needInstanceTag     bool
+	senderInstanceTag   uint32
+	receiverInstanceTag uint32
+	r                   [16]byte
+	encryptedSig        []byte
+	macSig              []byte
+}
+
+func (c *revealSig) serialize() []byte {
+	// TODO: errors?
+	out := appendShort(nil, c.protocolVersion)
+	out = append(out, msgTypeRevealSig)
+	if c.needInstanceTag {
+		out = appendWord(out, c.senderInstanceTag)
+		out = appendWord(out, c.receiverInstanceTag)
+	}
+	out = appendData(out, c.r[:])
+	out = append(out, c.encryptedSig...)
+	out = append(out, c.macSig[:20]...)
+
+	return out
 }
