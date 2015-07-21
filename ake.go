@@ -179,7 +179,6 @@ func (ake *AKE) serializeDHKey() []byte {
 
 func (ake *AKE) revealSigMessage() ([]byte, error) {
 	ake.calcAKEKeys(ake.calcDHSharedSecret(true))
-
 	encryptedSig, err := ake.generateEncryptedSignature(&ake.revealKey, true)
 	if err != nil {
 		return nil, err
@@ -245,16 +244,14 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 }
 
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
-	if len(msg) < ake.headerLen() {
-		return errors.New("otr: invalid OTR message")
+	revealSigMsg := revealSig{headerLen: ake.headerLen()}
+	err = revealSigMsg.deserialize(msg)
+	if err != nil {
+		return
 	}
-
-	in, r, ok1 := extractData(msg[ake.headerLen():])
-	theirMAC, encryptedSig, ok2 := extractData(in)
-
-	if !ok1 || !ok2 || len(theirMAC) != 20 {
-		return errors.New("otr: corrupt reveal signature message")
-	}
+	r := revealSigMsg.r[:]
+	theirMAC := revealSigMsg.macSig
+	encryptedSig := revealSigMsg.encryptedSig
 
 	decryptedGx := make([]byte, len(ake.encryptedGx))
 	if err = decrypt(r, decryptedGx, ake.encryptedGx); err != nil {

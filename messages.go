@@ -123,3 +123,20 @@ func (c *revealSig) serialize() []byte {
 
 	return out
 }
+
+func (c *revealSig) deserialize(msg []byte) error {
+	// TODO: errors?
+	if len(msg) < c.headerLen {
+		return errors.New("otr: invalid OTR message")
+	}
+	in, r, ok1 := extractData(msg[c.headerLen:])
+	macSig, encryptedSig, ok2 := extractData(in)
+	if !ok1 || !ok2 || len(macSig) != 20 {
+		return errors.New("otr: corrupt reveal signature message")
+	}
+
+	copy(c.r[:], r)
+	c.encryptedSig = encryptedSig
+	c.macSig = macSig
+	return nil
+}
