@@ -33,3 +33,7 @@ func (v otrV3) protocolVersion() uint16 {
 func (v otrV3) needInstanceTag() bool {
 	return true
 }
+
+func (v otrV3) headerLen() int {
+	return 11
+}

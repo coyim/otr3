@@ -63,20 +63,6 @@ func (ake *AKE) calcDHSharedSecret(xKnown bool) (*big.Int, error) {
 }
 
 func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, error) {
-	// TODO: errors?
-	//TODO: Is this error necessary? can we check values before calling each functions instead of having them in processes?
-	if ake.gy == nil {
-		return nil, errors.New("missing gy")
-	}
-
-	if ake.gx == nil {
-		return nil, errors.New("missing gx")
-	}
-
-	if ake.ourKey == nil {
-		return nil, errors.New("missing ourKey")
-	}
-
 	verifyData := ake.generateVerifyData(xFirst, &ake.ourKey.PublicKey, ake.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
@@ -260,11 +246,19 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	return
 }
 
-func (ake *AKE) processDHCommit(msg []byte) {
-	// TODO: errors?
-	msg, ake.encryptedGx, _ = extractData(msg[ake.headerLen():])
-	_, h, _ := extractData(msg)
+func (ake *AKE) processDHCommit(msg []byte) error {
+	if len(msg) < ake.headerLen() {
+		return errors.New("otr: invalid OTR message")
+	}
+
+	var ok1 bool
+	msg, ake.encryptedGx, ok1 = extractData(msg[ake.headerLen():])
+	_, h, ok2 := extractData(msg)
+	if !ok1 || !ok2 {
+		return errors.New("otr: corrupt DH commit message")
+	}
 	copy(ake.hashedGx[:], h)
+	return nil
 }
 
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
@@ -364,15 +358,6 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	ake.theirKeyID = keyID
 	//zero(ake.theirLastCtr[:])
 	return nil
-}
-
-// TODO: this should be polymorphic in the OTR version
-func (c akeContext) headerLen() int {
-	if c.needInstanceTag() {
-		return 11
-	}
-
-	return 3
 }
 
 func extractGx(decryptedGx []byte) (*big.Int, error) {

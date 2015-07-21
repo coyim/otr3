@@ -522,3 +522,21 @@ func Test_generateVerifyData(t *testing.T) {
 
 	assertDeepEquals(t, verifyData, expectedVerifyData)
 }
+
+func Test_processDHCommit_returnsErrorIfTheMessageIsNotLongEnoughForMessageHeader(t *testing.T) {
+	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
+	err := ake.processDHCommit([]byte{0x01, 0x02})
+	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+}
+
+func Test_processDHCommit_returnsErrorIfTheEncryptedGXPartIsNotCorrect(t *testing.T) {
+	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
+	err := ake.processDHCommit([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x02, 0x01})
+	assertDeepEquals(t, err, errors.New("otr: corrupt DH commit message"))
+}
+
+func Test_processDHCommit_returnsErrorIfTheHashedGXPartIsNotCorrect(t *testing.T) {
+	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
+	err := ake.processDHCommit([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
+	assertDeepEquals(t, err, errors.New("otr: corrupt DH commit message"))
+}
