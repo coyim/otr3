@@ -34,12 +34,12 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 		c.authState, toSend = c.authState.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
 		//TODO error
-		c.authState, toSend = c.authState.receiveRevealSigMessage(c, msg)
+		c.authState, toSend, _ = c.authState.receiveRevealSigMessage(c, msg)
 
 		//TODO set msgState = encrypted
 	case msgTypeSig:
 		//TODO error
-		c.authState, toSend = c.authState.receiveSigMessage(c, msg)
+		c.authState, toSend, _ = c.authState.receiveSigMessage(c, msg)
 	default:
 		err = fmt.Errorf("otr: unknown message type 0x%X", msg[2])
 	}
@@ -63,8 +63,8 @@ type authState interface {
 	receiveQueryMessage(*akeContext, []byte) (authState, []byte)
 	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte)
 	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte)
-	receiveRevealSigMessage(*akeContext, []byte) (authState, []byte)
-	receiveSigMessage(*akeContext, []byte) (authState, []byte)
+	receiveRevealSigMessage(*akeContext, []byte) (authState, []byte, error)
+	receiveSigMessage(*akeContext, []byte) (authState, []byte, error)
 }
 
 func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
@@ -254,59 +254,54 @@ func (s authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (au
 	return s, nil
 }
 
-func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return s, nil
+func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return s, nil, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	// TODO: errors?
+func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	ake := c.newAKE()
 	err := ake.processRevealSig(msg)
 
 	if err != nil {
-		//TODO errors
-		return nil, nil
+		return nil, nil, err
 	}
 
-	//TODO errors
 	ret, err := ake.sigMessage()
 
-	return authStateNone{}, ret
+	return authStateNone{}, ret, err
 }
 
-func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return s, nil
+func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return s, nil, nil
 }
 
-func (s authStateAwaitingSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return s, nil
+func (s authStateAwaitingSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return s, nil, nil
 }
 
-func (s authStateNone) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return s, nil
+func (s authStateNone) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return s, nil, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return s, nil
+func (s authStateAwaitingRevealSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return s, nil, nil
 }
 
-func (s authStateAwaitingDHKey) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return s, nil
+func (s authStateAwaitingDHKey) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return s, nil, nil
 }
 
-func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte) {
-	// TODO: errors?
+func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	ake := c.newAKE()
-
 	err := ake.processSig(msg)
+
 	if err != nil {
-		//TODO error
-		return nil, nil
+		return nil, nil, err
 	}
 
 	//TODO: msgState = encrypted
 
-	return authStateNone{}, nil
+	return authStateNone{}, nil, nil
 }
 
 func (authStateNone) String() string              { return "AUTHSTATE_NONE" }

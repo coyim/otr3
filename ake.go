@@ -242,6 +242,8 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	// TODO: errors?
 	in := msg[ake.headerLen():]
 	_, gy, _ := extractMPI(in)
+
+	// TODO: is this only for otrv3 or for v2 too?
 	if lt(gy, g1) || gt(gy, pMinusTwo) {
 		err = errors.New("otr: DH value out of range")
 		return
@@ -259,21 +261,24 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 }
 
 func (ake *AKE) processDHCommit(msg []byte) {
+	// TODO: errors?
 	msg, ake.encryptedGx, _ = extractData(msg[ake.headerLen():])
 	_, h, _ := extractData(msg)
 	copy(ake.hashedGx[:], h)
 }
 
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
-	// TODO: errors?
-	in := msg[ake.headerLen():]
+	if len(msg) < ake.headerLen() {
+		return errors.New("otr: invalid OTR message")
+	}
 
-	in, r, _ := extractData(in)
-	in, encryptedSig, _ := extractData(in)
-	theirMAC := in
-	if len(theirMAC) != 20 {
+	in, r, ok1 := extractData(msg[ake.headerLen():])
+	theirMAC, encryptedSig, ok2 := extractData(in)
+
+	if !ok1 || !ok2 || len(theirMAC) != 20 {
 		return errors.New("otr: corrupt reveal signature message")
 	}
+
 	decryptedGx := make([]byte, len(ake.encryptedGx))
 	if err = decrypt(r, decryptedGx, ake.encryptedGx); err != nil {
 		return
@@ -301,12 +306,13 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 }
 
 func (ake *AKE) processSig(msg []byte) error {
-	// TODO: errors?
-	in := msg[ake.headerLen():]
+	if len(msg) < ake.headerLen() {
+		return errors.New("otr: invalid OTR message")
+	}
 
-	in, encryptedSig, _ := extractData(in)
-	theirMAC := in
-	if len(theirMAC) != 20 {
+	theirMAC, encryptedSig, ok := extractData(msg[ake.headerLen():])
+
+	if !ok || len(theirMAC) != 20 {
 		return errors.New("otr: corrupt signature message")
 	}
 
@@ -360,6 +366,7 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	return nil
 }
 
+// TODO: this should be polymorphic in the OTR version
 func (c akeContext) headerLen() int {
 	if c.needInstanceTag() {
 		return 11
@@ -369,12 +376,13 @@ func (c akeContext) headerLen() int {
 }
 
 func extractGx(decryptedGx []byte) (*big.Int, error) {
-	// TODO: errors?
-	newData, gx, _ := extractMPI(decryptedGx)
-	if len(newData) > 0 {
+	newData, gx, ok := extractMPI(decryptedGx)
+	if !ok || len(newData) > 0 {
 		return gx, errors.New("otr: gx corrupt after decryption")
 	}
-	if gx.Cmp(g1) < 0 || gx.Cmp(pMinusTwo) > 0 {
+
+	// TODO: is this valid in otrv2 or only otrv3?
+	if lt(gx, g1) || gt(gx, pMinusTwo) {
 		return gx, errors.New("otr: DH value out of range")
 	}
 	return gx, nil
@@ -383,7 +391,6 @@ func extractGx(decryptedGx []byte) (*big.Int, error) {
 func sumHMAC(key, data []byte) []byte {
 	mac := hmac.New(sha256.New, key)
 	mac.Write(data)
-
 	return mac.Sum(nil)
 }
 
@@ -399,7 +406,6 @@ func h2(b byte, secbytes []byte, h hash.Hash) []byte {
 }
 
 func encrypt(r, gxMPI []byte) (dst []byte, err error) {
-	// TODO: errors?
 	aesCipher, err := aes.NewCipher(r)
 	if err != nil {
 		return nil, err
@@ -414,7 +420,6 @@ func encrypt(r, gxMPI []byte) (dst []byte, err error) {
 }
 
 func decrypt(r, dst, src []byte) error {
-	// TODO: errors?
 	aesCipher, err := aes.NewCipher(r)
 	if err != nil {
 		return errors.New("otr: cannot create AES cipher from reveal signature message: " + err.Error())
@@ -426,7 +431,6 @@ func decrypt(r, dst, src []byte) error {
 }
 
 func checkDecryptedGx(decryptedGx, hashedGx []byte) error {
-	// TODO: errors?
 	digest := sha256Sum(decryptedGx)
 
 	if subtle.ConstantTimeCompare(digest[:], hashedGx[:]) == 0 {

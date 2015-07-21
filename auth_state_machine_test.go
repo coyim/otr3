@@ -387,10 +387,11 @@ func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *te
 
 	c := aliceContextAtAwaitingRevealSig()
 
-	state, msg := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, revealSignMsg)
+	state, msg, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, revealSignMsg)
 
 	assertEquals(t, state, authStateNone{})
 	assertDeepEquals(t, dhMsgType(msg), msgTypeSig)
+	assertDeepEquals(t, err, nil)
 }
 
 func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing.T) {
@@ -406,10 +407,11 @@ func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing
 
 	for _, s := range states {
 		c := newAkeContext(otrV3{}, fixtureRand())
-		state, msg := s.receiveRevealSigMessage(&c, revealSignMsg)
+		state, msg, err := s.receiveRevealSigMessage(&c, revealSignMsg)
 
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
+		assertDeepEquals(t, err, nil)
 	}
 }
 
@@ -418,10 +420,11 @@ func Test_receiveSig_TransitionsFromAwaitingSigToNoneOnSuccess(t *testing.T) {
 	sigMsg := fixtureSigMsg()
 	c := bobContextAtAwaitingSig()
 
-	state, msg := authStateAwaitingSig{}.receiveSigMessage(&c, sigMsg)
+	state, msg, err := authStateAwaitingSig{}.receiveSigMessage(&c, sigMsg)
 
 	assertEquals(t, state, authStateNone{})
 	assertDeepEquals(t, msg, nilB)
+	assertDeepEquals(t, err, nil)
 }
 
 func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {
@@ -437,10 +440,11 @@ func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {
 
 	for _, s := range states {
 		c := newAkeContext(otrV3{}, fixtureRand())
-		state, msg := s.receiveSigMessage(&c, revealSignMsg)
+		state, msg, err := s.receiveSigMessage(&c, revealSignMsg)
 
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
+		assertDeepEquals(t, err, nil)
 	}
 }
 
@@ -540,4 +544,16 @@ func Test_receiveMessage_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 
 	_, err = cV3.receiveMessage([]byte{0x00, 0x03, 0x56})
 	assertDeepEquals(t, err, errors.New("otr: unknown message type 0x56"))
+}
+
+func Test_authStateAwaitingSig_receiveSigMessage_returnsErrorIfProcessSigFails(t *testing.T) {
+	c := newAkeContext(otrV2{}, fixtureRand())
+	_, _, err := authStateAwaitingSig{}.receiveSigMessage(&c, []byte{0x00, 0x00})
+	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+}
+
+func Test_authStateAwaitingRevealSig_receiveRevealSigMessage_returnsErrorIfProcessRevealSigFails(t *testing.T) {
+	c := newAkeContext(otrV2{}, fixtureRand())
+	_, _, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, []byte{0x00, 0x00})
+	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
 }

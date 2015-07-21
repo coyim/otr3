@@ -256,6 +256,36 @@ func Test_processSig(t *testing.T) {
 	assertEquals(t, ake.theirKeyID, uint32(1))
 }
 
+func Test_processSig_returnsErrorIfDataIsNotLongEnoughForHeader(t *testing.T) {
+	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
+	err := ake.processSig([]byte{0x01, 0x00})
+	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+}
+
+func Test_processSig_returnsErrorIfTheSignatureDataIsInvalid(t *testing.T) {
+	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
+	err := ake.processSig([]byte{0x01, 0x00, 0x01, 0x01, 0x01, 0x00})
+	assertDeepEquals(t, err, errors.New("otr: corrupt signature message"))
+}
+
+func Test_processRevealSig_returnsErrorIfDataIsNotLongEnoughForHeader(t *testing.T) {
+	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
+	err := ake.processRevealSig([]byte{0x01, 0x00})
+	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+}
+
+func Test_processRevealSig_returnsErrorIfTheRDataIsInvalid(t *testing.T) {
+	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
+	err := ake.processRevealSig([]byte{0x01, 0x00, 0x01, 0x01, 0x01, 0x00})
+	assertDeepEquals(t, err, errors.New("otr: corrupt reveal signature message"))
+}
+
+func Test_processRevealSig_returnsErrorIfTheSignatureDataIsInvalid(t *testing.T) {
+	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
+	err := ake.processRevealSig([]byte{0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
+	assertDeepEquals(t, err, errors.New("otr: corrupt reveal signature message"))
+}
+
 func Test_sigMessage(t *testing.T) {
 	rnd := fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	ake := AKE{
@@ -344,6 +374,11 @@ func Test_extractGxWithCorruptError(t *testing.T) {
 	gx, err := extractGx(appendMPI(appendMPI([]byte{}, fixedgx), fixedy))
 	assertDeepEquals(t, err.Error(), "otr: gx corrupt after decryption")
 	assertDeepEquals(t, gx, fixedgx)
+}
+
+func Test_extractGx_returnsErrorWhenThereIsNotEnoughLengthForTheMPI(t *testing.T) {
+	_, err := extractGx([]byte{0x00, 0x00, 0x00, 0x02, 0x01})
+	assertDeepEquals(t, err, errors.New("otr: gx corrupt after decryption"))
 }
 
 func Test_extractGxWithRangeError(t *testing.T) {
