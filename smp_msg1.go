@@ -21,7 +21,7 @@ func (m smpMessage1) tlv() []byte {
 	return genSMPTLV(2, m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
 }
 
-func (c *otrContext) generateInitialParameters() (s smp1, ok bool) {
+func (c *smpContext) generateInitialParameters() (s smp1, ok bool) {
 	b := make([]byte, c.parameterLength())
 	var ok1, ok2, ok3, ok4 bool
 	s.a2, ok1 = c.randMPI(b)
@@ -39,7 +39,7 @@ func generateMessageOneFor(s smp1) (m smpMessage1) {
 	return
 }
 
-func (c *otrContext) generateSMP1() (s smp1, ok bool) {
+func (c *smpContext) generateSMP1() (s smp1, ok bool) {
 	if s, ok = c.generateInitialParameters(); !ok {
 		return s, false
 	}

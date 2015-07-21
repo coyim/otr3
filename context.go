@@ -53,6 +53,14 @@ type otrContext struct {
 	Rand       io.Reader
 }
 
+func newSmpContext(v otrVersion, r io.Reader) *smpContext {
+	c := newOtrContext(v, r)
+	return &smpContext{
+		otrContext: c,
+		smpState:   smpStateExpect1{},
+	}
+}
+
 func newConversation(v otrVersion, rand io.Reader) *conversation {
 	c := newOtrContext(v, rand)
 	return &conversation{

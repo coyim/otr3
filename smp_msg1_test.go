@@ -2,13 +2,12 @@ package otr3
 
 import (
 	"errors"
-	"io"
 	"math/big"
 	"testing"
 )
 
 func Test_generatesLongerAandRValuesForOtrV3(t *testing.T) {
-	otr := newOtrContext(otrV3{}, fixtureRand())
+	otr := newSmpContext(otrV3{}, fixtureRand())
 	smp, ok := otr.generateSMP1()
 	assertDeepEquals(t, smp.a2, fixtureLong1)
 	assertDeepEquals(t, smp.a3, fixtureLong2)
@@ -18,17 +17,17 @@ func Test_generatesLongerAandRValuesForOtrV3(t *testing.T) {
 }
 
 func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForA2(t *testing.T) {
-	_, ok := newOtrContext(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateInitialParameters()
+	_, ok := newSmpContext(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateInitialParameters()
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_generateSMP1_ReturnsNotOKIfGenerateInitialParametersDoesntWork(t *testing.T) {
-	_, ok := newOtrContext(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSMP1()
+	_, ok := newSmpContext(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSMP1()
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForA3(t *testing.T) {
-	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateInitialParameters()
@@ -36,7 +35,7 @@ func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForA3
 }
 
 func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR2(t *testing.T) {
-	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
@@ -45,7 +44,7 @@ func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR2
 }
 
 func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR3(t *testing.T) {
-	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
+	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
@@ -55,7 +54,7 @@ func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR3
 }
 
 func Test_generatesShorterAandRValuesForOtrV2(t *testing.T) {
-	otr := newOtrContext(otrV2{}, fixtureRand())
+	otr := newSmpContext(otrV2{}, fixtureRand())
 	smp, _ := otr.generateSMP1()
 	assertDeepEquals(t, smp.a2, fixtureShort1)
 	assertDeepEquals(t, smp.a3, fixtureShort2)
@@ -64,39 +63,31 @@ func Test_generatesShorterAandRValuesForOtrV2(t *testing.T) {
 }
 
 func Test_computesG2aAndG3aCorrectlyForOtrV3(t *testing.T) {
-	otr := newOtrContext(otrV3{}, fixtureRand())
+	otr := newSmpContext(otrV3{}, fixtureRand())
 	smp, _ := otr.generateSMP1()
 	assertDeepEquals(t, smp.msg.g2a, fixtureMessage1v3().g2a)
 	assertDeepEquals(t, smp.msg.g3a, fixtureMessage1v3().g3a)
 }
 
 func Test_computesG2aAndG3aCorrectlyForOtrV2(t *testing.T) {
-	otr := newOtrContext(otrV2{}, fixtureRand())
+	otr := newSmpContext(otrV2{}, fixtureRand())
 	smp, _ := otr.generateSMP1()
 	assertDeepEquals(t, smp.msg.g2a, fixtureMessage1().g2a)
 	assertDeepEquals(t, smp.msg.g3a, fixtureMessage1().g3a)
 }
 
 func Test_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
-	otr := newOtrContext(otrV2{}, fixtureRand())
+	otr := newSmpContext(otrV2{}, fixtureRand())
 	smp, _ := otr.generateSMP1()
 	assertDeepEquals(t, smp.msg.c2, fixtureMessage1().c2)
 	assertDeepEquals(t, smp.msg.d2, fixtureMessage1().d2)
 }
 
 func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
-	otr := newOtrContext(otrV2{}, fixtureRand())
+	otr := newSmpContext(otrV2{}, fixtureRand())
 	smp, _ := otr.generateSMP1()
 	assertDeepEquals(t, smp.msg.c3, fixtureMessage1().c3)
 	assertDeepEquals(t, smp.msg.d3, fixtureMessage1().d3)
-}
-
-func newSmpContext(v otrVersion, r io.Reader) *smpContext {
-	c := newOtrContext(v, r)
-	return &smpContext{
-		otrContext: c,
-		smpState:   smpStateExpect1{},
-	}
 }
 
 func Test_thatVerifySMPStartParametersCheckG2AForOtrV3(t *testing.T) {
