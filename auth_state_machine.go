@@ -23,32 +23,19 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 		return nil, errors.New("otr: invalid OTR message")
 	}
 
+	if c.ignoreMessage(msg) {
+		return
+	}
+
 	switch msg[2] {
 	case msgTypeDHCommit:
-		if c.ignoreMessage(msg) {
-			return
-		}
 		c.authState, toSend = c.authState.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
-		if c.ignoreMessage(msg) {
-			return
-		}
 		c.authState, toSend = c.authState.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
-		//TODO error
-		if !c.has(allowV2) {
-			//TODO error?
-			return
-		}
 		c.authState, toSend, _ = c.authState.receiveRevealSigMessage(c, msg)
-
 		//TODO set msgState = encrypted
 	case msgTypeSig:
-		//TODO error
-		if !c.has(allowV2) {
-			//TODO error?
-			return
-		}
 		c.authState, toSend, _ = c.authState.receiveSigMessage(c, msg)
 	default:
 		err = fmt.Errorf("otr: unknown message type 0x%X", msg[2])
@@ -269,6 +256,10 @@ func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authS
 }
 
 func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	if !c.has(allowV2) {
+		return s, nil, nil
+	}
+
 	ake := c.newAKE()
 	err := ake.processRevealSig(msg)
 
@@ -302,6 +293,10 @@ func (s authStateAwaitingDHKey) receiveSigMessage(c *akeContext, msg []byte) (au
 }
 
 func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	if !c.has(allowV2) {
+		return s, nil, nil
+	}
+
 	ake := c.newAKE()
 	err := ake.processSig(msg)
 
