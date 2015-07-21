@@ -79,3 +79,24 @@ func (c *dhKey) serialize() []byte {
 
 	return out
 }
+
+func (c *dhKey) deserialize(msg []byte) error {
+	// TODO: errors?
+	if len(msg) < c.headerLen {
+		return errors.New("otr: invalid OTR message")
+	}
+
+	_, gy, ok := extractMPI(msg[c.headerLen:])
+
+	if !ok {
+		return errors.New("otr: corrupt DH key message")
+	}
+
+	// TODO: is this only for otrv3 or for v2 too?
+	if lt(gy, g1) || gt(gy, pMinusTwo) {
+		return errors.New("otr: DH value out of range")
+	}
+
+	c.gy = gy
+	return nil
+}

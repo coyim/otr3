@@ -120,21 +120,28 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
 	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.gx))
-	return ake.serializeDHCommit(), nil
+
+	dhCommitMsg := dhCommit{
+		protocolVersion:     ake.protocolVersion(),
+		needInstanceTag:     ake.needInstanceTag(),
+		senderInstanceTag:   ake.senderInstanceTag,
+		receiverInstanceTag: ake.receiverInstanceTag,
+		gx:                  ake.gx,
+		encryptedGx:         ake.encryptedGx,
+	}
+	return dhCommitMsg.serialize(), nil
 }
 
 func (ake *AKE) serializeDHCommit() []byte {
-	out := appendShort(nil, ake.protocolVersion())
-	out = append(out, msgTypeDHCommit)
-	if ake.needInstanceTag() {
-		out = appendWord(out, ake.senderInstanceTag)
-		out = appendWord(out, ake.receiverInstanceTag)
+	dhCommitMsg := dhCommit{
+		protocolVersion:     ake.protocolVersion(),
+		needInstanceTag:     ake.needInstanceTag(),
+		senderInstanceTag:   ake.senderInstanceTag,
+		receiverInstanceTag: ake.receiverInstanceTag,
+		gx:                  ake.gx,
+		encryptedGx:         ake.encryptedGx,
 	}
-	out = appendData(out, ake.encryptedGx)
-	ake.hashedGx = sha256Sum(appendMPI(nil, ake.gx))
-	out = appendData(out, ake.hashedGx[:])
-
-	return out
+	return dhCommitMsg.serialize()
 }
 
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
@@ -146,19 +153,28 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 
 	ake.y = y
 	ake.gy = modExp(g1, ake.y)
-	return ake.serializeDHKey(), nil
+
+	dhKeyMsg := dhKey{
+		protocolVersion:     ake.protocolVersion(),
+		needInstanceTag:     ake.needInstanceTag(),
+		senderInstanceTag:   ake.senderInstanceTag,
+		receiverInstanceTag: ake.receiverInstanceTag,
+		gy:                  ake.gy,
+	}
+
+	return dhKeyMsg.serialize(), nil
 }
 
 func (ake *AKE) serializeDHKey() []byte {
-	out := appendShort(nil, ake.protocolVersion())
-	out = append(out, msgTypeDHKey)
-
-	if ake.needInstanceTag() {
-		out = appendWord(out, ake.senderInstanceTag)
-		out = appendWord(out, ake.receiverInstanceTag)
+	dhKeyMsg := dhKey{
+		protocolVersion:     ake.protocolVersion(),
+		needInstanceTag:     ake.needInstanceTag(),
+		senderInstanceTag:   ake.senderInstanceTag,
+		receiverInstanceTag: ake.receiverInstanceTag,
+		gy:                  ake.gy,
 	}
 
-	return appendMPI(out, ake.gy)
+	return dhKeyMsg.serialize()
 }
 
 func (ake *AKE) revealSigMessage() ([]byte, error) {
@@ -205,46 +221,29 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 	return out, nil
 }
 
+func (ake *AKE) processDHCommit(msg []byte) error {
+	dhCommitMsg := dhCommit{headerLen: ake.headerLen()}
+	err := dhCommitMsg.deserialize(msg)
+	ake.encryptedGx = dhCommitMsg.encryptedGx
+	ake.hashedGx = dhCommitMsg.hashedGx
+	return err
+}
+
 func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
-	if len(msg) < ake.headerLen() {
-		return false, errors.New("otr: invalid OTR message")
+	dhKeyMsg := dhKey{headerLen: ake.headerLen()}
+	err = dhKeyMsg.deserialize(msg)
+	if err != nil {
+		return false, err
 	}
-
-	_, gy, ok := extractMPI(msg[ake.headerLen():])
-
-	if !ok {
-		return false, errors.New("otr: corrupt DH key message")
-	}
-
-	// TODO: is this only for otrv3 or for v2 too?
-	if lt(gy, g1) || gt(gy, pMinusTwo) {
-		return false, errors.New("otr: DH value out of range")
-	}
-
 	//NOTE: This keeps only the first Gy received
 	//Not sure if this is part of the spec,
 	//or simply a crypto/otr safeguard
 	if ake.gy != nil {
-		isSame = eq(ake.gy, gy)
+		isSame = eq(ake.gy, dhKeyMsg.gy)
 		return
 	}
-	ake.gy = gy
+	ake.gy = dhKeyMsg.gy
 	return
-}
-
-func (ake *AKE) processDHCommit(msg []byte) error {
-	if len(msg) < ake.headerLen() {
-		return errors.New("otr: invalid OTR message")
-	}
-
-	var ok1 bool
-	msg, ake.encryptedGx, ok1 = extractData(msg[ake.headerLen():])
-	_, h, ok2 := extractData(msg)
-	if !ok1 || !ok2 {
-		return errors.New("otr: corrupt DH commit message")
-	}
-	copy(ake.hashedGx[:], h)
-	return nil
 }
 
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
