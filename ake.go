@@ -90,7 +90,7 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) ([]byte, error) {
 	sigb, err := ake.ourKey.sign(ake.rand(), mb)
 	if err != nil {
 		if err == io.ErrUnexpectedEOF {
-			return nil, newOtrError("short read from random source")
+			return nil, errShortRandomRead
 		}
 		return nil, err
 	}

@@ -29,7 +29,7 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 
 	switch msg[2] {
 	case msgTypeDHCommit:
-		c.authState, toSend = c.authState.receiveDHCommitMessage(c, msg)
+		c.authState, toSend, _ = c.authState.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
 		c.authState, toSend, _ = c.authState.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
@@ -59,7 +59,7 @@ type authStateV1Setup struct{}
 
 type authState interface {
 	receiveQueryMessage(*akeContext, []byte) (authState, []byte)
-	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte)
+	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveRevealSigMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveSigMessage(*akeContext, []byte) (authState, []byte, error)
@@ -143,23 +143,30 @@ func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (auth
 	return authStateNone{}.receiveQueryMessage(c, msg)
 }
 
-func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
-	// TODO: errors?
+func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	ake := c.newAKE()
 
-	generateCommitMsgInstanceTags(&ake, msg)
+	if err := generateCommitMsgInstanceTags(&ake, msg); err != nil {
+		return s, nil, err
+	}
 
-	//TODO error
-	ret, _ := ake.dhKeyMessage()
+	ret, err := ake.dhKeyMessage()
+	if err != nil {
+		return s, nil, err
+	}
 
 	//TODO should we reset ourKeyID? Why?
 	c.y = ake.y
 	c.gy = ake.gy
-	ake.processDHCommit(msg)
+
+	if err = ake.processDHCommit(msg); err != nil {
+		return s, nil, err
+	}
+
 	c.encryptedGx = ake.encryptedGx
 	c.hashedGx = ake.hashedGx
 
-	return authStateAwaitingRevealSig{}, ret
+	return authStateAwaitingRevealSig{}, ret, nil
 }
 
 func generateCommitMsgInstanceTags(ake *AKE, msg []byte) error {
@@ -180,26 +187,26 @@ func generateInstanceTag() uint32 {
 	return 0x00000100 + 0x01
 }
 
-func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
-	// TODO: errors?
+func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	//Forget the DH-commit received before we sent the DH-Key
-
-	//TODO: error if gy OR y = nil when we define the error strategy
-	//They should have been stored when we sent the previous DH-Key
 
 	ake := c.newAKE()
 
-	ake.processDHCommit(msg)
+	if err := ake.processDHCommit(msg); err != nil {
+		return s, nil, err
+	}
+
 	c.encryptedGx = ake.encryptedGx
 	c.hashedGx = ake.hashedGx
 
 	//TODO: this should not change my instanceTag, since this is supposed to be a retransmit
+	// We can ignore errors from this function, since processDHCommit checks for the sameconditions
 	generateCommitMsgInstanceTags(&ake, msg)
 
-	return authStateAwaitingRevealSig{}, ake.serializeDHKey()
+	return authStateAwaitingRevealSig{}, ake.serializeDHKey(), nil
 }
 
-func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
+func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	//TODO error
 	newMsg, _, _ := extractData(msg[c.headerLen():])
 	_, theirHashedGx, _ := extractData(newMsg)
@@ -209,13 +216,13 @@ func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) 
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
 		ake := c.newAKE()
 		//NOTE what about the sender and receiver instance tags?
-		return authStateAwaitingRevealSig{}, ake.serializeDHCommit()
+		return authStateAwaitingRevealSig{}, ake.serializeDHCommit(), nil
 	}
 
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
-func (authStateAwaitingSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte) {
+func (authStateAwaitingSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 

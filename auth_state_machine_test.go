@@ -202,10 +202,11 @@ func Test_acceptOTRRequest_acceptsOTRV2IfHasOnlyAllowV2Policy(t *testing.T) {
 
 func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHKeyMsg(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
-	nextState, nextMsg := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
+	nextState, nextMsg, e := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
 	assertEquals(t, nextState, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(nextMsg), msgTypeDHKey)
+	assertDeepEquals(t, e, nil)
 }
 
 func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
@@ -232,10 +233,10 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing
 func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 
-	authAwaitingRevSig, prevDHKeyMsg := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
+	authAwaitingRevSig, prevDHKeyMsg, _ := authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 	assertEquals(t, authAwaitingRevSig, authStateAwaitingRevealSig{})
 
-	nextState, msg := authAwaitingRevSig.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
+	nextState, msg, _ := authAwaitingRevSig.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
 	assertEquals(t, nextState, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(msg), msgTypeDHKey)
@@ -262,7 +263,7 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 func Test_receiveDHCommit_AtAuthAwaitingSigTransitionsToAwaitingRevSigAndSendsNewDHKeyMsg(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 
-	authAwaitingRevSig, msg := authStateAwaitingSig{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
+	authAwaitingRevSig, msg, _ := authStateAwaitingSig{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 	assertEquals(t, authAwaitingRevSig, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(msg), msgTypeDHKey)
 }
@@ -281,7 +282,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 	newPoint, _, _ := extractData(msg[c.headerLen():])
 	newPoint[4] = 0x00
 
-	state, newMsg := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
+	state, newMsg, _ := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, newMsg, ourDHMsg)
 }
@@ -299,7 +300,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 	newPoint, _, _ := extractData(msg[c.headerLen():])
 	newPoint[4] = 0xFF
 
-	state, newMsg := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
+	state, newMsg, _ := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, dhMsgType(newMsg), msgTypeDHKey)
 	assertDeepEquals(t, c.gy, fixedgy)
@@ -696,5 +697,49 @@ func Test_generateCommitMsgInstanceTags_returnsErrorIfMsgDoesntHaveMsgHeader(t *
 func Test_generateCommitMsgInstanceTags_returnsErrorIfMsgIsntLongEnoughForInstanceTag(t *testing.T) {
 	ake := fixtureAKE()
 	err := generateCommitMsgInstanceTags(&ake, []byte{0x00, 0x01, 0x02, 0x00, 0x00, 0x00})
+	assertDeepEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_authStateAwaitingRevealSig_receiveDHCommitMessage_returnsErrorIfProcessDHCommitOrGenerateCommitInstanceTagsFailsFails(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.gx = ourDHCommitAKE.gx
+
+	_, _, err := authStateAwaitingRevealSig{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
+	assertDeepEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfgenerateCommitMsgInstanceTagsFails(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.gx = ourDHCommitAKE.gx
+
+	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
+	assertDeepEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfdhKeyMessageFails(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV2{}, fixedRand([]string{"ABCD"}))
+	c.gx = ourDHCommitAKE.gx
+
+	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
+	assertDeepEquals(t, err, errShortRandomRead)
+}
+
+func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfPcoessDHCommitFails(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV2{}, fixtureRand())
+	c.gx = ourDHCommitAKE.gx
+
+	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
 	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
