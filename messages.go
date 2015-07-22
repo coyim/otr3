@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"errors"
 	"math/big"
 )
@@ -141,5 +142,38 @@ func (c *sig) deserialize(msg []byte) error {
 	}
 	c.encryptedSig = encryptedSig
 	c.macSig = macSig
+	return nil
+}
+
+type dataMsg struct {
+	nul  byte
+	tlvs []tlv
+}
+
+type tlv struct {
+	tlvType   uint16
+	tlvLength uint16
+	tlvValue  []byte
+}
+
+func (c *dataMsg) deserialize(msg []byte) error {
+	if msg[0] != 0x00 {
+		return errors.New("otr: corrupt data message")
+	}
+	c.nul = msg[0]
+	tlvsBytes := msg[1:]
+	index := 0
+	for index < len(tlvsBytes) {
+		atlv := tlv{}
+		atlv.tlvType = binary.BigEndian.Uint16(tlvsBytes[index : index+2])
+		atlv.tlvLength = binary.BigEndian.Uint16(tlvsBytes[index+2 : index+4])
+		endOfTLV := index + 4 + int(atlv.tlvLength)
+		if endOfTLV > len(tlvsBytes) {
+			return errors.New("otr: wrong tlv length")
+		}
+		atlv.tlvValue = tlvsBytes[index+4 : endOfTLV]
+		c.tlvs = append(c.tlvs, atlv)
+		index = endOfTLV
+	}
 	return nil
 }
