@@ -50,6 +50,12 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 
 func (c *akeContext) receiveQueryMessage(msg []byte) (toSend []byte, err error) {
 	c.authState, toSend, err = c.authState.receiveQueryMessage(c, msg)
+
+	if err == nil {
+		c.ourKeyID = 0
+		c.ourCurrentDHKeys = dhKeyPair{}
+	}
+
 	return
 }
 
@@ -153,7 +159,6 @@ func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authSt
 		return s, nil, err
 	}
 
-	//TODO should we reset ourKeyID? Why?
 	c.y = ake.y
 	c.gy = ake.gy
 
@@ -163,6 +168,7 @@ func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authSt
 
 	c.encryptedGx = ake.encryptedGx
 	c.hashedGx = ake.hashedGx
+	c.ourKeyID = 1
 
 	return authStateAwaitingRevealSig{}, ret, nil
 }
@@ -254,6 +260,10 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (
 	c.gy = ake.gy
 	c.sigKey = ake.sigKey
 
+	c.theirCurrentDHPubKey = ake.gy
+	c.ourCurrentDHKeys.pub = c.gx
+	c.ourCurrentDHKeys.priv = c.x
+
 	return authStateAwaitingSig{}, c.revealSigMsg, nil
 }
 
@@ -287,14 +297,21 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg [
 		return nil, nil, err
 	}
 
+	ret, err := ake.sigMessage()
+	if err != nil {
+		return s, nil, err
+	}
+
 	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
+	c.ourKeyID = 0
 	c.theirKeyID = ake.theirKeyID
 	c.theirCurrentDHPubKey = ake.gx
 	c.theirPreviousDHPubKey = nil
 
-	ret, err := ake.sigMessage()
+	c.ourCurrentDHKeys.priv = ake.y
+	c.ourCurrentDHKeys.pub = ake.gy
 
-	return authStateNone{}, ret, err
+	return authStateNone{}, ret, nil
 }
 
 func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
@@ -334,6 +351,7 @@ func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (auth
 	//gy was stored when we receive DH-Key
 	c.theirCurrentDHPubKey = c.gy
 	c.theirPreviousDHPubKey = nil
+	c.ourKeyID = 0
 
 	return authStateNone{}, nil, nil
 }

@@ -16,6 +16,8 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 	}
 
 	c := newConversation(otrV3{}, fixtureRand())
+	c.ourCurrentDHKeys.pub = fixedgx
+
 	smpMsg := fixtureMessage1()
 	m := c.genDataMsg(smpMsg.tlv())
 	smpAbortMsg := smpMessageAbort{}.tlv()

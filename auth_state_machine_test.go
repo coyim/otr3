@@ -349,12 +349,27 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 
 	c := bobContextAtAwaitingDHKey()
 
-	authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
+	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
 
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, c.gy, fixedgy)
 	assertDeepEquals(t, c.sigKey.c[:], expectedC)
 	assertDeepEquals(t, c.sigKey.m1[:], expectedM1)
 	assertDeepEquals(t, c.sigKey.m2[:], expectedM2)
+}
+
+func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeys(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := bobContextAtAwaitingDHKey()
+
+	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
+
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, c.theirCurrentDHPubKey, fixedgy)
+	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgx)
+	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedx)
 }
 
 func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
@@ -396,8 +411,24 @@ func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *te
 	state, msg, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, revealSignMsg)
 
 	assertEquals(t, state, authStateNone{})
-	assertDeepEquals(t, dhMsgType(msg), msgTypeSig)
-	assertDeepEquals(t, err, nil)
+	assertEquals(t, dhMsgType(msg), msgTypeSig)
+}
+
+func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeys(t *testing.T) {
+	var nilBigInt *big.Int
+	revealSignMsg := fixtureRevealSigMsg(otrV2{})
+
+	c := aliceContextAtAwaitingRevealSig()
+
+	_, _, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, revealSignMsg)
+
+	assertEquals(t, err, nil)
+	assertEquals(t, c.ourKeyID, uint32(0))
+	assertEquals(t, c.theirKeyID, uint32(0)) //TODO create a fixture with a different value?
+	assertDeepEquals(t, c.theirCurrentDHPubKey, fixedgx)
+	assertDeepEquals(t, c.theirPreviousDHPubKey, nilBigInt)
+	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgy)
+	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedy)
 }
 
 func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing.T) {

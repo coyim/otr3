@@ -1,9 +1,9 @@
 package otr3
 
-import "math/big"
-
-func (c *otrContext) genDataMsg(tlvs ...[]byte) []byte {
+func (c *akeContext) genDataMsg(tlvs ...[]byte) []byte {
 	var out []byte
+
+	//TODO: if msgState != encrypted should error
 
 	out = appendShort(out, c.protocolVersion())
 	out = append(out, msgTypeData)
@@ -17,14 +17,12 @@ func (c *otrContext) genDataMsg(tlvs ...[]byte) []byte {
 	//TODO: implement IGNORE_UNREADABLE
 	out = append(out, 0x00)
 
-	//TODO after key management
-	ourKeyID := uint32(0)
-	theirKeyID := uint32(0)
-	out = appendWord(out, ourKeyID)
-	out = appendWord(out, theirKeyID)
+	senderKeyID := c.ourKeyID - 1
+	recipientKeyID := c.theirKeyID
+	out = appendWord(out, senderKeyID)
+	out = appendWord(out, recipientKeyID)
 
-	//TODO after key management
-	dhy := big.NewInt(0)
+	dhy := c.ourCurrentDHKeys.pub
 	out = appendMPI(out, dhy)
 
 	//TODO
