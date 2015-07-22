@@ -18,7 +18,6 @@ func (c *akeContext) ignoreMessage(msg []byte) bool {
 const minimumMessageLength = 3 // length of protocol version (SHORT) and message type (BYTE)
 
 func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
-	// TODO: errors
 	if len(msg) < minimumMessageLength {
 		return nil, errInvalidOTRMessage
 	}
@@ -29,15 +28,19 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 
 	switch msg[2] {
 	case msgTypeDHCommit:
-		c.authState, toSend, _ = c.authState.receiveDHCommitMessage(c, msg)
+		c.authState, toSend, err = c.authState.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
-		c.authState, toSend, _ = c.authState.receiveDHKeyMessage(c, msg)
+		c.authState, toSend, err = c.authState.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
-		c.authState, toSend, _ = c.authState.receiveRevealSigMessage(c, msg)
-		c.msgState = encrypted
+		c.authState, toSend, err = c.authState.receiveRevealSigMessage(c, msg)
+		if err == nil {
+			c.msgState = encrypted
+		}
 	case msgTypeSig:
-		c.authState, toSend, _ = c.authState.receiveSigMessage(c, msg)
-		c.msgState = encrypted
+		c.authState, toSend, err = c.authState.receiveSigMessage(c, msg)
+		if err == nil {
+			c.msgState = encrypted
+		}
 	default:
 		err = fmt.Errorf("otr: unknown message type 0x%X", msg[2])
 	}
@@ -45,9 +48,8 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 	return
 }
 
-func (c *akeContext) receiveQueryMessage(msg []byte) (toSend []byte) {
-	// TODO: errors?
-	c.authState, toSend = c.authState.receiveQueryMessage(c, msg)
+func (c *akeContext) receiveQueryMessage(msg []byte) (toSend []byte, err error) {
+	c.authState, toSend, err = c.authState.receiveQueryMessage(c, msg)
 	return
 }
 
@@ -58,20 +60,17 @@ type authStateAwaitingSig struct{}
 type authStateV1Setup struct{}
 
 type authState interface {
-	receiveQueryMessage(*akeContext, []byte) (authState, []byte)
+	receiveQueryMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveRevealSigMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveSigMessage(*akeContext, []byte) (authState, []byte, error)
 }
 
-func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
-	// TODO: errors?
-	v := s.acceptOTRRequest(c.policies, msg)
-	if v == nil {
-		//TODO errors
-		//version could not be accepted by the given policy
-		return nil, nil
+func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	v, ok := s.acceptOTRRequest(c.policies, msg)
+	if !ok {
+		return nil, nil, errInvalidVersion
 	}
 
 	//TODO set the version for every existing otrContext
@@ -80,31 +79,31 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 	ake := c.newAKE()
 	ake.senderInstanceTag = generateInstanceTag()
 
-	//TODO errors
-	out, _ := ake.dhCommitMessage()
+	out, err := ake.dhCommitMessage()
+	if err != nil {
+		return s, nil, err
+	}
 
 	c.r = ake.r
 	c.x = ake.x
 	c.gx = ake.gx
 
-	return authStateAwaitingDHKey{}, out
+	return authStateAwaitingDHKey{}, out, nil
 }
 
 func (authStateNone) parseOTRQueryMessage(msg []byte) []int {
-	// TODO: errors?
 	ret := []int{}
 
-	if bytes.HasPrefix(msg, queryMarker) {
-		var p int
+	if bytes.HasPrefix(msg, queryMarker) && len(msg) > len(queryMarker) {
 		versions := msg[len(queryMarker):]
 
-		if versions[p] == '?' {
+		if versions[0] == '?' {
 			ret = append(ret, 1)
-			p++
+			versions = versions[1:]
 		}
 
-		if len(versions) > p && versions[p] == 'v' {
-			for _, c := range versions[p:] {
+		if len(versions) > 0 && versions[0] == 'v' {
+			for _, c := range versions {
 				if v, err := strconv.Atoi(string(c)); err == nil {
 					ret = append(ret, v)
 				}
@@ -115,31 +114,30 @@ func (authStateNone) parseOTRQueryMessage(msg []byte) []int {
 	return ret
 }
 
-func (s authStateNone) acceptOTRRequest(p policies, msg []byte) otrVersion {
-	// TODO: errors?
+func (s authStateNone) acceptOTRRequest(p policies, msg []byte) (otrVersion, bool) {
 	versions := s.parseOTRQueryMessage(msg)
 
 	for _, v := range versions {
 		switch {
 		case v == 3 && p.has(allowV3):
-			return otrV3{}
+			return otrV3{}, true
 		case v == 2 && p.has(allowV2):
-			return otrV2{}
+			return otrV2{}, true
 		}
 	}
 
-	return nil
+	return nil, false
 }
 
-func (authStateAwaitingDHKey) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
+func (authStateAwaitingDHKey) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	return authStateNone{}.receiveQueryMessage(c, msg)
 }
 
-func (authStateAwaitingRevealSig) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
+func (authStateAwaitingRevealSig) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	return authStateNone{}.receiveQueryMessage(c, msg)
 }
 
-func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte) {
+func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	return authStateNone{}.receiveQueryMessage(c, msg)
 }
 
@@ -206,10 +204,17 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []
 	return authStateAwaitingRevealSig{}, ake.serializeDHKey(), nil
 }
 
-func (authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	//TODO error
-	newMsg, _, _ := extractData(msg[c.headerLen():])
-	_, theirHashedGx, _ := extractData(newMsg)
+func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	if len(msg) < c.headerLen() {
+		return s, nil, errInvalidOTRMessage
+	}
+
+	newMsg, _, ok1 := extractData(msg[c.headerLen():])
+	_, theirHashedGx, ok2 := extractData(newMsg)
+
+	if !ok1 || !ok2 {
+		return s, nil, errInvalidOTRMessage
+	}
 
 	gxMPI := appendMPI(nil, c.gx)
 	hashedGx := sha256Sum(gxMPI)

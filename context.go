@@ -120,7 +120,7 @@ func isQueryMessage(msg []byte) bool {
 //TODO toSend needs fragmentation to be implemented
 func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	if isQueryMessage(message) {
-		toSend = c.akeContext.receiveQueryMessage(message)
+		toSend, err = c.akeContext.receiveQueryMessage(message)
 		return
 	}
 

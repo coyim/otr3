@@ -135,7 +135,7 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 	for _, s := range states {
 		c := newAkeContext(nil, fixtureRand())
 		c.addPolicy(allowV3)
-		state, msg := s.receiveQueryMessage(&c, queryMsg)
+		state, msg, _ := s.receiveQueryMessage(&c, queryMsg)
 
 		assertEquals(t, state, authStateAwaitingDHKey{})
 		assertDeepEquals(t, fixtureDHCommitMsg(), msg)
@@ -176,9 +176,10 @@ func Test_parseOTRQueryMessage(t *testing.T) {
 func Test_acceptOTRRequest_returnsNilForUnsupportedVersions(t *testing.T) {
 	p := policies(0)
 	msg := []byte("?OTR?")
-	v := authStateNone{}.acceptOTRRequest(p, msg)
+	v, ok := authStateNone{}.acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, nil)
+	assertEquals(t, ok, false)
 }
 
 func Test_acceptOTRRequest_acceptsOTRV3IfHasAllowV3Policy(t *testing.T) {
@@ -186,18 +187,20 @@ func Test_acceptOTRRequest_acceptsOTRV3IfHasAllowV3Policy(t *testing.T) {
 	p := policies(0)
 	p.allowV2()
 	p.allowV3()
-	v := authStateNone{}.acceptOTRRequest(p, msg)
+	v, ok := authStateNone{}.acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, otrV3{})
+	assertEquals(t, ok, true)
 }
 
 func Test_acceptOTRRequest_acceptsOTRV2IfHasOnlyAllowV2Policy(t *testing.T) {
 	msg := []byte("?OTRv32?")
 	p := policies(0)
 	p.allowV2()
-	v := authStateNone{}.acceptOTRRequest(p, msg)
+	v, ok := authStateNone{}.acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, otrV2{})
+	assertEquals(t, ok, true)
 }
 
 func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHKeyMsg(t *testing.T) {
@@ -741,5 +744,59 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfPcoessDHCommitFails
 	c.gx = ourDHCommitAKE.gx
 
 	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
+	assertDeepEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_authStateNone_receiveQueryMessage_returnsNoErrorForValidMessage(t *testing.T) {
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.addPolicy(allowV3)
+	_, _, err := authStateNone{}.receiveQueryMessage(&c, []byte("?OTRv3?"))
+	assertDeepEquals(t, err, nil)
+}
+
+func Test_authStateNone_receiveQueryMessage_returnsErrorIfNoCompatibleVersionCouldBeFound(t *testing.T) {
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.addPolicy(allowV3)
+	_, _, err := authStateNone{}.receiveQueryMessage(&c, []byte("?OTRv2?"))
+	assertDeepEquals(t, err, errInvalidVersion)
+}
+
+func Test_authStateNone_receiveQueryMessage_returnsErrorIfDhCommitMessageGeneratesError(t *testing.T) {
+	c := newAkeContext(otrV2{}, fixedRand([]string{"ABCDABCD"}))
+	c.addPolicy(allowV2)
+	_, _, err := authStateNone{}.receiveQueryMessage(&c, []byte("?OTRv2?"))
+	assertDeepEquals(t, err, errShortRandomRead)
+}
+
+func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfMsgDoesntHaveHeader(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV2{}, fixtureRand())
+	c.gx = ourDHCommitAKE.gx
+
+	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
+	assertDeepEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractFirstPart(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV2{}, fixtureRand())
+	c.gx = ourDHCommitAKE.gx
+
+	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00, 0x00, 0x01})
+	assertDeepEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractSecondPart(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV2{}, fixtureRand())
+	c.gx = ourDHCommitAKE.gx
+
+	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x02})
 	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
