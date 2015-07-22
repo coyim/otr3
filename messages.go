@@ -211,21 +211,11 @@ func (c *dataMsgPlainText) deserialize(msg []byte) error {
 	tlvsBytes := msg[1:]
 	for len(tlvsBytes) > 0 {
 		atlv := tlv{}
-		var ok bool
-		tlvsBytes, atlv.tlvType, ok = extractShort(tlvsBytes)
-		if !ok {
-			return errors.New("otr: wrong tlv type")
+		if err := atlv.deserialize(tlvsBytes); err != nil {
+			return err
 		}
-		tlvsBytes, atlv.tlvLength, ok = extractShort(tlvsBytes)
-		if !ok {
-			return errors.New("otr: wrong tlv length")
-		}
-		if len(tlvsBytes) < int(atlv.tlvLength) {
-			return errors.New("otr: wrong tlv value")
-		}
-		atlv.tlvValue = tlvsBytes[:int(atlv.tlvLength)]
 		c.tlvs = append(c.tlvs, atlv)
-		tlvsBytes = tlvsBytes[int(atlv.tlvLength):]
+		tlvsBytes = tlvsBytes[4+int(atlv.tlvLength):]
 	}
 	return nil
 }
@@ -253,5 +243,6 @@ func (c *tlv) deserialize(tlvsBytes []byte) error {
 	if len(tlvsBytes) < int(c.tlvLength) {
 		return errors.New("otr: wrong tlv value")
 	}
+	c.tlvValue = tlvsBytes[:int(c.tlvLength)]
 	return nil
 }
