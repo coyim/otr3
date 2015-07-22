@@ -140,3 +140,26 @@ func (c *revealSig) deserialize(msg []byte) error {
 	c.macSig = macSig
 	return nil
 }
+
+type sig struct {
+	protocolVersion     uint16
+	headerLen           int
+	needInstanceTag     bool
+	senderInstanceTag   uint32
+	receiverInstanceTag uint32
+	encryptedSig        []byte
+	macSig              []byte
+}
+
+func (c *sig) serialize() []byte {
+	out := appendShort(nil, c.protocolVersion)
+	out = append(out, msgTypeSig)
+	if c.needInstanceTag {
+		out = appendWord(out, c.senderInstanceTag)
+		out = appendWord(out, c.receiverInstanceTag)
+	}
+	out = append(out, c.encryptedSig...)
+	out = append(out, c.macSig[:20]...)
+
+	return out
+}

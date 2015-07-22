@@ -199,23 +199,21 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 
 func (ake *AKE) sigMessage() ([]byte, error) {
 	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
-	out := appendShort(nil, ake.protocolVersion())
-	out = append(out, msgTypeSig)
-	if ake.needInstanceTag() {
-		out = appendWord(out, ake.senderInstanceTag)
-		out = appendWord(out, ake.receiverInstanceTag)
-	}
-
 	encryptedSig, err := ake.generateEncryptedSignature(&ake.sigKey, false)
 	if err != nil {
 		return nil, err
 	}
-
 	macSig := sumHMAC(ake.sigKey.m2[:], encryptedSig)
-	out = append(out, encryptedSig...)
-	out = append(out, macSig[:20]...)
+	sigMsg := sig{
+		protocolVersion:     ake.protocolVersion(),
+		needInstanceTag:     ake.needInstanceTag(),
+		senderInstanceTag:   ake.senderInstanceTag,
+		receiverInstanceTag: ake.receiverInstanceTag,
+		encryptedSig:        encryptedSig,
+		macSig:              macSig,
+	}
 
-	return out, nil
+	return sigMsg.serialize(), nil
 }
 
 func (ake *AKE) processDHCommit(msg []byte) error {
@@ -253,6 +251,7 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	theirMAC := revealSigMsg.macSig
 	encryptedSig := revealSigMsg.encryptedSig
 
+	//check Decrypted Gx and signature
 	decryptedGx := make([]byte, len(ake.encryptedGx))
 	if err = decrypt(r, decryptedGx, ake.encryptedGx); err != nil {
 		return
@@ -263,13 +262,10 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	if ake.gx, err = extractGx(decryptedGx); err != nil {
 		return
 	}
-
 	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
-
 	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
 		return errors.New("otr: in reveal signature message: " + err.Error())
 	}
-
 	//	ake.theirCurrentDHPub = ake.gx
 	//	ake.theirLastDHPub = nil
 
