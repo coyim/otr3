@@ -77,7 +77,7 @@ func (c *smpContext) generateSMP2(secret *big.Int, s1 smpMessage1) (s smp2, ok b
 	s.y = secret
 	s.msg = generateMessageTwoFor(&s, s1)
 	s.qb = s.msg.qb
-	return s, ok
+	return
 }
 
 func (c *smpContext) verifySMP2(s1 smp1, msg smpMessage2) error {
