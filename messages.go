@@ -239,3 +239,19 @@ func (c *dataMsgPlainText) serialize() []byte {
 	}
 	return out
 }
+
+func (c *tlv) deserialize(tlvsBytes []byte) error {
+	var ok bool
+	tlvsBytes, c.tlvType, ok = extractShort(tlvsBytes)
+	if !ok {
+		return errors.New("otr: wrong tlv type")
+	}
+	tlvsBytes, c.tlvLength, ok = extractShort(tlvsBytes)
+	if !ok {
+		return errors.New("otr: wrong tlv length")
+	}
+	if len(tlvsBytes) < int(c.tlvLength) {
+		return errors.New("otr: wrong tlv value")
+	}
+	return nil
+}
