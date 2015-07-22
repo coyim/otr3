@@ -23,8 +23,7 @@ type dhCommit struct {
 }
 
 func (c *dhCommit) serialize() []byte {
-	var out []byte
-	out = appendShort(out, c.protocolVersion)
+	out := appendShort(nil, c.protocolVersion)
 	out = append(out, msgTypeDHCommit)
 	if c.needInstanceTag {
 		out = appendWord(out, c.senderInstanceTag)
@@ -64,21 +63,17 @@ type dhKey struct {
 }
 
 func (c *dhKey) serialize() []byte {
-	// TODO: errors?
-	var out []byte
-	out = appendShort(out, c.protocolVersion)
+	out := appendShort(nil, c.protocolVersion)
 	out = append(out, msgTypeDHKey)
 	if c.needInstanceTag {
 		out = appendWord(out, c.senderInstanceTag)
 		out = appendWord(out, c.receiverInstanceTag)
 	}
-	out = appendMPI(out, c.gy)
 
-	return out
+	return appendMPI(out, c.gy)
 }
 
 func (c *dhKey) deserialize(msg []byte) error {
-	// TODO: errors?
 	if len(msg) < c.headerLen {
 		return errors.New("otr: invalid OTR message")
 	}
@@ -110,7 +105,6 @@ type revealSig struct {
 }
 
 func (c *revealSig) serialize() []byte {
-	// TODO: errors?
 	out := appendShort(nil, c.protocolVersion)
 	out = append(out, msgTypeRevealSig)
 	if c.needInstanceTag {
@@ -119,13 +113,10 @@ func (c *revealSig) serialize() []byte {
 	}
 	out = appendData(out, c.r[:])
 	out = append(out, c.encryptedSig...)
-	out = append(out, c.macSig[:20]...)
-
-	return out
+	return append(out, c.macSig[:20]...)
 }
 
 func (c *revealSig) deserialize(msg []byte) error {
-	// TODO: errors?
 	if len(msg) < c.headerLen {
 		return errors.New("otr: invalid OTR message")
 	}
@@ -159,13 +150,10 @@ func (c *sig) serialize() []byte {
 		out = appendWord(out, c.receiverInstanceTag)
 	}
 	out = append(out, c.encryptedSig...)
-	out = append(out, c.macSig[:20]...)
-
-	return out
+	return append(out, c.macSig[:20]...)
 }
 
 func (c *sig) deserialize(msg []byte) error {
-	// TODO: errors?
 	if len(msg) < c.headerLen {
 		return errors.New("otr: invalid OTR message")
 	}
