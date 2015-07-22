@@ -91,9 +91,8 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) ([]byte, error) {
 	if err != nil {
 		if err == io.ErrUnexpectedEOF {
 			return nil, newOtrError("short read from random source")
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 
 	xb = append(xb, sigb...)

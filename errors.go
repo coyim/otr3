@@ -20,6 +20,7 @@ var errShortRandomRead = newOtrError("short read from random source")
 var errInvalidOTRMessage = newOtrError("invalid OTR message")
 var errCorruptEncryptedSignature = newOtrError("corrupt encrypted signature")
 
+// OtrError is an error in the OTR library
 type OtrError struct {
 	msg string
 }

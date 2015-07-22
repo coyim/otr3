@@ -36,7 +36,7 @@ func fixtureAKEWithVersion(v otrVersion) AKE {
 
 func fixtureDHCommitMsg() []byte {
 	ake := fixtureAKE()
-	ake.senderInstanceTag = generateIntanceTag()
+	ake.senderInstanceTag = generateInstanceTag()
 	msg, _ := ake.dhCommitMessage()
 	return msg
 }
@@ -459,7 +459,7 @@ func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 	generateCommitMsgInstanceTags(&ake, dhCommitMsg)
 
 	assertEquals(t, ake.receiverInstanceTag, senderInstanceTag)
-	assertEquals(t, ake.senderInstanceTag, generateIntanceTag())
+	assertEquals(t, ake.senderInstanceTag, generateInstanceTag())
 }
 
 func Test_receiveMessage_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.T) {
@@ -684,5 +684,17 @@ func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyRet
 
 	_, _, err := authStateAwaitingSig{}.receiveDHKeyMessage(&c, []byte{0x01, 0x02})
 
+	assertDeepEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_generateCommitMsgInstanceTags_returnsErrorIfMsgDoesntHaveMsgHeader(t *testing.T) {
+	ake := fixtureAKE()
+	err := generateCommitMsgInstanceTags(&ake, []byte{0x00, 0x01})
+	assertDeepEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_generateCommitMsgInstanceTags_returnsErrorIfMsgIsntLongEnoughForInstanceTag(t *testing.T) {
+	ake := fixtureAKE()
+	err := generateCommitMsgInstanceTags(&ake, []byte{0x00, 0x01, 0x02, 0x00, 0x00, 0x00})
 	assertDeepEquals(t, err, errInvalidOTRMessage)
 }

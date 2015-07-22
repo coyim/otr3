@@ -78,7 +78,7 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 	c.otrVersion = v
 
 	ake := c.newAKE()
-	ake.senderInstanceTag = generateIntanceTag()
+	ake.senderInstanceTag = generateInstanceTag()
 
 	//TODO errors
 	out, _ := ake.dhCommitMessage()
@@ -162,17 +162,20 @@ func (authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authStat
 	return authStateAwaitingRevealSig{}, ret
 }
 
-func generateCommitMsgInstanceTags(ake *AKE, msg []byte) {
-	// TODO: errors?
+func generateCommitMsgInstanceTags(ake *AKE, msg []byte) error {
 	if ake.needInstanceTag() {
-		//TODO error
+		if len(msg) < lenMsgHeader+4 {
+			return errInvalidOTRMessage
+		}
+
 		_, receiverInstanceTag, _ := extractWord(msg[lenMsgHeader:])
-		ake.senderInstanceTag = generateIntanceTag()
+		ake.senderInstanceTag = generateInstanceTag()
 		ake.receiverInstanceTag = receiverInstanceTag
 	}
+	return nil
 }
 
-func generateIntanceTag() uint32 {
+func generateInstanceTag() uint32 {
 	//TODO generate this
 	return 0x00000100 + 0x01
 }
@@ -225,9 +228,10 @@ func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *akeContext, msg []byt
 }
 
 func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	var err error
 	ake := c.newAKE()
-	if _, err = ake.processDHKey(msg); err != nil {
+
+	_, err := ake.processDHKey(msg)
+	if err != nil {
 		return s, nil, err
 	}
 
