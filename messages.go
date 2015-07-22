@@ -163,3 +163,19 @@ func (c *sig) serialize() []byte {
 
 	return out
 }
+
+func (c *sig) deserialize(msg []byte) error {
+	// TODO: errors?
+	if len(msg) < c.headerLen {
+		return errors.New("otr: invalid OTR message")
+	}
+
+	macSig, encryptedSig, ok := extractData(msg[c.headerLen:])
+
+	if !ok || len(macSig) != 20 {
+		return errors.New("otr: corrupt signature message")
+	}
+	c.encryptedSig = encryptedSig
+	c.macSig = macSig
+	return nil
+}

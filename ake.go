@@ -272,16 +272,14 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	return nil
 }
 
-func (ake *AKE) processSig(msg []byte) error {
-	if len(msg) < ake.headerLen() {
-		return errors.New("otr: invalid OTR message")
+func (ake *AKE) processSig(msg []byte) (err error) {
+	sigMsg := sig{headerLen: ake.headerLen()}
+	err = sigMsg.deserialize(msg)
+	if err != nil {
+		return
 	}
-
-	theirMAC, encryptedSig, ok := extractData(msg[ake.headerLen():])
-
-	if !ok || len(theirMAC) != 20 {
-		return errors.New("otr: corrupt signature message")
-	}
+	theirMAC := sigMsg.macSig
+	encryptedSig := sigMsg.encryptedSig
 
 	if err := ake.processEncryptedSig(encryptedSig, theirMAC, &ake.sigKey, false /* gy comes first */); err != nil {
 		return errors.New("otr: in signature message: " + err.Error())
