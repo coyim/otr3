@@ -35,6 +35,7 @@ type smpContext struct {
 type akeContext struct {
 	*otrContext
 	authState           authState
+	msgState            msgState
 	r                   [16]byte
 	gx, gy, x, y        *big.Int
 	encryptedGx         []byte
@@ -45,7 +46,7 @@ type akeContext struct {
 	ourKey              *PrivateKey
 	theirKey            *PublicKey
 	revealSigMsg        []byte
-	msgState            msgState
+	keyManagementContext
 	policies
 }
 

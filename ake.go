@@ -262,8 +262,6 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
 		return newOtrError("in reveal signature message: " + err.Error())
 	}
-	//	ake.theirCurrentDHPub = ake.gx
-	//	ake.theirLastDHPub = nil
 
 	return nil
 }
@@ -295,9 +293,6 @@ func (ake *AKE) processSig(msg []byte) (err error) {
 	if err := ake.processEncryptedSig(encryptedSig, theirMAC, &ake.sigKey, false /* gy comes first */); err != nil {
 		return errors.New("otr: in signature message: " + err.Error())
 	}
-
-	//ake.theirCurrentDHPub = ake.gy
-	//ake.theirLastDHPub = nil
 
 	return nil
 }

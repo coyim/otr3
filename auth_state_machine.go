@@ -287,6 +287,11 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg [
 		return nil, nil, err
 	}
 
+	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
+	c.theirKeyID = ake.theirKeyID
+	c.theirCurrentDHPubKey = ake.gx
+	c.theirPreviousDHPubKey = nil
+
 	ret, err := ake.sigMessage()
 
 	return authStateNone{}, ret, err
@@ -323,6 +328,12 @@ func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (auth
 	if err != nil {
 		return nil, nil, err
 	}
+
+	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
+	c.theirKeyID = ake.theirKeyID
+	//gy was stored when we receive DH-Key
+	c.theirCurrentDHPubKey = c.gy
+	c.theirPreviousDHPubKey = nil
 
 	return authStateNone{}, nil, nil
 }

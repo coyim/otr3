@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
+	"math/big"
 	"testing"
 )
 
@@ -72,6 +73,7 @@ func bobContextAtAwaitingSig() akeContext {
 	c := bobContextAtReceiveDHKey()
 	c.otrVersion = otrV2{}
 	c.addPolicy(allowV2)
+	c.authState = authStateAwaitingSig{}
 
 	return c
 }
@@ -637,6 +639,21 @@ func Test_receiveMessage_receiveRevealSigMessageAndSetMessageStateToEncrypted(t 
 	assertEquals(t, c.msgState, encrypted)
 }
 
+func Test_receiveMessage_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey(t *testing.T) {
+	var nilBigInt *big.Int
+
+	c := aliceContextAtAwaitingRevealSig()
+	msg := fixtureRevealSigMsg(otrV2{})
+	assertEquals(t, c.msgState, plainText)
+
+	_, err := c.receiveMessage(msg)
+
+	assertEquals(t, err, nil)
+	assertEquals(t, c.theirKeyID, uint32(0)) // should not be 0
+	assertDeepEquals(t, c.theirCurrentDHPubKey.Bytes(), fixedgx.Bytes())
+	assertEquals(t, c.theirPreviousDHPubKey, nilBigInt)
+}
+
 func Test_receiveMessage_receiveSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
 	c := bobContextAtAwaitingSig()
 	msg := fixtureSigMsg(otrV2{})
@@ -646,6 +663,23 @@ func Test_receiveMessage_receiveSigMessageAndSetMessageStateToEncrypted(t *testi
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.msgState, encrypted)
+}
+
+//THUS
+func Test_receiveMessage_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey(t *testing.T) {
+	var nilBigInt *big.Int
+
+	c := bobContextAtAwaitingSig()
+
+	msg := fixtureSigMsg(otrV2{})
+	assertEquals(t, c.msgState, plainText)
+
+	_, err := c.receiveMessage(msg)
+
+	assertEquals(t, err, nil)
+	assertEquals(t, c.theirKeyID, uint32(0)) // should not be 0
+	assertDeepEquals(t, c.theirCurrentDHPubKey.Bytes(), fixedgy.Bytes())
+	assertEquals(t, c.theirPreviousDHPubKey, nilBigInt)
 }
 
 func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
