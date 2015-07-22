@@ -211,7 +211,7 @@ func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHKeyMsg(
 
 	assertEquals(t, nextState, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(nextMsg), msgTypeDHKey)
-	assertDeepEquals(t, e, nil)
+	assertEquals(t, e, nil)
 }
 
 func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
@@ -307,7 +307,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 
 	state, newMsg, _ := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, dhMsgType(newMsg), msgTypeDHKey)
+	assertEquals(t, dhMsgType(newMsg), msgTypeDHKey)
 	assertDeepEquals(t, c.gy, fixedgy)
 	assertDeepEquals(t, c.y, fixedy)
 }
@@ -324,9 +324,9 @@ func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *te
 
 	for _, s := range states {
 		state, msg, err := s.receiveDHKeyMessage(&c, dhKeymsg)
+		assertEquals(t, err, nil)
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
-		assertDeepEquals(t, err, nil)
 	}
 }
 
@@ -340,7 +340,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 
 	//TODO before generate rev si need to extract their gy from DH commit
 	assertEquals(t, state, authStateAwaitingSig{})
-	assertDeepEquals(t, dhMsgType(msg), msgTypeRevealSig)
+	assertEquals(t, dhMsgType(msg), msgTypeRevealSig)
 }
 
 func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
@@ -410,6 +410,7 @@ func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *te
 
 	state, msg, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, revealSignMsg)
 
+	assertEquals(t, err, nil)
 	assertEquals(t, state, authStateNone{})
 	assertEquals(t, dhMsgType(msg), msgTypeSig)
 }
@@ -446,9 +447,9 @@ func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing
 		c := newAkeContext(otrV3{}, fixtureRand())
 		state, msg, err := s.receiveRevealSigMessage(&c, revealSignMsg)
 
+		assertEquals(t, err, nil)
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
-		assertDeepEquals(t, err, nil)
 	}
 }
 
@@ -459,9 +460,9 @@ func Test_receiveSig_TransitionsFromAwaitingSigToNoneOnSuccess(t *testing.T) {
 
 	state, msg, err := authStateAwaitingSig{}.receiveSigMessage(&c, sigMsg)
 
+	assertEquals(t, err, nil)
 	assertEquals(t, state, authStateNone{})
 	assertDeepEquals(t, msg, nilB)
-	assertDeepEquals(t, err, nil)
 }
 
 func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {
@@ -479,9 +480,9 @@ func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {
 		c := newAkeContext(otrV3{}, fixtureRand())
 		state, msg, err := s.receiveSigMessage(&c, revealSignMsg)
 
+		assertEquals(t, err, nil)
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
-		assertDeepEquals(t, err, nil)
 	}
 }
 
@@ -636,10 +637,10 @@ func Test_receiveMessage_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 	cV3.addPolicy(allowV3)
 
 	_, err := cV3.receiveMessage([]byte{})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 
 	_, err = cV3.receiveMessage([]byte{0x00, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 
 	_, err = cV3.receiveMessage([]byte{0x00, 0x03, 0x56})
 	assertDeepEquals(t, err, errors.New("otr: unknown message type 0x56"))
@@ -649,14 +650,14 @@ func Test_authStateAwaitingSig_receiveSigMessage_returnsErrorIfProcessSigFails(t
 	c := newAkeContext(otrV2{}, fixtureRand())
 	c.addPolicy(allowV2)
 	_, _, err := authStateAwaitingSig{}.receiveSigMessage(&c, []byte{0x00, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateAwaitingRevealSig_receiveRevealSigMessage_returnsErrorIfProcessRevealSigFails(t *testing.T) {
 	c := newAkeContext(otrV2{}, fixtureRand())
 	c.addPolicy(allowV2)
 	_, _, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, []byte{0x00, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_receiveMessage_receiveRevealSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
@@ -681,7 +682,7 @@ func Test_receiveMessage_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurre
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.theirKeyID, uint32(0)) // should not be 0
-	assertDeepEquals(t, c.theirCurrentDHPubKey.Bytes(), fixedgx.Bytes())
+	assertDeepEquals(t, c.theirCurrentDHPubKey, fixedgx)
 	assertEquals(t, c.theirPreviousDHPubKey, nilBigInt)
 }
 
@@ -709,7 +710,7 @@ func Test_receiveMessage_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPu
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.theirKeyID, uint32(0)) // should not be 0
-	assertDeepEquals(t, c.theirCurrentDHPubKey.Bytes(), fixedgy.Bytes())
+	assertDeepEquals(t, c.theirCurrentDHPubKey, fixedgy)
 	assertEquals(t, c.theirPreviousDHPubKey, nilBigInt)
 }
 
@@ -724,7 +725,7 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyR
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, []byte{0x01, 0x02})
 
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMessageReturnsError(t *testing.T) {
@@ -739,7 +740,7 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMess
 	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, sameDHKeyMsg)
 
-	assertDeepEquals(t, err, errShortRandomRead)
+	assertEquals(t, err, errShortRandomRead)
 }
 
 func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
@@ -753,19 +754,19 @@ func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyRet
 
 	_, _, err := authStateAwaitingSig{}.receiveDHKeyMessage(&c, []byte{0x01, 0x02})
 
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_generateCommitMsgInstanceTags_returnsErrorIfMsgDoesntHaveMsgHeader(t *testing.T) {
 	ake := fixtureAKE()
 	err := generateCommitMsgInstanceTags(&ake, []byte{0x00, 0x01})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_generateCommitMsgInstanceTags_returnsErrorIfMsgIsntLongEnoughForInstanceTag(t *testing.T) {
 	ake := fixtureAKE()
 	err := generateCommitMsgInstanceTags(&ake, []byte{0x00, 0x01, 0x02, 0x00, 0x00, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateAwaitingRevealSig_receiveDHCommitMessage_returnsErrorIfProcessDHCommitOrGenerateCommitInstanceTagsFailsFails(t *testing.T) {
@@ -776,7 +777,7 @@ func Test_authStateAwaitingRevealSig_receiveDHCommitMessage_returnsErrorIfProces
 	c.gx = ourDHCommitAKE.gx
 
 	_, _, err := authStateAwaitingRevealSig{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfgenerateCommitMsgInstanceTagsFails(t *testing.T) {
@@ -787,7 +788,7 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfgenerateCommitMsgIn
 	c.gx = ourDHCommitAKE.gx
 
 	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfdhKeyMessageFails(t *testing.T) {
@@ -798,7 +799,7 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfdhKeyMessageFails(t
 	c.gx = ourDHCommitAKE.gx
 
 	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
-	assertDeepEquals(t, err, errShortRandomRead)
+	assertEquals(t, err, errShortRandomRead)
 }
 
 func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfPcoessDHCommitFails(t *testing.T) {
@@ -809,28 +810,28 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfPcoessDHCommitFails
 	c.gx = ourDHCommitAKE.gx
 
 	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateNone_receiveQueryMessage_returnsNoErrorForValidMessage(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 	c.addPolicy(allowV3)
 	_, _, err := authStateNone{}.receiveQueryMessage(&c, []byte("?OTRv3?"))
-	assertDeepEquals(t, err, nil)
+	assertEquals(t, err, nil)
 }
 
 func Test_authStateNone_receiveQueryMessage_returnsErrorIfNoCompatibleVersionCouldBeFound(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 	c.addPolicy(allowV3)
 	_, _, err := authStateNone{}.receiveQueryMessage(&c, []byte("?OTRv2?"))
-	assertDeepEquals(t, err, errInvalidVersion)
+	assertEquals(t, err, errInvalidVersion)
 }
 
 func Test_authStateNone_receiveQueryMessage_returnsErrorIfDhCommitMessageGeneratesError(t *testing.T) {
 	c := newAkeContext(otrV2{}, fixedRand([]string{"ABCDABCD"}))
 	c.addPolicy(allowV2)
 	_, _, err := authStateNone{}.receiveQueryMessage(&c, []byte("?OTRv2?"))
-	assertDeepEquals(t, err, errShortRandomRead)
+	assertEquals(t, err, errShortRandomRead)
 }
 
 func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfMsgDoesntHaveHeader(t *testing.T) {
@@ -841,7 +842,7 @@ func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfMsgDoesntHaveHead
 	c.gx = ourDHCommitAKE.gx
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractFirstPart(t *testing.T) {
@@ -852,7 +853,7 @@ func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractFirstP
 	c.gx = ourDHCommitAKE.gx
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00, 0x00, 0x01})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractSecondPart(t *testing.T) {
@@ -863,5 +864,5 @@ func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractSecond
 	c.gx = ourDHCommitAKE.gx
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x02})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
