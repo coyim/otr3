@@ -11,15 +11,18 @@ type message interface {
 	deserialize(msg []byte) error
 }
 
-type dhCommit struct {
+type dhMessage struct {
 	protocolVersion     uint16
-	headerLen           int
 	needInstanceTag     bool
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
-	gx                  *big.Int
-	encryptedGx         []byte
-	hashedGx            [sha256.Size]byte
+}
+
+type dhCommit struct {
+	dhMessage
+	gx          *big.Int
+	encryptedGx []byte
+	hashedGx    [sha256.Size]byte
 }
 
 func (c *dhCommit) serialize() []byte {
@@ -39,12 +42,8 @@ func (c *dhCommit) serialize() []byte {
 }
 
 func (c *dhCommit) deserialize(msg []byte) error {
-	if len(msg) < c.headerLen {
-		return errors.New("otr: invalid OTR message")
-	}
-
 	var ok1 bool
-	msg, c.encryptedGx, ok1 = extractData(msg[c.headerLen:])
+	msg, c.encryptedGx, ok1 = extractData(msg)
 	_, h, ok2 := extractData(msg)
 	if !ok1 || !ok2 {
 		return errors.New("otr: corrupt DH commit message")
@@ -54,12 +53,8 @@ func (c *dhCommit) deserialize(msg []byte) error {
 }
 
 type dhKey struct {
-	protocolVersion     uint16
-	headerLen           int
-	needInstanceTag     bool
-	senderInstanceTag   uint32
-	receiverInstanceTag uint32
-	gy                  *big.Int
+	dhMessage
+	gy *big.Int
 }
 
 func (c *dhKey) serialize() []byte {
@@ -74,11 +69,7 @@ func (c *dhKey) serialize() []byte {
 }
 
 func (c *dhKey) deserialize(msg []byte) error {
-	if len(msg) < c.headerLen {
-		return errors.New("otr: invalid OTR message")
-	}
-
-	_, gy, ok := extractMPI(msg[c.headerLen:])
+	_, gy, ok := extractMPI(msg)
 
 	if !ok {
 		return errors.New("otr: corrupt DH key message")
@@ -94,14 +85,10 @@ func (c *dhKey) deserialize(msg []byte) error {
 }
 
 type revealSig struct {
-	protocolVersion     uint16
-	headerLen           int
-	needInstanceTag     bool
-	senderInstanceTag   uint32
-	receiverInstanceTag uint32
-	r                   [16]byte
-	encryptedSig        []byte
-	macSig              []byte
+	dhMessage
+	r            [16]byte
+	encryptedSig []byte
+	macSig       []byte
 }
 
 func (c *revealSig) serialize() []byte {
@@ -117,10 +104,7 @@ func (c *revealSig) serialize() []byte {
 }
 
 func (c *revealSig) deserialize(msg []byte) error {
-	if len(msg) < c.headerLen {
-		return errors.New("otr: invalid OTR message")
-	}
-	in, r, ok1 := extractData(msg[c.headerLen:])
+	in, r, ok1 := extractData(msg)
 	macSig, encryptedSig, ok2 := extractData(in)
 	if !ok1 || !ok2 || len(macSig) != 20 {
 		return errors.New("otr: corrupt reveal signature message")
@@ -133,13 +117,9 @@ func (c *revealSig) deserialize(msg []byte) error {
 }
 
 type sig struct {
-	protocolVersion     uint16
-	headerLen           int
-	needInstanceTag     bool
-	senderInstanceTag   uint32
-	receiverInstanceTag uint32
-	encryptedSig        []byte
-	macSig              []byte
+	dhMessage
+	encryptedSig []byte
+	macSig       []byte
 }
 
 func (c *sig) serialize() []byte {
@@ -154,11 +134,7 @@ func (c *sig) serialize() []byte {
 }
 
 func (c *sig) deserialize(msg []byte) error {
-	if len(msg) < c.headerLen {
-		return errors.New("otr: invalid OTR message")
-	}
-
-	macSig, encryptedSig, ok := extractData(msg[c.headerLen:])
+	macSig, encryptedSig, ok := extractData(msg)
 
 	if !ok || len(macSig) != 20 {
 		return errors.New("otr: corrupt signature message")

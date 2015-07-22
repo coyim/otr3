@@ -103,6 +103,14 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) ([]byte, error) {
 	return xb, nil
 }
 
+func (ake *AKE) dhMessage() dhMessage {
+	return dhMessage{
+		protocolVersion:     ake.protocolVersion(),
+		needInstanceTag:     ake.needInstanceTag(),
+		senderInstanceTag:   ake.senderInstanceTag,
+		receiverInstanceTag: ake.receiverInstanceTag,
+	}
+}
 func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.ourKeyID = 0
 
@@ -122,24 +130,18 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.gx))
 
 	dhCommitMsg := dhCommit{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		gx:                  ake.gx,
-		encryptedGx:         ake.encryptedGx,
+		dhMessage:   ake.dhMessage(),
+		gx:          ake.gx,
+		encryptedGx: ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize(), nil
 }
 
 func (ake *AKE) serializeDHCommit() []byte {
 	dhCommitMsg := dhCommit{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		gx:                  ake.gx,
-		encryptedGx:         ake.encryptedGx,
+		dhMessage:   ake.dhMessage(),
+		gx:          ake.gx,
+		encryptedGx: ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize()
 }
@@ -155,11 +157,8 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	ake.gy = modExp(g1, ake.y)
 
 	dhKeyMsg := dhKey{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		gy:                  ake.gy,
+		dhMessage: ake.dhMessage(),
+		gy:        ake.gy,
 	}
 
 	return dhKeyMsg.serialize(), nil
@@ -167,11 +166,8 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 
 func (ake *AKE) serializeDHKey() []byte {
 	dhKeyMsg := dhKey{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		gy:                  ake.gy,
+		dhMessage: ake.dhMessage(),
+		gy:        ake.gy,
 	}
 
 	return dhKeyMsg.serialize()
@@ -186,13 +182,10 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 	macSig := sumHMAC(ake.revealKey.m2[:], encryptedSig)
 
 	revealSigMsg := revealSig{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		r:                   ake.r,
-		encryptedSig:        encryptedSig,
-		macSig:              macSig,
+		dhMessage:    ake.dhMessage(),
+		r:            ake.r,
+		encryptedSig: encryptedSig,
+		macSig:       macSig,
 	}
 	return revealSigMsg.serialize(), nil
 }
@@ -205,28 +198,29 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 	}
 	macSig := sumHMAC(ake.sigKey.m2[:], encryptedSig)
 	sigMsg := sig{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-		encryptedSig:        encryptedSig,
-		macSig:              macSig,
+		dhMessage:    ake.dhMessage(),
+		encryptedSig: encryptedSig,
+		macSig:       macSig,
 	}
 
 	return sigMsg.serialize(), nil
 }
 
 func (ake *AKE) processDHCommit(msg []byte) error {
-	dhCommitMsg := dhCommit{headerLen: ake.headerLen()}
-	err := dhCommitMsg.deserialize(msg)
+	// TODO: fix errors
+	dhCommitMsg := dhCommit{}
+	err := chainErrors(ake.ensureValidMessage, dhCommitMsg.deserialize, msg)
+	if err != nil {
+		return err
+	}
 	ake.encryptedGx = dhCommitMsg.encryptedGx
 	ake.hashedGx = dhCommitMsg.hashedGx
 	return err
 }
 
 func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
-	dhKeyMsg := dhKey{headerLen: ake.headerLen()}
-	err = dhKeyMsg.deserialize(msg)
+	dhKeyMsg := dhKey{}
+	err = chainErrors(ake.ensureValidMessage, dhKeyMsg.deserialize, msg)
 	if err != nil {
 		return false, err
 	}
@@ -242,8 +236,8 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 }
 
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
-	revealSigMsg := revealSig{headerLen: ake.headerLen()}
-	err = revealSigMsg.deserialize(msg)
+	revealSigMsg := revealSig{}
+	err = chainErrors(ake.ensureValidMessage, revealSigMsg.deserialize, msg)
 	if err != nil {
 		return
 	}
@@ -272,9 +266,24 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	return nil
 }
 
+func chainErrors(f1 func([]byte) ([]byte, error), f2 func([]byte) error, msg []byte) error {
+	res, e1 := f1(msg)
+	if e1 != nil {
+		return e1
+	}
+	return f2(res)
+}
+
+func (ake *AKE) ensureValidMessage(msg []byte) ([]byte, error) {
+	if len(msg) < ake.headerLen() {
+		return nil, errors.New("otr: invalid OTR message")
+	}
+	return msg[ake.headerLen():], nil
+}
+
 func (ake *AKE) processSig(msg []byte) (err error) {
-	sigMsg := sig{headerLen: ake.headerLen()}
-	err = sigMsg.deserialize(msg)
+	sigMsg := sig{}
+	err = chainErrors(ake.ensureValidMessage, sigMsg.deserialize, msg)
 	if err != nil {
 		return
 	}
