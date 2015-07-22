@@ -146,6 +146,54 @@ func (c *sig) deserialize(msg []byte) error {
 }
 
 type dataMsg struct {
+	dhMessage
+	flag                        byte
+	senderKeyID, recipientKeyID uint32
+	y                           *big.Int
+	topHalfCtr                  [8]byte
+	dataMsgEncrypted            []byte
+	authenticator               [20]byte
+	oldRevealKeyMAC             []byte
+}
+
+func (c dataMsg) serialize() []byte {
+	var out []byte
+
+	out = appendShort(out, c.protocolVersion)
+	out = append(out, msgTypeData)
+
+	//TODO
+	if c.needInstanceTag {
+		out = appendWord(out, c.senderInstanceTag)
+		out = appendWord(out, c.receiverInstanceTag)
+	}
+
+	//TODO: implement IGNORE_UNREADABLE
+	out = append(out, c.flag)
+
+	//TODO after key management
+	out = appendWord(out, c.senderKeyID)
+	out = appendWord(out, c.recipientKeyID)
+
+	//TODO after key management
+	out = appendMPI(out, c.y)
+
+	//TODO
+	out = append(out, c.topHalfCtr[:]...)
+
+	//TODO encrypt
+	//tlv is properly formatted
+	out = appendData(out, c.dataMsgEncrypted)
+
+	//TODO Authenticator (MAC)
+	out = append(out, c.authenticator[:]...)
+	//TODO Old MAC keys to be revealed (DATA)
+	out = appendData(out, c.oldRevealKeyMAC)
+
+	return out
+}
+
+type dataMsgPlainText struct {
 	nul  byte
 	tlvs []tlv
 }
@@ -156,7 +204,7 @@ type tlv struct {
 	tlvValue  []byte
 }
 
-func (c *dataMsg) deserialize(msg []byte) error {
+func (c *dataMsgPlainText) deserialize(msg []byte) error {
 	if msg[0] != 0x00 {
 		return errors.New("otr: corrupt data message")
 	}
@@ -178,7 +226,7 @@ func (c *dataMsg) deserialize(msg []byte) error {
 	return nil
 }
 
-func (c *dataMsg) serialize() []byte {
+func (c *dataMsgPlainText) serialize() []byte {
 	out := []byte{0x00}
 	for i := range c.tlvs {
 		out = appendShort(out, c.tlvs[i].tlvType)

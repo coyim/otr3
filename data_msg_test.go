@@ -6,7 +6,7 @@ func Test_dataMsgShouldDeserializeOneTLV(t *testing.T) {
 	nul := []byte{0x00}
 	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	msg := append(nul, atlvBytes...)
-	aDataMsg := dataMsg{}
+	aDataMsg := dataMsgPlainText{}
 	err := aDataMsg.deserialize(msg)
 	atlv := tlv{
 		tlvType:   0x0001,
@@ -26,7 +26,7 @@ func Test_dataMsgShouldDeserializeMultiTLV(t *testing.T) {
 	btlvBytes := []byte{0x00, 0x02, 0x00, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01}
 	msg := append(nul, atlvBytes...)
 	msg = append(msg, btlvBytes...)
-	aDataMsg := dataMsg{}
+	aDataMsg := dataMsgPlainText{}
 	err := aDataMsg.deserialize(msg)
 	atlv := tlv{
 		tlvType:   0x0001,
@@ -52,7 +52,7 @@ func Test_dataMsgShouldSerialize(t *testing.T) {
 	btlvBytes := []byte{0x00, 0x02, 0x00, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01}
 	msg := append(nul, atlvBytes...)
 	msg = append(msg, btlvBytes...)
-	aDataMsg := dataMsg{}
+	aDataMsg := dataMsgPlainText{}
 	atlv := tlv{
 		tlvType:   0x0001,
 		tlvLength: 0x0002,

@@ -1,45 +1,44 @@
 package otr3
 
-func (c *akeContext) genDataMsg(tlvs ...[]byte) []byte {
-	var out []byte
+import "encoding/binary"
 
-	//TODO: if msgState != encrypted should error
-
-	out = appendShort(out, c.protocolVersion())
-	out = append(out, msgTypeData)
-
-	//TODO
-	if c.needInstanceTag() {
-		out = appendWord(out, uint32(0))
-		out = appendWord(out, uint32(0))
+func (c *akeContext) genDataMsg(tlvsBytes []byte) []byte {
+	msgHeader := dhMessage{
+		protocolVersion:     c.protocolVersion(),
+		needInstanceTag:     c.needInstanceTag(),
+		senderInstanceTag:   uint32(0),
+		receiverInstanceTag: uint32(0),
 	}
 
-	//TODO: implement IGNORE_UNREADABLE
-	out = append(out, 0x00)
-
-	senderKeyID := c.ourKeyID - 1
-	recipientKeyID := c.theirKeyID
-	out = appendWord(out, senderKeyID)
-	out = appendWord(out, recipientKeyID)
-
-	dhy := c.ourCurrentDHKeys.pub
-	out = appendMPI(out, dhy)
-
-	//TODO
-	var crt [8]byte
-	out = append(out, crt[:]...)
-
-	//tlv is properly formatted
-	var data []byte
-	for _, tlv := range tlvs {
-		data = append(data, tlv...)
+	var tlvs []tlv
+	index := 0
+	for index < len(tlvsBytes) {
+		atlv := tlv{}
+		atlv.tlvType = binary.BigEndian.Uint16(tlvsBytes[index : index+2])
+		atlv.tlvLength = binary.BigEndian.Uint16(tlvsBytes[index+2 : index+4])
+		endOfTLV := index + 4 + int(atlv.tlvLength)
+		atlv.tlvValue = tlvsBytes[index+4 : endOfTLV]
+		tlvs = append(tlvs, atlv)
+		index = endOfTLV
 	}
 
-	//TODO encrypt
-	out = append(out, data...)
+	dataMessage := dataMsg{
+		dhMessage: msgHeader,
+		//TODO: implement IGNORE_UNREADABLE
+		flag: 0x00,
 
-	//TODO Authenticator (MAC)
-	//TODO Old MAC keys to be revealed (DATA)
+		//TODO after key management
+		senderKeyID:    c.ourKeyID - 1,
+		recipientKeyID: c.theirKeyID,
+		//TODO after key management
+		y:          c.ourCurrentDHKeys.pub,
+		topHalfCtr: [8]byte{},
+		//tlv is properly formatted
+		dataMsgEncrypted: []byte{},
+		//TODO after key management
+		authenticator:   [20]byte{},
+		oldRevealKeyMAC: []byte{},
+	}
 
-	return out
+	return dataMessage.serialize()
 }
