@@ -139,9 +139,16 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 			return c.smpContext.restart(), nil
 		}
 
-		//TODO: extract message from the encripted DATA
-		//msg := decrypt(message)
-		c.smpContext.receive(message)
+		//TODO: decrypt data from data message and extract TLVs from it
+		tlv := message
+		smpMessage, ok := parseTLV(tlv)
+		if !ok {
+			// TODO: errors
+			return nil, nil
+		}
+
+		//TODO: encrypt toSend and wrap in a DATA message
+		c.smpContext.receive(smpMessage)
 	default:
 		return c.akeContext.receiveMessage(message)
 	}

@@ -102,7 +102,7 @@ func Test_contextTransitionsFromSmpExpect1ToSmpExpect3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	c.smpContext.receive(m.tlv())
+	c.smpContext.receive(m)
 	assertEquals(t, c.smpState, smpStateExpect3{})
 }
 
@@ -113,7 +113,7 @@ func Test_contextTransitionsFromSmpExpect2ToSmpExpect4(t *testing.T) {
 	c.smpContext.s1 = fixtureSmp1()
 	c.smpContext.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	c.smpContext.receive(m.tlv())
+	c.smpContext.receive(m)
 	assertEquals(t, c.smpState, smpStateExpect4{})
 }
 
@@ -124,7 +124,7 @@ func Test_contextTransitionsFromSmpExpect3ToSmpExpect1(t *testing.T) {
 	c.smpContext.s2 = fixtureSmp2()
 	c.smpContext.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	c.smpContext.receive(m.tlv())
+	c.smpContext.receive(m)
 	assertEquals(t, c.smpState, smpStateExpect1{})
 }
 
@@ -135,7 +135,7 @@ func Test_contextTransitionsFromSmpExpect4ToSmpExpect1(t *testing.T) {
 	c.smpContext.s1 = fixtureSmp1()
 	c.smpContext.s3 = fixtureSmp3()
 
-	c.smpContext.receive(m.tlv())
+	c.smpContext.receive(m)
 	assertEquals(t, c.smpState, smpStateExpect1{})
 }
 
@@ -144,7 +144,7 @@ func Test_contextUnexpectedMessageTransitionsToSmpExpected1(t *testing.T) {
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect3{}
-	toSend := c.smpContext.receive(m.tlv())
+	toSend := c.smpContext.receive(m)
 
 	assertEquals(t, c.smpState, smpStateExpect1{})
 	assertDeepEquals(t, toSend, smpMessageAbort{}.tlv())

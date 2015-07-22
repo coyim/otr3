@@ -33,25 +33,14 @@ func (c *smpContext) abortStateMachine() (smpState, smpMessage) {
 	return smpStateExpect1{}, smpMessageAbort{}
 }
 
-func (c *smpContext) receive(message []byte) []byte {
-	var toSend smpMessage
+func (c *smpContext) receive(m smpMessage) []byte {
+	toSend := m.receivedMessage(c)
 
-	//TODO if msgState != encrypted
-	//must abandon SMP state and restart the state machine
-
-	m, ok := parseTLV(message)
-	if !ok {
-		// TODO: errors
+	if toSend == nil {
 		return nil
 	}
 
-	toSend = m.receivedMessage(c)
-
-	if toSend != nil {
-		return toSend.tlv()
-	}
-
-	return nil
+	return toSend.tlv()
 }
 
 func (smpStateExpect1) receiveMessage1(c *smpContext, m smpMessage1) (smpState, smpMessage) {
