@@ -177,3 +177,13 @@ func (c *dataMsg) deserialize(msg []byte) error {
 	}
 	return nil
 }
+
+func (c *dataMsg) serialize() []byte {
+	out := []byte{0x00}
+	for i := range c.tlvs {
+		out = appendShort(out, c.tlvs[i].tlvType)
+		out = appendShort(out, c.tlvs[i].tlvLength)
+		out = append(out, c.tlvs[i].tlvValue...)
+	}
+	return out
+}

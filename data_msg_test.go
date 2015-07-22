@@ -20,7 +20,7 @@ func Test_dataMsgShouldDeserializeOneTLV(t *testing.T) {
 	assertDeepEquals(t, aDataMsg.tlvs[0].tlvValue, atlv.tlvValue)
 }
 
-func Test_tlvShouldContainsTypeLengthValue(t *testing.T) {
+func Test_dataMsgShouldDeserializeMultiTLV(t *testing.T) {
 	nul := []byte{0x00}
 	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	btlvBytes := []byte{0x00, 0x02, 0x00, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01}
@@ -44,4 +44,28 @@ func Test_tlvShouldContainsTypeLengthValue(t *testing.T) {
 	assertEquals(t, aDataMsg.nul, byte(0x00))
 	assertDeepEquals(t, aDataMsg.tlvs[0], atlv)
 	assertDeepEquals(t, aDataMsg.tlvs[1], btlv)
+}
+
+func Test_dataMsgShouldSerialize(t *testing.T) {
+	nul := []byte{0x00}
+	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
+	btlvBytes := []byte{0x00, 0x02, 0x00, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01}
+	msg := append(nul, atlvBytes...)
+	msg = append(msg, btlvBytes...)
+	aDataMsg := dataMsg{}
+	atlv := tlv{
+		tlvType:   0x0001,
+		tlvLength: 0x0002,
+		tlvValue:  []byte{0x01, 0x01},
+	}
+
+	btlv := tlv{
+		tlvType:   0x0002,
+		tlvLength: 0x0005,
+		tlvValue:  []byte{0x01, 0x01, 0x01, 0x01, 0x01},
+	}
+	aDataMsg.nul = 0x00
+	aDataMsg.tlvs = []tlv{atlv, btlv}
+
+	assertDeepEquals(t, aDataMsg.serialize(), msg)
 }
