@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strconv"
 )
@@ -19,8 +18,9 @@ func (c *akeContext) ignoreMessage(msg []byte) bool {
 const minimumMessageLength = 3 // length of protocol version (SHORT) and message type (BYTE)
 
 func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
+	// TODO: errors
 	if len(msg) < minimumMessageLength {
-		return nil, errors.New("otr: invalid OTR message")
+		return nil, errInvalidOTRMessage
 	}
 
 	if c.ignoreMessage(msg) {
@@ -31,7 +31,7 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 	case msgTypeDHCommit:
 		c.authState, toSend = c.authState.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
-		c.authState, toSend = c.authState.receiveDHKeyMessage(c, msg)
+		c.authState, toSend, _ = c.authState.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
 		c.authState, toSend, _ = c.authState.receiveRevealSigMessage(c, msg)
 		c.msgState = encrypted
@@ -60,7 +60,7 @@ type authStateV1Setup struct{}
 type authState interface {
 	receiveQueryMessage(*akeContext, []byte) (authState, []byte)
 	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte)
-	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte)
+	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveRevealSigMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveSigMessage(*akeContext, []byte) (authState, []byte, error)
 }
@@ -216,38 +216,43 @@ func (authStateAwaitingSig) receiveDHCommitMessage(c *akeContext, msg []byte) (a
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
-func (s authStateNone) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return s, nil
+func (s authStateNone) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return s, nil, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
-	return s, nil
+func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return s, nil, nil
 }
 
-func (authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
-	// TODO: errors?
+func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	var err error
 	ake := c.newAKE()
-	ake.processDHKey(msg)
+	if _, err = ake.processDHKey(msg); err != nil {
+		return s, nil, err
+	}
 
-	c.revealSigMsg, _ = ake.revealSigMessage()
+	if c.revealSigMsg, err = ake.revealSigMessage(); err != nil {
+		return s, nil, err
+	}
 
 	c.gy = ake.gy
 	c.sigKey = ake.sigKey
 
-	return authStateAwaitingSig{}, c.revealSigMsg
+	return authStateAwaitingSig{}, c.revealSigMsg, nil
 }
 
-func (s authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte) {
-	// TODO: errors?
+func (s authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	ake := c.newAKE()
-	isSame, _ := ake.processDHKey(msg)
-	//TODO handle errors
-
-	if isSame {
-		return s, c.revealSigMsg
+	isSame, err := ake.processDHKey(msg)
+	if err != nil {
+		return s, nil, err
 	}
 
-	return s, nil
+	if isSame {
+		return s, c.revealSigMsg, nil
+	}
+
+	return s, nil, nil
 }
 
 func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {

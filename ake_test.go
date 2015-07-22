@@ -79,7 +79,7 @@ func Test_dhKeyMessage_returnsAnErrorIfTheresNotEnoughRandomnessForAnMPI(t *test
 	rnd := fixedRand([]string{"0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A"})
 	ake := AKE{akeContext: newAkeContext(otrV3{}, rnd)}
 	_, err := ake.dhKeyMessage()
-	assertDeepEquals(t, err, errors.New("otr: short read from random source"))
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_revealSigMessage(t *testing.T) {
@@ -259,7 +259,7 @@ func Test_processSig(t *testing.T) {
 func Test_processSig_returnsErrorIfDataIsNotLongEnoughForHeader(t *testing.T) {
 	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
 	err := ake.processSig([]byte{0x01, 0x00})
-	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_processSig_returnsErrorIfTheSignatureDataIsInvalid(t *testing.T) {
@@ -271,7 +271,7 @@ func Test_processSig_returnsErrorIfTheSignatureDataIsInvalid(t *testing.T) {
 func Test_processRevealSig_returnsErrorIfDataIsNotLongEnoughForHeader(t *testing.T) {
 	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
 	err := ake.processRevealSig([]byte{0x01, 0x00})
-	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_processRevealSig_returnsErrorIfTheRDataIsInvalid(t *testing.T) {
@@ -503,7 +503,7 @@ func Test_generateVerifyData(t *testing.T) {
 func Test_processDHCommit_returnsErrorIfTheMessageIsNotLongEnoughForMessageHeader(t *testing.T) {
 	ake := AKE{akeContext: newAkeContext(otrV2{}, fixtureRand())}
 	err := ake.processDHCommit([]byte{0x01, 0x02})
-	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_processDHCommit_returnsErrorIfTheEncryptedGXPartIsNotCorrect(t *testing.T) {
@@ -524,14 +524,14 @@ func Test_calcXBb_returnsErrorIfTheSigningDoesntWork(t *testing.T) {
 	ake.ourKeyID = 1
 
 	_, err := ake.calcXb(nil, []byte{0x00}, false)
-	assertDeepEquals(t, err.Error(), "unexpected EOF")
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_dhCommitMessage_returnsErrorIfNoRandomnessIsAvailable(t *testing.T) {
 	rnd := fixedRand([]string{"ABCD"})
 	ake := AKE{akeContext: newAkeContext(otrV3{}, rnd)}
 	_, err := ake.dhCommitMessage()
-	assertDeepEquals(t, err, errors.New("otr: short read from random source"))
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_dhCommitMessage_returnsErrorIfNoRandomnessIsAvailableForR(t *testing.T) {
@@ -541,7 +541,7 @@ func Test_dhCommitMessage_returnsErrorIfNoRandomnessIsAvailableForR(t *testing.T
 	})
 	ake := AKE{akeContext: newAkeContext(otrV3{}, rnd)}
 	_, err := ake.dhCommitMessage()
-	assertDeepEquals(t, err, errors.New("otr: short read from random source"))
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_generateEncryptedSignature_returnsErrorIfCalcXbFails(t *testing.T) {
@@ -553,7 +553,7 @@ func Test_generateEncryptedSignature_returnsErrorIfCalcXbFails(t *testing.T) {
 	ake.gy = fixedgy
 
 	_, err := ake.generateEncryptedSignature(&ake.revealKey, true)
-	assertDeepEquals(t, err.Error(), "unexpected EOF")
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_revealSigMessage_returnsErrorFromGenerateEncryptedSignature(t *testing.T) {
@@ -567,7 +567,7 @@ func Test_revealSigMessage_returnsErrorFromGenerateEncryptedSignature(t *testing
 	ake.gy = fixedgy
 
 	_, err := ake.revealSigMessage()
-	assertDeepEquals(t, err.Error(), "unexpected EOF")
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_sigMessage_returnsErrorFromgenerateEncryptedSignature(t *testing.T) {
@@ -580,13 +580,13 @@ func Test_sigMessage_returnsErrorFromgenerateEncryptedSignature(t *testing.T) {
 	ake.gy = fixedgy
 	ake.ourKeyID = 1
 	_, err := ake.sigMessage()
-	assertEquals(t, err.Error(), "unexpected EOF")
+	assertEquals(t, err, errShortRandomRead)
 }
 
 func Test_processDHKey_returnsErrorIfTheMessageIsNotLongEnoughForMessageHeader(t *testing.T) {
 	ake := AKE{akeContext: newAkeContext(otrV2{}, fixedRand([]string{}))}
 	_, err := ake.processDHKey([]byte{0x01, 0x02})
-	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_processDHKey_returnsErrorIfTheMessageHasAnIncorrectGyParameter(t *testing.T) {

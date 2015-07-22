@@ -317,9 +317,10 @@ func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *te
 	}
 
 	for _, s := range states {
-		state, msg := s.receiveDHKeyMessage(&c, dhKeymsg)
+		state, msg, err := s.receiveDHKeyMessage(&c, dhKeymsg)
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
+		assertDeepEquals(t, err, nil)
 	}
 }
 
@@ -329,7 +330,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 
 	c := bobContextAtAwaitingDHKey()
 
-	state, msg := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
+	state, msg, _ := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
 
 	//TODO before generate rev si need to extract their gy from DH commit
 	assertEquals(t, state, authStateAwaitingSig{})
@@ -360,9 +361,9 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 	c.ourKey = bobPrivateKey
 
 	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
-	sigState, previousRevealSig := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, sameDHKeyMsg)
+	sigState, previousRevealSig, _ := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, sameDHKeyMsg)
 
-	state, msg := sigState.receiveDHKeyMessage(&c, sameDHKeyMsg)
+	state, msg, _ := sigState.receiveDHKeyMessage(&c, sameDHKeyMsg)
 
 	//FIXME: What about gy and sigKey?
 	assertEquals(t, state, authStateAwaitingSig{})
@@ -375,7 +376,7 @@ func Test_receiveDHKey_AtAuthAwaitingSigIgnoresMsgIfIsNotSameDHKeyMsg(t *testing
 	newDHKeyMsg := fixtureDHKeyMsg(otrV3{})
 	c := newAkeContext(otrV3{}, fixtureRand())
 
-	state, msg := authStateAwaitingSig{}.receiveDHKeyMessage(&c, newDHKeyMsg)
+	state, msg, _ := authStateAwaitingSig{}.receiveDHKeyMessage(&c, newDHKeyMsg)
 
 	assertEquals(t, state, authStateAwaitingSig{})
 	assertDeepEquals(t, msg, nilB)
@@ -598,10 +599,10 @@ func Test_receiveMessage_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 	cV3.addPolicy(allowV3)
 
 	_, err := cV3.receiveMessage([]byte{})
-	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+	assertDeepEquals(t, err, errInvalidOTRMessage)
 
 	_, err = cV3.receiveMessage([]byte{0x00, 0x00})
-	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+	assertDeepEquals(t, err, errInvalidOTRMessage)
 
 	_, err = cV3.receiveMessage([]byte{0x00, 0x03, 0x56})
 	assertDeepEquals(t, err, errors.New("otr: unknown message type 0x56"))
@@ -611,14 +612,14 @@ func Test_authStateAwaitingSig_receiveSigMessage_returnsErrorIfProcessSigFails(t
 	c := newAkeContext(otrV2{}, fixtureRand())
 	c.addPolicy(allowV2)
 	_, _, err := authStateAwaitingSig{}.receiveSigMessage(&c, []byte{0x00, 0x00})
-	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateAwaitingRevealSig_receiveRevealSigMessage_returnsErrorIfProcessRevealSigFails(t *testing.T) {
 	c := newAkeContext(otrV2{}, fixtureRand())
 	c.addPolicy(allowV2)
 	_, _, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, []byte{0x00, 0x00})
-	assertDeepEquals(t, err, errors.New("otr: invalid OTR message"))
+	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_receiveMessage_receiveRevealSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
@@ -641,4 +642,47 @@ func Test_receiveMessage_receiveSigMessageAndSetMessageStateToEncrypted(t *testi
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.msgState, encrypted)
+}
+
+func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.x = ourDHCommitAKE.x
+	c.gx = ourDHCommitAKE.gx
+	c.ourKey = bobPrivateKey
+
+	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, []byte{0x01, 0x02})
+
+	assertDeepEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMessageReturnsError(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV3{}, fixedRand([]string{"ABCD"}))
+	c.x = ourDHCommitAKE.x
+	c.gx = ourDHCommitAKE.gx
+	c.ourKey = bobPrivateKey
+
+	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
+	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, sameDHKeyMsg)
+
+	assertDeepEquals(t, err, errShortRandomRead)
+}
+
+func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
+	ourDHCommitAKE := fixtureAKE()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.x = ourDHCommitAKE.x
+	c.gx = ourDHCommitAKE.gx
+	c.ourKey = bobPrivateKey
+
+	_, _, err := authStateAwaitingSig{}.receiveDHKeyMessage(&c, []byte{0x01, 0x02})
+
+	assertDeepEquals(t, err, errInvalidOTRMessage)
 }

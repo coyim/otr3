@@ -89,7 +89,11 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) ([]byte, error) {
 
 	sigb, err := ake.ourKey.sign(ake.rand(), mb)
 	if err != nil {
-		return nil, err
+		if err == io.ErrUnexpectedEOF {
+			return nil, newOtrError("short read from random source")
+		} else {
+			return nil, err
+		}
 	}
 
 	xb = append(xb, sigb...)
@@ -116,14 +120,14 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 
 	x, ok := ake.randMPI(make([]byte, 40))
 	if !ok {
-		return nil, errors.New("otr: short read from random source")
+		return nil, errShortRandomRead
 	}
 
 	ake.x = x
 	ake.gx = modExp(g1, ake.x)
 
 	if _, err := io.ReadFull(ake.rand(), ake.r[:]); err != nil {
-		return nil, errors.New("otr: short read from random source")
+		return nil, errShortRandomRead
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
@@ -150,7 +154,7 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	y, ok := ake.randMPI(make([]byte, 40)[:])
 
 	if !ok {
-		return nil, errors.New("otr: short read from random source")
+		return nil, errShortRandomRead
 	}
 
 	ake.y = y
@@ -207,7 +211,6 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 }
 
 func (ake *AKE) processDHCommit(msg []byte) error {
-	// TODO: fix errors
 	dhCommitMsg := dhCommit{}
 	err := chainErrors(ake.ensureValidMessage, dhCommitMsg.deserialize, msg)
 	if err != nil {
@@ -258,7 +261,7 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	}
 	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
 	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
-		return errors.New("otr: in reveal signature message: " + err.Error())
+		return newOtrError("in reveal signature message: " + err.Error())
 	}
 	//	ake.theirCurrentDHPub = ake.gx
 	//	ake.theirLastDHPub = nil
@@ -276,7 +279,7 @@ func chainErrors(f1 func([]byte) ([]byte, error), f2 func([]byte) error, msg []b
 
 func (ake *AKE) ensureValidMessage(msg []byte) ([]byte, error) {
 	if len(msg) < ake.headerLen() {
-		return nil, errors.New("otr: invalid OTR message")
+		return nil, errInvalidOTRMessage
 	}
 	return msg[ake.headerLen():], nil
 }
@@ -320,7 +323,7 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	_, keyID, ok2 := extractWord(nextPoint)
 
 	if !ok1 || !ok2 || len(nextPoint) < 4 {
-		return errors.New("otr: corrupt encrypted signature")
+		return errCorruptEncryptedSignature
 	}
 
 	sig := nextPoint[4:]
@@ -333,7 +336,7 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 		return errors.New("bad signature in encrypted signature")
 	}
 	if len(rest) > 0 {
-		return errors.New("corrupt encrypted signature")
+		return errCorruptEncryptedSignature
 	}
 
 	ake.theirKeyID = keyID
