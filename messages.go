@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"crypto/sha256"
-	"encoding/binary"
 	"errors"
 	"math/big"
 )
@@ -210,18 +209,23 @@ func (c *dataMsgPlainText) deserialize(msg []byte) error {
 	}
 	c.nul = msg[0]
 	tlvsBytes := msg[1:]
-	index := 0
-	for index < len(tlvsBytes) {
+	for len(tlvsBytes) > 0 {
 		atlv := tlv{}
-		atlv.tlvType = binary.BigEndian.Uint16(tlvsBytes[index : index+2])
-		atlv.tlvLength = binary.BigEndian.Uint16(tlvsBytes[index+2 : index+4])
-		endOfTLV := index + 4 + int(atlv.tlvLength)
-		if endOfTLV > len(tlvsBytes) {
+		var ok bool
+		tlvsBytes, atlv.tlvType, ok = extractShort(tlvsBytes)
+		if !ok {
+			return errors.New("otr: wrong tlv type")
+		}
+		tlvsBytes, atlv.tlvLength, ok = extractShort(tlvsBytes)
+		if !ok {
 			return errors.New("otr: wrong tlv length")
 		}
-		atlv.tlvValue = tlvsBytes[index+4 : endOfTLV]
+		if len(tlvsBytes) < int(atlv.tlvLength) {
+			return errors.New("otr: wrong tlv value")
+		}
+		atlv.tlvValue = tlvsBytes[:int(atlv.tlvLength)]
 		c.tlvs = append(c.tlvs, atlv)
-		index = endOfTLV
+		tlvsBytes = tlvsBytes[int(atlv.tlvLength):]
 	}
 	return nil
 }
