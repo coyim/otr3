@@ -101,3 +101,7 @@ func h(b byte, secbytes []byte, h hash.Hash) []byte {
 	h.Write(secbytes[:])
 	return h.Sum(nil)
 }
+
+//calculateSessionKeysWhenAKEIsCompleted (receiveRevealSig and recevieSig)
+//rotateDhKeys
+//rotateYKeys

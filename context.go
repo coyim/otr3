@@ -3,6 +3,7 @@ package otr3
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"errors"
 	"io"
 	"math/big"
@@ -107,28 +108,36 @@ func (c *akeContext) newAKE() AKE {
 	}
 }
 
-func (ake *akeContext) messageHeader() messageHeader {
+func (c *akeContext) messageHeader() messageHeader {
 	return messageHeader{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
+		protocolVersion:     c.protocolVersion(),
+		needInstanceTag:     c.needInstanceTag(),
+		senderInstanceTag:   c.senderInstanceTag,
+		receiverInstanceTag: c.receiverInstanceTag,
 	}
 }
 
-func (ake *akeContext) genDataMsg(tlvs ...tlv) dataMsg {
-	msgHeader := ake.messageHeader()
+func (c *akeContext) genDataMsg(tlvs ...tlv) dataMsg {
+	//TODO add padding using TLV type 0
+	plain := dataMsgPlainText{tlvs: tlvs}
+	bytes := plain.serialize()
+
+	topHalfCtr := [8]byte{}
+	binary.BigEndian.PutUint64(topHalfCtr[:], c.ourCounter)
+	c.ourCounter++
+
+	msgHeader := c.messageHeader()
 	dataMessage := dataMsg{
 		messageHeader: msgHeader,
 		//TODO: implement IGNORE_UNREADABLE
 		flag: 0x00,
 
-		senderKeyID:    ake.ourKeyID - 1,
-		recipientKeyID: ake.theirKeyID,
-		y:              ake.ourCurrentDHKeys.pub,
-		topHalfCtr:     [8]byte{},
+		senderKeyID:    c.ourKeyID - 1,
+		recipientKeyID: c.theirKeyID,
+		y:              c.ourCurrentDHKeys.pub,
+		topHalfCtr:     topHalfCtr,
 		//tlv is properly formatted
-		dataMsgEncrypted: []byte{},
+		dataMsgEncrypted: bytes,
 		//TODO after key management
 		authenticator:   [20]byte{},
 		oldRevealKeyMAC: []byte{},

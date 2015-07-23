@@ -131,10 +131,15 @@ func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
 	c.ourKeyID = 2
 	c.theirKeyID = 3
 	c.ourCurrentDHKeys.pub = fixedgy
+	c.ourCounter = 0x1011121314
 
 	dataMsg := c.genDataMsg()
 
 	assertEquals(t, dataMsg.senderKeyID, uint32(1))
 	assertEquals(t, dataMsg.recipientKeyID, uint32(3))
 	assertDeepEquals(t, dataMsg.y, fixedgy)
+	assertDeepEquals(t, dataMsg.topHalfCtr, [8]byte{
+		0x00, 0x00, 0x00, 0x10, 0x11, 0x12, 0x13, 0x14,
+	})
+	assertEquals(t, c.ourCounter, uint64(0x1011121314+1))
 }
