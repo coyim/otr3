@@ -193,16 +193,24 @@ func (c dataMsg) serialize() []byte {
 }
 
 type dataMsgPlainText struct {
-	nul  byte
-	tlvs []tlv
+	plain []byte
+	tlvs  []tlv
 }
 
 func (c *dataMsgPlainText) deserialize(msg []byte) error {
-	if msg[0] != 0x00 {
-		return errors.New("otr: corrupt data message")
+	nulPos := 0
+	for msg[nulPos] != 0x00 && nulPos <= len(msg) {
+		nulPos++
 	}
-	c.nul = msg[0]
-	tlvsBytes := msg[1:]
+
+	var tlvsBytes []byte
+	if nulPos < len(msg) {
+		c.plain = msg[:nulPos]
+		tlvsBytes = msg[nulPos+1:]
+	} else {
+		c.plain = msg
+	}
+
 	for len(tlvsBytes) > 0 {
 		atlv := tlv{}
 		if err := atlv.deserialize(tlvsBytes); err != nil {
@@ -215,11 +223,14 @@ func (c *dataMsgPlainText) deserialize(msg []byte) error {
 }
 
 func (c dataMsgPlainText) serialize() []byte {
-	out := []byte{0x00}
-	for i := range c.tlvs {
-		out = appendShort(out, c.tlvs[i].tlvType)
-		out = appendShort(out, c.tlvs[i].tlvLength)
-		out = append(out, c.tlvs[i].tlvValue...)
+	out := c.plain
+	if len(c.tlvs) > 0 {
+		out = append(out, 0x00)
+		for i := range c.tlvs {
+			out = appendShort(out, c.tlvs[i].tlvType)
+			out = appendShort(out, c.tlvs[i].tlvLength)
+			out = append(out, c.tlvs[i].tlvValue...)
+		}
 	}
 	return out
 }

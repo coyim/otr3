@@ -47,10 +47,11 @@ func Test_tlvDeserilzeWithWrongValue(t *testing.T) {
 	assertEquals(t, err.Error(), "otr: wrong tlv value")
 }
 
-func Test_dataMsgShouldDeserializeOneTLV(t *testing.T) {
-	nul := []byte{0x00}
+func Test_dataMsgPlainTextShouldDeserializeOneTLV(t *testing.T) {
+	plain := []byte("helloworld")
 	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
-	msg := append(nul, atlvBytes...)
+	msg := append(plain, 0x00)
+	msg = append(msg, atlvBytes...)
 	aDataMsg := dataMsgPlainText{}
 	err := aDataMsg.deserialize(msg)
 	atlv := tlv{
@@ -60,16 +61,16 @@ func Test_dataMsgShouldDeserializeOneTLV(t *testing.T) {
 	}
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, aDataMsg.tlvs[0].tlvType, atlv.tlvType)
-	assertDeepEquals(t, aDataMsg.tlvs[0].tlvLength, atlv.tlvLength)
-	assertDeepEquals(t, aDataMsg.tlvs[0].tlvValue, atlv.tlvValue)
+	assertDeepEquals(t, aDataMsg.plain, plain)
+	assertDeepEquals(t, aDataMsg.tlvs[0], atlv)
 }
 
-func Test_dataMsgShouldDeserializeMultiTLV(t *testing.T) {
-	nul := []byte{0x00}
+func Test_dataMsgPlainTextShouldDeserializeMultiTLV(t *testing.T) {
+	plain := []byte("helloworld")
 	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	btlvBytes := []byte{0x00, 0x02, 0x00, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01}
-	msg := append(nul, atlvBytes...)
+	msg := append(plain, 0x00)
+	msg = append(msg, atlvBytes...)
 	msg = append(msg, btlvBytes...)
 	aDataMsg := dataMsgPlainText{}
 	err := aDataMsg.deserialize(msg)
@@ -86,24 +87,16 @@ func Test_dataMsgShouldDeserializeMultiTLV(t *testing.T) {
 	}
 
 	assertEquals(t, err, nil)
-	assertEquals(t, aDataMsg.nul, byte(0x00))
 	assertDeepEquals(t, aDataMsg.tlvs[0], atlv)
 	assertDeepEquals(t, aDataMsg.tlvs[1], btlv)
 }
 
-func Test_dataMsgShouldDeserializeWithErrorWhenFirstByteNotEquals0x00(t *testing.T) {
-	msg := []byte{0x01}
-	aDataMsg := dataMsgPlainText{}
-	err := aDataMsg.deserialize(msg)
-
-	assertEquals(t, err.Error(), "otr: corrupt data message")
-}
-
-func Test_dataMsgShouldSerialize(t *testing.T) {
-	nul := []byte{0x00}
+func Test_dataMsgPlainTextShouldSerialize(t *testing.T) {
+	plain := []byte("helloworld")
 	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	btlvBytes := []byte{0x00, 0x02, 0x00, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01}
-	msg := append(nul, atlvBytes...)
+	msg := append(plain, 0x00)
+	msg = append(msg, atlvBytes...)
 	msg = append(msg, btlvBytes...)
 	aDataMsg := dataMsgPlainText{}
 	atlv := tlv{
@@ -117,7 +110,7 @@ func Test_dataMsgShouldSerialize(t *testing.T) {
 		tlvLength: 0x0005,
 		tlvValue:  []byte{0x01, 0x01, 0x01, 0x01, 0x01},
 	}
-	aDataMsg.nul = 0x00
+	aDataMsg.plain = plain
 	aDataMsg.tlvs = []tlv{atlv, btlv}
 
 	assertDeepEquals(t, aDataMsg.serialize(), msg)
