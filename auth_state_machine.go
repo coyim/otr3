@@ -256,6 +256,7 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (
 	c.theirCurrentDHPubKey = ake.gy
 	c.ourCurrentDHKeys.pub = c.gx
 	c.ourCurrentDHKeys.priv = c.x
+	c.ourCounter++
 
 	return authStateAwaitingSig{}, c.revealSigMsg, nil
 }
@@ -303,6 +304,7 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg [
 
 	c.ourCurrentDHKeys.priv = ake.y
 	c.ourCurrentDHKeys.pub = ake.gy
+	c.ourCounter++
 
 	return authStateNone{}, ret, nil
 }

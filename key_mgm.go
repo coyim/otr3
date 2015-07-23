@@ -28,6 +28,8 @@ type keyManagementContext struct {
 	ourKeyID, theirKeyID                        uint32
 	ourCurrentDHKeys, ourPreviousDHKeys         dhKeyPair
 	theirCurrentDHPubKey, theirPreviousDHPubKey *big.Int
+
+	ourCounter uint64
 }
 
 func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint32) (sessionKeys, error) {

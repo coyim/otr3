@@ -358,7 +358,7 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 	assertDeepEquals(t, c.sigKey.m2[:], expectedM2)
 }
 
-func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeys(t *testing.T) {
+func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeysAndIncreaseCounter(t *testing.T) {
 	ourDHCommitAKE := fixtureAKE()
 	ourDHCommitAKE.dhCommitMessage()
 
@@ -370,6 +370,7 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeys(t *testing.T) {
 	assertDeepEquals(t, c.theirCurrentDHPubKey, fixedgy)
 	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgx)
 	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedx)
+	assertEquals(t, c.ourCounter, uint64(1))
 }
 
 func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
@@ -415,7 +416,7 @@ func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *te
 	assertEquals(t, dhMsgType(msg), msgTypeSig)
 }
 
-func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeys(t *testing.T) {
+func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeysAndIncreaseCounter(t *testing.T) {
 	var nilBigInt *big.Int
 	revealSignMsg := fixtureRevealSigMsg(otrV2{})
 
@@ -430,6 +431,7 @@ func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeys(t *testin
 	assertDeepEquals(t, c.theirPreviousDHPubKey, nilBigInt)
 	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgy)
 	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedy)
+	assertEquals(t, c.ourCounter, uint64(1))
 }
 
 func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing.T) {
