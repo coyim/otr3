@@ -20,7 +20,7 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 
 	smpMsg := fixtureMessage1()
 	m := c.genDataMsg(smpMsg.tlv()).serialize()
-	smpAbortMsg := smpMessageAbort{}.tlv()
+	smpAbortMsg := smpMessageAbort{}.tlv().serialize()
 
 	for _, s := range states {
 		c.msgState = s

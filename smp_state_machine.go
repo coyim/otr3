@@ -12,7 +12,7 @@ var errUnexpectedMessage = errors.New("unexpected SMP message")
 
 type smpMessage interface {
 	receivedMessage(*smpContext) (smpMessage, error)
-	tlv() []byte
+	tlv() tlv
 }
 
 type smpState interface {
@@ -26,7 +26,7 @@ type smpState interface {
 func (c *smpContext) restart() []byte {
 	var ret smpMessage
 	c.smpState, ret, _ = abortStateMachine()
-	return ret.tlv()
+	return ret.tlv().serialize()
 }
 
 func abortStateMachine() (smpState, smpMessage, error) {
@@ -48,7 +48,7 @@ func (c *smpContext) receive(m smpMessage) ([]byte, error) {
 		return nil, nil
 	}
 
-	return toSend.tlv(), nil
+	return toSend.tlv().serialize(), nil
 }
 
 func (smpStateBase) receiveMessage1(c *smpContext, m smpMessage1) (smpState, smpMessage, error) {

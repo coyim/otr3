@@ -62,7 +62,7 @@ func verifyZKP4(cr, g3a, d7, qaqb, ra *big.Int, ix byte) bool {
 	return eq(cr, t)
 }
 
-func genSMPTLV(tp byte, mpis ...*big.Int) []byte {
+func genSMPTLV(tp byte, mpis ...*big.Int) tlv {
 	data := make([]byte, 0, 1000)
 
 	data = appendWord(data, uint32(len(mpis)))
@@ -74,5 +74,5 @@ func genSMPTLV(tp byte, mpis ...*big.Int) []byte {
 		tlvValue:  data,
 	}
 
-	return out.serialize()
+	return out
 }

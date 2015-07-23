@@ -40,7 +40,7 @@ func Test_smpMessage1TLV(t *testing.T) {
 	}
 
 	msg := fixtureMessage1()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 	assertEquals(t, len(tlv), expectedLength)
 	assertDeepEquals(t, tlv[:len(exp)], exp)
 }
@@ -60,7 +60,7 @@ func Test_smpMessage2TLV(t *testing.T) {
 	}
 
 	msg := fixtureMessage2()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 	assertEquals(t, len(tlv), expectedLength)
 	assertDeepEquals(t, tlv[:len(exp)], exp)
 }
@@ -80,7 +80,7 @@ func Test_smpMessage3TLV(t *testing.T) {
 	}
 
 	msg := fixtureMessage3()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 	assertEquals(t, len(tlv), expectedLength)
 	assertDeepEquals(t, tlv[:len(exp)], exp)
 }
@@ -96,14 +96,14 @@ func Test_smpMessage4TLV(t *testing.T) {
 	}
 
 	msg := fixtureMessage4()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 	assertEquals(t, len(tlv), expectedLength)
 	assertDeepEquals(t, tlv[:len(exp)], exp)
 }
 
 func Test_readSmpMessage1TLV(t *testing.T) {
 	msg := fixtureMessage1()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 
 	parsedValue, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, true)
@@ -114,7 +114,7 @@ func Test_readSmpMessage1TLV(t *testing.T) {
 
 func Test_readSmpMessage1TLV_ReturnsNotOKForInvalidMessage1(t *testing.T) {
 	msg := fixtureMessage1()
-	tlv := msg.tlv()[:24]
+	tlv := msg.tlv().serialize()[:24]
 
 	_, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, false)
@@ -122,7 +122,7 @@ func Test_readSmpMessage1TLV_ReturnsNotOKForInvalidMessage1(t *testing.T) {
 
 func Test_readSmpMessage1TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.T) {
 	msg := fixtureMessage1()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 	tlv[8] = 0x01
 
 	_, parsedOk := parseTLV(tlv)
@@ -131,7 +131,7 @@ func Test_readSmpMessage1TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.
 
 func Test_readSmpMessage2TLV_ReturnsNotOKForInvalidMessage2(t *testing.T) {
 	msg := fixtureMessage2()
-	tlv := msg.tlv()[:24]
+	tlv := msg.tlv().serialize()[:24]
 
 	_, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, false)
@@ -139,7 +139,7 @@ func Test_readSmpMessage2TLV_ReturnsNotOKForInvalidMessage2(t *testing.T) {
 
 func Test_readSmpMessage2TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.T) {
 	msg := fixtureMessage2()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 	tlv[8] = 0x01
 
 	_, parsedOk := parseTLV(tlv)
@@ -148,7 +148,7 @@ func Test_readSmpMessage2TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.
 
 func Test_readSmpMessage3TLV_ReturnsNotOKForInvalidMessage2(t *testing.T) {
 	msg := fixtureMessage3()
-	tlv := msg.tlv()[:24]
+	tlv := msg.tlv().serialize()[:24]
 
 	_, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, false)
@@ -156,7 +156,7 @@ func Test_readSmpMessage3TLV_ReturnsNotOKForInvalidMessage2(t *testing.T) {
 
 func Test_readSmpMessage3TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.T) {
 	msg := fixtureMessage3()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 	tlv[8] = 0x01
 
 	_, parsedOk := parseTLV(tlv)
@@ -165,7 +165,7 @@ func Test_readSmpMessage3TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.
 
 func Test_readSmpMessage4TLV_ReturnsNotOKForInvalidMessage2(t *testing.T) {
 	msg := fixtureMessage4()
-	tlv := msg.tlv()[:24]
+	tlv := msg.tlv().serialize()[:24]
 
 	_, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, false)
@@ -173,7 +173,7 @@ func Test_readSmpMessage4TLV_ReturnsNotOKForInvalidMessage2(t *testing.T) {
 
 func Test_readSmpMessage4TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.T) {
 	msg := fixtureMessage4()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 	tlv[8] = 0x01
 
 	_, parsedOk := parseTLV(tlv)
@@ -196,7 +196,7 @@ func Test_parseTLV_ReturnsNotOKForTooShortTLV(t *testing.T) {
 
 func Test_readSmpMessage2TLV(t *testing.T) {
 	msg := fixtureMessage2()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 
 	parsedValue, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, true)
@@ -207,7 +207,7 @@ func Test_readSmpMessage2TLV(t *testing.T) {
 
 func Test_readSmpMessage3TLV(t *testing.T) {
 	msg := fixtureMessage3()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 
 	parsedValue, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, true)
@@ -218,7 +218,7 @@ func Test_readSmpMessage3TLV(t *testing.T) {
 
 func Test_readSmpMessage4TLV(t *testing.T) {
 	msg := fixtureMessage4()
-	tlv := msg.tlv()
+	tlv := msg.tlv().serialize()
 
 	parsedValue, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, true)
