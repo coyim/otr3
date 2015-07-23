@@ -3,7 +3,7 @@ package otr3
 import "encoding/binary"
 
 func (c *akeContext) genDataMsg(tlvsBytes []byte) []byte {
-	msgHeader := dhMessage{
+	msgHeader := messageHeader{
 		protocolVersion:     c.protocolVersion(),
 		needInstanceTag:     c.needInstanceTag(),
 		senderInstanceTag:   uint32(0),
@@ -23,7 +23,7 @@ func (c *akeContext) genDataMsg(tlvsBytes []byte) []byte {
 	}
 
 	dataMessage := dataMsg{
-		dhMessage: msgHeader,
+		messageHeader: msgHeader,
 		//TODO: implement IGNORE_UNREADABLE
 		flag: 0x00,
 

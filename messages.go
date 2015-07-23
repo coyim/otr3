@@ -11,7 +11,7 @@ type message interface {
 	deserialize(msg []byte) error
 }
 
-type dhMessage struct {
+type messageHeader struct {
 	protocolVersion     uint16
 	needInstanceTag     bool
 	senderInstanceTag   uint32
@@ -19,7 +19,7 @@ type dhMessage struct {
 }
 
 type dhCommit struct {
-	dhMessage
+	messageHeader
 	gx          *big.Int
 	encryptedGx []byte
 	hashedGx    [sha256.Size]byte
@@ -53,7 +53,7 @@ func (c *dhCommit) deserialize(msg []byte) error {
 }
 
 type dhKey struct {
-	dhMessage
+	messageHeader
 	gy *big.Int
 }
 
@@ -85,7 +85,7 @@ func (c *dhKey) deserialize(msg []byte) error {
 }
 
 type revealSig struct {
-	dhMessage
+	messageHeader
 	r            [16]byte
 	encryptedSig []byte
 	macSig       []byte
@@ -117,7 +117,7 @@ func (c *revealSig) deserialize(msg []byte) error {
 }
 
 type sig struct {
-	dhMessage
+	messageHeader
 	encryptedSig []byte
 	macSig       []byte
 }
@@ -145,7 +145,7 @@ func (c *sig) deserialize(msg []byte) error {
 }
 
 type dataMsg struct {
-	dhMessage
+	messageHeader
 	flag                        byte
 	senderKeyID, recipientKeyID uint32
 	y                           *big.Int

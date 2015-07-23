@@ -90,8 +90,8 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) ([]byte, error) {
 	return xb, nil
 }
 
-func (ake *AKE) dhMessage() dhMessage {
-	return dhMessage{
+func (ake *AKE) messageHeader() messageHeader {
+	return messageHeader{
 		protocolVersion:     ake.protocolVersion(),
 		needInstanceTag:     ake.needInstanceTag(),
 		senderInstanceTag:   ake.senderInstanceTag,
@@ -117,7 +117,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.gx))
 
 	dhCommitMsg := dhCommit{
-		dhMessage:   ake.dhMessage(),
+		messageHeader:   ake.messageHeader(),
 		gx:          ake.gx,
 		encryptedGx: ake.encryptedGx,
 	}
@@ -126,7 +126,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 
 func (ake *AKE) serializeDHCommit() []byte {
 	dhCommitMsg := dhCommit{
-		dhMessage:   ake.dhMessage(),
+		messageHeader:   ake.messageHeader(),
 		gx:          ake.gx,
 		encryptedGx: ake.encryptedGx,
 	}
@@ -144,7 +144,7 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	ake.gy = modExp(g1, ake.y)
 
 	dhKeyMsg := dhKey{
-		dhMessage: ake.dhMessage(),
+		messageHeader: ake.messageHeader(),
 		gy:        ake.gy,
 	}
 
@@ -153,7 +153,7 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 
 func (ake *AKE) serializeDHKey() []byte {
 	dhKeyMsg := dhKey{
-		dhMessage: ake.dhMessage(),
+		messageHeader: ake.messageHeader(),
 		gy:        ake.gy,
 	}
 
@@ -169,7 +169,7 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 	macSig := sumHMAC(ake.revealKey.m2[:], encryptedSig)
 
 	revealSigMsg := revealSig{
-		dhMessage:    ake.dhMessage(),
+		messageHeader:    ake.messageHeader(),
 		r:            ake.r,
 		encryptedSig: encryptedSig,
 		macSig:       macSig,
@@ -185,7 +185,7 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 	}
 	macSig := sumHMAC(ake.sigKey.m2[:], encryptedSig)
 	sigMsg := sig{
-		dhMessage:    ake.dhMessage(),
+		messageHeader:    ake.messageHeader(),
 		encryptedSig: encryptedSig,
 		macSig:       macSig,
 	}
