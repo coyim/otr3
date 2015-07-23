@@ -148,8 +148,9 @@ func Test_contextUnexpectedMessageTransitionsToSmpExpected1(t *testing.T) {
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect3{}
-	toSend := c.smpContext.receive(m)
+	toSend, err := c.smpContext.receive(m)
 
+	assertEquals(t, err, nil)
 	assertEquals(t, c.smpState, smpStateExpect1{})
 	assertDeepEquals(t, toSend, smpMessageAbort{}.tlv())
 }
@@ -270,4 +271,12 @@ func Test_smpMessage4_receivedMessage_returnsErrorIfTheUnderlyingPrimitiveDoes(t
 	_, err := smpMessage4{rb: big.NewInt(1)}.receivedMessage(c)
 
 	assertDeepEquals(t, err, errors.New("Rb is an invalid group element"))
+}
+
+func Test_receive_returnsAnyErrorThatOccurs(t *testing.T) {
+	m := smpMessage1{g2a: big.NewInt(1)}
+	c := newConversation(otrV3{}, fixtureRand())
+	//c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+	_, err := c.smpContext.receive(m)
+	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
 }
