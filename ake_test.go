@@ -8,11 +8,6 @@ import (
 	"testing"
 )
 
-func bytesFromHex(s string) []byte {
-	val, _ := hex.DecodeString(s)
-	return val
-}
-
 var (
 	fixedr                   = bytesFromHex("abcdabcdabcdabcdabcdabcdabcdabcd")
 	fixedx                   = bnFromHex("bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
