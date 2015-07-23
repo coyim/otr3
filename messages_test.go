@@ -87,8 +87,18 @@ func Test_dataMsgPlainTextShouldDeserializeMultiTLV(t *testing.T) {
 	}
 
 	assertEquals(t, err, nil)
+	assertDeepEquals(t, aDataMsg.plain, plain)
 	assertDeepEquals(t, aDataMsg.tlvs[0], atlv)
 	assertDeepEquals(t, aDataMsg.tlvs[1], btlv)
+}
+
+func Test_dataMsgPlainTextShouldDeserializeNoTLV(t *testing.T) {
+	plain := []byte("helloworld")
+	aDataMsg := dataMsgPlainText{}
+	err := aDataMsg.deserialize(plain)
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, aDataMsg.plain, plain)
+	assertDeepEquals(t, len(aDataMsg.tlvs), 0)
 }
 
 func Test_dataMsgPlainTextShouldSerialize(t *testing.T) {

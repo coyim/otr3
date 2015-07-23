@@ -199,7 +199,7 @@ type dataMsgPlainText struct {
 
 func (c *dataMsgPlainText) deserialize(msg []byte) error {
 	nulPos := 0
-	for msg[nulPos] != 0x00 && nulPos <= len(msg) {
+	for nulPos < len(msg) && msg[nulPos] != 0x00 {
 		nulPos++
 	}
 
