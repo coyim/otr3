@@ -44,9 +44,7 @@ func Test_calculateDHSessionKeys_failsWhenOurKeyIsUnknown(t *testing.T) {
 }
 
 func Test_calculateAKEKeys(t *testing.T) {
-	c := keyManagementContext{}
-
-	ssid, revealSigKeys, signatureKeys := c.calculateAKEKeys(expectedSharedSecret)
+	ssid, revealSigKeys, signatureKeys := calculateAKEKeys(expectedSharedSecret)
 
 	assertDeepEquals(t, ssid[:], bytesFromHex("9cee5d2c7edbc86d"))
 	assertDeepEquals(t, revealSigKeys.c[:], bytesFromHex("5745340b350364a02a0ac1467a318dcc"))

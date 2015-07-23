@@ -27,7 +27,7 @@ type AKE struct {
 }
 
 func (ake *AKE) calcAKEKeys(s *big.Int) {
-	ake.ssid, ake.revealKey, ake.sigKey = ake.calculateAKEKeys(s)
+	ake.ssid, ake.revealKey, ake.sigKey = calculateAKEKeys(s)
 }
 
 func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {

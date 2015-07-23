@@ -66,9 +66,9 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	s := new(big.Int).Exp(theirPubKey, ourPrivKey, p)
 	secbytes := appendMPI(nil, s)
 
-	h := sha1.New()
-	copy(ret.sendingAESKey[:], c.h(sendbyte, secbytes, h))
-	copy(ret.receivingAESKey[:], c.h(recvbyte, secbytes, h))
+	sha := sha1.New()
+	copy(ret.sendingAESKey[:], h(sendbyte, secbytes, sha))
+	copy(ret.receivingAESKey[:], h(recvbyte, secbytes, sha))
 
 	ret.sendingMACKey = sha1.Sum(ret.sendingAESKey[:])
 	ret.receivingMACKey = sha1.Sum(ret.receivingAESKey[:])
@@ -76,24 +76,24 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	return ret, nil
 }
 
-func (c *keyManagementContext) calculateAKEKeys(s *big.Int) (ssid [8]byte, revealSigKeys, signatureKeys akeKeys) {
+func calculateAKEKeys(s *big.Int) (ssid [8]byte, revealSigKeys, signatureKeys akeKeys) {
 	secbytes := appendMPI(nil, s)
-	h := sha256.New()
-	keys := c.h(0x01, secbytes, h)
+	sha := sha256.New()
+	keys := h(0x01, secbytes, sha)
 
-	copy(ssid[:], c.h(0x00, secbytes, h)[:8])
+	copy(ssid[:], h(0x00, secbytes, sha)[:8])
 	copy(revealSigKeys.c[:], keys[:16])
 	copy(signatureKeys.c[:], keys[16:])
-	copy(revealSigKeys.m1[:], c.h(0x02, secbytes, h))
-	copy(revealSigKeys.m2[:], c.h(0x03, secbytes, h))
-	copy(signatureKeys.m1[:], c.h(0x04, secbytes, h))
-	copy(signatureKeys.m2[:], c.h(0x05, secbytes, h))
+	copy(revealSigKeys.m1[:], h(0x02, secbytes, sha))
+	copy(revealSigKeys.m2[:], h(0x03, secbytes, sha))
+	copy(signatureKeys.m1[:], h(0x04, secbytes, sha))
+	copy(signatureKeys.m2[:], h(0x05, secbytes, sha))
 
 	return
 }
 
 // h1() and h2() are the same
-func (*keyManagementContext) h(b byte, secbytes []byte, h hash.Hash) []byte {
+func h(b byte, secbytes []byte, h hash.Hash) []byte {
 	h.Reset()
 	h.Write([]byte{b})
 	h.Write(secbytes[:])
