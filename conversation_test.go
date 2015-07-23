@@ -26,7 +26,7 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 		c.msgState = s
 
 		toSend, err := c.receive(m)
-		assertEquals(t, err, nil)
+		assertEquals(t, err, errEncryptedMessageWithNoSecureChannel)
 		assertEquals(t, c.smpState, smpStateExpect1{})
 		assertDeepEquals(t, toSend, smpAbortMsg)
 	}

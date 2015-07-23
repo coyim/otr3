@@ -128,7 +128,11 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	// TODO check the message instanceTag for V3
 	// I should ignore the message if it is not for my conversation
 
-	_, msgProtocolVersion, _ := extractShort(message)
+	_, msgProtocolVersion, ok := extractShort(message)
+	if !ok {
+		return nil, errInvalidOTRMessage
+	}
+
 	if c.protocolVersion() != msgProtocolVersion {
 		return nil, errWrongProtocolVersion
 	}
@@ -136,16 +140,14 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	switch message[2] {
 	case msgTypeData:
 		if c.msgState != encrypted {
-			//TODO error?
-			return c.smpContext.restart(), nil
+			return c.smpContext.restart(), errEncryptedMessageWithNoSecureChannel
 		}
 
 		//TODO: decrypt data from data message and extract TLVs from it
 		tlv := message
 		smpMessage, ok := parseTLV(tlv)
 		if !ok {
-			// TODO: errors
-			return nil, nil
+			return nil, newOtrError("corrupt data message")
 		}
 
 		//TODO: encrypt toSend and wrap in a DATA message

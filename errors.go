@@ -20,6 +20,7 @@ var errShortRandomRead = newOtrError("short read from random source")
 var errInvalidOTRMessage = newOtrError("invalid OTR message")
 var errCorruptEncryptedSignature = newOtrError("corrupt encrypted signature")
 var errInvalidVersion = newOtrError("no valid version agreement could be found") //libotr ignores this situation
+var errEncryptedMessageWithNoSecureChannel = newOtrError("encrypted message received without encrypted session established")
 
 // OtrError is an error in the OTR library
 type OtrError struct {

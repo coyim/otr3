@@ -35,7 +35,40 @@ func Test_receiveVerifiesMessageProtocolVersion(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 
 	_, err := c.receive(msg)
+
 	assertEquals(t, err, errWrongProtocolVersion)
+}
+
+func Test_receive_returnsAnErrorForAnInvalidOTRMessageWithoutVersionData(t *testing.T) {
+	msg := []byte{0x00}
+	c := newConversation(otrV3{}, fixtureRand())
+
+	_, err := c.receive(msg)
+
+	assertEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_receive_returnsAnErrorForADataMessageWhenNoEncryptionIsActive(t *testing.T) {
+	m := []byte{
+		0x00, 0x03, // protocol version
+		msgTypeData,
+	}
+	c := newConversation(otrV3{}, fixtureRand())
+
+	_, err := c.receive(m)
+	assertDeepEquals(t, err, errEncryptedMessageWithNoSecureChannel)
+}
+
+func Test_receive_returnsAnErrorForAnIncorrectTLVMessage(t *testing.T) {
+	m := []byte{
+		0x00, 0x03, // protocol version
+		msgTypeData,
+		0x99,
+	}
+	c := newConversation(otrV3{}, fixtureRand())
+	c.msgState = encrypted
+	_, err := c.receive(m)
+	assertDeepEquals(t, err, newOtrError("corrupt data message"))
 }
 
 func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
