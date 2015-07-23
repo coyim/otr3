@@ -400,15 +400,8 @@ func Test_calcDHSharedSecret(t *testing.T) {
 }
 
 func Test_calcAKEKeys(t *testing.T) {
-	bob := AKE{
-		akeContext: newAkeContext(otrV3{}, fixtureRand()),
-	}
-
-	bob.x = fixedx
-	bob.gy = fixedgy
-
-	key := bob.calcDHSharedSecret(true)
-	bob.calcAKEKeys(key)
+	var bob AKE
+	bob.calcAKEKeys(expectedSharedSecret)
 
 	assertEquals(t, hex.EncodeToString(bob.ssid[:]), "9cee5d2c7edbc86d")
 	assertEquals(t, hex.EncodeToString(bob.revealKey.c[:]), "5745340b350364a02a0ac1467a318dcc")
@@ -417,21 +410,6 @@ func Test_calcAKEKeys(t *testing.T) {
 	assertEquals(t, hex.EncodeToString(bob.revealKey.m2[:]), "79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6")
 	assertEquals(t, hex.EncodeToString(bob.sigKey.m1[:]), "b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c")
 	assertEquals(t, hex.EncodeToString(bob.sigKey.m2[:]), "954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5")
-
-	var alice AKE
-	alice.y = fixedy
-	alice.gx = fixedgx
-
-	key = alice.calcDHSharedSecret(false)
-	alice.calcAKEKeys(key)
-
-	assertEquals(t, hex.EncodeToString(alice.ssid[:]), "9cee5d2c7edbc86d")
-	assertEquals(t, hex.EncodeToString(alice.revealKey.c[:]), "5745340b350364a02a0ac1467a318dcc")
-	assertEquals(t, hex.EncodeToString(alice.sigKey.c[:]), "d942cc80b66503414c05e3752d9ba5c4")
-	assertEquals(t, hex.EncodeToString(alice.revealKey.m1[:]), "d3251498fb9d977d07392a96eafb8c048d6bc67064bd7da72aa38f20f87a2e3d")
-	assertEquals(t, hex.EncodeToString(alice.revealKey.m2[:]), "79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6")
-	assertEquals(t, hex.EncodeToString(alice.sigKey.m1[:]), "b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c")
-	assertEquals(t, hex.EncodeToString(alice.sigKey.m2[:]), "954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5")
 }
 
 func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
