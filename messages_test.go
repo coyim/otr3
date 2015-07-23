@@ -125,3 +125,16 @@ func Test_dataMsgPlainTextShouldSerialize(t *testing.T) {
 
 	assertDeepEquals(t, aDataMsg.serialize(), msg)
 }
+
+func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.ourKeyID = 2
+	c.theirKeyID = 3
+	c.ourCurrentDHKeys.pub = fixedgy
+
+	dataMsg := c.genDataMsg(nil)
+
+	assertEquals(t, dataMsg.senderKeyID, uint32(1))
+	assertEquals(t, dataMsg.recipientKeyID, uint32(3))
+	assertDeepEquals(t, dataMsg.y, fixedgy)
+}

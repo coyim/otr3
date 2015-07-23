@@ -2,7 +2,7 @@ package otr3
 
 import "encoding/binary"
 
-func (c *akeContext) genDataMsg(tlvsBytes []byte) []byte {
+func (c *akeContext) genDataMsg(tlvsBytes []byte) dataMsg {
 	msgHeader := messageHeader{
 		protocolVersion:     c.protocolVersion(),
 		needInstanceTag:     c.needInstanceTag(),
@@ -27,12 +27,10 @@ func (c *akeContext) genDataMsg(tlvsBytes []byte) []byte {
 		//TODO: implement IGNORE_UNREADABLE
 		flag: 0x00,
 
-		//TODO after key management
 		senderKeyID:    c.ourKeyID - 1,
 		recipientKeyID: c.theirKeyID,
-		//TODO after key management
-		y:          c.ourCurrentDHKeys.pub,
-		topHalfCtr: [8]byte{},
+		y:              c.ourCurrentDHKeys.pub,
+		topHalfCtr:     [8]byte{},
 		//tlv is properly formatted
 		dataMsgEncrypted: []byte{},
 		//TODO after key management
@@ -40,5 +38,5 @@ func (c *akeContext) genDataMsg(tlvsBytes []byte) []byte {
 		oldRevealKeyMAC: []byte{},
 	}
 
-	return dataMessage.serialize()
+	return dataMessage
 }
