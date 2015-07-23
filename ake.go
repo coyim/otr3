@@ -90,14 +90,6 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) ([]byte, error) {
 	return xb, nil
 }
 
-func (ake *AKE) messageHeader() messageHeader {
-	return messageHeader{
-		protocolVersion:     ake.protocolVersion(),
-		needInstanceTag:     ake.needInstanceTag(),
-		senderInstanceTag:   ake.senderInstanceTag,
-		receiverInstanceTag: ake.receiverInstanceTag,
-	}
-}
 func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.ourKeyID = 0
 
@@ -117,18 +109,18 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.gx))
 
 	dhCommitMsg := dhCommit{
-		messageHeader:   ake.messageHeader(),
-		gx:          ake.gx,
-		encryptedGx: ake.encryptedGx,
+		messageHeader: ake.messageHeader(),
+		gx:            ake.gx,
+		encryptedGx:   ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize(), nil
 }
 
 func (ake *AKE) serializeDHCommit() []byte {
 	dhCommitMsg := dhCommit{
-		messageHeader:   ake.messageHeader(),
-		gx:          ake.gx,
-		encryptedGx: ake.encryptedGx,
+		messageHeader: ake.messageHeader(),
+		gx:            ake.gx,
+		encryptedGx:   ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize()
 }
@@ -145,7 +137,7 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 
 	dhKeyMsg := dhKey{
 		messageHeader: ake.messageHeader(),
-		gy:        ake.gy,
+		gy:            ake.gy,
 	}
 
 	return dhKeyMsg.serialize(), nil
@@ -154,7 +146,7 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 func (ake *AKE) serializeDHKey() []byte {
 	dhKeyMsg := dhKey{
 		messageHeader: ake.messageHeader(),
-		gy:        ake.gy,
+		gy:            ake.gy,
 	}
 
 	return dhKeyMsg.serialize()
@@ -169,10 +161,10 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 	macSig := sumHMAC(ake.revealKey.m2[:], encryptedSig)
 
 	revealSigMsg := revealSig{
-		messageHeader:    ake.messageHeader(),
-		r:            ake.r,
-		encryptedSig: encryptedSig,
-		macSig:       macSig,
+		messageHeader: ake.messageHeader(),
+		r:             ake.r,
+		encryptedSig:  encryptedSig,
+		macSig:        macSig,
 	}
 	return revealSigMsg.serialize(), nil
 }
@@ -185,9 +177,9 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 	}
 	macSig := sumHMAC(ake.sigKey.m2[:], encryptedSig)
 	sigMsg := sig{
-		messageHeader:    ake.messageHeader(),
-		encryptedSig: encryptedSig,
-		macSig:       macSig,
+		messageHeader: ake.messageHeader(),
+		encryptedSig:  encryptedSig,
+		macSig:        macSig,
 	}
 
 	return sigMsg.serialize(), nil

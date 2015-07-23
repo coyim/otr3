@@ -107,6 +107,36 @@ func (c *akeContext) newAKE() AKE {
 	}
 }
 
+func (ake *akeContext) messageHeader() messageHeader {
+	return messageHeader{
+		protocolVersion:     ake.protocolVersion(),
+		needInstanceTag:     ake.needInstanceTag(),
+		senderInstanceTag:   ake.senderInstanceTag,
+		receiverInstanceTag: ake.receiverInstanceTag,
+	}
+}
+
+func (ake *akeContext) genDataMsg(tlvs ...tlv) dataMsg {
+	msgHeader := ake.messageHeader()
+	dataMessage := dataMsg{
+		messageHeader: msgHeader,
+		//TODO: implement IGNORE_UNREADABLE
+		flag: 0x00,
+
+		senderKeyID:    ake.ourKeyID - 1,
+		recipientKeyID: ake.theirKeyID,
+		y:              ake.ourCurrentDHKeys.pub,
+		topHalfCtr:     [8]byte{},
+		//tlv is properly formatted
+		dataMsgEncrypted: []byte{},
+		//TODO after key management
+		authenticator:   [20]byte{},
+		oldRevealKeyMAC: []byte{},
+	}
+
+	return dataMessage
+}
+
 func (c *conversation) send(message []byte) {
 	// FIXME Dummy for now
 }
