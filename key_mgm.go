@@ -1,7 +1,9 @@
 package otr3
 
 import (
+	"crypto/aes"
 	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 	"hash"
 	"math/big"
@@ -12,8 +14,13 @@ type dhKeyPair struct {
 	priv *big.Int
 }
 
+type akeKeys struct {
+	c      [aes.BlockSize]byte
+	m1, m2 [sha256.Size]byte
+}
+
 type sessionKeys struct {
-	sendingAESKey, receivingAESKey [16]byte
+	sendingAESKey, receivingAESKey [aes.BlockSize]byte
 	sendingMACKey, receivingMACKey [sha1.Size]byte
 }
 
@@ -60,8 +67,8 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	secbytes := appendMPI(nil, s)
 
 	h := sha1.New()
-	copy(ret.sendingAESKey[:], c.h1(h, sendbyte, secbytes))
-	copy(ret.receivingAESKey[:], c.h1(h, recvbyte, secbytes))
+	copy(ret.sendingAESKey[:], c.h1(sendbyte, secbytes, h))
+	copy(ret.receivingAESKey[:], c.h1(recvbyte, secbytes, h))
 
 	ret.sendingMACKey = sha1.Sum(ret.sendingAESKey[:])
 	ret.receivingMACKey = sha1.Sum(ret.receivingAESKey[:])
@@ -69,9 +76,33 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	return ret, nil
 }
 
-func (c *keyManagementContext) h1(h hash.Hash, b byte, secbytes []byte) []byte {
+func (c *keyManagementContext) calculateAKEKeys(s *big.Int) (ssid [8]byte, revealSigKeys, signatureKeys akeKeys) {
+	secbytes := appendMPI(nil, s)
+	h := sha256.New()
+	keys := c.h2(0x01, secbytes, h)
+
+	copy(ssid[:], c.h2(0x00, secbytes, h)[:8])
+	copy(revealSigKeys.c[:], keys[:16])
+	copy(signatureKeys.c[:], keys[16:])
+	copy(revealSigKeys.m1[:], c.h2(0x02, secbytes, h))
+	copy(revealSigKeys.m2[:], c.h2(0x03, secbytes, h))
+	copy(signatureKeys.m1[:], c.h2(0x04, secbytes, h))
+	copy(signatureKeys.m2[:], c.h2(0x05, secbytes, h))
+
+	return
+}
+
+func (*keyManagementContext) h(b byte, secbytes []byte, h hash.Hash) []byte {
 	h.Reset()
 	h.Write([]byte{b})
 	h.Write(secbytes[:])
 	return h.Sum(nil)
+}
+
+func (c *keyManagementContext) h1(b byte, secbytes []byte, h hash.Hash) []byte {
+	return c.h(b, secbytes, h)
+}
+
+func (c *keyManagementContext) h2(b byte, secbytes []byte, h hash.Hash) []byte {
+	return c.h(b, secbytes, h)
 }

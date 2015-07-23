@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"errors"
-	"hash"
 	"io"
 	"math/big"
 )
@@ -27,22 +26,8 @@ type AKE struct {
 	ssid      [8]byte
 }
 
-type akeKeys struct {
-	c      [16]byte
-	m1, m2 [32]byte
-}
-
 func (ake *AKE) calcAKEKeys(s *big.Int) {
-	secbytes := appendMPI(nil, s)
-	h := sha256.New()
-	keys := h2(0x01, secbytes, h)
-	copy(ake.ssid[:], h2(0x00, secbytes, h)[:8])
-	copy(ake.revealKey.c[:], keys[:16])
-	copy(ake.sigKey.c[:], keys[16:])
-	copy(ake.revealKey.m1[:], h2(0x02, secbytes, h))
-	copy(ake.revealKey.m2[:], h2(0x03, secbytes, h))
-	copy(ake.sigKey.m1[:], h2(0x04, secbytes, h))
-	copy(ake.sigKey.m2[:], h2(0x05, secbytes, h))
+	ake.ssid, ake.revealKey, ake.sigKey = ake.calculateAKEKeys(s)
 }
 
 func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
@@ -358,13 +343,6 @@ func sumHMAC(key, data []byte) []byte {
 
 func sha256Sum(x []byte) [sha256.Size]byte {
 	return sha256.Sum256(x)
-}
-
-func h2(b byte, secbytes []byte, h hash.Hash) []byte {
-	h.Reset()
-	h.Write([]byte{b})
-	h.Write(secbytes[:])
-	return h.Sum(nil)
 }
 
 func encrypt(r, gxMPI []byte) (dst []byte, err error) {
