@@ -12,7 +12,7 @@ $ echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
 ```
 Then, create a symbolic link to the OTR3 repository
 ```
-ln -s /Users/ipazmino/.gopkgs/otr3/src/github.com/twstrike/ .
+ln -s /PathToMyGoPackages/.gopkgs/otr3/src/github.com/twstrike/ .
 ```
 
 Install all dependencies:
