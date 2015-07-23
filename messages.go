@@ -25,7 +25,7 @@ type dhCommit struct {
 	hashedGx    [sha256.Size]byte
 }
 
-func (c *dhCommit) serialize() []byte {
+func (c dhCommit) serialize() []byte {
 	out := appendShort(nil, c.protocolVersion)
 	out = append(out, msgTypeDHCommit)
 	if c.needInstanceTag {
@@ -57,7 +57,7 @@ type dhKey struct {
 	gy *big.Int
 }
 
-func (c *dhKey) serialize() []byte {
+func (c dhKey) serialize() []byte {
 	out := appendShort(nil, c.protocolVersion)
 	out = append(out, msgTypeDHKey)
 	if c.needInstanceTag {
@@ -91,7 +91,7 @@ type revealSig struct {
 	macSig       []byte
 }
 
-func (c *revealSig) serialize() []byte {
+func (c revealSig) serialize() []byte {
 	out := appendShort(nil, c.protocolVersion)
 	out = append(out, msgTypeRevealSig)
 	if c.needInstanceTag {
@@ -122,7 +122,7 @@ type sig struct {
 	macSig       []byte
 }
 
-func (c *sig) serialize() []byte {
+func (c sig) serialize() []byte {
 	out := appendShort(nil, c.protocolVersion)
 	out = append(out, msgTypeSig)
 	if c.needInstanceTag {
@@ -214,7 +214,7 @@ func (c *dataMsgPlainText) deserialize(msg []byte) error {
 	return nil
 }
 
-func (c *dataMsgPlainText) serialize() []byte {
+func (c dataMsgPlainText) serialize() []byte {
 	out := []byte{0x00}
 	for i := range c.tlvs {
 		out = appendShort(out, c.tlvs[i].tlvType)
@@ -230,7 +230,7 @@ type tlv struct {
 	tlvValue  []byte
 }
 
-func (c *tlv) serialize() []byte {
+func (c tlv) serialize() []byte {
 	out := appendShort([]byte{}, c.tlvType)
 	out = appendShort(out, c.tlvLength)
 	return append(out, c.tlvValue...)
