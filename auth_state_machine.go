@@ -59,11 +59,12 @@ func (c *akeContext) receiveQueryMessage(msg []byte) (toSend []byte, err error) 
 	return
 }
 
-type authStateNone struct{}
-type authStateAwaitingDHKey struct{}
-type authStateAwaitingRevealSig struct{}
-type authStateAwaitingSig struct{}
-type authStateV1Setup struct{}
+type authStateBase struct{}
+type authStateNone struct{ authStateBase }
+type authStateAwaitingDHKey struct{ authStateBase }
+type authStateAwaitingRevealSig struct{ authStateBase }
+type authStateAwaitingSig struct{ authStateBase }
+type authStateV1Setup struct{ authStateBase }
 
 type authState interface {
 	receiveQueryMessage(*akeContext, []byte) (authState, []byte, error)
@@ -71,6 +72,14 @@ type authState interface {
 	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveRevealSigMessage(*akeContext, []byte) (authState, []byte, error)
 	receiveSigMessage(*akeContext, []byte) (authState, []byte, error)
+}
+
+func (authStateBase) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return authStateNone{}.receiveQueryMessage(c, msg)
+}
+
+func (authStateBase) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
 func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
@@ -133,18 +142,6 @@ func (s authStateNone) acceptOTRRequest(p policies, msg []byte) (otrVersion, boo
 	}
 
 	return nil, false
-}
-
-func (authStateAwaitingDHKey) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	return authStateNone{}.receiveQueryMessage(c, msg)
-}
-
-func (authStateAwaitingRevealSig) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	return authStateNone{}.receiveQueryMessage(c, msg)
-}
-
-func (authStateAwaitingSig) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	return authStateNone{}.receiveQueryMessage(c, msg)
 }
 
 func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
@@ -230,10 +227,6 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte
 		return authStateAwaitingRevealSig{}, ake.serializeDHCommit(), nil
 	}
 
-	return authStateNone{}.receiveDHCommitMessage(c, msg)
-}
-
-func (authStateAwaitingSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
