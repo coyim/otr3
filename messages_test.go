@@ -2,7 +2,7 @@ package otr3
 
 import "testing"
 
-func Test_tlvSerilze(t *testing.T) {
+func Test_tlvSerialize(t *testing.T) {
 	expectedTLVBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	aTLV := tlv{
 		tlvType:   0x0001,
@@ -13,7 +13,7 @@ func Test_tlvSerilze(t *testing.T) {
 	assertDeepEquals(t, aTLVBytes, expectedTLVBytes)
 }
 
-func Test_tlvDeserilze(t *testing.T) {
+func Test_tlvDeserialize(t *testing.T) {
 	aTLVBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	aTLV := tlv{}
 	expectedTLV := tlv{
@@ -26,21 +26,21 @@ func Test_tlvDeserilze(t *testing.T) {
 	assertDeepEquals(t, aTLV, expectedTLV)
 }
 
-func Test_tlvDeserilzeWithWrongType(t *testing.T) {
+func Test_tlvDeserializeWithWrongType(t *testing.T) {
 	aTLVBytes := []byte{0x00}
 	aTLV := tlv{}
 	err := aTLV.deserialize(aTLVBytes)
 	assertEquals(t, err.Error(), "otr: wrong tlv type")
 }
 
-func Test_tlvDeserilzeWithWrongLength(t *testing.T) {
+func Test_tlvDeserializeWithWrongLength(t *testing.T) {
 	aTLVBytes := []byte{0x00, 0x01, 0x00}
 	aTLV := tlv{}
 	err := aTLV.deserialize(aTLVBytes)
 	assertEquals(t, err.Error(), "otr: wrong tlv length")
 }
 
-func Test_tlvDeserilzeWithWrongValue(t *testing.T) {
+func Test_tlvDeserializeWithWrongValue(t *testing.T) {
 	aTLVBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01}
 	aTLV := tlv{}
 	err := aTLV.deserialize(aTLVBytes)
