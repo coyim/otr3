@@ -238,13 +238,35 @@ func (c dataMsgPlainText) serialize() []byte {
 	return out
 }
 
+const (
+	paddingGranularity = 256
+	tlvHeaderLen       = 4
+	nulByteLen         = 1
+)
+
+func (c dataMsgPlainText) pad() dataMsgPlainText {
+	padding := paddingGranularity - ((len(c.plain) + tlvHeaderLen + nulByteLen) % paddingGranularity)
+
+	if padding > 0 {
+		paddingTlv := tlv{
+			tlvType:   0,
+			tlvLength: uint16(padding),
+			tlvValue:  make([]byte, padding),
+		}
+
+		c.tlvs = append(c.tlvs, paddingTlv)
+	}
+
+	return c
+}
+
 func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte, counter [8]byte) ([]byte, error) {
 	aes, err := aes.NewCipher(key[:])
 	if err != nil {
 		return nil, err
 	}
 
-	plain := c.serialize()
+	plain := c.pad().serialize()
 	encrypted := make([]byte, len(plain))
 
 	var iv [16]byte

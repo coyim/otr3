@@ -128,7 +128,6 @@ func (c *akeContext) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	binary.BigEndian.PutUint64(topHalfCtr[:], c.ourCounter)
 	c.ourCounter++
 
-	//TODO add padding using TLV type 0
 	plain := dataMsgPlainText{
 		plain: message,
 		tlvs:  tlvs,
