@@ -117,3 +117,29 @@ func Test_randMPI_returnsOKForARealRead(t *testing.T) {
 	_, ok := c.randMPI(buf[:])
 	assertEquals(t, ok, true)
 }
+
+func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
+	c := bobContextAfterAKE()
+	c.ourKeyID = 2
+	c.theirKeyID = 3
+	c.ourCounter = 0x1011121314
+
+	dataMsg := c.genDataMsg(nil)
+
+	assertEquals(t, dataMsg.senderKeyID, uint32(1))
+	assertEquals(t, dataMsg.recipientKeyID, uint32(3))
+	assertDeepEquals(t, dataMsg.y, c.ourCurrentDHKeys.pub)
+	assertDeepEquals(t, dataMsg.topHalfCtr, [8]byte{
+		0x00, 0x00, 0x00, 0x10, 0x11, 0x12, 0x13, 0x14,
+	})
+	assertEquals(t, c.ourCounter, uint64(0x1011121314+1))
+}
+
+func Test_genDataMsg_hasEncryptedMessage(t *testing.T) {
+	c := bobContextAfterAKE()
+
+	expected := bytesFromHex("4f0de18011633ed0264ccc1840d64f")
+	dataMsg := c.genDataMsg([]byte("we are awesome"))
+
+	assertDeepEquals(t, dataMsg.encryptedMsg, expected)
+}

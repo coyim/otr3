@@ -1,6 +1,9 @@
 package otr3
 
-import "testing"
+import (
+	"crypto/aes"
+	"testing"
+)
 
 func Test_tlvSerialize(t *testing.T) {
 	expectedTLVBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
@@ -126,20 +129,28 @@ func Test_dataMsgPlainTextShouldSerialize(t *testing.T) {
 	assertDeepEquals(t, aDataMsg.serialize(), msg)
 }
 
-func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
-	c := newAkeContext(otrV3{}, fixtureRand())
-	c.ourKeyID = 2
-	c.theirKeyID = 3
-	c.ourCurrentDHKeys.pub = fixedgy
-	c.ourCounter = 0x1011121314
+func Test_dataMsgPlainTextShouldSerializeWithoutTLVs(t *testing.T) {
+	plain := []byte("helloworld")
+	expected := append(plain, 0x00)
 
-	dataMsg := c.genDataMsg()
+	dataMsg := dataMsgPlainText{
+		plain: plain,
+	}
 
-	assertEquals(t, dataMsg.senderKeyID, uint32(1))
-	assertEquals(t, dataMsg.recipientKeyID, uint32(3))
-	assertDeepEquals(t, dataMsg.y, fixedgy)
-	assertDeepEquals(t, dataMsg.topHalfCtr, [8]byte{
-		0x00, 0x00, 0x00, 0x10, 0x11, 0x12, 0x13, 0x14,
-	})
-	assertEquals(t, c.ourCounter, uint64(0x1011121314+1))
+	assertDeepEquals(t, dataMsg.serialize(), expected)
+}
+
+func Test_encrypt_EncryptsPlainMessageUsingSendingAESKeyAndCounter(t *testing.T) {
+	plain := dataMsgPlainText{
+		plain: []byte("we are awesome"),
+	}
+
+	var sendingAESKey [aes.BlockSize]byte
+	copy(sendingAESKey[:], bytesFromHex("42e258bebf031acf442f52d6ef52d6f1"))
+	expectedEncrypted := bytesFromHex("4f0de18011633ed0264ccc1840d64f")
+
+	encrypted, err := plain.encrypt(sendingAESKey, [8]byte{})
+
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, encrypted, expectedEncrypted)
 }

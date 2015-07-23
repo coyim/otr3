@@ -69,6 +69,19 @@ func fixtureSigMsg(v otrVersion) []byte {
 	return msg
 }
 
+func bobContextAfterAKE() akeContext {
+	c := newAkeContext(otrV3{}, fixtureRand())
+	c.ourKeyID = 1
+	c.ourCurrentDHKeys.pub = fixedgx
+	c.ourPreviousDHKeys.priv = fixedx
+	c.ourPreviousDHKeys.pub = fixedgx
+
+	c.theirKeyID = 1
+	c.theirCurrentDHPubKey = fixedgy
+
+	return c
+}
+
 func bobContextAtAwaitingSig() akeContext {
 	c := bobContextAtReceiveDHKey()
 	c.otrVersion = otrV2{}

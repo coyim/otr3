@@ -16,10 +16,10 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 	}
 
 	c := newConversation(otrV3{}, fixtureRand())
-	c.ourCurrentDHKeys.pub = fixedgx
+	c.akeContext = bobContextAfterAKE()
 
 	smpMsg := fixtureMessage1()
-	m := c.genDataMsg(smpMsg.tlv()).serialize()
+	m := c.genDataMsg(nil, smpMsg.tlv()).serialize()
 	smpAbortMsg := smpMessageAbort{}.tlv().serialize()
 
 	for _, s := range states {

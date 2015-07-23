@@ -1,6 +1,8 @@
 package otr3
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/sha256"
 	"errors"
 	"math/big"
@@ -150,7 +152,7 @@ type dataMsg struct {
 	senderKeyID, recipientKeyID uint32
 	y                           *big.Int
 	topHalfCtr                  [8]byte
-	dataMsgEncrypted            []byte
+	encryptedMsg                []byte
 	authenticator               [20]byte
 	oldRevealKeyMAC             []byte
 }
@@ -182,7 +184,7 @@ func (c dataMsg) serialize() []byte {
 
 	//TODO encrypt
 	//tlv is properly formatted
-	out = appendData(out, c.dataMsgEncrypted)
+	out = appendData(out, c.encryptedMsg)
 
 	//TODO Authenticator (MAC)
 	out = append(out, c.authenticator[:]...)
@@ -224,8 +226,9 @@ func (c *dataMsgPlainText) deserialize(msg []byte) error {
 
 func (c dataMsgPlainText) serialize() []byte {
 	out := c.plain
+	out = append(out, 0x00)
+
 	if len(c.tlvs) > 0 {
-		out = append(out, 0x00)
 		for i := range c.tlvs {
 			out = appendShort(out, c.tlvs[i].tlvType)
 			out = appendShort(out, c.tlvs[i].tlvLength)
@@ -233,6 +236,24 @@ func (c dataMsgPlainText) serialize() []byte {
 		}
 	}
 	return out
+}
+
+func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte, counter [8]byte) ([]byte, error) {
+	aes, err := aes.NewCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
+
+	plain := c.serialize()
+	encrypted := make([]byte, len(plain))
+
+	var iv [16]byte
+	copy(iv[:8], counter[:])
+	stream := cipher.NewCTR(aes, iv[:])
+
+	stream.XORKeyStream(encrypted, plain)
+
+	return encrypted, nil
 }
 
 type tlv struct {

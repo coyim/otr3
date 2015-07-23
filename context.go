@@ -117,14 +117,28 @@ func (c *akeContext) messageHeader() messageHeader {
 	}
 }
 
-func (c *akeContext) genDataMsg(tlvs ...tlv) dataMsg {
-	//TODO add padding using TLV type 0
-	plain := dataMsgPlainText{tlvs: tlvs}
-	bytes := plain.serialize()
+func (c *akeContext) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
+	keys, err := c.calculateDHSessionKeys(c.ourKeyID-1, c.theirKeyID)
+	if err != nil {
+		//TODO errors
+		return dataMsg{}
+	}
 
 	topHalfCtr := [8]byte{}
 	binary.BigEndian.PutUint64(topHalfCtr[:], c.ourCounter)
 	c.ourCounter++
+
+	//TODO add padding using TLV type 0
+	plain := dataMsgPlainText{
+		plain: message,
+		tlvs:  tlvs,
+	}
+
+	encrypted, err := plain.encrypt(keys.sendingAESKey, topHalfCtr)
+	if err != nil {
+		//TODO key has problem
+		return dataMsg{}
+	}
 
 	msgHeader := c.messageHeader()
 	dataMessage := dataMsg{
@@ -136,8 +150,7 @@ func (c *akeContext) genDataMsg(tlvs ...tlv) dataMsg {
 		recipientKeyID: c.theirKeyID,
 		y:              c.ourCurrentDHKeys.pub,
 		topHalfCtr:     topHalfCtr,
-		//tlv is properly formatted
-		dataMsgEncrypted: bytes,
+		encryptedMsg:   encrypted,
 		//TODO after key management
 		authenticator:   [20]byte{},
 		oldRevealKeyMAC: []byte{},
