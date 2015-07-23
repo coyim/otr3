@@ -2,10 +2,11 @@ package otr3
 
 import "errors"
 
-type smpStateExpect1 struct{}
-type smpStateExpect2 struct{}
-type smpStateExpect3 struct{}
-type smpStateExpect4 struct{}
+type smpStateBase struct{}
+type smpStateExpect1 struct{ smpStateBase }
+type smpStateExpect2 struct{ smpStateBase }
+type smpStateExpect3 struct{ smpStateBase }
+type smpStateExpect4 struct{ smpStateBase }
 
 var errUnexpectedMessage = errors.New("unexpected SMP message")
 
@@ -50,6 +51,27 @@ func (c *smpContext) receive(m smpMessage) ([]byte, error) {
 	return toSend.tlv(), nil
 }
 
+func (smpStateBase) receiveMessage1(c *smpContext, m smpMessage1) (smpState, smpMessage, error) {
+	return abortStateMachine()
+}
+
+func (smpStateBase) receiveMessage2(c *smpContext, m smpMessage2) (smpState, smpMessage, error) {
+	return abortStateMachine()
+}
+
+func (smpStateBase) receiveMessage3(c *smpContext, m smpMessage3) (smpState, smpMessage, error) {
+	return abortStateMachine()
+}
+
+func (smpStateBase) receiveMessage4(c *smpContext, m smpMessage4) (smpState, smpMessage, error) {
+	return abortStateMachine()
+}
+
+func (smpStateBase) receiveAbortMessage(c *smpContext, m smpMessageAbort) (smpState, smpMessage) {
+	abortStateMachine()
+	return smpStateExpect1{}, nil
+}
+
 func (smpStateExpect1) receiveMessage1(c *smpContext, m smpMessage1) (smpState, smpMessage, error) {
 	err := c.verifySMP1(m)
 	if err != nil {
@@ -62,22 +84,6 @@ func (smpStateExpect1) receiveMessage1(c *smpContext, m smpMessage1) (smpState, 
 	}
 
 	return smpStateExpect3{}, ret.msg, nil
-}
-
-func (smpStateExpect2) receiveMessage1(c *smpContext, m smpMessage1) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
-func (smpStateExpect3) receiveMessage1(c *smpContext, m smpMessage1) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
-func (smpStateExpect4) receiveMessage1(c *smpContext, m smpMessage1) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
-func (smpStateExpect1) receiveMessage2(c *smpContext, m smpMessage2) (smpState, smpMessage, error) {
-	return abortStateMachine()
 }
 
 func (smpStateExpect2) receiveMessage2(c *smpContext, m smpMessage2) (smpState, smpMessage, error) {
@@ -95,22 +101,6 @@ func (smpStateExpect2) receiveMessage2(c *smpContext, m smpMessage2) (smpState, 
 	}
 
 	return smpStateExpect4{}, ret.msg, nil
-}
-
-func (smpStateExpect3) receiveMessage2(c *smpContext, m smpMessage2) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
-func (smpStateExpect4) receiveMessage2(c *smpContext, m smpMessage2) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
-func (smpStateExpect1) receiveMessage3(c *smpContext, m smpMessage3) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
-func (smpStateExpect2) receiveMessage3(c *smpContext, m smpMessage3) (smpState, smpMessage, error) {
-	return abortStateMachine()
 }
 
 func (smpStateExpect3) receiveMessage3(c *smpContext, m smpMessage3) (smpState, smpMessage, error) {
@@ -135,22 +125,6 @@ func (smpStateExpect3) receiveMessage3(c *smpContext, m smpMessage3) (smpState, 
 	return smpStateExpect1{}, ret.msg, nil
 }
 
-func (smpStateExpect4) receiveMessage3(c *smpContext, m smpMessage3) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
-func (smpStateExpect1) receiveMessage4(c *smpContext, m smpMessage4) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
-func (smpStateExpect2) receiveMessage4(c *smpContext, m smpMessage4) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
-func (smpStateExpect3) receiveMessage4(c *smpContext, m smpMessage4) (smpState, smpMessage, error) {
-	return abortStateMachine()
-}
-
 func (smpStateExpect4) receiveMessage4(c *smpContext, m smpMessage4) (smpState, smpMessage, error) {
 	//TODO: make sure c.s3 is stored when it is generated
 	//TODO: c.s3 could be merged into the smpContext, the same way akeContext works
@@ -166,26 +140,6 @@ func (smpStateExpect4) receiveMessage4(c *smpContext, m smpMessage4) (smpState, 
 	}
 
 	return smpStateExpect1{}, nil, nil
-}
-
-func (smpStateExpect1) receiveAbortMessage(c *smpContext, m smpMessageAbort) (smpState, smpMessage) {
-	abortStateMachine()
-	return smpStateExpect1{}, nil
-}
-
-func (smpStateExpect2) receiveAbortMessage(c *smpContext, m smpMessageAbort) (smpState, smpMessage) {
-	abortStateMachine()
-	return smpStateExpect1{}, nil
-}
-
-func (smpStateExpect3) receiveAbortMessage(c *smpContext, m smpMessageAbort) (smpState, smpMessage) {
-	abortStateMachine()
-	return smpStateExpect1{}, nil
-}
-
-func (smpStateExpect4) receiveAbortMessage(c *smpContext, m smpMessageAbort) (smpState, smpMessage) {
-	abortStateMachine()
-	return smpStateExpect1{}, nil
 }
 
 func (m smpMessage1) receivedMessage(c *smpContext) (ret smpMessage, err error) {
