@@ -28,7 +28,7 @@ type smpMessage2 struct {
 }
 
 func (m smpMessage2) tlv() tlv {
-	return genSMPTLV(3, m.g2b, m.c2, m.d2, m.g3b, m.c3, m.d3, m.pb, m.qb, m.cp, m.d5, m.d6)
+	return genSMPTLV(0x0003, m.g2b, m.c2, m.d2, m.g3b, m.c3, m.d3, m.pb, m.qb, m.cp, m.d5, m.d6)
 }
 
 func (c *smpContext) generateSecondaryParameters() (s smp2, ok bool) {

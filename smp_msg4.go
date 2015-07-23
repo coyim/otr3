@@ -18,7 +18,7 @@ type smpMessage4 struct {
 }
 
 func (m smpMessage4) tlv() tlv {
-	return genSMPTLV(5, m.rb, m.cr, m.d7)
+	return genSMPTLV(0x0005, m.rb, m.cr, m.d7)
 }
 
 func (c *smpContext) generateSMP4(secret *big.Int, s2 smp2, msg3 smpMessage3) (smp4, bool) {

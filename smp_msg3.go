@@ -25,7 +25,7 @@ type smpMessage3 struct {
 }
 
 func (m smpMessage3) tlv() tlv {
-	return genSMPTLV(4, m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
+	return genSMPTLV(0x0004, m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
 }
 
 func (c *smpContext) generateThirdParameters() (s smp3, ok bool) {

@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"crypto/sha256"
-	"encoding/binary"
 	"math/big"
 )
 
@@ -62,14 +61,14 @@ func verifyZKP4(cr, g3a, d7, qaqb, ra *big.Int, ix byte) bool {
 	return eq(cr, t)
 }
 
-func genSMPTLV(tp byte, mpis ...*big.Int) tlv {
+func genSMPTLV(tp uint16, mpis ...*big.Int) tlv {
 	data := make([]byte, 0, 1000)
 
 	data = appendWord(data, uint32(len(mpis)))
 	data = appendMPIs(data, mpis...)
 	length := uint16(len(data))
 	out := tlv{
-		tlvType:   binary.BigEndian.Uint16([]byte{0x00, tp}),
+		tlvType:   tp,
 		tlvLength: length,
 		tlvValue:  data,
 	}
