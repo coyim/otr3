@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"math/big"
 )
 
@@ -67,9 +68,11 @@ func genSMPTLV(tp byte, mpis ...*big.Int) []byte {
 	data = appendWord(data, uint32(len(mpis)))
 	data = appendMPIs(data, mpis...)
 	length := uint16(len(data))
+	out := tlv{
+		tlvType:   binary.BigEndian.Uint16([]byte{0x00, tp}),
+		tlvLength: length,
+		tlvValue:  data,
+	}
 
-	result := make([]byte, 0, length+4)
-	result = append(result, 0x00, tp)
-	result = appendShort(result, length)
-	return append(result, data...)
+	return out.serialize()
 }
