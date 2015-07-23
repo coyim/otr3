@@ -197,12 +197,6 @@ type dataMsgPlainText struct {
 	tlvs []tlv
 }
 
-type tlv struct {
-	tlvType   uint16
-	tlvLength uint16
-	tlvValue  []byte
-}
-
 func (c *dataMsgPlainText) deserialize(msg []byte) error {
 	if msg[0] != 0x00 {
 		return errors.New("otr: corrupt data message")
@@ -228,6 +222,18 @@ func (c *dataMsgPlainText) serialize() []byte {
 		out = append(out, c.tlvs[i].tlvValue...)
 	}
 	return out
+}
+
+type tlv struct {
+	tlvType   uint16
+	tlvLength uint16
+	tlvValue  []byte
+}
+
+func (c *tlv) serialize() []byte {
+	out := appendShort([]byte{}, c.tlvType)
+	out = appendShort(out, c.tlvLength)
+	return append(out, c.tlvValue...)
 }
 
 func (c *tlv) deserialize(tlvsBytes []byte) error {

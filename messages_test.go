@@ -2,6 +2,17 @@ package otr3
 
 import "testing"
 
+func Test_tlvSerilze(t *testing.T) {
+	expectedTLVBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
+	aTLV := tlv{
+		tlvType:   0x0001,
+		tlvLength: 0x0002,
+		tlvValue:  []byte{0x01, 0x01},
+	}
+	aTLVBytes := aTLV.serialize()
+	assertDeepEquals(t, aTLVBytes, expectedTLVBytes)
+}
+
 func Test_tlvDeserilze(t *testing.T) {
 	aTLVBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	aTLV := tlv{}
