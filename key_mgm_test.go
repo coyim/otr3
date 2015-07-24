@@ -91,3 +91,44 @@ func Test_rotateTheirKey_doesNotRotateIfWeDontReceiveTheCurrentSenderKey(t *test
 	assertDeepEquals(t, c.theirPreviousDHPubKey, previousPubKey)
 	assertDeepEquals(t, c.theirCurrentDHPubKey, currentPubKey)
 }
+
+func Test_rotateOurKeys_rotateOurCurrentDHKeys(t *testing.T) {
+	recipientKeyID := uint32(1)
+
+	c := keyManagementContext{
+		ourKeyID: recipientKeyID,
+		ourCurrentDHKeys: dhKeyPair{
+			pub:  fixedgx,
+			priv: fixedx,
+		},
+	}
+
+	c.rotateOurKeys(recipientKeyID, fixedy)
+
+	assertEquals(t, c.ourKeyID, recipientKeyID+1)
+	assertDeepEquals(t, c.ourPreviousDHKeys.priv, fixedx)
+	assertDeepEquals(t, c.ourPreviousDHKeys.pub, fixedgx)
+	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedy)
+	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgy)
+}
+
+func Test_rotateOurKeys_doesNotRotateIfWeDontReceiveOurCurrentKeyID(t *testing.T) {
+	var nilB *big.Int
+	recipientKeyID := uint32(1)
+
+	c := keyManagementContext{
+		ourKeyID: recipientKeyID,
+		ourCurrentDHKeys: dhKeyPair{
+			pub:  fixedgx,
+			priv: fixedx,
+		},
+	}
+
+	c.rotateOurKeys(recipientKeyID+1, fixedy)
+
+	assertEquals(t, c.ourKeyID, recipientKeyID)
+	assertEquals(t, c.ourPreviousDHKeys.priv, nilB)
+	assertEquals(t, c.ourPreviousDHKeys.pub, nilB)
+	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedx)
+	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgx)
+}

@@ -34,8 +34,21 @@ type keyManagementContext struct {
 	ourCounter uint64
 }
 
+func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, newPrivKey *big.Int) {
+	if recipientKeyID == c.ourKeyID {
+		//TODO: reveal MAC keys for c.ourPreviousDHKeys
+		c.ourPreviousDHKeys = c.ourCurrentDHKeys
+		c.ourCurrentDHKeys = dhKeyPair{
+			priv: newPrivKey,
+			pub:  modExp(g1, newPrivKey),
+		}
+		c.ourKeyID++
+	}
+}
+
 func (c *keyManagementContext) rotateTheirKey(senderKeyID uint32, pubDHKey *big.Int) {
 	if senderKeyID == c.theirKeyID {
+		//TODO: reveal MAC keys for c.theirPreviousDHPubKey
 		c.theirPreviousDHPubKey = c.theirCurrentDHPubKey
 		c.theirCurrentDHPubKey = pubDHKey
 		c.theirKeyID++
