@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"crypto/aes"
+	"crypto/hmac"
 	"crypto/sha1"
 	"math/big"
 	"testing"
@@ -171,13 +172,19 @@ func Test_pad_PlainMessageUsingTLV0(t *testing.T) {
 }
 
 func Test_dataMsg_serializeWithAuthenticator(t *testing.T) {
+	var sendingMACKey [sha1.Size]byte
+	copy(sendingMACKey[:], bytesFromHex("a45e2b122f58bbe2042f73f092329ad9b5dfe23e"))
+
 	bodyLen := 30
 	m := dataMsg{
 		y:            big.NewInt(0x01),
 		encryptedMsg: []byte{0x01},
+		macKey:       sendingMACKey,
 	}.serialize()
 
-	auth := sha1.Sum(m[:bodyLen])
+	mac := hmac.New(sha1.New, sendingMACKey[:])
+	mac.Write(m[:bodyLen])
+	auth := mac.Sum(nil)
 
 	assertDeepEquals(t, m[bodyLen:bodyLen+len(auth)], auth[:])
 }

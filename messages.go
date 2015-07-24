@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"crypto/aes"
+	"crypto/hmac"
 	"crypto/sha1"
 	"crypto/sha256"
 	"errors"
@@ -153,6 +154,7 @@ type dataMsg struct {
 	y                           *big.Int
 	topHalfCtr                  [8]byte
 	encryptedMsg                []byte
+	macKey                      [sha1.Size]byte
 	oldRevealKeyMAC             []byte
 }
 
@@ -175,8 +177,9 @@ func (c dataMsg) serialize() []byte {
 	out = append(out, c.topHalfCtr[:]...)
 	out = appendData(out, c.encryptedMsg)
 
-	authenticator := sha1.Sum(out)
-	out = append(out, authenticator[:]...)
+	mac := hmac.New(sha1.New, c.macKey[:])
+	mac.Write(out)
+	out = mac.Sum(out)
 
 	//TODO Old MAC keys to be revealed (DATA)
 	out = appendData(out, c.oldRevealKeyMAC)
