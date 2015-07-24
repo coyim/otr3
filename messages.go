@@ -190,6 +190,49 @@ func (c dataMsg) serialize() []byte {
 	return out
 }
 
+func (c *dataMsg) deserialize(msg []byte) error {
+	c.flag = msg[0]
+
+	msg = msg[1:]
+	var ok bool
+	msg, c.senderKeyID, ok = extractWord(msg)
+	if !ok {
+		return errors.New("otr: failed to deserialize data message")
+	}
+	msg, c.recipientKeyID, ok = extractWord(msg)
+	if !ok {
+		return errors.New("otr: failed to deserialize data message")
+	}
+	msg, c.y, ok = extractMPI(msg)
+	if !ok {
+		return errors.New("otr: failed to deserialize data message")
+	}
+	copy(c.topHalfCtr[:], msg)
+	msg = msg[len(c.topHalfCtr):]
+	msg, c.encryptedMsg, ok = extractData(msg)
+	if !ok {
+		return errors.New("otr: failed to deserialize data message")
+	}
+	copy(c.macKey[:], msg)
+	msg = msg[len(c.macKey):]
+	var revKeysBytes []byte
+	msg, revKeysBytes, ok = extractData(msg)
+	if !ok {
+		return errors.New("otr: failed to deserialize data message")
+	}
+	for len(revKeysBytes) > 0 {
+		var revKey [sha1.Size]byte
+		if len(revKeysBytes) < sha1.Size {
+			return errors.New("otr: failed to deserialize data message")
+		}
+		copy(revKey[:], revKeysBytes)
+		c.oldMACKeys = append(c.oldMACKeys, revKey)
+		revKeysBytes = revKeysBytes[len(revKey):]
+	}
+
+	return nil
+}
+
 type dataMsgPlainText struct {
 	plain []byte
 	tlvs  []tlv

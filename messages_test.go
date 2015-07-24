@@ -53,6 +53,55 @@ func Test_tlvDeserializeWithWrongValue(t *testing.T) {
 	assertEquals(t, err.Error(), "otr: wrong tlv value")
 }
 
+func Test_dataMsgDeserialze(t *testing.T) {
+
+	var msg []byte
+
+	flag := byte(0x00)
+	senderKeyID := uint32(0x00000000)
+	recipientKeyID := uint32(0x00000001)
+	y := big.NewInt(1)
+	topHalfCtr := [8]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+	encryptedMsg := []byte{0x00, 0x01, 0x02, 0x03}
+
+	macKey := [20]byte{0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03}
+	oldMACKeys := [][sha1.Size]byte{
+		[20]byte{0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03},
+		[20]byte{0x01, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03},
+	}
+
+	msg = append(msg, flag)
+
+	msg = appendWord(msg, senderKeyID)
+	msg = appendWord(msg, recipientKeyID)
+
+	msg = appendMPI(msg, y)
+
+	msg = append(msg, topHalfCtr[:]...)
+
+	msg = appendData(msg, encryptedMsg)
+
+	msg = append(msg, macKey[:]...)
+	revKeys := make([]byte, 0, len(oldMACKeys)*sha1.Size)
+	for _, k := range oldMACKeys {
+		revKeys = append(revKeys, k[:]...)
+	}
+	msg = appendData(msg, revKeys)
+
+	dataMessage := dataMsg{}
+	err := dataMessage.deserialize(msg)
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, dataMessage.flag, flag)
+	assertDeepEquals(t, dataMessage.senderKeyID, senderKeyID)
+	assertDeepEquals(t, dataMessage.recipientKeyID, recipientKeyID)
+	assertDeepEquals(t, dataMessage.y, y)
+	assertDeepEquals(t, dataMessage.topHalfCtr, topHalfCtr)
+	assertDeepEquals(t, dataMessage.encryptedMsg, encryptedMsg)
+	assertDeepEquals(t, dataMessage.macKey, macKey)
+	assertDeepEquals(t, dataMessage.oldMACKeys, oldMACKeys)
+
+}
+
 func Test_dataMsgPlainTextShouldDeserializeOneTLV(t *testing.T) {
 	plain := []byte("helloworld")
 	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
