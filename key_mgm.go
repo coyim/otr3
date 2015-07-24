@@ -19,9 +19,11 @@ type akeKeys struct {
 	m1, m2 [sha256.Size]byte
 }
 
+type macKey [sha1.Size]byte
+
 type sessionKeys struct {
 	sendingAESKey, receivingAESKey [aes.BlockSize]byte
-	sendingMACKey, receivingMACKey [sha1.Size]byte
+	sendingMACKey, receivingMACKey macKey
 }
 
 type keyManagementContext struct {

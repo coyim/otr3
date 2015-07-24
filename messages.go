@@ -154,8 +154,8 @@ type dataMsg struct {
 	y                           *big.Int
 	topHalfCtr                  [8]byte
 	encryptedMsg                []byte
-	macKey                      [sha1.Size]byte
-	oldMACKeys                  [][sha1.Size]byte
+	macKey                      macKey
+	oldMACKeys                  []macKey
 }
 
 func (c dataMsg) serialize() []byte {
@@ -181,7 +181,8 @@ func (c dataMsg) serialize() []byte {
 	mac.Write(out)
 	out = mac.Sum(out)
 
-	revKeys := make([]byte, 0, len(c.oldMACKeys)*sha1.Size)
+	keyLen := len(macKey{})
+	revKeys := make([]byte, 0, len(c.oldMACKeys)*keyLen)
 	for _, k := range c.oldMACKeys {
 		revKeys = append(revKeys, k[:]...)
 	}
