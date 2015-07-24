@@ -48,20 +48,32 @@ func (ake *akeContext) getY() *big.Int {
 
 func (ake *akeContext) setX(val *big.Int) {
 	ake.secretExponent = val
-	ake._gx = modExp(g1, val)
+	ake.setGXOur(modExp(g1, val))
 }
 
 func (ake *akeContext) setY(val *big.Int) {
 	ake.secretExponent = val
-	ake._gy = modExp(g1, val)
+	ake.setGYOur(modExp(g1, val))
 }
 
-func (ake *akeContext) setGX(val *big.Int) {
+func (ake *akeContext) setGXTheir(val *big.Int) {
 	ake._gx = val
+	ake._their = val
 }
 
-func (ake *akeContext) setGY(val *big.Int) {
+func (ake *akeContext) setGXOur(val *big.Int) {
+	ake._gx = val
+	ake._our = val
+}
+
+func (ake *akeContext) setGYTheir(val *big.Int) {
 	ake._gy = val
+	ake._their = val
+}
+
+func (ake *akeContext) setGYOur(val *big.Int) {
+	ake._gy = val
+	ake._our = val
 }
 
 func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
@@ -241,7 +253,7 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 		isSame = eq(ake.getGY(), dhKeyMsg.gy)
 		return
 	}
-	ake.setGY(dhKeyMsg.gy)
+	ake.setGYTheir(dhKeyMsg.gy)
 	return
 }
 
@@ -267,7 +279,7 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	if tempgx, err = extractGx(decryptedGx); err != nil {
 		return
 	}
-	ake.setGX(tempgx)
+	ake.setGXTheir(tempgx)
 	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
 	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
 		return newOtrError("in reveal signature message: " + err.Error())

@@ -40,6 +40,7 @@ type akeContext struct {
 	msgState            msgState
 	r                   [16]byte
 	secretExponent      *big.Int
+	_our, _their        *big.Int
 	_gx, _gy, _x, _y    *big.Int
 	encryptedGx         []byte
 	hashedGx            [sha256.Size]byte

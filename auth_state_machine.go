@@ -101,7 +101,6 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 
 	c.r = ake.r
 	c.setX(ake.getX())
-	c.setGX(ake.getGX())
 
 	return authStateAwaitingDHKey{}, out, nil
 }
@@ -157,7 +156,6 @@ func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authSt
 	}
 
 	c.setY(ake.getY())
-	c.setGY(ake.getGY())
 
 	if err = ake.processDHCommit(msg); err != nil {
 		return s, nil, err
@@ -250,7 +248,7 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (
 		return s, nil, err
 	}
 
-	c.setGY(ake.getGY())
+	c.setGYTheir(ake.getGY())
 	c.sigKey = ake.sigKey
 
 	c.theirCurrentDHPubKey = ake.getGY()
