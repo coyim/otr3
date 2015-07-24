@@ -188,3 +188,21 @@ func Test_dataMsg_serializeWithAuthenticator(t *testing.T) {
 
 	assertDeepEquals(t, m[bodyLen:bodyLen+len(auth)], auth[:])
 }
+
+func Test_dataMsg_serializeExposesOldMACKeys(t *testing.T) {
+	var macKey1, macKey2 [sha1.Size]byte
+	copy(macKey1[:], bytesFromHex("a45e2b122f58bbe2042f73f092329ad9b5dfe23e"))
+	copy(macKey2[:], bytesFromHex("e55a2b111f60bbe1041f73f003333ad9a5dfe22a"))
+
+	m := dataMsg{
+		y:          big.NewInt(0x01),
+		oldMACKeys: [][20]byte{macKey1, macKey2},
+	}
+	msg := m.serialize()
+	revMACsSize := 2 * sha1.Size
+	MACsIndex := (len(msg) - revMACsSize)
+
+	_, expectedData, _ := extractData(msg[MACsIndex-4:])
+	assertDeepEquals(t, expectedData[:sha1.Size], macKey1[:])
+	assertDeepEquals(t, expectedData[sha1.Size:], macKey2[:])
+}

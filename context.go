@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
@@ -146,7 +147,7 @@ func (c *akeContext) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		topHalfCtr:     topHalfCtr,
 		encryptedMsg:   encrypted,
 		//TODO after key management
-		oldRevealKeyMAC: []byte{},
+		oldMACKeys: [][sha1.Size]byte{},
 	}
 
 	return dataMessage

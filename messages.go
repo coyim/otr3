@@ -155,7 +155,7 @@ type dataMsg struct {
 	topHalfCtr                  [8]byte
 	encryptedMsg                []byte
 	macKey                      [sha1.Size]byte
-	oldRevealKeyMAC             []byte
+	oldMACKeys                  [][sha1.Size]byte
 }
 
 func (c dataMsg) serialize() []byte {
@@ -181,8 +181,11 @@ func (c dataMsg) serialize() []byte {
 	mac.Write(out)
 	out = mac.Sum(out)
 
-	//TODO Old MAC keys to be revealed (DATA)
-	out = appendData(out, c.oldRevealKeyMAC)
+	revKeys := make([]byte, 0, len(c.oldMACKeys)*sha1.Size)
+	for _, k := range c.oldMACKeys {
+		revKeys = append(revKeys, k[:]...)
+	}
+	out = appendData(out, revKeys)
 
 	return out
 }
