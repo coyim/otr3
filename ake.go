@@ -92,8 +92,8 @@ func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
 	return modExp(ake.getTheirPublicValue(), ake.getExponent())
 }
 
-func (ake *AKE) generateEncryptedSignatureTrue(publicValueL, publicValueR *big.Int, key *akeKeys) ([]byte, error) {
-	verifyData := appendAll(publicValueL, publicValueR, &ake.ourKey.PublicKey, ake.ourKeyID)
+func (ake *AKE) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
+	verifyData := appendAll(ake.getOurPublicValue(), ake.getTheirPublicValue(), &ake.ourKey.PublicKey, ake.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
 	xb, err := ake.calcXb(key, mb)
@@ -104,20 +104,6 @@ func (ake *AKE) generateEncryptedSignatureTrue(publicValueL, publicValueR *big.I
 
 	return appendData(nil, xb), nil
 }
-
-func (ake *AKE) generateEncryptedSignatureFalse(publicValueL, publicValueR *big.Int, key *akeKeys) ([]byte, error) {
-	verifyData := appendAll(publicValueL, publicValueR, &ake.ourKey.PublicKey, ake.ourKeyID)
-
-	mb := sumHMAC(key.m1[:], verifyData)
-	xb, err := ake.calcXb(key, mb)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return appendData(nil, xb), nil
-}
-
 func appendAll(one, two *big.Int, publicKey *PublicKey, keyID uint32) []byte {
 	return appendWord(append(appendMPI(appendMPI(nil, one), two), publicKey.serialize()...), keyID)
 }
@@ -207,7 +193,7 @@ func (ake *AKE) serializeDHKey() []byte {
 // Bob ---- Reveal Signature ----> Alice
 func (ake *AKE) revealSigMessage() ([]byte, error) {
 	ake.calcAKEKeys(ake.calcDHSharedSecret(true))
-	encryptedSig, err := ake.generateEncryptedSignatureTrue(ake.getOurPublicValue(), ake.getTheirPublicValue(), &ake.revealKey)
+	encryptedSig, err := ake.generateEncryptedSignature(&ake.revealKey)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +212,7 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 // Alice -- Signature -----------> Bob
 func (ake *AKE) sigMessage() ([]byte, error) {
 	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
-	encryptedSig, err := ake.generateEncryptedSignatureFalse(ake.getOurPublicValue(), ake.getTheirPublicValue(), &ake.sigKey)
+	encryptedSig, err := ake.generateEncryptedSignature(&ake.sigKey)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +284,7 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	}
 	ake.setGXTheir(tempgx)
 	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
-	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
+	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey); err != nil {
 		return newOtrError("in reveal signature message: " + err.Error())
 	}
 
@@ -331,14 +317,14 @@ func (ake *AKE) processSig(msg []byte) (err error) {
 	theirMAC := sigMsg.macSig
 	encryptedSig := sigMsg.encryptedSig
 
-	if err := ake.processEncryptedSig(encryptedSig, theirMAC, &ake.sigKey, false /* gy comes first */); err != nil {
+	if err := ake.processEncryptedSig(encryptedSig, theirMAC, &ake.sigKey); err != nil {
 		return errors.New("otr: in signature message: " + err.Error())
 	}
 
 	return nil
 }
 
-func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys, xFirst bool) error {
+func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys) error {
 	tomac := appendData(nil, encryptedSig)
 	myMAC := sumHMAC(keys.m2[:], tomac)[:20]
 
@@ -363,12 +349,7 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 
 	sig := nextPoint[4:]
 
-	var verifyData []byte
-	if xFirst {
-		verifyData = appendAll(ake.getGX(), ake.getGY(), ake.theirKey, keyID)
-	} else {
-		verifyData = appendAll(ake.getGY(), ake.getGX(), ake.theirKey, keyID)
-	}
+	verifyData := appendAll(ake.getTheirPublicValue(), ake.getOurPublicValue(), ake.theirKey, keyID)
 
 	mb := sumHMAC(keys.m1[:], verifyData)
 
