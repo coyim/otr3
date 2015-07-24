@@ -87,9 +87,9 @@ func Test_revealSigMessage(t *testing.T) {
 	ake.receiverInstanceTag = 0x00000001
 	ake.ourKey = bobPrivateKey
 	copy(ake.r[:], fixedr)
-	ake.x = fixedx
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setX(fixedx)
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 	ake.ourKeyID = 1
 	expectedEncryptedSignature := bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf")
 	expedctedMACSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
@@ -112,11 +112,11 @@ func Test_processDHKey(t *testing.T) {
 	ake := AKE{
 		akeContext: newAkeContext(otrV2{}, fixtureRand()),
 	}
-	ake.gy = fixedgy
+	ake.setGY(fixedgy)
 
 	msg := appendShort([]byte{}, ake.protocolVersion())
 	msg = append(msg, msgTypeDHKey)
-	msg = appendMPI(msg, ake.gy)
+	msg = appendMPI(msg, ake.getGY())
 
 	isSame, err := ake.processDHKey(msg)
 	assertEquals(t, err, nil)
@@ -127,7 +127,7 @@ func Test_processDHKeyNotSame(t *testing.T) {
 	ake := AKE{
 		akeContext: newAkeContext(otrV2{}, fixtureRand()),
 	}
-	ake.gy = fixedgy
+	ake.setGY(fixedgy)
 
 	msg := appendShort([]byte{}, ake.protocolVersion())
 	msg = append(msg, msgTypeDHKey)
@@ -144,7 +144,7 @@ func Test_processDHKeyHavingError(t *testing.T) {
 	ake := AKE{
 		akeContext: newAkeContext(otrV2{}, fixtureRand()),
 	}
-	ake.gy = fixedgy
+	ake.setGY(fixedgy)
 
 	msg := appendShort([]byte{}, ake.protocolVersion())
 	msg = append(msg, msgTypeDHKey)
@@ -160,9 +160,9 @@ func Test_processEncryptedSig(t *testing.T) {
 	ake := AKE{
 		akeContext: newAkeContext(otrV3{}, rnd),
 	}
-	ake.x = fixedx
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setX(fixedx)
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 	ake.ourKeyID = 1
 	s := ake.calcDHSharedSecret(true)
 	ake.calcAKEKeys(s)
@@ -191,9 +191,9 @@ func Test_processEncryptedSigWithBadSignatureError(t *testing.T) {
 	}
 	ake.ourKey = bobPrivateKey
 	ake.theirKey = &bobPrivateKey.PublicKey
-	ake.x = fixedx
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setX(fixedx)
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 	ake.ourKeyID = 1
 	s := ake.calcDHSharedSecret(true)
 	ake.calcAKEKeys(s)
@@ -216,14 +216,14 @@ func Test_processRevealSig(t *testing.T) {
 
 	bob.ourKey = bobPrivateKey
 	copy(bob.r[:], fixedr)
-	bob.x = fixedx
-	bob.gx = fixedgx
-	bob.gy = fixedgy
+	bob.setX(fixedx)
+	bob.setGX(fixedgx)
+	bob.setGY(fixedgy)
 	bob.ourKeyID = 1
 	msg, err := bob.revealSigMessage()
 
-	alice.y = fixedy
-	alice.gy = fixedgy
+	alice.setY(fixedy)
+	alice.setGY(fixedgy)
 	alice.encryptedGx = bytesFromHex("5dd6a5999be73a99b80bdb78194a125f3067bd79e69c648b76a068117a8c4d0f36f275305423a933541937145d85ab4618094cbafbe4db0c0081614c1ff0f516c3dc4f352e9c92f88e4883166f12324d82240a8f32874c3d6bc35acedb8d501aa0111937a4859f33aa9b43ec342d78c3a45a5939c1e58e6b4f02725c1922f3df8754d1e1ab7648f558e9043ad118e63603b3ba2d8cbfea99a481835e42e73e6cd6019840f4470b606e168b1cd4a1f401c3dc52525d79fa6b959a80d4e11f1ec3a7984cf9")
 	copy(alice.hashedGx[:], bytesFromHex("a3f2c4b9e3a7d1f565157ae7b0e71c721d59d3c79d39e5e4e8d08cb8464ff857"))
 	err = alice.processRevealSig(msg)
@@ -239,9 +239,9 @@ func Test_processSig(t *testing.T) {
 	}
 
 	ake.ourKey = bobPrivateKey
-	ake.y = fixedy
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setY(fixedy)
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 	ake.ourKeyID = 1
 	result, err := ake.sigMessage()
 
@@ -290,9 +290,9 @@ func Test_sigMessage(t *testing.T) {
 	ake.ourKey = alicePrivateKey
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
-	ake.y = fixedy
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setY(fixedy)
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 	ake.ourKeyID = 1
 
 	expectedEncryptedSignature, _ := hex.DecodeString("000001d2b4f6ac650cc1d28f61a3b9bdf3cd60e2d1ea55d4c56e9f954eb22e10764861fb40d69917f5c4249fa701f3c04fae9449cd13a5054861f95fbc5775fc3cfd931cf5cc1a89eac82e7209b607c4fbf18df945e23bd0e91365fcc6c5dac072703dd8e2287372107f6a2cbb9139f5e82108d4cbcc1c6cdfcc772014136e756338745e2210d42c6e3ec4e9cf87fa8ebd8190e00f3a54bec86ee06cb7664059bb0fa79529e9d2e563ffecc5561477b3ba6bbf4ac679624b6da69a85822ed5c6ceb56a98740b1002026c503c39badab13b5d5ec948bbb961f0c90e68894a1fb70645a8e21ffe6b78e2e4ee62a62c48bd54e3d27c1166d098791518b53a10c409b5e55d16555b721a7750b7084e8972540bf0f1d76602e9b5fd58f94ed2dbf69fafccef84fdca2f9d800346b2358a200db060d8cf1b984a5213d02f7c27e452ad1cd893b0a668aaf6733809c31a392fc6cfc754691aca9a51582b636b92ea10abd661dd88bfd4c5f19b3ce265951728637b23fff7f7c0638721b6a01b3f1c3e923c10ea37d4e240fd973647d34dde6991cc3a04ce459c23e3ee2a858912ff78f405bbd9951935a120017904537db50f6e9e29338938f2b45ed323fc508d02fd0a0703e53ffc1889bccdec87e7c3d87e442fe29a7654d1")
@@ -317,12 +317,12 @@ func Test_encrypt(t *testing.T) {
 		akeContext: newAkeContext(otrV3{}, rnd),
 	}
 
-	ake.gx = fixedgx
+	ake.setGX(fixedgx)
 	io.ReadFull(ake.rand(), ake.r[:])
 
-	encryptedGx, err := encrypt(ake.r[:], appendMPI(nil, ake.gx))
+	encryptedGx, err := encrypt(ake.r[:], appendMPI(nil, ake.getGX()))
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, len(encryptedGx), len(appendMPI([]byte{}, ake.gx)))
+	assertDeepEquals(t, len(encryptedGx), len(appendMPI([]byte{}, ake.getGX())))
 }
 
 func Test_decrypt(t *testing.T) {
@@ -331,15 +331,15 @@ func Test_decrypt(t *testing.T) {
 		akeContext: newAkeContext(otrV3{}, rnd),
 	}
 
-	ake.gx = fixedgx
+	ake.setGX(fixedgx)
 	io.ReadFull(ake.rand(), ake.r[:])
 
-	encryptedGx, _ := encrypt(ake.r[:], appendMPI(nil, ake.gx))
+	encryptedGx, _ := encrypt(ake.r[:], appendMPI(nil, ake.getGX()))
 	decryptedGx := encryptedGx
 	err := decrypt(ake.r[:], decryptedGx, encryptedGx)
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, decryptedGx, appendMPI([]byte{}, ake.gx))
+	assertDeepEquals(t, decryptedGx, appendMPI([]byte{}, ake.getGX()))
 }
 
 func Test_sha256Sum(t *testing.T) {
@@ -384,15 +384,15 @@ func Test_extractGxWithRangeError(t *testing.T) {
 
 func Test_calcDHSharedSecret(t *testing.T) {
 	var bob AKE
-	bob.x = fixedx
-	bob.gy = fixedgy
+	bob.setX(fixedx)
+	bob.setGY(fixedgy)
 
 	sharedSecretB := bob.calcDHSharedSecret(true)
 	assertDeepEquals(t, sharedSecretB, expectedSharedSecret)
 
 	var alice AKE
-	alice.y = fixedy
-	alice.gx = fixedgx
+	alice.setY(fixedy)
+	alice.setGX(fixedgx)
 
 	sharedSecretA := alice.calcDHSharedSecret(false)
 
@@ -419,9 +419,9 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 	}
 
 	ake.ourKey = bobPrivateKey
-	ake.x = fixedx
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setX(fixedx)
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 	ake.ourKeyID = 1
 
 	key := ake.calcDHSharedSecret(true)
@@ -443,9 +443,9 @@ func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 	}
 
 	ake.ourKey = alicePrivateKey
-	ake.y = fixedy
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setY(fixedy)
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 	ake.ourKeyID = 1
 
 	key := ake.calcDHSharedSecret(false)
@@ -463,8 +463,8 @@ func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 func Test_generateVerifyData(t *testing.T) {
 	var ake AKE
 	ake.ourKey = bobPrivateKey
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 	ake.ourKeyID = 1
 
 	verifyData := ake.generateVerifyData(true, &ake.ourKey.PublicKey, ake.ourKeyID)
@@ -522,8 +522,8 @@ func Test_generateEncryptedSignature_returnsErrorIfCalcXbFails(t *testing.T) {
 	ake := AKE{akeContext: newAkeContext(otrV3{}, rnd)}
 
 	ake.ourKey = bobPrivateKey
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 
 	_, err := ake.generateEncryptedSignature(&ake.revealKey, true)
 	assertDeepEquals(t, err, errShortRandomRead)
@@ -534,10 +534,10 @@ func Test_revealSigMessage_returnsErrorFromGenerateEncryptedSignature(t *testing
 	ake := AKE{akeContext: newAkeContext(otrV3{}, rnd)}
 
 	ake.ourKey = bobPrivateKey
-	ake.y = fixedy
-	ake.x = fixedx
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setY(fixedy)
+	ake.setX(fixedx)
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 
 	_, err := ake.revealSigMessage()
 	assertDeepEquals(t, err, errShortRandomRead)
@@ -548,9 +548,9 @@ func Test_sigMessage_returnsErrorFromgenerateEncryptedSignature(t *testing.T) {
 	ake := AKE{akeContext: newAkeContext(otrV3{}, rnd)}
 
 	ake.ourKey = bobPrivateKey
-	ake.y = fixedy
-	ake.gx = fixedgx
-	ake.gy = fixedgy
+	ake.setY(fixedy)
+	ake.setGX(fixedgx)
+	ake.setGY(fixedgy)
 	ake.ourKeyID = 1
 	_, err := ake.sigMessage()
 	assertEquals(t, err, errShortRandomRead)

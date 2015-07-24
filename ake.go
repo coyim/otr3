@@ -30,12 +30,46 @@ func (ake *AKE) calcAKEKeys(s *big.Int) {
 	ake.ssid, ake.revealKey, ake.sigKey = calculateAKEKeys(s)
 }
 
+func (ake *akeContext) getGY() *big.Int {
+	return ake._gy
+}
+
+func (ake *akeContext) getGX() *big.Int {
+	return ake._gx
+}
+
+func (ake *akeContext) getX() *big.Int {
+	return ake.secretExponent
+}
+
+func (ake *akeContext) getY() *big.Int {
+	return ake.secretExponent
+}
+
+func (ake *akeContext) setX(val *big.Int) {
+	ake.secretExponent = val
+	ake._gx = modExp(g1, val)
+}
+
+func (ake *akeContext) setY(val *big.Int) {
+	ake.secretExponent = val
+	ake._gy = modExp(g1, val)
+}
+
+func (ake *akeContext) setGX(val *big.Int) {
+	ake._gx = val
+}
+
+func (ake *akeContext) setGY(val *big.Int) {
+	ake._gy = val
+}
+
 func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
 	if xKnown {
-		return modExp(ake.gy, ake.x)
+		return modExp(ake.getGY(), ake.getX())
 	}
 
-	return modExp(ake.gx, ake.y)
+	return modExp(ake.getGX(), ake.getY())
 }
 
 func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, error) {
@@ -55,11 +89,11 @@ func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyID uint
 	var verifyData []byte
 
 	if xFirst {
-		verifyData = appendMPI(verifyData, ake.gx)
-		verifyData = appendMPI(verifyData, ake.gy)
+		verifyData = appendMPI(verifyData, ake.getGX())
+		verifyData = appendMPI(verifyData, ake.getGY())
 	} else {
-		verifyData = appendMPI(verifyData, ake.gy)
-		verifyData = appendMPI(verifyData, ake.gx)
+		verifyData = appendMPI(verifyData, ake.getGY())
+		verifyData = appendMPI(verifyData, ake.getGX())
 	}
 
 	verifyData = append(verifyData, publicKey.serialize()...)
@@ -98,19 +132,18 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 		return nil, errShortRandomRead
 	}
 
-	ake.x = x
-	ake.gx = modExp(g1, ake.x)
+	ake.setX(x)
 
 	if _, err := io.ReadFull(ake.rand(), ake.r[:]); err != nil {
 		return nil, errShortRandomRead
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
-	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.gx))
+	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.getGX()))
 
 	dhCommitMsg := dhCommit{
 		messageHeader: ake.messageHeader(),
-		gx:            ake.gx,
+		gx:            ake.getGX(),
 		encryptedGx:   ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize(), nil
@@ -119,7 +152,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 func (ake *AKE) serializeDHCommit() []byte {
 	dhCommitMsg := dhCommit{
 		messageHeader: ake.messageHeader(),
-		gx:            ake.gx,
+		gx:            ake.getGX(),
 		encryptedGx:   ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize()
@@ -132,12 +165,11 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 		return nil, errShortRandomRead
 	}
 
-	ake.y = y
-	ake.gy = modExp(g1, ake.y)
+	ake.setY(y)
 
 	dhKeyMsg := dhKey{
 		messageHeader: ake.messageHeader(),
-		gy:            ake.gy,
+		gy:            ake.getGY(),
 	}
 
 	return dhKeyMsg.serialize(), nil
@@ -146,7 +178,7 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 func (ake *AKE) serializeDHKey() []byte {
 	dhKeyMsg := dhKey{
 		messageHeader: ake.messageHeader(),
-		gy:            ake.gy,
+		gy:            ake.getGY(),
 	}
 
 	return dhKeyMsg.serialize()
@@ -205,11 +237,11 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	//NOTE: This keeps only the first Gy received
 	//Not sure if this is part of the spec,
 	//or simply a crypto/otr safeguard
-	if ake.gy != nil {
-		isSame = eq(ake.gy, dhKeyMsg.gy)
+	if ake.getGY() != nil {
+		isSame = eq(ake.getGY(), dhKeyMsg.gy)
 		return
 	}
-	ake.gy = dhKeyMsg.gy
+	ake.setGY(dhKeyMsg.gy)
 	return
 }
 
@@ -231,9 +263,11 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	if err = checkDecryptedGx(decryptedGx, ake.hashedGx[:]); err != nil {
 		return
 	}
-	if ake.gx, err = extractGx(decryptedGx); err != nil {
+	var tempgx *big.Int
+	if tempgx, err = extractGx(decryptedGx); err != nil {
 		return
 	}
+	ake.setGX(tempgx)
 	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
 	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey, true /* gx comes first */); err != nil {
 		return newOtrError("in reveal signature message: " + err.Error())

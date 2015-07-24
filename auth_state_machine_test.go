@@ -93,7 +93,7 @@ func bobContextAtAwaitingSig() akeContext {
 
 func bobContextAtReceiveDHKey() akeContext {
 	c := bobContextAtAwaitingDHKey()
-	c.gy = fixedgy // stored at receiveDHKey
+	c.setGY(fixedgy) // stored at receiveDHKey
 
 	copy(c.sigKey.c[:], bytesFromHex("d942cc80b66503414c05e3752d9ba5c4"))
 	copy(c.sigKey.m1[:], bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
@@ -109,15 +109,15 @@ func bobContextAtAwaitingDHKey() akeContext {
 	c.ourKey = bobPrivateKey
 
 	copy(c.r[:], fixedr) // stored at sendDHCommit
-	c.x = fixedx         // stored at sendDHCommit
-	c.gx = fixedgx       // stored at sendDHCommit
+	c.setX(fixedx)       // stored at sendDHCommit
+	c.setGX(fixedgx)     // stored at sendDHCommit
 
 	return c
 }
 
 func aliceContextAtReceiveRevealSig() akeContext {
 	c := aliceContextAtAwaitingRevealSig()
-	c.gx = fixedgx // Alice decrypts encryptedGx using r
+	c.setGX(fixedgx) // Alice decrypts encryptedGx using r
 
 	return c
 }
@@ -131,8 +131,8 @@ func aliceContextAtAwaitingRevealSig() akeContext {
 	copy(c.hashedGx[:], expectedHashedGxValue) //stored at receiveDHCommit
 	c.encryptedGx = expectedEncryptedGxValue   //stored at receiveDHCommit
 
-	c.gy = fixedgy //stored at sendDHKey
-	c.y = fixedy   //stored at sendDHKey
+	c.setGY(fixedgy) //stored at sendDHKey
+	c.setY(fixedy)   //stored at sendDHKey
 
 	return c
 }
@@ -167,8 +167,8 @@ func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 
 	cxt.receiveQueryMessage(msg)
 	assertDeepEquals(t, cxt.r, fixture.r)
-	assertDeepEquals(t, cxt.x, fixture.x)
-	assertDeepEquals(t, cxt.gx, fixture.gx)
+	assertDeepEquals(t, cxt.getX(), fixture.getX())
+	assertDeepEquals(t, cxt.getGX(), fixture.getGX())
 }
 
 func Test_parseOTRQueryMessage(t *testing.T) {
@@ -231,8 +231,8 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
 	authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
 
-	assertDeepEquals(t, c.gy, fixedgy)
-	assertDeepEquals(t, c.y, fixedy)
+	assertDeepEquals(t, c.getGY(), fixedgy)
+	assertDeepEquals(t, c.getY(), fixedy)
 }
 
 func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing.T) {
@@ -293,7 +293,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 	//make sure we store the same alues when creating the DH commit
 	c := newAkeContext(otrV3{}, fixtureRand())
 	c.encryptedGx = ourDHCommitAKE.encryptedGx
-	c.gx = ourDHCommitAKE.gx
+	c.setGX(ourDHCommitAKE.getGX())
 
 	// force their hashedGx to be lower than ours
 	msg := fixtureDHCommitMsg()
@@ -311,7 +311,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 
 	//make sure we store the same values when creating the DH commit
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.gx = ourDHCommitAKE.gx
+	c.setGX(ourDHCommitAKE.getGX())
 
 	// force their hashedGx to be higher than ours
 	msg := fixtureDHCommitMsg()
@@ -321,8 +321,8 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 	state, newMsg, _ := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(newMsg), msgTypeDHKey)
-	assertDeepEquals(t, c.gy, fixedgy)
-	assertDeepEquals(t, c.y, fixedy)
+	assertDeepEquals(t, c.getGY(), fixedgy)
+	assertDeepEquals(t, c.getY(), fixedy)
 }
 
 func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *testing.T) {
@@ -365,7 +365,7 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, c.gy, fixedgy)
+	assertDeepEquals(t, c.getGY(), fixedgy)
 	assertDeepEquals(t, c.sigKey.c[:], expectedC)
 	assertDeepEquals(t, c.sigKey.m1[:], expectedM1)
 	assertDeepEquals(t, c.sigKey.m2[:], expectedM2)
@@ -391,8 +391,8 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.x = ourDHCommitAKE.x
-	c.gx = ourDHCommitAKE.gx
+	c.setX(ourDHCommitAKE.getX())
+	c.setGX(ourDHCommitAKE.getGX())
 	c.ourKey = bobPrivateKey
 
 	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
@@ -734,8 +734,8 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyR
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.x = ourDHCommitAKE.x
-	c.gx = ourDHCommitAKE.gx
+	c.setX(ourDHCommitAKE.getX())
+	c.setGX(ourDHCommitAKE.getGX())
 	c.ourKey = bobPrivateKey
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, []byte{0x01, 0x02})
@@ -748,8 +748,8 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMess
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV3{}, fixedRand([]string{"ABCD"}))
-	c.x = ourDHCommitAKE.x
-	c.gx = ourDHCommitAKE.gx
+	c.setX(ourDHCommitAKE.getX())
+	c.setGX(ourDHCommitAKE.getGX())
 	c.ourKey = bobPrivateKey
 
 	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
@@ -763,8 +763,8 @@ func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyRet
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.x = ourDHCommitAKE.x
-	c.gx = ourDHCommitAKE.gx
+	c.setX(ourDHCommitAKE.getX())
+	c.setGX(ourDHCommitAKE.getGX())
 	c.ourKey = bobPrivateKey
 
 	_, _, err := authStateAwaitingSig{}.receiveDHKeyMessage(&c, []byte{0x01, 0x02})
@@ -789,7 +789,7 @@ func Test_authStateAwaitingRevealSig_receiveDHCommitMessage_returnsErrorIfProces
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.gx = ourDHCommitAKE.gx
+	c.setGX(ourDHCommitAKE.getGX())
 
 	_, _, err := authStateAwaitingRevealSig{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
 	assertEquals(t, err, errInvalidOTRMessage)
@@ -800,7 +800,7 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfgenerateCommitMsgIn
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.gx = ourDHCommitAKE.gx
+	c.setGX(ourDHCommitAKE.getGX())
 
 	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
 	assertEquals(t, err, errInvalidOTRMessage)
@@ -811,7 +811,7 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfdhKeyMessageFails(t
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV2{}, fixedRand([]string{"ABCD"}))
-	c.gx = ourDHCommitAKE.gx
+	c.setGX(ourDHCommitAKE.getGX())
 
 	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
 	assertEquals(t, err, errShortRandomRead)
@@ -822,7 +822,7 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfPcoessDHCommitFails
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV2{}, fixtureRand())
-	c.gx = ourDHCommitAKE.gx
+	c.setGX(ourDHCommitAKE.getGX())
 
 	_, _, err := authStateNone{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
 	assertEquals(t, err, errInvalidOTRMessage)
@@ -854,7 +854,7 @@ func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfMsgDoesntHaveHead
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV2{}, fixtureRand())
-	c.gx = ourDHCommitAKE.gx
+	c.setGX(ourDHCommitAKE.getGX())
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00})
 	assertEquals(t, err, errInvalidOTRMessage)
@@ -865,7 +865,7 @@ func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractFirstP
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV2{}, fixtureRand())
-	c.gx = ourDHCommitAKE.gx
+	c.setGX(ourDHCommitAKE.getGX())
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00, 0x00, 0x01})
 	assertEquals(t, err, errInvalidOTRMessage)
@@ -876,7 +876,7 @@ func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractSecond
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newAkeContext(otrV2{}, fixtureRand())
-	c.gx = ourDHCommitAKE.gx
+	c.setGX(ourDHCommitAKE.getGX())
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x02})
 	assertEquals(t, err, errInvalidOTRMessage)

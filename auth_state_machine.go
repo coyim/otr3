@@ -100,8 +100,8 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 	}
 
 	c.r = ake.r
-	c.x = ake.x
-	c.gx = ake.gx
+	c.setX(ake.getX())
+	c.setGX(ake.getGX())
 
 	return authStateAwaitingDHKey{}, out, nil
 }
@@ -156,8 +156,8 @@ func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authSt
 		return s, nil, err
 	}
 
-	c.y = ake.y
-	c.gy = ake.gy
+	c.setY(ake.getY())
+	c.setGY(ake.getGY())
 
 	if err = ake.processDHCommit(msg); err != nil {
 		return s, nil, err
@@ -219,7 +219,7 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte
 		return s, nil, errInvalidOTRMessage
 	}
 
-	gxMPI := appendMPI(nil, c.gx)
+	gxMPI := appendMPI(nil, c.getGX())
 	hashedGx := sha256Sum(gxMPI)
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
 		ake := c.newAKE()
@@ -250,12 +250,12 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (
 		return s, nil, err
 	}
 
-	c.gy = ake.gy
+	c.setGY(ake.getGY())
 	c.sigKey = ake.sigKey
 
-	c.theirCurrentDHPubKey = ake.gy
-	c.ourCurrentDHKeys.pub = c.gx
-	c.ourCurrentDHKeys.priv = c.x
+	c.theirCurrentDHPubKey = ake.getGY()
+	c.ourCurrentDHKeys.pub = c.getGX()
+	c.ourCurrentDHKeys.priv = c.getX()
 	c.ourCounter++
 
 	return authStateAwaitingSig{}, c.revealSigMsg, nil
@@ -299,11 +299,11 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg [
 	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
 	c.ourKeyID = 0
 	c.theirKeyID = ake.theirKeyID
-	c.theirCurrentDHPubKey = ake.gx
+	c.theirCurrentDHPubKey = ake.getGX()
 	c.theirPreviousDHPubKey = nil
 
-	c.ourCurrentDHKeys.priv = ake.y
-	c.ourCurrentDHKeys.pub = ake.gy
+	c.ourCurrentDHKeys.priv = ake.getY()
+	c.ourCurrentDHKeys.pub = ake.getGY()
 	c.ourCounter++
 
 	return authStateNone{}, ret, nil
@@ -344,7 +344,7 @@ func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (auth
 	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
 	c.theirKeyID = ake.theirKeyID
 	//gy was stored when we receive DH-Key
-	c.theirCurrentDHPubKey = c.gy
+	c.theirCurrentDHPubKey = c.getGY()
 	c.theirPreviousDHPubKey = nil
 	c.ourKeyID = 0
 
