@@ -2,6 +2,8 @@ package otr3
 
 import (
 	"crypto/aes"
+	"crypto/sha1"
+	"math/big"
 	"testing"
 )
 
@@ -166,4 +168,16 @@ func Test_pad_PlainMessageUsingTLV0(t *testing.T) {
 
 	assertEquals(t, len(paddedMessage.tlvs), 2)
 	assertEquals(t, paddedMessage.tlvs[1].tlvLength, uint16(245))
+}
+
+func Test_dataMsg_serializeWithAuthenticator(t *testing.T) {
+	bodyLen := 30
+	m := dataMsg{
+		y:            big.NewInt(0x01),
+		encryptedMsg: []byte{0x01},
+	}.serialize()
+
+	auth := sha1.Sum(m[:bodyLen])
+
+	assertDeepEquals(t, m[bodyLen:bodyLen+len(auth)], auth[:])
 }

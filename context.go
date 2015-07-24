@@ -146,7 +146,6 @@ func (c *akeContext) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		topHalfCtr:     topHalfCtr,
 		encryptedMsg:   encrypted,
 		//TODO after key management
-		authenticator:   [20]byte{},
 		oldRevealKeyMAC: []byte{},
 	}
 

@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"crypto/aes"
+	"crypto/sha1"
 	"crypto/sha256"
 	"errors"
 	"math/big"
@@ -152,7 +153,6 @@ type dataMsg struct {
 	y                           *big.Int
 	topHalfCtr                  [8]byte
 	encryptedMsg                []byte
-	authenticator               [20]byte
 	oldRevealKeyMAC             []byte
 }
 
@@ -162,7 +162,6 @@ func (c dataMsg) serialize() []byte {
 	out = appendShort(out, c.protocolVersion)
 	out = append(out, msgTypeData)
 
-	//TODO
 	if c.needInstanceTag {
 		out = appendWord(out, c.senderInstanceTag)
 		out = appendWord(out, c.receiverInstanceTag)
@@ -170,23 +169,15 @@ func (c dataMsg) serialize() []byte {
 
 	//TODO: implement IGNORE_UNREADABLE
 	out = append(out, c.flag)
-
-	//TODO after key management
 	out = appendWord(out, c.senderKeyID)
 	out = appendWord(out, c.recipientKeyID)
-
-	//TODO after key management
 	out = appendMPI(out, c.y)
-
-	//TODO
 	out = append(out, c.topHalfCtr[:]...)
-
-	//TODO encrypt
-	//tlv is properly formatted
 	out = appendData(out, c.encryptedMsg)
 
-	//TODO Authenticator (MAC)
-	out = append(out, c.authenticator[:]...)
+	authenticator := sha1.Sum(out)
+	out = append(out, authenticator[:]...)
+
 	//TODO Old MAC keys to be revealed (DATA)
 	out = appendData(out, c.oldRevealKeyMAC)
 
