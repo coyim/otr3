@@ -246,15 +246,13 @@ const (
 func (c dataMsgPlainText) pad() dataMsgPlainText {
 	padding := paddingGranularity - ((len(c.plain) + tlvHeaderLen + nulByteLen) % paddingGranularity)
 
-	if padding > 0 {
-		paddingTlv := tlv{
-			tlvType:   0,
-			tlvLength: uint16(padding),
-			tlvValue:  make([]byte, padding),
-		}
-
-		c.tlvs = append(c.tlvs, paddingTlv)
+	paddingTlv := tlv{
+		tlvType:   0,
+		tlvLength: uint16(padding),
+		tlvValue:  make([]byte, padding),
 	}
+
+	c.tlvs = append(c.tlvs, paddingTlv)
 
 	return c
 }
