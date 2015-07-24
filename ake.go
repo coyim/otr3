@@ -38,6 +38,18 @@ func (ake *akeContext) getGX() *big.Int {
 	return ake._gx
 }
 
+func (ake *akeContext) getExponent() *big.Int {
+	return ake.secretExponent
+}
+
+func (ake *akeContext) getTheirPublicValue() *big.Int {
+	return ake._their
+}
+
+func (ake *akeContext) getOurPublicValue() *big.Int {
+	return ake._our
+}
+
 func (ake *akeContext) getX() *big.Int {
 	return ake.secretExponent
 }
@@ -77,18 +89,14 @@ func (ake *akeContext) setGYOur(val *big.Int) {
 }
 
 func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
-	if xKnown {
-		return modExp(ake.getGY(), ake.getX())
-	}
-
-	return modExp(ake.getGX(), ake.getY())
+	return modExp(ake.getTheirPublicValue(), ake.getExponent())
 }
 
-func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, error) {
-	verifyData := ake.generateVerifyData(xFirst, &ake.ourKey.PublicKey, ake.ourKeyID)
+func (ake *AKE) generateEncryptedSignatureTrue(publicValueL, publicValueR *big.Int, key *akeKeys) ([]byte, error) {
+	verifyData := appendAll(publicValueL, publicValueR, &ake.ourKey.PublicKey, ake.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
-	xb, err := ake.calcXb(key, mb, xFirst)
+	xb, err := ake.calcXb(key, mb)
 
 	if err != nil {
 		return nil, err
@@ -97,23 +105,24 @@ func (ake *AKE) generateEncryptedSignature(key *akeKeys, xFirst bool) ([]byte, e
 	return appendData(nil, xb), nil
 }
 
-func (ake *AKE) generateVerifyData(xFirst bool, publicKey *PublicKey, keyID uint32) []byte {
-	var verifyData []byte
+func (ake *AKE) generateEncryptedSignatureFalse(publicValueL, publicValueR *big.Int, key *akeKeys) ([]byte, error) {
+	verifyData := appendAll(publicValueL, publicValueR, &ake.ourKey.PublicKey, ake.ourKeyID)
 
-	if xFirst {
-		verifyData = appendMPI(verifyData, ake.getGX())
-		verifyData = appendMPI(verifyData, ake.getGY())
-	} else {
-		verifyData = appendMPI(verifyData, ake.getGY())
-		verifyData = appendMPI(verifyData, ake.getGX())
+	mb := sumHMAC(key.m1[:], verifyData)
+	xb, err := ake.calcXb(key, mb)
+
+	if err != nil {
+		return nil, err
 	}
 
-	verifyData = append(verifyData, publicKey.serialize()...)
-
-	return appendWord(verifyData, keyID)
+	return appendData(nil, xb), nil
 }
 
-func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) ([]byte, error) {
+func appendAll(one, two *big.Int, publicKey *PublicKey, keyID uint32) []byte {
+	return appendWord(append(appendMPI(appendMPI(nil, one), two), publicKey.serialize()...), keyID)
+}
+
+func (ake *AKE) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	xb := ake.ourKey.PublicKey.serialize()
 	xb = appendWord(xb, ake.ourKeyID)
 
@@ -136,6 +145,8 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte, xFirst bool) ([]byte, error) {
 	return xb, nil
 }
 
+// dhCommitMessage = bob = x
+// Bob ---- DH Commit -----------> Alice
 func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	ake.ourKeyID = 0
 
@@ -151,11 +162,11 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
-	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.getGX()))
+	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.getOurPublicValue()))
 
 	dhCommitMsg := dhCommit{
 		messageHeader: ake.messageHeader(),
-		gx:            ake.getGX(),
+		gx:            ake.getOurPublicValue(),
 		encryptedGx:   ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize(), nil
@@ -164,12 +175,14 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 func (ake *AKE) serializeDHCommit() []byte {
 	dhCommitMsg := dhCommit{
 		messageHeader: ake.messageHeader(),
-		gx:            ake.getGX(),
+		gx:            ake.getTheirPublicValue(),
 		encryptedGx:   ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize()
 }
 
+// dhKeyMessage = alice = y
+// Alice -- DH Key --------------> Bob
 func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	y, ok := ake.randMPI(make([]byte, 40)[:])
 
@@ -178,27 +191,23 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	}
 
 	ake.setY(y)
-
-	dhKeyMsg := dhKey{
-		messageHeader: ake.messageHeader(),
-		gy:            ake.getGY(),
-	}
-
-	return dhKeyMsg.serialize(), nil
+	return ake.serializeDHKey(), nil
 }
 
 func (ake *AKE) serializeDHKey() []byte {
 	dhKeyMsg := dhKey{
 		messageHeader: ake.messageHeader(),
-		gy:            ake.getGY(),
+		gy:            ake.getOurPublicValue(),
 	}
 
 	return dhKeyMsg.serialize()
 }
 
+// revealSigMessage = bob = x
+// Bob ---- Reveal Signature ----> Alice
 func (ake *AKE) revealSigMessage() ([]byte, error) {
 	ake.calcAKEKeys(ake.calcDHSharedSecret(true))
-	encryptedSig, err := ake.generateEncryptedSignature(&ake.revealKey, true)
+	encryptedSig, err := ake.generateEncryptedSignatureTrue(ake.getOurPublicValue(), ake.getTheirPublicValue(), &ake.revealKey)
 	if err != nil {
 		return nil, err
 	}
@@ -213,9 +222,11 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 	return revealSigMsg.serialize(), nil
 }
 
+// sigMessage = alice = y
+// Alice -- Signature -----------> Bob
 func (ake *AKE) sigMessage() ([]byte, error) {
 	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
-	encryptedSig, err := ake.generateEncryptedSignature(&ake.sigKey, false)
+	encryptedSig, err := ake.generateEncryptedSignatureFalse(ake.getOurPublicValue(), ake.getTheirPublicValue(), &ake.sigKey)
 	if err != nil {
 		return nil, err
 	}
@@ -229,6 +240,8 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 	return sigMsg.serialize(), nil
 }
 
+// processDHCommit = alice = y
+// Bob ---- DH Commit -----------> Alice
 func (ake *AKE) processDHCommit(msg []byte) error {
 	dhCommitMsg := dhCommit{}
 	err := chainErrors(ake.ensureValidMessage, dhCommitMsg.deserialize, msg)
@@ -240,6 +253,8 @@ func (ake *AKE) processDHCommit(msg []byte) error {
 	return err
 }
 
+// processDHKey = bob = x
+// Alice -- DH Key --------------> Bob
 func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	dhKeyMsg := dhKey{}
 	err = chainErrors(ake.ensureValidMessage, dhKeyMsg.deserialize, msg)
@@ -249,14 +264,16 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	//NOTE: This keeps only the first Gy received
 	//Not sure if this is part of the spec,
 	//or simply a crypto/otr safeguard
-	if ake.getGY() != nil {
-		isSame = eq(ake.getGY(), dhKeyMsg.gy)
+	if ake.getTheirPublicValue() != nil {
+		isSame = eq(ake.getTheirPublicValue(), dhKeyMsg.gy)
 		return
 	}
 	ake.setGYTheir(dhKeyMsg.gy)
 	return
 }
 
+// processRevealSig = alice = y
+// Bob ---- Reveal Signature ----> Alice
 func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	revealSigMsg := revealSig{}
 	err = chainErrors(ake.ensureValidMessage, revealSigMsg.deserialize, msg)
@@ -303,6 +320,8 @@ func (ake *AKE) ensureValidMessage(msg []byte) ([]byte, error) {
 	return msg[ake.headerLen():], nil
 }
 
+// processSig = bob = x
+// Alice -- Signature -----------> Bob
 func (ake *AKE) processSig(msg []byte) (err error) {
 	sigMsg := sig{}
 	err = chainErrors(ake.ensureValidMessage, sigMsg.deserialize, msg)
@@ -344,7 +363,13 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 
 	sig := nextPoint[4:]
 
-	verifyData := ake.generateVerifyData(xFirst, ake.theirKey, keyID)
+	var verifyData []byte
+	if xFirst {
+		verifyData = appendAll(ake.getGX(), ake.getGY(), ake.theirKey, keyID)
+	} else {
+		verifyData = appendAll(ake.getGY(), ake.getGX(), ake.theirKey, keyID)
+	}
+
 	mb := sumHMAC(keys.m1[:], verifyData)
 
 	rest, ok := ake.theirKey.verify(mb, sig)
