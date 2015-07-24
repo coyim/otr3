@@ -196,6 +196,9 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 			return nil, newOtrError("corrupt data message")
 		}
 
+		//TODO: rotate their key
+		//c.rotateTheirKey(msg.senderKeyID, msg.y)
+
 		//TODO: encrypt toSend and wrap in a DATA message
 		c.smpContext.receive(smpMessage)
 	default:

@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"errors"
+	"math/big"
 	"testing"
 )
 
@@ -53,4 +54,40 @@ func Test_calculateAKEKeys(t *testing.T) {
 	assertDeepEquals(t, revealSigKeys.m2[:], bytesFromHex("79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6"))
 	assertDeepEquals(t, signatureKeys.m1[:], bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
 	assertDeepEquals(t, signatureKeys.m2[:], bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5"))
+}
+
+func Test_rotateTheirKey_rotatesTheirKeysWhenWeReceiveANewPubKey(t *testing.T) {
+	senderKey := uint32(1)
+	currentPubKey := big.NewInt(9)
+	receivedKey := big.NewInt(99)
+
+	c := keyManagementContext{
+		theirKeyID:           senderKey,
+		theirCurrentDHPubKey: currentPubKey,
+	}
+
+	c.rotateTheirKey(senderKey, receivedKey)
+
+	assertEquals(t, c.theirKeyID, senderKey+1)
+	assertDeepEquals(t, c.theirPreviousDHPubKey, currentPubKey)
+	assertDeepEquals(t, c.theirCurrentDHPubKey, receivedKey)
+}
+
+func Test_rotateTheirKey_doesNotRotateIfWeDontReceiveTheCurrentSenderKey(t *testing.T) {
+	senderKey := uint32(1)
+	previousPubKey := big.NewInt(8)
+	currentPubKey := big.NewInt(9)
+	receivedKey := big.NewInt(99)
+
+	c := keyManagementContext{
+		theirKeyID:            senderKey,
+		theirPreviousDHPubKey: previousPubKey,
+		theirCurrentDHPubKey:  currentPubKey,
+	}
+
+	c.rotateTheirKey(senderKey+1, receivedKey)
+
+	assertEquals(t, c.theirKeyID, senderKey)
+	assertDeepEquals(t, c.theirPreviousDHPubKey, previousPubKey)
+	assertDeepEquals(t, c.theirCurrentDHPubKey, currentPubKey)
 }

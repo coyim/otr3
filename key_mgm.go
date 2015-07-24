@@ -32,6 +32,14 @@ type keyManagementContext struct {
 	ourCounter uint64
 }
 
+func (c *keyManagementContext) rotateTheirKey(senderKeyID uint32, pubDHKey *big.Int) {
+	if senderKeyID == c.theirKeyID {
+		c.theirPreviousDHPubKey = c.theirCurrentDHPubKey
+		c.theirCurrentDHPubKey = pubDHKey
+		c.theirKeyID++
+	}
+}
+
 func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint32) (sessionKeys, error) {
 	var ret sessionKeys
 	var ourPubKey, ourPrivKey, theirPubKey *big.Int
