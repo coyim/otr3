@@ -54,7 +54,6 @@ func Test_tlvDeserializeWithWrongValue(t *testing.T) {
 }
 
 func Test_dataMsgDeserialze(t *testing.T) {
-
 	var msg []byte
 
 	flag := byte(0x00)
@@ -99,7 +98,107 @@ func Test_dataMsgDeserialze(t *testing.T) {
 	assertDeepEquals(t, dataMessage.encryptedMsg, encryptedMsg)
 	assertDeepEquals(t, dataMessage.macKey, mac)
 	assertDeepEquals(t, dataMessage.oldMACKeys, oldMACKeys)
+}
 
+func Test_dataMsgDeserialzeErrorWhenEmpty(t *testing.T) {
+	var msg []byte
+
+	dataMessage := dataMsg{}
+	err := dataMessage.deserialize(msg)
+	assertEquals(t, err.Error(), "otr: dataMsg.deserialize empty message")
+}
+
+func Test_dataMsgDeserialzeErrorWhenCorruptedSenderKeyID(t *testing.T) {
+	var msg []byte
+
+	flag := byte(0x00)
+	senderKeyID := byte(0x00)
+	msg = append(msg, flag)
+
+	msg = append(msg, senderKeyID)
+
+	dataMessage := dataMsg{}
+	err := dataMessage.deserialize(msg)
+	assertEquals(t, err.Error(), "otr: dataMsg.deserialize corrupted senderKeyID")
+}
+
+func Test_dataMsgDeserialzeErrorWhenCorruptedReceiverKeyID(t *testing.T) {
+	var msg []byte
+
+	flag := byte(0x00)
+	senderKeyID := uint32(0x00000000)
+	recipientKeyID := byte(0x00)
+	msg = append(msg, flag)
+
+	msg = appendWord(msg, senderKeyID)
+	msg = append(msg, recipientKeyID)
+
+	dataMessage := dataMsg{}
+	err := dataMessage.deserialize(msg)
+	assertEquals(t, err.Error(), "otr: dataMsg.deserialize corrupted recipientKeyID")
+}
+
+func Test_dataMsgDeserialzeErrorWhenCorruptedY(t *testing.T) {
+	var msg []byte
+
+	flag := byte(0x00)
+	senderKeyID := uint32(0x00000000)
+	recipientKeyID := byte(0x00)
+	y := big.NewInt(1)
+	msg = append(msg, flag)
+
+	msg = appendWord(msg, senderKeyID)
+	msg = append(msg, recipientKeyID)
+	mpiY := appendMPI([]byte{}, y)
+	msg = append(msg, mpiY[1:]...)
+
+	dataMessage := dataMsg{}
+	err := dataMessage.deserialize(msg)
+	assertEquals(t, err.Error(), "otr: dataMsg.deserialize corrupted y")
+}
+
+func Test_dataMsgDeserialzeErrorWhenCorruptedEncryptedMsg(t *testing.T) {
+	var msg []byte
+
+	flag := byte(0x00)
+	senderKeyID := uint32(0x00000000)
+	recipientKeyID := uint32(0x00000001)
+	y := big.NewInt(1)
+	topHalfCtr := [8]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+	encryptedMsg := []byte{0x00, 0x01, 0x02, 0x03}
+
+	msg = append(msg, flag)
+	msg = appendWord(msg, senderKeyID)
+	msg = appendWord(msg, recipientKeyID)
+	msg = appendMPI(msg, y)
+	msg = append(msg, topHalfCtr[:]...)
+	encryptedMsgData := appendData([]byte{}, encryptedMsg)
+	msg = append(msg, encryptedMsgData[1:]...)
+
+	dataMessage := dataMsg{}
+	err := dataMessage.deserialize(msg)
+	assertEquals(t, err.Error(), "otr: dataMsg.deserialize corrupted encryptedMsg")
+}
+
+func Test_dataMsgDeserialzeErrorWhenCorruptedTopHalfCtr(t *testing.T) {
+	var msg []byte
+
+	flag := byte(0x00)
+	senderKeyID := uint32(0x00000000)
+	recipientKeyID := uint32(0x00000001)
+	y := big.NewInt(1)
+	topHalfCtr := [7]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+
+	msg = append(msg, flag)
+	msg = appendWord(msg, senderKeyID)
+	msg = appendWord(msg, recipientKeyID)
+	msg = appendMPI(msg, y)
+
+	msg = append(msg, topHalfCtr[:]...)
+
+	dataMessage := dataMsg{}
+	err := dataMessage.deserialize(msg)
+	assertEquals(t, err.Error(), "otr: dataMsg.deserialize corrupted topHalfCtr")
 }
 
 func Test_dataMsgPlainTextShouldDeserializeOneTLV(t *testing.T) {

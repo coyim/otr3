@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"math/big"
 )
@@ -188,6 +189,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 			return c.smpContext.restart(), errEncryptedMessageWithNoSecureChannel
 		}
 
+		//TODO: c.processDataMessage(message)
 		//TODO: decrypt data from data message and extract TLVs from it
 		tlv := message
 		smpMessage, ok := parseTLV(tlv)
@@ -205,6 +207,16 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	}
 
 	return
+}
+
+func (c *conversation) processDataMessage(msg []byte) []byte {
+	msg = msg[c.headerLen():]
+	dataMessage := dataMsg{}
+	dataMessage.deserialize(msg)
+	encryptData := dataMessage.encryptedMsg
+	fmt.Println("encryptData", encryptData)
+
+	return []byte{}
 }
 
 func (c *otrContext) rand() io.Reader {

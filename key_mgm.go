@@ -60,15 +60,20 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	var ourPubKey, ourPrivKey, theirPubKey *big.Int
 	var sendbyte, recvbyte byte
 
-	switch ourKeyID {
-	case c.ourKeyID:
+	if c.ourKeyID == 0 {
 		ourPrivKey = c.ourCurrentDHKeys.priv
 		ourPubKey = c.ourCurrentDHKeys.pub
-	case c.ourKeyID - 1:
-		ourPrivKey = c.ourPreviousDHKeys.priv
-		ourPubKey = c.ourPreviousDHKeys.pub
-	default:
-		return ret, fmt.Errorf("otr: unexpected ourKeyID %d", ourKeyID)
+	} else {
+		switch ourKeyID {
+		case c.ourKeyID:
+			ourPrivKey = c.ourCurrentDHKeys.priv
+			ourPubKey = c.ourCurrentDHKeys.pub
+		case c.ourKeyID - 1:
+			ourPrivKey = c.ourPreviousDHKeys.priv
+			ourPubKey = c.ourPreviousDHKeys.pub
+		default:
+			return ret, fmt.Errorf("otr: unexpected ourKeyID %d", ourKeyID)
+		}
 	}
 
 	switch theirKeyID {

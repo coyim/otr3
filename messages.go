@@ -192,28 +192,35 @@ func (c dataMsg) serialize() []byte {
 }
 
 func (c *dataMsg) deserialize(msg []byte) error {
+	if len(msg) == 0 {
+		return errors.New("otr: dataMsg.deserialize empty message")
+	}
 	c.flag = msg[0]
 
 	msg = msg[1:]
 	var ok bool
 	msg, c.senderKeyID, ok = extractWord(msg)
 	if !ok {
-		return errors.New("otr: failed to deserialize data message")
+		return errors.New("otr: dataMsg.deserialize corrupted senderKeyID")
 	}
 	msg, c.recipientKeyID, ok = extractWord(msg)
 	if !ok {
-		return errors.New("otr: failed to deserialize data message")
+		return errors.New("otr: dataMsg.deserialize corrupted recipientKeyID")
 	}
 	msg, c.y, ok = extractMPI(msg)
 	if !ok {
-		return errors.New("otr: failed to deserialize data message")
+		return errors.New("otr: dataMsg.deserialize corrupted y")
+	}
+	if len(msg) < len(c.topHalfCtr) {
+		return errors.New("otr: dataMsg.deserialize corrupted topHalfCtr")
 	}
 	copy(c.topHalfCtr[:], msg)
 	msg = msg[len(c.topHalfCtr):]
 	msg, c.encryptedMsg, ok = extractData(msg)
 	if !ok {
-		return errors.New("otr: failed to deserialize data message")
+		return errors.New("otr: dataMsg.deserialize corrupted encryptedMsg")
 	}
+	//FIXME: pass macKey instead of deserialize it from dataMsg
 	copy(c.macKey[:], msg)
 	msg = msg[len(c.macKey):]
 	var revKeysBytes []byte
