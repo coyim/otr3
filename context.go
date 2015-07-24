@@ -133,12 +133,7 @@ func (c *akeContext) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		tlvs:  tlvs,
 	}
 
-	encrypted, err := plain.encrypt(keys.sendingAESKey, topHalfCtr)
-	if err != nil {
-		//TODO key has problem
-		return dataMsg{}
-	}
-
+	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
 	msgHeader := c.messageHeader()
 	dataMessage := dataMsg{
 		messageHeader: msgHeader,

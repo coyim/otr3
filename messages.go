@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"crypto/aes"
-	"crypto/cipher"
 	"crypto/sha256"
 	"errors"
 	"math/big"
@@ -260,22 +259,10 @@ func (c dataMsgPlainText) pad() dataMsgPlainText {
 	return c
 }
 
-func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte, counter [8]byte) ([]byte, error) {
-	aes, err := aes.NewCipher(key[:])
-	if err != nil {
-		return nil, err
-	}
-
-	plain := c.pad().serialize()
-	encrypted := make([]byte, len(plain))
-
-	var iv [16]byte
-	copy(iv[:8], counter[:])
-	stream := cipher.NewCTR(aes, iv[:])
-
-	stream.XORKeyStream(encrypted, plain)
-
-	return encrypted, nil
+func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte, counter [8]byte) []byte {
+	// This can not cause an error
+	encrypted, _ := encrypt(key[:], c.pad().serialize())
+	return encrypted
 }
 
 type tlv struct {

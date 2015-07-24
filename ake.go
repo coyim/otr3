@@ -337,16 +337,16 @@ func sha256Sum(x []byte) [sha256.Size]byte {
 	return sha256.Sum256(x)
 }
 
-func encrypt(r, gxMPI []byte) (dst []byte, err error) {
-	aesCipher, err := aes.NewCipher(r)
+func encrypt(key, data []byte) (dst []byte, err error) {
+	aesCipher, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 
-	dst = make([]byte, len(gxMPI))
+	dst = make([]byte, len(data))
 	iv := dst[:aes.BlockSize]
 	stream := cipher.NewCTR(aesCipher, iv)
-	stream.XORKeyStream(dst, gxMPI)
+	stream.XORKeyStream(dst, data)
 
 	return dst, nil
 }
