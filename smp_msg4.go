@@ -32,7 +32,7 @@ func (c *smpContext) generateSMP4(secret *big.Int, s2 smp2, msg3 smpMessage3) (s
 }
 
 func (c *smpContext) verifySMP4(s3 smp3, msg smpMessage4) error {
-	if !c.isGroupElement(msg.rb) {
+	if !c.version.isGroupElement(msg.rb) {
 		return errors.New("Rb is an invalid group element")
 	}
 
@@ -44,7 +44,7 @@ func (c *smpContext) verifySMP4(s3 smp3, msg smpMessage4) error {
 }
 
 func (c *smpContext) generateFourthParameters() (s smp4, ok bool) {
-	b := make([]byte, c.parameterLength())
+	b := make([]byte, c.version.parameterLength())
 	s.r7, ok = c.randMPI(b)
 	return
 }

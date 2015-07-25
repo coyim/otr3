@@ -22,7 +22,7 @@ func (m smpMessage1) tlv() tlv {
 }
 
 func (c *smpContext) generateInitialParameters() (s smp1, ok bool) {
-	b := make([]byte, c.parameterLength())
+	b := make([]byte, c.version.parameterLength())
 	var ok1, ok2, ok3, ok4 bool
 	s.a2, ok1 = c.randMPI(b)
 	s.a3, ok2 = c.randMPI(b)
@@ -48,11 +48,11 @@ func (c *smpContext) generateSMP1() (s smp1, ok bool) {
 }
 
 func (c *smpContext) verifySMP1(msg smpMessage1) error {
-	if !c.isGroupElement(msg.g2a) {
+	if !c.version.isGroupElement(msg.g2a) {
 		return errors.New("g2a is an invalid group element")
 	}
 
-	if !c.isGroupElement(msg.g3a) {
+	if !c.version.isGroupElement(msg.g3a) {
 		return errors.New("g3a is an invalid group element")
 	}
 

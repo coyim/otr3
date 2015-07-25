@@ -45,7 +45,7 @@ func (c *conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr
 	numFragments := (len / int(fraglen)) + 1
 	ret := make([][]byte, numFragments)
 	for i := 0; i < numFragments; i++ {
-		prefix := c.fragmentPrefix(i, numFragments, itags, itagr)
+		prefix := c.version.fragmentPrefix(i, numFragments, itags, itagr)
 		ret[i] = append(append(prefix, fragmentData(data, i, fraglen, uint16(len))...), fragmentSeparator[0])
 	}
 	return ret

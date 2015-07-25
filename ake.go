@@ -241,10 +241,10 @@ func chainErrors(f1 func([]byte) ([]byte, error), f2 func([]byte) error, msg []b
 }
 
 func (ake *AKE) ensureValidMessage(msg []byte) ([]byte, error) {
-	if len(msg) < ake.headerLen() {
+	if len(msg) < ake.version.headerLen() {
 		return nil, errInvalidOTRMessage
 	}
-	return msg[ake.headerLen():], nil
+	return msg[ake.version.headerLen():], nil
 }
 
 // processSig = bob = x

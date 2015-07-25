@@ -90,7 +90,7 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 	}
 
 	//TODO set the version for every existing otrContext
-	c.otrVersion = v
+	c.version = v
 
 	ake := c.newAKE()
 	ake.senderInstanceTag = generateInstanceTag()
@@ -170,7 +170,7 @@ func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authSt
 }
 
 func generateCommitMsgInstanceTags(ake *AKE, msg []byte) error {
-	if ake.needInstanceTag() {
+	if ake.version.needInstanceTag() {
 		if len(msg) < lenMsgHeader+4 {
 			return errInvalidOTRMessage
 		}
@@ -207,11 +207,11 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []
 }
 
 func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	if len(msg) < c.headerLen() {
+	if len(msg) < c.version.headerLen() {
 		return s, nil, errInvalidOTRMessage
 	}
 
-	newMsg, _, ok1 := extractData(msg[c.headerLen():])
+	newMsg, _, ok1 := extractData(msg[c.version.headerLen():])
 	_, theirHashedGx, ok2 := extractData(newMsg)
 
 	if !ok1 || !ok2 {

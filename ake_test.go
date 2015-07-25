@@ -36,7 +36,7 @@ func Test_dhCommitMessage(t *testing.T) {
 	ake.receiverInstanceTag = 0x00000001
 
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.version.protocolVersion())
 	out = append(out, msgTypeDHCommit)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -60,7 +60,7 @@ func Test_dhKeyMessage(t *testing.T) {
 	expectedGyValue := bnFromHex("075dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.version.protocolVersion())
 	out = append(out, msgTypeDHKey)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -95,7 +95,7 @@ func Test_revealSigMessage(t *testing.T) {
 	expedctedMACSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.version.protocolVersion())
 	out = append(out, msgTypeRevealSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
@@ -114,7 +114,7 @@ func Test_processDHKey(t *testing.T) {
 	}
 	ake.theirPublicValue = fixedgy
 
-	msg := appendShort([]byte{}, ake.protocolVersion())
+	msg := appendShort([]byte{}, ake.version.protocolVersion())
 	msg = append(msg, msgTypeDHKey)
 	msg = appendMPI(msg, ake.theirPublicValue)
 
@@ -129,7 +129,7 @@ func Test_processDHKeyNotSame(t *testing.T) {
 	}
 	ake.theirPublicValue = fixedgy
 
-	msg := appendShort([]byte{}, ake.protocolVersion())
+	msg := appendShort([]byte{}, ake.version.protocolVersion())
 	msg = append(msg, msgTypeDHKey)
 	msg = appendMPI(msg, fixedgx)
 
@@ -146,7 +146,7 @@ func Test_processDHKeyHavingError(t *testing.T) {
 	}
 	ake.theirPublicValue = fixedgy
 
-	msg := appendShort([]byte{}, ake.protocolVersion())
+	msg := appendShort([]byte{}, ake.version.protocolVersion())
 	msg = append(msg, msgTypeDHKey)
 	msg = appendMPI(msg, invalidGy)
 
@@ -300,7 +300,7 @@ func Test_sigMessage(t *testing.T) {
 	expedctedMACSignature, _ := hex.DecodeString("66b47e29be91a7cf4803d731921482fd514b4a53a9dd1639b17705c90185f91d")
 
 	var out []byte
-	out = appendShort(out, ake.protocolVersion())
+	out = appendShort(out, ake.version.protocolVersion())
 	out = append(out, msgTypeSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)

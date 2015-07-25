@@ -52,6 +52,11 @@ type akeContext struct {
 	policies
 }
 
+type otrContext struct {
+	version otrVersion
+	Rand    io.Reader
+}
+
 type msgState int
 
 const (
@@ -59,11 +64,6 @@ const (
 	encrypted
 	finished
 )
-
-type otrContext struct {
-	otrVersion // TODO: this is extremely brittle and can cause unexpected interactions. We should revisit the decision to embed here
-	Rand       io.Reader
-}
 
 func newSmpContext(v otrVersion, r io.Reader) *smpContext {
 	c := newOtrContext(v, r)
@@ -90,17 +90,7 @@ func newConversation(v otrVersion, rand io.Reader) *conversation {
 }
 
 func newOtrContext(v otrVersion, rand io.Reader) *otrContext {
-	return &otrContext{otrVersion: v, Rand: rand}
-}
-
-type otrVersion interface {
-	protocolVersion() uint16
-	parameterLength() int
-	isGroupElement(n *big.Int) bool
-	isFragmented(data []byte) bool
-	fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte
-	needInstanceTag() bool
-	headerLen() int
+	return &otrContext{version: v, Rand: rand}
 }
 
 func (c *akeContext) newAKE() AKE {
@@ -111,8 +101,8 @@ func (c *akeContext) newAKE() AKE {
 
 func (c *akeContext) messageHeader() messageHeader {
 	return messageHeader{
-		protocolVersion:     c.protocolVersion(),
-		needInstanceTag:     c.needInstanceTag(),
+		protocolVersion:     c.version.protocolVersion(),
+		needInstanceTag:     c.version.needInstanceTag(),
 		senderInstanceTag:   c.senderInstanceTag,
 		receiverInstanceTag: c.receiverInstanceTag,
 	}
@@ -179,7 +169,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 		return nil, errInvalidOTRMessage
 	}
 
-	if c.protocolVersion() != msgProtocolVersion {
+	if c.version.protocolVersion() != msgProtocolVersion {
 		return nil, errWrongProtocolVersion
 	}
 
@@ -210,7 +200,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 }
 
 func (c *conversation) processDataMessage(msg []byte) []byte {
-	msg = msg[c.headerLen():]
+	msg = msg[c.version.headerLen():]
 	dataMessage := dataMsg{}
 	dataMessage.deserialize(msg)
 

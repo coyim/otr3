@@ -52,7 +52,7 @@ func fixtureDHKeyMsg(v otrVersion) []byte {
 func fixtureRevealSigMsg(v otrVersion) []byte {
 	ake := fixtureAKEWithVersion(v)
 	ake.akeContext = bobContextAtReceiveDHKey()
-	ake.otrVersion = v
+	ake.version = v
 
 	msg, _ := ake.revealSigMessage()
 
@@ -62,7 +62,7 @@ func fixtureRevealSigMsg(v otrVersion) []byte {
 func fixtureSigMsg(v otrVersion) []byte {
 	ake := fixtureAKEWithVersion(v)
 	ake.akeContext = aliceContextAtReceiveRevealSig()
-	ake.otrVersion = v
+	ake.version = v
 
 	msg, _ := ake.sigMessage()
 
@@ -84,7 +84,7 @@ func bobContextAfterAKE() akeContext {
 
 func bobContextAtAwaitingSig() akeContext {
 	c := bobContextAtReceiveDHKey()
-	c.otrVersion = otrV2{}
+	c.version = otrV2{}
 	c.addPolicy(allowV2)
 	c.authState = authStateAwaitingSig{}
 
@@ -237,7 +237,7 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing
 	c := newAkeContext(otrV3{}, fixtureRand())
 
 	dhCommitMsg := fixtureDHCommitMsg()
-	newMsg, encryptedGx, _ := extractData(dhCommitMsg[c.headerLen():])
+	newMsg, encryptedGx, _ := extractData(dhCommitMsg[c.version.headerLen():])
 	_, hashedGx, _ := extractData(newMsg)
 
 	authStateNone{}.receiveDHCommitMessage(&c, dhCommitMsg)
@@ -266,7 +266,7 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 	c.hashedGx = [sha256.Size]byte{0x05} //some hashedGx
 
 	newDHCommitMsg := fixtureDHCommitMsg()
-	newMsg, newEncryptedGx, _ := extractData(newDHCommitMsg[c.headerLen():])
+	newMsg, newEncryptedGx, _ := extractData(newDHCommitMsg[c.version.headerLen():])
 	_, newHashedGx, _ := extractData(newMsg)
 
 	authStateNone{}.receiveDHCommitMessage(&c, fixtureDHCommitMsg())
@@ -295,7 +295,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 
 	// force their hashedGx to be lower than ours
 	msg := fixtureDHCommitMsg()
-	newPoint, _, _ := extractData(msg[c.headerLen():])
+	newPoint, _, _ := extractData(msg[c.version.headerLen():])
 	newPoint[4] = 0x00
 
 	state, newMsg, _ := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)
@@ -313,7 +313,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 
 	// force their hashedGx to be higher than ours
 	msg := fixtureDHCommitMsg()
-	newPoint, _, _ := extractData(msg[c.headerLen():])
+	newPoint, _, _ := extractData(msg[c.version.headerLen():])
 	newPoint[4] = 0xFF
 
 	state, newMsg, _ := authStateAwaitingDHKey{}.receiveDHCommitMessage(&c, msg)

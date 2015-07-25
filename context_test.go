@@ -25,8 +25,8 @@ func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 
 	cxt.receive(msg)
 
-	assertDeepEquals(t, cxt.otrContext.otrVersion, otrV3{})
-	assertDeepEquals(t, cxt.akeContext.otrVersion, otrV3{})
+	assertDeepEquals(t, cxt.otrContext.version, otrV3{})
+	assertDeepEquals(t, cxt.akeContext.version, otrV3{})
 }
 
 func Test_receiveVerifiesMessageProtocolVersion(t *testing.T) {
