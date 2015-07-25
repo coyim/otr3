@@ -9,6 +9,14 @@ import (
 	"math/big"
 )
 
+const (
+	msgTypeData      = byte(3)
+	msgTypeDHCommit  = byte(2)
+	msgTypeDHKey     = byte(10)
+	msgTypeRevealSig = byte(17)
+	msgTypeSig       = byte(18)
+)
+
 type message interface {
 	serialize() []byte
 	deserialize(msg []byte) error
