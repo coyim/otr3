@@ -15,8 +15,7 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 		plainText, finished,
 	}
 
-	c := newConversation(otrV3{}, fixtureRand())
-	c.akeContext = bobContextAfterAKE()
+	c := bobContextAfterAKE()
 
 	smpMsg := fixtureMessage1()
 	m := c.genDataMsg(nil, smpMsg.tlv()).serialize()

@@ -13,18 +13,13 @@ const (
 )
 
 type conversation struct {
-	version  otrVersion
-	Rand     io.Reader
-	smpState smpState
-	secret   *big.Int
-	s1       smp1
-	s2       smp2
-	s3       smp3
-	akeContext
-}
-
-type akeContext struct {
-	*conversation
+	version                          otrVersion
+	Rand                             io.Reader
+	smpState                         smpState
+	secret                           *big.Int
+	s1                               smp1
+	s2                               smp2
+	s3                               smp3
 	authState                        authState
 	msgState                         msgState
 	r                                [16]byte
@@ -53,20 +48,16 @@ const (
 )
 
 func newConversation(v otrVersion, rand io.Reader) *conversation {
-	c := &conversation{
-		version:  v,
-		Rand:     rand,
-		smpState: smpStateExpect1{},
-		akeContext: akeContext{
-			authState: authStateNone{},
-			policies:  policies(0),
-		},
+	return &conversation{
+		version:   v,
+		Rand:      rand,
+		smpState:  smpStateExpect1{},
+		authState: authStateNone{},
+		policies:  policies(0),
 	}
-	c.akeContext.conversation = c
-	return c
 }
 
-func (c *akeContext) messageHeader() messageHeader {
+func (c *conversation) messageHeader() messageHeader {
 	return messageHeader{
 		protocolVersion:     c.version.protocolVersion(),
 		needInstanceTag:     c.version.needInstanceTag(),
@@ -75,7 +66,7 @@ func (c *akeContext) messageHeader() messageHeader {
 	}
 }
 
-func (c *akeContext) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
+func (c *conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	if err != nil {
 		//TODO errors
@@ -124,7 +115,7 @@ func isQueryMessage(msg []byte) bool {
 //TODO toSend needs fragmentation to be implemented
 func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	if isQueryMessage(message) {
-		toSend, err = c.akeContext.receiveQueryMessage(message)
+		toSend, err = c.receiveQueryMessage(message)
 		return
 	}
 
@@ -160,7 +151,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 		//TODO: encrypt toSend and wrap in a DATA message
 		c.receiveSMP(smpMessage)
 	default:
-		return c.akeContext.receiveMessage(message)
+		return c.receiveAKE(message)
 	}
 
 	return

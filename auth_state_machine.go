@@ -8,7 +8,7 @@ import (
 )
 
 // ignoreMessage should never be called with a too small message buffer, it is assumed the caller will have checked this before calling it
-func (c *akeContext) ignoreMessage(msg []byte) bool {
+func (c *conversation) ignoreMessage(msg []byte) bool {
 	_, protocolVersion, _ := extractShort(msg)
 	unexpectedV2Msg := protocolVersion == 2 && !c.policies.has(allowV2)
 	unexpectedV3Msg := protocolVersion == 3 && !c.policies.has(allowV3)
@@ -18,7 +18,7 @@ func (c *akeContext) ignoreMessage(msg []byte) bool {
 
 const minimumMessageLength = 3 // length of protocol version (SHORT) and message type (BYTE)
 
-func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
+func (c *conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 	if len(msg) < minimumMessageLength {
 		return nil, errInvalidOTRMessage
 	}
@@ -49,7 +49,7 @@ func (c *akeContext) receiveMessage(msg []byte) (toSend []byte, err error) {
 	return
 }
 
-func (c *akeContext) receiveQueryMessage(msg []byte) (toSend []byte, err error) {
+func (c *conversation) receiveQueryMessage(msg []byte) (toSend []byte, err error) {
 	c.authState, toSend, err = c.authState.receiveQueryMessage(c, msg)
 
 	if err == nil {
@@ -68,22 +68,22 @@ type authStateAwaitingSig struct{ authStateBase }
 type authStateV1Setup struct{ authStateBase }
 
 type authState interface {
-	receiveQueryMessage(*akeContext, []byte) (authState, []byte, error)
-	receiveDHCommitMessage(*akeContext, []byte) (authState, []byte, error)
-	receiveDHKeyMessage(*akeContext, []byte) (authState, []byte, error)
-	receiveRevealSigMessage(*akeContext, []byte) (authState, []byte, error)
-	receiveSigMessage(*akeContext, []byte) (authState, []byte, error)
+	receiveQueryMessage(*conversation, []byte) (authState, []byte, error)
+	receiveDHCommitMessage(*conversation, []byte) (authState, []byte, error)
+	receiveDHKeyMessage(*conversation, []byte) (authState, []byte, error)
+	receiveRevealSigMessage(*conversation, []byte) (authState, []byte, error)
+	receiveSigMessage(*conversation, []byte) (authState, []byte, error)
 }
 
-func (authStateBase) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (authStateBase) receiveQueryMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return authStateNone{}.receiveQueryMessage(c, msg)
 }
 
-func (authStateBase) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (authStateBase) receiveDHCommitMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
-func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateNone) receiveQueryMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	v, ok := s.acceptOTRRequest(c.policies, msg)
 	if !ok {
 		return nil, nil, errInvalidVersion
@@ -139,7 +139,7 @@ func (s authStateNone) acceptOTRRequest(p policies, msg []byte) (otrVersion, boo
 	return nil, false
 }
 
-func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateNone) receiveDHCommitMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	if err := generateCommitMsgInstanceTags(c, msg); err != nil {
 		return s, nil, err
 	}
@@ -158,7 +158,7 @@ func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authSt
 	return authStateAwaitingRevealSig{}, ret, nil
 }
 
-func generateCommitMsgInstanceTags(ake *akeContext, msg []byte) error {
+func generateCommitMsgInstanceTags(ake *conversation, msg []byte) error {
 	if ake.version.needInstanceTag() {
 		if len(msg) < lenMsgHeader+4 {
 			return errInvalidOTRMessage
@@ -176,7 +176,7 @@ func generateInstanceTag() uint32 {
 	return 0x00000100 + 0x01
 }
 
-func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	//Forget the DH-commit received before we sent the DH-Key
 
 	if err := c.processDHCommit(msg); err != nil {
@@ -190,7 +190,7 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []
 	return authStateAwaitingRevealSig{}, c.serializeDHKey(), nil
 }
 
-func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	if len(msg) < c.version.headerLen() {
 		return s, nil, errInvalidOTRMessage
 	}
@@ -212,15 +212,15 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
-func (s authStateNone) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateNone) receiveDHKeyMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	_, err := c.processDHKey(msg)
 	if err != nil {
 		return s, nil, err
@@ -238,7 +238,7 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (
 	return authStateAwaitingSig{}, c.revealSigMsg, nil
 }
 
-func (s authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingSig) receiveDHKeyMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	isSame, err := c.processDHKey(msg)
 	if err != nil {
 		return s, nil, err
@@ -251,11 +251,11 @@ func (s authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (au
 	return s, nil, nil
 }
 
-func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateNone) receiveRevealSigMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	if !c.policies.has(allowV2) {
 		return s, nil, nil
 	}
@@ -283,27 +283,27 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg [
 	return authStateNone{}, ret, nil
 }
 
-func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingSig) receiveRevealSigMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return s, nil, nil
 }
 
-func (s authStateNone) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateNone) receiveSigMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingRevealSig) receiveSigMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingDHKey) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingDHKey) receiveSigMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingSig) receiveSigMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	if !c.policies.has(allowV2) {
 		return s, nil, nil
 	}

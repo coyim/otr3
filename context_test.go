@@ -25,8 +25,7 @@ func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 
 	cxt.receive(msg)
 
-	assertDeepEquals(t, cxt.conversation.version, otrV3{})
-	assertDeepEquals(t, cxt.akeContext.version, otrV3{})
+	assertDeepEquals(t, cxt.version, otrV3{})
 }
 
 func Test_receiveVerifiesMessageProtocolVersion(t *testing.T) {
@@ -77,7 +76,7 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 		msgTypeDHKey,
 	}
 
-	dhCommitAKE := fixtureAKE()
+	dhCommitAKE := fixtureConversation()
 	dhCommitMsg, _ := dhCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
@@ -92,9 +91,8 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
 	v := otrV3{}
 
-	c := newConversation(v, fixtureRand())
 	msg := fixtureDHKeyMsg(v)
-	c.akeContext = bobContextAtAwaitingDHKey()
+	c := bobContextAtAwaitingDHKey()
 
 	toSend, err := c.receive(msg)
 
