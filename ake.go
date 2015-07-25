@@ -1,8 +1,6 @@
 package otr3
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/subtle"
@@ -67,15 +65,17 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	xb = append(xb, sigb...)
-
 	// this error can't happen, since key.c is fixed to the correct size
-	aesCipher, _ := aes.NewCipher(key.c[:])
-
-	ctr := cipher.NewCTR(aesCipher, make([]byte, aes.BlockSize))
-	ctr.XORKeyStream(xb, xb)
+	xb, _ = encrypt(key.c[:], append(xb, sigb...))
 
 	return xb, nil
+}
+
+func (ake *AKE) randomInto(b []byte) error {
+	if _, err := io.ReadFull(ake.rand(), b); err != nil {
+		return errShortRandomRead
+	}
+	return nil
 }
 
 // dhCommitMessage = bob = x
@@ -90,25 +90,19 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 
 	ake.setSecretExponent(x)
 
-	if _, err := io.ReadFull(ake.rand(), ake.r[:]); err != nil {
-		return nil, errShortRandomRead
+	if err := ake.randomInto(ake.r[:]); err != nil {
+		return nil, err
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
 	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.ourPublicValue))
-
-	dhCommitMsg := dhCommit{
-		messageHeader: ake.messageHeader(),
-		gx:            ake.ourPublicValue,
-		encryptedGx:   ake.encryptedGx,
-	}
-	return dhCommitMsg.serialize(), nil
+	return ake.serializeDHCommit(ake.ourPublicValue), nil
 }
 
-func (ake *AKE) serializeDHCommit() []byte {
+func (ake *AKE) serializeDHCommit(public *big.Int) []byte {
 	dhCommitMsg := dhCommit{
 		messageHeader: ake.messageHeader(),
-		gx:            ake.theirPublicValue,
+		gx:            public,
 		encryptedGx:   ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize()
@@ -225,11 +219,11 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	if err = checkDecryptedGx(decryptedGx, ake.hashedGx[:]); err != nil {
 		return
 	}
-	var tempgx *big.Int
-	if tempgx, err = extractGx(decryptedGx); err != nil {
+
+	if ake.theirPublicValue, err = extractGx(decryptedGx); err != nil {
 		return
 	}
-	ake.theirPublicValue = tempgx
+
 	ake.calcAKEKeys(ake.calcDHSharedSecret())
 	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey); err != nil {
 		return newOtrError("in reveal signature message: " + err.Error())
@@ -271,35 +265,7 @@ func (ake *AKE) processSig(msg []byte) (err error) {
 	return nil
 }
 
-func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys) error {
-	tomac := appendData(nil, encryptedSig)
-	myMAC := sumHMAC(keys.m2[:], tomac)[:20]
-
-	if len(myMAC) != len(theirMAC) || subtle.ConstantTimeCompare(myMAC, theirMAC) == 0 {
-		return errors.New("bad signature MAC in encrypted signature")
-	}
-
-	decryptedSig := encryptedSig
-	if err := decrypt(keys.c[:], decryptedSig, encryptedSig); err != nil {
-		return err
-	}
-
-	ake.theirKey = &PublicKey{}
-
-	nextPoint, ok1 := ake.theirKey.parse(decryptedSig)
-
-	_, keyID, ok2 := extractWord(nextPoint)
-
-	if !ok1 || !ok2 || len(nextPoint) < 4 {
-		return errCorruptEncryptedSignature
-	}
-
-	sig := nextPoint[4:]
-
-	verifyData := appendAll(ake.theirPublicValue, ake.ourPublicValue, ake.theirKey, keyID)
-
-	mb := sumHMAC(keys.m1[:], verifyData)
-
+func (ake *AKE) checkedSignatureVerification(mb, sig []byte) error {
 	rest, ok := ake.theirKey.verify(mb, sig)
 	if !ok {
 		return errors.New("bad signature in encrypted signature")
@@ -307,8 +273,59 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 	if len(rest) > 0 {
 		return errCorruptEncryptedSignature
 	}
+	return nil
+}
+
+func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *akeKeys) error {
+	tomac := appendData(nil, encryptedSig)
+	myMAC := sumHMAC(keys.m2[:], tomac)[:20]
+
+	if len(myMAC) != len(theirMAC) || subtle.ConstantTimeCompare(myMAC, theirMAC) == 0 {
+		return errors.New("bad signature MAC in encrypted signature")
+	}
+
+	return nil
+}
+
+func (ake *AKE) parseTheirKey(key []byte) (sig []byte, keyID uint32, err error) {
+	ake.theirKey = &PublicKey{}
+	rest, ok1 := ake.theirKey.parse(key)
+	sig, keyID, ok2 := extractWord(rest)
+
+	if !ok1 || !ok2 {
+		return nil, 0, errCorruptEncryptedSignature
+	}
+
+	return
+}
+
+func (ake *AKE) expectedMessageHMAC(keyID uint32, keys *akeKeys) []byte {
+	verifyData := appendAll(ake.theirPublicValue, ake.ourPublicValue, ake.theirKey, keyID)
+	return sumHMAC(keys.m1[:], verifyData)
+}
+
+func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys) error {
+	if err := verifyEncryptedSignatureMAC(encryptedSig, theirMAC, keys); err != nil {
+		return err
+	}
+
+	decryptedSig := encryptedSig
+	if err := decrypt(keys.c[:], decryptedSig, encryptedSig); err != nil {
+		return err
+	}
+
+	sig, keyID, err := ake.parseTheirKey(decryptedSig)
+	if err != nil {
+		return err
+	}
+
+	mb := ake.expectedMessageHMAC(keyID, keys)
+	if err := ake.checkedSignatureVerification(mb, sig); err != nil {
+		return err
+	}
 
 	ake.theirKeyID = keyID
+
 	//zero(ake.theirLastCtr[:])
 	return nil
 }
@@ -332,12 +349,8 @@ func sumHMAC(key, data []byte) []byte {
 	return mac.Sum(nil)
 }
 
-func sha256Sum(x []byte) [sha256.Size]byte {
-	return sha256.Sum256(x)
-}
-
 func checkDecryptedGx(decryptedGx, hashedGx []byte) error {
-	digest := sha256Sum(decryptedGx)
+	digest := sha256.Sum256(decryptedGx)
 
 	if subtle.ConstantTimeCompare(digest[:], hashedGx[:]) == 0 {
 		return errors.New("otr: bad commit MAC in reveal signature message")

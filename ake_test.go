@@ -1,6 +1,7 @@
 package otr3
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"io"
@@ -342,19 +343,14 @@ func Test_decrypt(t *testing.T) {
 	assertDeepEquals(t, decryptedGx, appendMPI([]byte{}, ake.theirPublicValue))
 }
 
-func Test_sha256Sum(t *testing.T) {
-	hashedGx := sha256Sum(appendMPI(nil, fixedgx))
-	assertDeepEquals(t, hashedGx[:], expectedHashedGxValue)
-}
-
 func Test_checkDecryptedGxWithoutError(t *testing.T) {
-	hashedGx := sha256Sum(appendMPI([]byte{}, fixedgx))
+	hashedGx := sha256.Sum256(appendMPI([]byte{}, fixedgx))
 	err := checkDecryptedGx(appendMPI([]byte{}, fixedgx), hashedGx[:])
 	assertDeepEquals(t, err, nil)
 }
 
 func Test_checkDecryptedGxWithError(t *testing.T) {
-	hashedGx := sha256Sum(appendMPI([]byte{}, fixedgy))
+	hashedGx := sha256.Sum256(appendMPI([]byte{}, fixedgy))
 	err := checkDecryptedGx(appendMPI([]byte{}, fixedgx), hashedGx[:])
 	assertDeepEquals(t, err.Error(), "otr: bad commit MAC in reveal signature message")
 }

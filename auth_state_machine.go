@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"strconv"
 )
@@ -218,11 +219,11 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte
 	}
 
 	gxMPI := appendMPI(nil, c.theirPublicValue)
-	hashedGx := sha256Sum(gxMPI)
+	hashedGx := sha256.Sum256(gxMPI)
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
 		ake := c.newAKE()
 		//NOTE what about the sender and receiver instance tags?
-		return authStateAwaitingRevealSig{}, ake.serializeDHCommit(), nil
+		return authStateAwaitingRevealSig{}, ake.serializeDHCommit(ake.theirPublicValue), nil
 	}
 
 	return authStateNone{}.receiveDHCommitMessage(c, msg)

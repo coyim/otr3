@@ -37,7 +37,7 @@ func (c dhCommit) serialize() []byte {
 	}
 	out = appendData(out, c.encryptedGx)
 	if c.hashedGx == [sha256.Size]byte{} {
-		c.hashedGx = sha256Sum(appendMPI(nil, c.gx))
+		c.hashedGx = sha256.Sum256(appendMPI(nil, c.gx))
 	}
 	out = appendData(out, c.hashedGx[:])
 
