@@ -13,11 +13,6 @@ const (
 )
 
 type conversation struct {
-	*otrContext
-	akeContext
-}
-
-type otrContext struct {
 	version  otrVersion
 	Rand     io.Reader
 	smpState smpState
@@ -25,10 +20,11 @@ type otrContext struct {
 	s1       smp1
 	s2       smp2
 	s3       smp3
+	akeContext
 }
 
 type akeContext struct {
-	*otrContext
+	*conversation
 	authState                        authState
 	msgState                         msgState
 	r                                [16]byte
@@ -57,23 +53,17 @@ const (
 )
 
 func newConversation(v otrVersion, rand io.Reader) *conversation {
-	c := newOtrContext(v, rand)
-	return &conversation{
-		otrContext: c,
-		akeContext: akeContext{
-			otrContext: c,
-			authState:  authStateNone{},
-			policies:   policies(0),
-		},
-	}
-}
-
-func newOtrContext(v otrVersion, rand io.Reader) *otrContext {
-	return &otrContext{
+	c := &conversation{
 		version:  v,
 		Rand:     rand,
 		smpState: smpStateExpect1{},
+		akeContext: akeContext{
+			authState: authStateNone{},
+			policies:  policies(0),
+		},
 	}
+	c.akeContext.conversation = c
+	return c
 }
 
 func (c *akeContext) messageHeader() messageHeader {
@@ -184,14 +174,14 @@ func (c *conversation) processDataMessage(msg []byte) []byte {
 	return []byte{}
 }
 
-func (c *otrContext) rand() io.Reader {
+func (c *conversation) rand() io.Reader {
 	if c.Rand != nil {
 		return c.Rand
 	}
 	return c.Rand
 }
 
-func (c *otrContext) randMPI(buf []byte) (*big.Int, bool) {
+func (c *conversation) randMPI(buf []byte) (*big.Int, bool) {
 	_, err := io.ReadFull(c.rand(), buf)
 
 	if err != nil {

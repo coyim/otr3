@@ -14,10 +14,10 @@ func dhMsgType(msg []byte) byte {
 
 func newAkeContext(v otrVersion, r io.Reader) akeContext {
 	return akeContext{
-		otrContext: newOtrContext(v, r),
-		authState:  authStateNone{},
-		msgState:   0,
-		policies:   0,
+		conversation: newConversation(v, r),
+		authState:    authStateNone{},
+		msgState:     0,
+		policies:     0,
 	}
 }
 

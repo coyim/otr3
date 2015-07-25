@@ -25,7 +25,7 @@ func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 
 	cxt.receive(msg)
 
-	assertDeepEquals(t, cxt.otrContext.version, otrV3{})
+	assertDeepEquals(t, cxt.conversation.version, otrV3{})
 	assertDeepEquals(t, cxt.akeContext.version, otrV3{})
 }
 
@@ -103,7 +103,7 @@ func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
 }
 
 func Test_randMPI_returnsNotOKForAShortRead(t *testing.T) {
-	c := newOtrContext(otrV3{}, fixedRand([]string{"ABCD"}))
+	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
 	var buf [3]byte
 
 	_, ok := c.randMPI(buf[:])
@@ -111,7 +111,7 @@ func Test_randMPI_returnsNotOKForAShortRead(t *testing.T) {
 }
 
 func Test_randMPI_returnsOKForARealRead(t *testing.T) {
-	c := newOtrContext(otrV3{}, fixedRand([]string{"ABCD"}))
+	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
 	var buf [2]byte
 
 	_, ok := c.randMPI(buf[:])
