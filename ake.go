@@ -10,7 +10,9 @@ import (
 )
 
 type ake struct {
-	secretExponent *big.Int
+	secretExponent   *big.Int
+	ourPublicValue   *big.Int
+	theirPublicValue *big.Int
 }
 
 func (c *conversation) calcAKEKeys(s *big.Int) {
@@ -19,15 +21,15 @@ func (c *conversation) calcAKEKeys(s *big.Int) {
 
 func (c *conversation) setSecretExponent(val *big.Int) {
 	c.ake.secretExponent = val
-	c.ourPublicValue = modExp(g1, val)
+	c.ake.ourPublicValue = modExp(g1, val)
 }
 
 func (c *conversation) calcDHSharedSecret() *big.Int {
-	return modExp(c.theirPublicValue, c.ake.secretExponent)
+	return modExp(c.ake.theirPublicValue, c.ake.secretExponent)
 }
 
 func (c *conversation) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
-	verifyData := appendAll(c.ourPublicValue, c.theirPublicValue, &c.ourKey.PublicKey, c.keys.ourKeyID)
+	verifyData := appendAll(c.ake.ourPublicValue, c.ake.theirPublicValue, &c.ourKey.PublicKey, c.keys.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
 	xb, err := c.calcXb(key, mb)
@@ -90,8 +92,8 @@ func (c *conversation) dhCommitMessage() ([]byte, error) {
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
-	c.encryptedGx, _ = encrypt(c.r[:], appendMPI(nil, c.ourPublicValue))
-	return c.serializeDHCommit(c.ourPublicValue), nil
+	c.encryptedGx, _ = encrypt(c.r[:], appendMPI(nil, c.ake.ourPublicValue))
+	return c.serializeDHCommit(c.ake.ourPublicValue), nil
 }
 
 func (c *conversation) serializeDHCommit(public *big.Int) []byte {
@@ -121,7 +123,7 @@ func (c *conversation) dhKeyMessage() ([]byte, error) {
 func (c *conversation) serializeDHKey() []byte {
 	dhKeyMsg := dhKey{
 		messageHeader: c.messageHeader(),
-		gy:            c.ourPublicValue,
+		gy:            c.ake.ourPublicValue,
 	}
 
 	return dhKeyMsg.serialize()
@@ -188,11 +190,11 @@ func (c *conversation) processDHKey(msg []byte) (isSame bool, err error) {
 	//NOTE: This keeps only the first Gy received
 	//Not sure if this is part of the spec,
 	//or simply a crypto/otr safeguard
-	if c.theirPublicValue != nil {
-		isSame = eq(c.theirPublicValue, dhKeyMsg.gy)
+	if c.ake.theirPublicValue != nil {
+		isSame = eq(c.ake.theirPublicValue, dhKeyMsg.gy)
 		return
 	}
-	c.theirPublicValue = dhKeyMsg.gy
+	c.ake.theirPublicValue = dhKeyMsg.gy
 	return
 }
 
@@ -217,7 +219,7 @@ func (c *conversation) processRevealSig(msg []byte) (err error) {
 		return
 	}
 
-	if c.theirPublicValue, err = extractGx(decryptedGx); err != nil {
+	if c.ake.theirPublicValue, err = extractGx(decryptedGx); err != nil {
 		return
 	}
 
@@ -297,7 +299,7 @@ func (c *conversation) parseTheirKey(key []byte) (sig []byte, keyID uint32, err 
 }
 
 func (c *conversation) expectedMessageHMAC(keyID uint32, keys *akeKeys) []byte {
-	verifyData := appendAll(c.theirPublicValue, c.ourPublicValue, c.theirKey, keyID)
+	verifyData := appendAll(c.ake.theirPublicValue, c.ake.ourPublicValue, c.theirKey, keyID)
 	return sumHMAC(keys.m1[:], verifyData)
 }
 

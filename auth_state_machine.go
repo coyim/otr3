@@ -202,11 +202,11 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *conversation, msg []by
 		return s, nil, errInvalidOTRMessage
 	}
 
-	gxMPI := appendMPI(nil, c.theirPublicValue)
+	gxMPI := appendMPI(nil, c.ake.theirPublicValue)
 	hashedGx := sha256.Sum256(gxMPI)
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
 		//NOTE what about the sender and receiver instance tags?
-		return authStateAwaitingRevealSig{}, c.serializeDHCommit(c.theirPublicValue), nil
+		return authStateAwaitingRevealSig{}, c.serializeDHCommit(c.ake.theirPublicValue), nil
 	}
 
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
@@ -230,8 +230,8 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *conversation, msg []byte)
 		return s, nil, err
 	}
 
-	c.keys.theirCurrentDHPubKey = c.theirPublicValue
-	c.keys.ourCurrentDHKeys.pub = c.ourPublicValue
+	c.keys.theirCurrentDHPubKey = c.ake.theirPublicValue
+	c.keys.ourCurrentDHKeys.pub = c.ake.ourPublicValue
 	c.keys.ourCurrentDHKeys.priv = c.ake.secretExponent
 	c.keys.ourCounter++
 
@@ -273,11 +273,11 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *conversation, msg
 
 	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
 	c.keys.ourKeyID = 0
-	c.keys.theirCurrentDHPubKey = c.theirPublicValue
+	c.keys.theirCurrentDHPubKey = c.ake.theirPublicValue
 	c.keys.theirPreviousDHPubKey = nil
 
 	c.keys.ourCurrentDHKeys.priv = c.ake.secretExponent
-	c.keys.ourCurrentDHKeys.pub = c.ourPublicValue
+	c.keys.ourCurrentDHKeys.pub = c.ake.ourPublicValue
 	c.keys.ourCounter++
 
 	return authStateNone{}, ret, nil
@@ -315,7 +315,7 @@ func (s authStateAwaitingSig) receiveSigMessage(c *conversation, msg []byte) (au
 	}
 
 	//gy was stored when we receive DH-Key
-	c.keys.theirCurrentDHPubKey = c.theirPublicValue
+	c.keys.theirCurrentDHPubKey = c.ake.theirPublicValue
 	c.keys.theirPreviousDHPubKey = nil
 	c.keys.ourKeyID = 0
 
