@@ -20,11 +20,11 @@ type conversation struct {
 
 type smpContext struct {
 	*otrContext
-	smpState
-	secret *big.Int
-	s1     smp1
-	s2     smp2
-	s3     smp3
+	smpState smpState
+	secret   *big.Int
+	s1       smp1
+	s2       smp2
+	s3       smp3
 }
 
 type akeContext struct {
