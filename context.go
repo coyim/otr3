@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"math/big"
 )
@@ -36,20 +35,19 @@ type smpContext struct {
 
 type akeContext struct {
 	*otrContext
-	authState           authState
-	msgState            msgState
-	r                   [16]byte
-	secretExponent      *big.Int
-	_our, _their        *big.Int
-	_gx, _gy, _x, _y    *big.Int
-	encryptedGx         []byte
-	hashedGx            [sha256.Size]byte
-	sigKey              akeKeys
-	senderInstanceTag   uint32
-	receiverInstanceTag uint32
-	ourKey              *PrivateKey
-	theirKey            *PublicKey
-	revealSigMsg        []byte
+	authState                        authState
+	msgState                         msgState
+	r                                [16]byte
+	secretExponent                   *big.Int
+	ourPublicValue, theirPublicValue *big.Int
+	encryptedGx                      []byte
+	hashedGx                         [sha256.Size]byte
+	sigKey                           akeKeys
+	senderInstanceTag                uint32
+	receiverInstanceTag              uint32
+	ourKey                           *PrivateKey
+	theirKey                         *PublicKey
+	revealSigMsg                     []byte
 	keyManagementContext
 	policies
 }
@@ -215,8 +213,6 @@ func (c *conversation) processDataMessage(msg []byte) []byte {
 	msg = msg[c.headerLen():]
 	dataMessage := dataMsg{}
 	dataMessage.deserialize(msg)
-	encryptData := dataMessage.encryptedMsg
-	fmt.Println("encryptData", encryptData)
 
 	return []byte{}
 }

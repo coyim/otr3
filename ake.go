@@ -30,70 +30,17 @@ func (ake *AKE) calcAKEKeys(s *big.Int) {
 	ake.ssid, ake.revealKey, ake.sigKey = calculateAKEKeys(s)
 }
 
-func (ake *akeContext) getGY() *big.Int {
-	return ake._gy
-}
-
-func (ake *akeContext) getGX() *big.Int {
-	return ake._gx
-}
-
-func (ake *akeContext) getExponent() *big.Int {
-	return ake.secretExponent
-}
-
-func (ake *akeContext) getTheirPublicValue() *big.Int {
-	return ake._their
-}
-
-func (ake *akeContext) getOurPublicValue() *big.Int {
-	return ake._our
-}
-
-func (ake *akeContext) getX() *big.Int {
-	return ake.secretExponent
-}
-
-func (ake *akeContext) getY() *big.Int {
-	return ake.secretExponent
-}
-
-func (ake *akeContext) setX(val *big.Int) {
+func (ake *akeContext) setSecretExponent(val *big.Int) {
 	ake.secretExponent = val
-	ake.setGXOur(modExp(g1, val))
+	ake.ourPublicValue = modExp(g1, val)
 }
 
-func (ake *akeContext) setY(val *big.Int) {
-	ake.secretExponent = val
-	ake.setGYOur(modExp(g1, val))
-}
-
-func (ake *akeContext) setGXTheir(val *big.Int) {
-	ake._gx = val
-	ake._their = val
-}
-
-func (ake *akeContext) setGXOur(val *big.Int) {
-	ake._gx = val
-	ake._our = val
-}
-
-func (ake *akeContext) setGYTheir(val *big.Int) {
-	ake._gy = val
-	ake._their = val
-}
-
-func (ake *akeContext) setGYOur(val *big.Int) {
-	ake._gy = val
-	ake._our = val
-}
-
-func (ake *AKE) calcDHSharedSecret(xKnown bool) *big.Int {
-	return modExp(ake.getTheirPublicValue(), ake.getExponent())
+func (ake *AKE) calcDHSharedSecret() *big.Int {
+	return modExp(ake.theirPublicValue, ake.secretExponent)
 }
 
 func (ake *AKE) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
-	verifyData := appendAll(ake.getOurPublicValue(), ake.getTheirPublicValue(), &ake.ourKey.PublicKey, ake.ourKeyID)
+	verifyData := appendAll(ake.ourPublicValue, ake.theirPublicValue, &ake.ourKey.PublicKey, ake.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
 	xb, err := ake.calcXb(key, mb)
@@ -141,18 +88,18 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 		return nil, errShortRandomRead
 	}
 
-	ake.setX(x)
+	ake.setSecretExponent(x)
 
 	if _, err := io.ReadFull(ake.rand(), ake.r[:]); err != nil {
 		return nil, errShortRandomRead
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
-	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.getOurPublicValue()))
+	ake.encryptedGx, _ = encrypt(ake.r[:], appendMPI(nil, ake.ourPublicValue))
 
 	dhCommitMsg := dhCommit{
 		messageHeader: ake.messageHeader(),
-		gx:            ake.getOurPublicValue(),
+		gx:            ake.ourPublicValue,
 		encryptedGx:   ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize(), nil
@@ -161,7 +108,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 func (ake *AKE) serializeDHCommit() []byte {
 	dhCommitMsg := dhCommit{
 		messageHeader: ake.messageHeader(),
-		gx:            ake.getTheirPublicValue(),
+		gx:            ake.theirPublicValue,
 		encryptedGx:   ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize()
@@ -176,14 +123,14 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 		return nil, errShortRandomRead
 	}
 
-	ake.setY(y)
+	ake.setSecretExponent(y)
 	return ake.serializeDHKey(), nil
 }
 
 func (ake *AKE) serializeDHKey() []byte {
 	dhKeyMsg := dhKey{
 		messageHeader: ake.messageHeader(),
-		gy:            ake.getOurPublicValue(),
+		gy:            ake.ourPublicValue,
 	}
 
 	return dhKeyMsg.serialize()
@@ -192,7 +139,7 @@ func (ake *AKE) serializeDHKey() []byte {
 // revealSigMessage = bob = x
 // Bob ---- Reveal Signature ----> Alice
 func (ake *AKE) revealSigMessage() ([]byte, error) {
-	ake.calcAKEKeys(ake.calcDHSharedSecret(true))
+	ake.calcAKEKeys(ake.calcDHSharedSecret())
 	encryptedSig, err := ake.generateEncryptedSignature(&ake.revealKey)
 	if err != nil {
 		return nil, err
@@ -211,7 +158,7 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 // sigMessage = alice = y
 // Alice -- Signature -----------> Bob
 func (ake *AKE) sigMessage() ([]byte, error) {
-	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
+	ake.calcAKEKeys(ake.calcDHSharedSecret())
 	encryptedSig, err := ake.generateEncryptedSignature(&ake.sigKey)
 	if err != nil {
 		return nil, err
@@ -250,11 +197,11 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 	//NOTE: This keeps only the first Gy received
 	//Not sure if this is part of the spec,
 	//or simply a crypto/otr safeguard
-	if ake.getTheirPublicValue() != nil {
-		isSame = eq(ake.getTheirPublicValue(), dhKeyMsg.gy)
+	if ake.theirPublicValue != nil {
+		isSame = eq(ake.theirPublicValue, dhKeyMsg.gy)
 		return
 	}
-	ake.setGYTheir(dhKeyMsg.gy)
+	ake.theirPublicValue = dhKeyMsg.gy
 	return
 }
 
@@ -282,8 +229,8 @@ func (ake *AKE) processRevealSig(msg []byte) (err error) {
 	if tempgx, err = extractGx(decryptedGx); err != nil {
 		return
 	}
-	ake.setGXTheir(tempgx)
-	ake.calcAKEKeys(ake.calcDHSharedSecret(false))
+	ake.theirPublicValue = tempgx
+	ake.calcAKEKeys(ake.calcDHSharedSecret())
 	if err = ake.processEncryptedSig(encryptedSig, theirMAC, &ake.revealKey); err != nil {
 		return newOtrError("in reveal signature message: " + err.Error())
 	}
@@ -349,7 +296,7 @@ func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *
 
 	sig := nextPoint[4:]
 
-	verifyData := appendAll(ake.getTheirPublicValue(), ake.getOurPublicValue(), ake.theirKey, keyID)
+	verifyData := appendAll(ake.theirPublicValue, ake.ourPublicValue, ake.theirKey, keyID)
 
 	mb := sumHMAC(keys.m1[:], verifyData)
 
