@@ -92,19 +92,19 @@ func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
 
 func Test_thatVerifySMPStartParametersCheckG2AForOtrV3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	err := c.verifySMP1(smpMessage1{g2a: new(big.Int).SetInt64(1)})
+	err := c.verifySMP1(smp1Message{g2a: new(big.Int).SetInt64(1)})
 	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
 }
 
 func Test_thatVerifySMPStartParametersCheckG3AForOtrV3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	err := c.verifySMP1(smpMessage1{g2a: new(big.Int).SetInt64(3), g3a: p})
+	err := c.verifySMP1(smp1Message{g2a: new(big.Int).SetInt64(3), g3a: p})
 	assertDeepEquals(t, err, errors.New("g3a is an invalid group element"))
 }
 
 func Test_thatVerifySMPStartParametersDoesntCheckG2AForOtrV2(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	err := c.verifySMP1(smpMessage1{
+	err := c.verifySMP1(smp1Message{
 		g2a: new(big.Int).SetInt64(1),
 		g3a: new(big.Int).SetInt64(1),
 		c2:  new(big.Int).SetInt64(1),
@@ -117,7 +117,7 @@ func Test_thatVerifySMPStartParametersDoesntCheckG2AForOtrV2(t *testing.T) {
 
 func Test_thatVerifySMPStartParametersDoesntCheckG3AForOtrV2(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	err := c.verifySMP1(smpMessage1{
+	err := c.verifySMP1(smp1Message{
 		g2a: new(big.Int).SetInt64(3),
 		g3a: new(big.Int).SetInt64(1),
 		c2:  new(big.Int).SetInt64(1),
@@ -130,7 +130,7 @@ func Test_thatVerifySMPStartParametersDoesntCheckG3AForOtrV2(t *testing.T) {
 
 func Test_thatVerifySMPStartParametersChecksThatc2IsAValidZeroKnowledgeProof(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	err := c.verifySMP1(smpMessage1{
+	err := c.verifySMP1(smp1Message{
 		g2a: new(big.Int).SetInt64(3),
 		g3a: new(big.Int).SetInt64(3),
 		c2:  new(big.Int).SetInt64(3),
@@ -143,7 +143,7 @@ func Test_thatVerifySMPStartParametersChecksThatc2IsAValidZeroKnowledgeProof(t *
 
 func Test_thatVerifySMPStartParametersChecksThatc3IsAValidZeroKnowledgeProof(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	err := c.verifySMP1(smpMessage1{
+	err := c.verifySMP1(smp1Message{
 		g2a: fixtureMessage1().g2a,
 		g3a: new(big.Int).SetInt64(3),
 		c2:  fixtureMessage1().c2,
@@ -164,7 +164,7 @@ func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessage(t *testing.
 	c3, _ := new(big.Int).SetString("57d8cfda442854ecb01b28e631aa9165d51d1192f7f464bf17ea7f6665c05030", 16)
 	d3, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af8140bb2aa65628bcff455920bba95a1392f2fcb5c115f43a7a828b5bf0393c5c775a17a88506a7893ff509d674cd655c", 16)
 
-	err := c.verifySMP1(smpMessage1{
+	err := c.verifySMP1(smp1Message{
 		g2a: g2a,
 		g3a: g3a,
 		c2:  c2,
@@ -185,7 +185,7 @@ func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessageWithProtocol
 	c3, _ := new(big.Int).SetString("57d8cfda442854ecb01b28e631aa9165d51d1192f7f464bf17ea7f6665c05030", 16)
 	d3, _ := new(big.Int).SetString("7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267af8140bb2aa65628bcff455920bba95a1392f2fcb5c115f43a7a828b5bf0393c5c775a17a88506a7893ff509d674cd655c", 16)
 
-	err := c.verifySMP1(smpMessage1{
+	err := c.verifySMP1(smp1Message{
 		g2a: g2a,
 		g3a: g3a,
 		c2:  c2,

@@ -17,9 +17,9 @@ type conversation struct {
 	Rand                             io.Reader
 	smpState                         smpState
 	secret                           *big.Int
-	s1                               smp1
-	s2                               smp2
-	s3                               smp3
+	s1                               smp1State
+	s2                               smp2State
+	s3                               smp3State
 	authState                        authState
 	msgState                         msgState
 	r                                [16]byte

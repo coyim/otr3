@@ -193,13 +193,13 @@ func Test_generateSMP2_computesD6Correctly(t *testing.T) {
 
 func Test_verifySMP2_checkG2bForOtrV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	err := otr.verifySMP2(fixtureSmp1(), smpMessage2{g2b: new(big.Int).SetInt64(1)})
+	err := otr.verifySMP2(fixtureSmp1(), smp2Message{g2b: new(big.Int).SetInt64(1)})
 	assertDeepEquals(t, err, errors.New("g2b is an invalid group element"))
 }
 
 func Test_verifySMP2_checkG3bForOtrV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	err := otr.verifySMP2(fixtureSmp1(), smpMessage2{
+	err := otr.verifySMP2(fixtureSmp1(), smp2Message{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(1),
 	})
@@ -208,7 +208,7 @@ func Test_verifySMP2_checkG3bForOtrV3(t *testing.T) {
 
 func Test_verifySMP2_checkPbForOtrV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	err := otr.verifySMP2(fixtureSmp1(), smpMessage2{
+	err := otr.verifySMP2(fixtureSmp1(), smp2Message{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(3),
 		pb:  p,
@@ -218,7 +218,7 @@ func Test_verifySMP2_checkPbForOtrV3(t *testing.T) {
 
 func Test_verifySMP2_checkQbForOtrV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	err := otr.verifySMP2(fixtureSmp1(), smpMessage2{
+	err := otr.verifySMP2(fixtureSmp1(), smp2Message{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(3),
 		pb:  pMinusTwo,

@@ -60,7 +60,7 @@ func Test_verifySMP4_succeedsForValidZKPS(t *testing.T) {
 
 func Test_verifySMP4_failsIfRbIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	err := otr.verifySMP4(fixtureSmp3(), smpMessage4{rb: big.NewInt(1)})
+	err := otr.verifySMP4(fixtureSmp3(), smp4Message{rb: big.NewInt(1)})
 	assertDeepEquals(t, err, errors.New("Rb is an invalid group element"))
 }
 

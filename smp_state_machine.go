@@ -16,10 +16,10 @@ type smpMessage interface {
 }
 
 type smpState interface {
-	receiveMessage1(*conversation, smpMessage1) (smpState, smpMessage, error)
-	receiveMessage2(*conversation, smpMessage2) (smpState, smpMessage, error)
-	receiveMessage3(*conversation, smpMessage3) (smpState, smpMessage, error)
-	receiveMessage4(*conversation, smpMessage4) (smpState, smpMessage, error)
+	receiveMessage1(*conversation, smp1Message) (smpState, smpMessage, error)
+	receiveMessage2(*conversation, smp2Message) (smpState, smpMessage, error)
+	receiveMessage3(*conversation, smp3Message) (smpState, smpMessage, error)
+	receiveMessage4(*conversation, smp4Message) (smpState, smpMessage, error)
 	receiveAbortMessage(*conversation, smpMessageAbort) (smpState, smpMessage)
 }
 
@@ -51,19 +51,19 @@ func (c *conversation) receiveSMP(m smpMessage) ([]byte, error) {
 	return toSend.tlv().serialize(), nil
 }
 
-func (smpStateBase) receiveMessage1(c *conversation, m smpMessage1) (smpState, smpMessage, error) {
+func (smpStateBase) receiveMessage1(c *conversation, m smp1Message) (smpState, smpMessage, error) {
 	return abortStateMachine()
 }
 
-func (smpStateBase) receiveMessage2(c *conversation, m smpMessage2) (smpState, smpMessage, error) {
+func (smpStateBase) receiveMessage2(c *conversation, m smp2Message) (smpState, smpMessage, error) {
 	return abortStateMachine()
 }
 
-func (smpStateBase) receiveMessage3(c *conversation, m smpMessage3) (smpState, smpMessage, error) {
+func (smpStateBase) receiveMessage3(c *conversation, m smp3Message) (smpState, smpMessage, error) {
 	return abortStateMachine()
 }
 
-func (smpStateBase) receiveMessage4(c *conversation, m smpMessage4) (smpState, smpMessage, error) {
+func (smpStateBase) receiveMessage4(c *conversation, m smp4Message) (smpState, smpMessage, error) {
 	return abortStateMachine()
 }
 
@@ -72,7 +72,7 @@ func (smpStateBase) receiveAbortMessage(c *conversation, m smpMessageAbort) (smp
 	return smpStateExpect1{}, nil
 }
 
-func (smpStateExpect1) receiveMessage1(c *conversation, m smpMessage1) (smpState, smpMessage, error) {
+func (smpStateExpect1) receiveMessage1(c *conversation, m smp1Message) (smpState, smpMessage, error) {
 	err := c.verifySMP1(m)
 	if err != nil {
 		return abortStateMachineWith(err)
@@ -86,7 +86,7 @@ func (smpStateExpect1) receiveMessage1(c *conversation, m smpMessage1) (smpState
 	return smpStateExpect3{}, ret.msg, nil
 }
 
-func (smpStateExpect2) receiveMessage2(c *conversation, m smpMessage2) (smpState, smpMessage, error) {
+func (smpStateExpect2) receiveMessage2(c *conversation, m smp2Message) (smpState, smpMessage, error) {
 	//TODO: make sure c.s1 is stored when it is generated
 
 	err := c.verifySMP2(c.s1, m)
@@ -102,7 +102,7 @@ func (smpStateExpect2) receiveMessage2(c *conversation, m smpMessage2) (smpState
 	return smpStateExpect4{}, ret.msg, nil
 }
 
-func (smpStateExpect3) receiveMessage3(c *conversation, m smpMessage3) (smpState, smpMessage, error) {
+func (smpStateExpect3) receiveMessage3(c *conversation, m smp3Message) (smpState, smpMessage, error) {
 	//TODO: make sure c.s2 is stored when it is generated
 
 	err := c.verifySMP3(c.s2, m)
@@ -123,7 +123,7 @@ func (smpStateExpect3) receiveMessage3(c *conversation, m smpMessage3) (smpState
 	return smpStateExpect1{}, ret.msg, nil
 }
 
-func (smpStateExpect4) receiveMessage4(c *conversation, m smpMessage4) (smpState, smpMessage, error) {
+func (smpStateExpect4) receiveMessage4(c *conversation, m smp4Message) (smpState, smpMessage, error) {
 	//TODO: make sure c.s3 is stored when it is generated
 
 	err := c.verifySMP4(c.s3, m)
@@ -139,22 +139,22 @@ func (smpStateExpect4) receiveMessage4(c *conversation, m smpMessage4) (smpState
 	return smpStateExpect1{}, nil, nil
 }
 
-func (m smpMessage1) receivedMessage(c *conversation) (ret smpMessage, err error) {
+func (m smp1Message) receivedMessage(c *conversation) (ret smpMessage, err error) {
 	c.smpState, ret, err = c.smpState.receiveMessage1(c, m)
 	return
 }
 
-func (m smpMessage2) receivedMessage(c *conversation) (ret smpMessage, err error) {
+func (m smp2Message) receivedMessage(c *conversation) (ret smpMessage, err error) {
 	c.smpState, ret, err = c.smpState.receiveMessage2(c, m)
 	return
 }
 
-func (m smpMessage3) receivedMessage(c *conversation) (ret smpMessage, err error) {
+func (m smp3Message) receivedMessage(c *conversation) (ret smpMessage, err error) {
 	c.smpState, ret, err = c.smpState.receiveMessage3(c, m)
 	return
 }
 
-func (m smpMessage4) receivedMessage(c *conversation) (ret smpMessage, err error) {
+func (m smp4Message) receivedMessage(c *conversation) (ret smpMessage, err error) {
 	c.smpState, ret, err = c.smpState.receiveMessage4(c, m)
 	return
 }

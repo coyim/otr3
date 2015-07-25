@@ -8,15 +8,15 @@ import (
 // FIXME should store g3b, (Pa / Pb), (Qa / Qb) and Ra
 // after generating smpMessage3
 
-type smp3 struct {
+type smp3State struct {
 	x              *big.Int
 	g3b            *big.Int
 	r4, r5, r6, r7 *big.Int
 	qaqb, papb     *big.Int
-	msg            smpMessage3
+	msg            smp3Message
 }
 
-type smpMessage3 struct {
+type smp3Message struct {
 	pa, qa     *big.Int
 	cp         *big.Int
 	d5, d6, d7 *big.Int
@@ -24,11 +24,11 @@ type smpMessage3 struct {
 	cr         *big.Int
 }
 
-func (m smpMessage3) tlv() tlv {
+func (m smp3Message) tlv() tlv {
 	return genSMPTLV(0x0004, m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
 }
 
-func (c *conversation) generateSMP3Parameters() (s smp3, ok bool) {
+func (c *conversation) generateSMP3Parameters() (s smp3State, ok bool) {
 	b := make([]byte, c.version.parameterLength())
 	var ok1, ok2, ok3, ok4 bool
 	s.r4, ok1 = c.randMPI(b)
@@ -38,8 +38,8 @@ func (c *conversation) generateSMP3Parameters() (s smp3, ok bool) {
 	return s, ok1 && ok2 && ok3 && ok4
 }
 
-func generateSMP3Message(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
-	var m smpMessage3
+func generateSMP3Message(s *smp3State, s1 smp1State, m2 smp2Message) smp3Message {
+	var m smp3Message
 
 	g2 := modExp(m2.g2b, s1.a2)
 	g3 := modExp(m2.g3b, s1.a3)
@@ -63,7 +63,7 @@ func generateSMP3Message(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
 	return m
 }
 
-func (c *conversation) generateSMP3(secret *big.Int, s1 smp1, m2 smpMessage2) (s smp3, ok bool) {
+func (c *conversation) generateSMP3(secret *big.Int, s1 smp1State, m2 smp2Message) (s smp3State, ok bool) {
 	if s, ok = c.generateSMP3Parameters(); !ok {
 		return s, false
 	}
@@ -72,7 +72,7 @@ func (c *conversation) generateSMP3(secret *big.Int, s1 smp1, m2 smpMessage2) (s
 	return s, true
 }
 
-func (c *conversation) verifySMP3(s2 smp2, msg smpMessage3) error {
+func (c *conversation) verifySMP3(s2 smp2State, msg smp3Message) error {
 	if !c.version.isGroupElement(msg.pa) {
 		return errors.New("Pa is an invalid group element")
 	}
@@ -99,7 +99,7 @@ func (c *conversation) verifySMP3(s2 smp2, msg smpMessage3) error {
 	return nil
 }
 
-func (c *conversation) verifySMP3ProtocolSuccess(s2 smp2, msg smpMessage3) error {
+func (c *conversation) verifySMP3ProtocolSuccess(s2 smp2State, msg smp3Message) error {
 	papb := divMod(msg.pa, s2.msg.pb, p)
 
 	rab := modExp(msg.ra, s2.b3)

@@ -21,7 +21,7 @@ func parseTLV(data []byte) (smpMessage, bool) {
 	return nil, false
 }
 
-func parseSMP1TLV(data []byte) (msg smpMessage1, ok bool) {
+func parseSMP1TLV(data []byte) (msg smp1Message, ok bool) {
 	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
 	if !ok || len(mpis) < 6 {
 		return msg, false
@@ -35,7 +35,7 @@ func parseSMP1TLV(data []byte) (msg smpMessage1, ok bool) {
 	return msg, true
 }
 
-func parseSMP2TLV(data []byte) (msg smpMessage2, ok bool) {
+func parseSMP2TLV(data []byte) (msg smp2Message, ok bool) {
 	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
 	if !ok || len(mpis) < 11 {
 		return msg, false
@@ -54,7 +54,7 @@ func parseSMP2TLV(data []byte) (msg smpMessage2, ok bool) {
 	return msg, true
 }
 
-func parseSMP3TLV(data []byte) (msg smpMessage3, ok bool) {
+func parseSMP3TLV(data []byte) (msg smp3Message, ok bool) {
 	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
 	if !ok || len(mpis) < 8 {
 		return msg, false
@@ -70,7 +70,7 @@ func parseSMP3TLV(data []byte) (msg smpMessage3, ok bool) {
 	return msg, true
 }
 
-func parseSMP4TLV(data []byte) (msg smpMessage4, ok bool) {
+func parseSMP4TLV(data []byte) (msg smp4Message, ok bool) {
 	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
 	if !ok || len(mpis) < 3 {
 		return msg, false

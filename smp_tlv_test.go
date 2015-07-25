@@ -107,7 +107,7 @@ func Test_readSmpMessage1TLV(t *testing.T) {
 
 	parsedValue, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, true)
-	val, ok := parsedValue.(smpMessage1)
+	val, ok := parsedValue.(smp1Message)
 	assertEquals(t, ok, true)
 	assertDeepEquals(t, val, msg)
 }
@@ -200,7 +200,7 @@ func Test_readSmpMessage2TLV(t *testing.T) {
 
 	parsedValue, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, true)
-	val, ok := parsedValue.(smpMessage2)
+	val, ok := parsedValue.(smp2Message)
 	assertEquals(t, ok, true)
 	assertDeepEquals(t, val, msg)
 }
@@ -211,7 +211,7 @@ func Test_readSmpMessage3TLV(t *testing.T) {
 
 	parsedValue, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, true)
-	val, ok := parsedValue.(smpMessage3)
+	val, ok := parsedValue.(smp3Message)
 	assertEquals(t, ok, true)
 	assertDeepEquals(t, val, msg)
 }
@@ -222,7 +222,7 @@ func Test_readSmpMessage4TLV(t *testing.T) {
 
 	parsedValue, parsedOk := parseTLV(tlv)
 	assertEquals(t, parsedOk, true)
-	val, ok := parsedValue.(smpMessage4)
+	val, ok := parsedValue.(smp4Message)
 	assertEquals(t, ok, true)
 	assertDeepEquals(t, val, msg)
 }

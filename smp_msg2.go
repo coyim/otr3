@@ -6,19 +6,19 @@ import (
 )
 
 // FIXME should store g3a*, g2, g3, b3, Pb and Qb
-// after generating smpMessage2
+// after generating smp2Message
 
-type smp2 struct {
+type smp2State struct {
 	y                  *big.Int
 	b2, b3             *big.Int
 	r2, r3, r4, r5, r6 *big.Int
 	g2, g3             *big.Int
 	g3a                *big.Int
 	qb                 *big.Int
-	msg                smpMessage2
+	msg                smp2Message
 }
 
-type smpMessage2 struct {
+type smp2Message struct {
 	g2b, g3b *big.Int
 	c2, c3   *big.Int
 	d2, d3   *big.Int
@@ -27,11 +27,11 @@ type smpMessage2 struct {
 	d5, d6   *big.Int
 }
 
-func (m smpMessage2) tlv() tlv {
+func (m smp2Message) tlv() tlv {
 	return genSMPTLV(0x0003, m.g2b, m.c2, m.d2, m.g3b, m.c3, m.d3, m.pb, m.qb, m.cp, m.d5, m.d6)
 }
 
-func (c *conversation) generateSMP2Parameters() (s smp2, ok bool) {
+func (c *conversation) generateSMP2Parameters() (s smp2State, ok bool) {
 	b := make([]byte, c.version.parameterLength())
 	var ok1, ok2, ok3, ok4, ok5, ok6, ok7 bool
 	s.b2, ok1 = c.randMPI(b)
@@ -44,8 +44,8 @@ func (c *conversation) generateSMP2Parameters() (s smp2, ok bool) {
 	return s, ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7
 }
 
-func generateSMP2Message(s *smp2, s1 smpMessage1) smpMessage2 {
-	var m smpMessage2
+func generateSMP2Message(s *smp2State, s1 smp1Message) smp2Message {
+	var m smp2Message
 
 	m.g2b = modExp(g1, s.b2)
 	m.g3b = modExp(g1, s.b3)
@@ -70,7 +70,7 @@ func generateSMP2Message(s *smp2, s1 smpMessage1) smpMessage2 {
 	return m
 }
 
-func (c *conversation) generateSMP2(secret *big.Int, s1 smpMessage1) (s smp2, ok bool) {
+func (c *conversation) generateSMP2(secret *big.Int, s1 smp1Message) (s smp2State, ok bool) {
 	if s, ok = c.generateSMP2Parameters(); !ok {
 		return s, false
 	}
@@ -80,7 +80,7 @@ func (c *conversation) generateSMP2(secret *big.Int, s1 smpMessage1) (s smp2, ok
 	return
 }
 
-func (c *conversation) verifySMP2(s1 smp1, msg smpMessage2) error {
+func (c *conversation) verifySMP2(s1 smp1State, msg smp2Message) error {
 	if !c.version.isGroupElement(msg.g2b) {
 		return errors.New("g2b is an invalid group element")
 	}

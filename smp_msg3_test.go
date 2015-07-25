@@ -159,13 +159,13 @@ func Test_generateSMP3_returnsNotOKIfThereIsNotEnoughRandomnessForBlinding(t *te
 
 func Test_verifySMP3_failsIfPaIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	err := otr.verifySMP3(fixtureSmp2(), smpMessage3{pa: big.NewInt(1)})
+	err := otr.verifySMP3(fixtureSmp2(), smp3Message{pa: big.NewInt(1)})
 	assertDeepEquals(t, err, errors.New("Pa is an invalid group element"))
 }
 
 func Test_verifySMP3_failsIfQaIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	err := otr.verifySMP3(fixtureSmp2(), smpMessage3{
+	err := otr.verifySMP3(fixtureSmp2(), smp3Message{
 		pa: big.NewInt(2),
 		qa: big.NewInt(1),
 	})
@@ -174,7 +174,7 @@ func Test_verifySMP3_failsIfQaIsNotInTheGroupForProtocolV3(t *testing.T) {
 
 func Test_verifySMP3_failsIfRaIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	err := otr.verifySMP3(fixtureSmp2(), smpMessage3{
+	err := otr.verifySMP3(fixtureSmp2(), smp3Message{
 		pa: big.NewInt(2),
 		qa: big.NewInt(2),
 		ra: big.NewInt(1),
