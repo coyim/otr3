@@ -7,7 +7,7 @@ import (
 )
 
 func Test_smpStateExpect1_goToExpectState3WhenReceivesSmpMessage1(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	msg := fixtureMessage1()
@@ -18,7 +18,7 @@ func Test_smpStateExpect1_goToExpectState3WhenReceivesSmpMessage1(t *testing.T) 
 
 func Test_smpStateExpect1_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect1{}
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	_, msg, _ := state.receiveMessage2(c, smpMessage2{})
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
@@ -30,7 +30,7 @@ func Test_smpStateExpect1_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *t
 }
 
 func Test_smpStateExpect2_goToExpectState4WhenReceivesSmpMessage2(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	c.s1 = fixtureSmp1()
 
@@ -42,7 +42,7 @@ func Test_smpStateExpect2_goToExpectState4WhenReceivesSmpMessage2(t *testing.T) 
 
 func Test_smpStateExpect2_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect2{}
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	_, msg, _ := state.receiveMessage1(c, smpMessage1{})
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
@@ -54,7 +54,7 @@ func Test_smpStateExpect2_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *t
 }
 
 func Test_smpStateExpect3_goToExpectState1WhenReceivesSmpMessage3(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	c.s2 = fixtureSmp2()
 	msg := fixtureMessage3()
@@ -66,7 +66,7 @@ func Test_smpStateExpect3_goToExpectState1WhenReceivesSmpMessage3(t *testing.T) 
 
 func Test_smpStateExpect3_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect3{}
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	_, msg, _ := state.receiveMessage1(c, smpMessage1{})
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
@@ -78,7 +78,7 @@ func Test_smpStateExpect3_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *t
 }
 
 func Test_smpStateExpect4_goToExpectState1WhenReceivesSmpMessage4(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.s1 = fixtureSmp1()
 	c.s3 = fixtureSmp3()
 	msg := fixtureMessage4()
@@ -90,7 +90,7 @@ func Test_smpStateExpect4_goToExpectState1WhenReceivesSmpMessage4(t *testing.T) 
 
 func Test_smpStateExpect4_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect4{}
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	_, msg, _ := state.receiveMessage1(c, smpMessage1{})
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
@@ -106,7 +106,7 @@ func Test_contextTransitionsFromSmpExpect1ToSmpExpect3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	c.smpContext.receive(m)
+	c.receiveSMP(m)
 	assertEquals(t, c.smpState, smpStateExpect3{})
 }
 
@@ -114,10 +114,10 @@ func Test_contextTransitionsFromSmpExpect2ToSmpExpect4(t *testing.T) {
 	m := fixtureMessage2()
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect2{}
-	c.smpContext.s1 = fixtureSmp1()
-	c.smpContext.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+	c.s1 = fixtureSmp1()
+	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	c.smpContext.receive(m)
+	c.receiveSMP(m)
 	assertEquals(t, c.smpState, smpStateExpect4{})
 }
 
@@ -125,10 +125,10 @@ func Test_contextTransitionsFromSmpExpect3ToSmpExpect1(t *testing.T) {
 	m := fixtureMessage3()
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect3{}
-	c.smpContext.s2 = fixtureSmp2()
-	c.smpContext.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+	c.s2 = fixtureSmp2()
+	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	c.smpContext.receive(m)
+	c.receiveSMP(m)
 	assertEquals(t, c.smpState, smpStateExpect1{})
 }
 
@@ -136,10 +136,10 @@ func Test_contextTransitionsFromSmpExpect4ToSmpExpect1(t *testing.T) {
 	m := fixtureMessage4()
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect4{}
-	c.smpContext.s1 = fixtureSmp1()
-	c.smpContext.s3 = fixtureSmp3()
+	c.s1 = fixtureSmp1()
+	c.s3 = fixtureSmp3()
 
-	c.smpContext.receive(m)
+	c.receiveSMP(m)
 	assertEquals(t, c.smpState, smpStateExpect1{})
 }
 
@@ -148,7 +148,7 @@ func Test_contextUnexpectedMessageTransitionsToSmpExpected1(t *testing.T) {
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect3{}
-	toSend, err := c.smpContext.receive(m)
+	toSend, err := c.receiveSMP(m)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.smpState, smpStateExpect1{})
@@ -156,14 +156,14 @@ func Test_contextUnexpectedMessageTransitionsToSmpExpected1(t *testing.T) {
 }
 
 func Test_smpStateExpect1_receiveMessage1_returnsErrorIfVerifySMP1ReturnsError(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	_, _, err := smpStateExpect1{}.receiveMessage1(c, smpMessage1{g2a: big.NewInt(1)})
 
 	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
 }
 
 func Test_smpMessage1_receivedMessage_returnsErrorIfreceiveMessage1ReturnsError(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect1{}
 	m := smpMessage1{g2a: big.NewInt(1)}
 	_, err := m.receivedMessage(c)
@@ -172,14 +172,14 @@ func Test_smpMessage1_receivedMessage_returnsErrorIfreceiveMessage1ReturnsError(
 }
 
 func Test_smpStateExpect1_receiveMessage1_returnsErrorIfgenerateSMP2Fails(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixedRand([]string{"ABCD"}))
+	c := newOtrContext(otrV3{}, fixedRand([]string{"ABCD"}))
 	_, _, err := smpStateExpect1{}.receiveMessage1(c, fixtureMessage1())
 
 	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_smpStateExpect2_receiveMessage2_returnsErrorIfVerifySMPReturnsError(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.s1 = fixtureSmp1()
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	_, _, err := smpStateExpect2{}.receiveMessage2(c, smpMessage2{g2b: big.NewInt(1)})
@@ -188,7 +188,7 @@ func Test_smpStateExpect2_receiveMessage2_returnsErrorIfVerifySMPReturnsError(t 
 }
 
 func Test_smpMessage2_receivedMessage_returnsErrorIfUnderlyingPrimitiveHasErrors(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect2{}
 	c.s1 = fixtureSmp1()
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
@@ -198,7 +198,7 @@ func Test_smpMessage2_receivedMessage_returnsErrorIfUnderlyingPrimitiveHasErrors
 }
 
 func Test_smpStateExpect2_receiveMessage2_returnsErrorIfgenerateSMPFails(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixedRand([]string{"ABCD"}))
+	c := newOtrContext(otrV3{}, fixedRand([]string{"ABCD"}))
 	c.s1 = fixtureSmp1()
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	_, _, err := smpStateExpect2{}.receiveMessage2(c, fixtureMessage2())
@@ -207,7 +207,7 @@ func Test_smpStateExpect2_receiveMessage2_returnsErrorIfgenerateSMPFails(t *test
 }
 
 func Test_smpStateExpect3_receiveMessage3_returnsErrorIfVerifySMPReturnsError(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	c.s2 = fixtureSmp2()
 	_, _, err := smpStateExpect3{}.receiveMessage3(c, smpMessage3{pa: big.NewInt(1)})
@@ -216,7 +216,7 @@ func Test_smpStateExpect3_receiveMessage3_returnsErrorIfVerifySMPReturnsError(t 
 }
 
 func Test_smpMessage3_receivedMessage_returnsErrorIfUnderlyingPrimitiveDoes(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect3{}
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	c.s2 = fixtureSmp2()
@@ -226,7 +226,7 @@ func Test_smpMessage3_receivedMessage_returnsErrorIfUnderlyingPrimitiveDoes(t *t
 }
 
 func Test_smpStateExpect3_receiveMessage3_returnsErrorIfProtocolFails(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	c.s2 = fixtureSmp2()
 	c.s2.b3 = sub(c.s2.b3, big.NewInt(1))
@@ -236,7 +236,7 @@ func Test_smpStateExpect3_receiveMessage3_returnsErrorIfProtocolFails(t *testing
 }
 
 func Test_smpStateExpect3_receiveMessage3_returnsErrorIfCantGenerateFinalParameters(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixedRand([]string{"ABCD"}))
+	c := newOtrContext(otrV3{}, fixedRand([]string{"ABCD"}))
 	c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	c.s2 = fixtureSmp2()
 	_, _, err := smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
@@ -245,7 +245,7 @@ func Test_smpStateExpect3_receiveMessage3_returnsErrorIfCantGenerateFinalParamet
 }
 
 func Test_smpStateExpect4_receiveMessage4_returnsErrorIfVerifySMPReturnsError(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.s1 = fixtureSmp1()
 	c.s3 = fixtureSmp3()
 	_, _, err := smpStateExpect4{}.receiveMessage4(c, smpMessage4{rb: big.NewInt(1)})
@@ -254,7 +254,7 @@ func Test_smpStateExpect4_receiveMessage4_returnsErrorIfVerifySMPReturnsError(t 
 }
 
 func Test_smpStateExpect4_receiveMessage4_returnsErrorIfProtocolFails(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.s1 = fixtureSmp1()
 	c.s3 = fixtureSmp3()
 	c.s3.papb = sub(c.s3.papb, big.NewInt(1))
@@ -264,7 +264,7 @@ func Test_smpStateExpect4_receiveMessage4_returnsErrorIfProtocolFails(t *testing
 }
 
 func Test_smpMessage4_receivedMessage_returnsErrorIfTheUnderlyingPrimitiveDoes(t *testing.T) {
-	c := newSmpContext(otrV3{}, fixtureRand())
+	c := newOtrContext(otrV3{}, fixtureRand())
 	c.smpState = smpStateExpect4{}
 	c.s1 = fixtureSmp1()
 	c.s3 = fixtureSmp3()
@@ -277,6 +277,6 @@ func Test_receive_returnsAnyErrorThatOccurs(t *testing.T) {
 	m := smpMessage1{g2a: big.NewInt(1)}
 	c := newConversation(otrV3{}, fixtureRand())
 	//c.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
-	_, err := c.smpContext.receive(m)
+	_, err := c.receiveSMP(m)
 	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
 }

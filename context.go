@@ -14,12 +14,12 @@ const (
 
 type conversation struct {
 	*otrContext
-	smpContext
 	akeContext
 }
 
-type smpContext struct {
-	*otrContext
+type otrContext struct {
+	version  otrVersion
+	Rand     io.Reader
 	smpState smpState
 	secret   *big.Int
 	s1       smp1
@@ -48,11 +48,6 @@ type akeContext struct {
 	policies                         policies
 }
 
-type otrContext struct {
-	version otrVersion
-	Rand    io.Reader
-}
-
 type msgState int
 
 const (
@@ -60,14 +55,6 @@ const (
 	encrypted
 	finished
 )
-
-func newSmpContext(v otrVersion, r io.Reader) *smpContext {
-	c := newOtrContext(v, r)
-	return &smpContext{
-		otrContext: c,
-		smpState:   smpStateExpect1{},
-	}
-}
 
 func newConversation(v otrVersion, rand io.Reader) *conversation {
 	c := newOtrContext(v, rand)
@@ -78,15 +65,15 @@ func newConversation(v otrVersion, rand io.Reader) *conversation {
 			authState:  authStateNone{},
 			policies:   policies(0),
 		},
-		smpContext: smpContext{
-			otrContext: c,
-			smpState:   smpStateExpect1{},
-		},
 	}
 }
 
 func newOtrContext(v otrVersion, rand io.Reader) *otrContext {
-	return &otrContext{version: v, Rand: rand}
+	return &otrContext{
+		version:  v,
+		Rand:     rand,
+		smpState: smpStateExpect1{},
+	}
 }
 
 func (c *akeContext) messageHeader() messageHeader {
@@ -166,7 +153,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	switch message[2] {
 	case msgTypeData:
 		if c.msgState != encrypted {
-			return c.smpContext.restart(), errEncryptedMessageWithNoSecureChannel
+			return c.restart(), errEncryptedMessageWithNoSecureChannel
 		}
 
 		//TODO: c.processDataMessage(message)
@@ -181,7 +168,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 		//c.rotateTheirKey(msg.senderKeyID, msg.y)
 
 		//TODO: encrypt toSend and wrap in a DATA message
-		c.smpContext.receive(smpMessage)
+		c.receiveSMP(smpMessage)
 	default:
 		return c.akeContext.receiveMessage(message)
 	}

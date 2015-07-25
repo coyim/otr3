@@ -7,7 +7,7 @@ import (
 )
 
 func Test_generateSMP2_generatesLongerValuesForBAndRWithProtocolV3(t *testing.T) {
-	otr := newSmpContext(otrV3{}, fixtureRand())
+	otr := newOtrContext(otrV3{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, ok := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.b2, fixtureLong1)
@@ -21,7 +21,7 @@ func Test_generateSMP2_generatesLongerValuesForBAndRWithProtocolV3(t *testing.T)
 }
 
 func Test_generateSMP2_willReturnNotOKIfThereIsntEnoughRandomnessForBlindingParameters(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixedRand([]string{
+	otr := newOtrContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	}))
@@ -30,12 +30,12 @@ func Test_generateSMP2_willReturnNotOKIfThereIsntEnoughRandomnessForBlindingPara
 }
 
 func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_b2(t *testing.T) {
-	_, ok := newSmpContext(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSecondaryParameters()
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSecondaryParameters()
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_b3(t *testing.T) {
-	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSecondaryParameters()
@@ -43,7 +43,7 @@ func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnes
 }
 
 func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r2(t *testing.T) {
-	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
@@ -52,7 +52,7 @@ func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnes
 }
 
 func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r3(t *testing.T) {
-	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
@@ -62,7 +62,7 @@ func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnes
 }
 
 func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r4(t *testing.T) {
-	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
@@ -73,7 +73,7 @@ func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnes
 }
 
 func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r5(t *testing.T) {
-	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
@@ -85,7 +85,7 @@ func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnes
 }
 
 func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r6(t *testing.T) {
-	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
@@ -98,7 +98,7 @@ func Test_generateSecondaryParameters_willReturnNotOKIfThereIsNotEnoughRandomnes
 }
 
 func Test_generateSecondaryParameters_willReturnOKIfThereIsEnoughRandomnessForAllParameters(t *testing.T) {
-	_, ok := newSmpContext(otrV2{}, fixedRand([]string{
+	_, ok := newOtrContext(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
@@ -111,7 +111,7 @@ func Test_generateSecondaryParameters_willReturnOKIfThereIsEnoughRandomnessForAl
 }
 
 func Test_generateSMP2_generatesShorterValuesForBAndRWithProtocolV2(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.b2, fixtureShort1)
@@ -124,7 +124,7 @@ func Test_generateSMP2_generatesShorterValuesForBAndRWithProtocolV2(t *testing.T
 }
 
 func Test_generateSMP2_computesG2AndG3CorrectlyForOtrV2(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.g2, fixtureSmp2().g2)
@@ -132,14 +132,14 @@ func Test_generateSMP2_computesG2AndG3CorrectlyForOtrV2(t *testing.T) {
 }
 
 func Test_generateSMP2_storesG3ForOtrV2(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.g3a, smp1.g3a)
 }
 
 func Test_generateSMP2_computesG2bAndG3bCorrectlyForOtrV2(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.msg.g2b, fixtureMessage2().g2b)
@@ -147,7 +147,7 @@ func Test_generateSMP2_computesG2bAndG3bCorrectlyForOtrV2(t *testing.T) {
 }
 
 func Test_generateSMP2_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.msg.c2, fixtureMessage2().c2)
@@ -155,7 +155,7 @@ func Test_generateSMP2_computesC2AndD2CorrectlyForOtrV2(t *testing.T) {
 }
 
 func Test_generateSMP2_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.msg.c3, fixtureMessage2().c3)
@@ -163,7 +163,7 @@ func Test_generateSMP2_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
 }
 
 func Test_generateSMP2_computesPbAndQbCorrectly(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.msg.pb, fixtureMessage2().pb)
@@ -171,34 +171,34 @@ func Test_generateSMP2_computesPbAndQbCorrectly(t *testing.T) {
 }
 
 func Test_generateSMP2_computesCPCorrectly(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.msg.cp, fixtureMessage2().cp)
 }
 
 func Test_generateSMP2_computesD5Correctly(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.msg.d5, fixtureMessage2().d5)
 }
 
 func Test_generateSMP2_computesD6Correctly(t *testing.T) {
-	otr := newSmpContext(otrV2{}, fixtureRand())
+	otr := newOtrContext(otrV2{}, fixtureRand())
 	smp1 := fixtureMessage1()
 	smp, _ := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.msg.d6, fixtureMessage2().d6)
 }
 
 func Test_verifySMP2_checkG2bForOtrV3(t *testing.T) {
-	otr := newSmpContext(otrV3{}, fixtureRand())
+	otr := newOtrContext(otrV3{}, fixtureRand())
 	err := otr.verifySMP2(fixtureSmp1(), smpMessage2{g2b: new(big.Int).SetInt64(1)})
 	assertDeepEquals(t, err, errors.New("g2b is an invalid group element"))
 }
 
 func Test_verifySMP2_checkG3bForOtrV3(t *testing.T) {
-	otr := newSmpContext(otrV3{}, fixtureRand())
+	otr := newOtrContext(otrV3{}, fixtureRand())
 	err := otr.verifySMP2(fixtureSmp1(), smpMessage2{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(1),
@@ -207,7 +207,7 @@ func Test_verifySMP2_checkG3bForOtrV3(t *testing.T) {
 }
 
 func Test_verifySMP2_checkPbForOtrV3(t *testing.T) {
-	otr := newSmpContext(otrV3{}, fixtureRand())
+	otr := newOtrContext(otrV3{}, fixtureRand())
 	err := otr.verifySMP2(fixtureSmp1(), smpMessage2{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(3),
@@ -217,7 +217,7 @@ func Test_verifySMP2_checkPbForOtrV3(t *testing.T) {
 }
 
 func Test_verifySMP2_checkQbForOtrV3(t *testing.T) {
-	otr := newSmpContext(otrV3{}, fixtureRand())
+	otr := newOtrContext(otrV3{}, fixtureRand())
 	err := otr.verifySMP2(fixtureSmp1(), smpMessage2{
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(3),
@@ -228,7 +228,7 @@ func Test_verifySMP2_checkQbForOtrV3(t *testing.T) {
 }
 
 func Test_verifySMP2_failsIfC2IsNotACorrectZKP(t *testing.T) {
-	otr := newSmpContext(otrV3{}, fixtureRand())
+	otr := newOtrContext(otrV3{}, fixtureRand())
 	s2 := fixtureMessage2()
 	s2.c2 = sub(s2.c2, big.NewInt(1))
 	err := otr.verifySMP2(fixtureSmp1(), s2)
@@ -236,7 +236,7 @@ func Test_verifySMP2_failsIfC2IsNotACorrectZKP(t *testing.T) {
 }
 
 func Test_verifySMP2_failsIfC3IsNotACorrectZKP(t *testing.T) {
-	otr := newSmpContext(otrV3{}, fixtureRand())
+	otr := newOtrContext(otrV3{}, fixtureRand())
 	s2 := fixtureMessage2()
 	s2.c3 = sub(s2.c3, big.NewInt(1))
 	err := otr.verifySMP2(fixtureSmp1(), s2)
@@ -244,7 +244,7 @@ func Test_verifySMP2_failsIfC3IsNotACorrectZKP(t *testing.T) {
 }
 
 func Test_verifySMP2_failsIfCpIsNotACorrectZKP(t *testing.T) {
-	otr := newSmpContext(otrV3{}, fixtureRand())
+	otr := newOtrContext(otrV3{}, fixtureRand())
 	s2 := fixtureMessage2()
 	s2.cp = sub(s2.cp, big.NewInt(1))
 	err := otr.verifySMP2(fixtureSmp1(), s2)
@@ -252,7 +252,7 @@ func Test_verifySMP2_failsIfCpIsNotACorrectZKP(t *testing.T) {
 }
 
 func Test_verifySMP2_succeedsForACorrectZKP(t *testing.T) {
-	otr := newSmpContext(otrV3{}, fixtureRand())
+	otr := newOtrContext(otrV3{}, fixtureRand())
 	err := otr.verifySMP2(fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, err, nil)
 }
