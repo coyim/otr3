@@ -90,6 +90,7 @@ func bobContextAtReceiveDHKey() *conversation {
 
 func bobContextAtAwaitingDHKey() *conversation {
 	c := newConversation(otrV3{}, fixtureRand())
+	c.startAKE()
 	c.policies.add(allowV3)
 	c.authState = authStateAwaitingDHKey{}
 	c.ourKey = bobPrivateKey
@@ -109,6 +110,7 @@ func aliceContextAtReceiveRevealSig() *conversation {
 
 func aliceContextAtAwaitingRevealSig() *conversation {
 	c := newConversation(otrV2{}, fixtureRand())
+	c.startAKE()
 	c.policies.add(allowV2)
 	c.authState = authStateAwaitingRevealSig{}
 	c.ourKey = alicePrivateKey
@@ -151,7 +153,7 @@ func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 
 	cxt.receiveQueryMessage(msg)
 	assertDeepEquals(t, cxt.r, fixture.r)
-	assertDeepEquals(t, cxt.secretExponent, fixture.secretExponent)
+	assertDeepEquals(t, cxt.ake.secretExponent, fixture.ake.secretExponent)
 	assertDeepEquals(t, cxt.ourPublicValue, fixture.ourPublicValue)
 }
 
@@ -216,7 +218,7 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 	authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsg())
 
 	assertDeepEquals(t, c.ourPublicValue, fixedgy)
-	assertDeepEquals(t, c.secretExponent, fixedy)
+	assertDeepEquals(t, c.ake.secretExponent, fixedy)
 }
 
 func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing.T) {
@@ -306,7 +308,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 	assertEquals(t, state, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(newMsg), msgTypeDHKey)
 	assertDeepEquals(t, c.ourPublicValue, fixedgy)
-	assertDeepEquals(t, c.secretExponent, fixedy)
+	assertDeepEquals(t, c.ake.secretExponent, fixedy)
 }
 
 func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *testing.T) {
@@ -375,7 +377,8 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
-	c.setSecretExponent(ourDHCommitAKE.secretExponent)
+	c.startAKE()
+	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
 	c.ourKey = bobPrivateKey
 
 	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
@@ -717,7 +720,8 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyR
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
-	c.setSecretExponent(ourDHCommitAKE.secretExponent)
+	c.startAKE()
+	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
 	c.ourKey = bobPrivateKey
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, []byte{0x01, 0x02})
@@ -730,7 +734,8 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMess
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
-	c.setSecretExponent(ourDHCommitAKE.secretExponent)
+	c.startAKE()
+	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
 	c.ourKey = bobPrivateKey
 
 	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
@@ -744,7 +749,8 @@ func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyRet
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
-	c.setSecretExponent(ourDHCommitAKE.secretExponent)
+	c.startAKE()
+	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
 	c.ourKey = bobPrivateKey
 
 	_, _, err := authStateAwaitingSig{}.receiveDHKeyMessage(c, []byte{0x01, 0x02})

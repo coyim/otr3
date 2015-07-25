@@ -23,7 +23,6 @@ type conversation struct {
 	authState                        authState
 	msgState                         msgState
 	r                                [16]byte
-	secretExponent                   *big.Int
 	ourPublicValue, theirPublicValue *big.Int
 	encryptedGx                      []byte
 	hashedGx                         [sha256.Size]byte
@@ -37,6 +36,7 @@ type conversation struct {
 	revealKey                        akeKeys
 	ssid                             [8]byte
 	policies                         policies
+	ake                              *ake
 }
 
 type msgState int

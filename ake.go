@@ -9,17 +9,21 @@ import (
 	"math/big"
 )
 
+type ake struct {
+	secretExponent *big.Int
+}
+
 func (c *conversation) calcAKEKeys(s *big.Int) {
 	c.ssid, c.revealKey, c.sigKey = calculateAKEKeys(s)
 }
 
 func (c *conversation) setSecretExponent(val *big.Int) {
-	c.secretExponent = val
+	c.ake.secretExponent = val
 	c.ourPublicValue = modExp(g1, val)
 }
 
 func (c *conversation) calcDHSharedSecret() *big.Int {
-	return modExp(c.theirPublicValue, c.secretExponent)
+	return modExp(c.theirPublicValue, c.ake.secretExponent)
 }
 
 func (c *conversation) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
@@ -63,9 +67,15 @@ func (c *conversation) randomInto(b []byte) error {
 	return nil
 }
 
+func (c *conversation) startAKE() {
+	c.ake = new(ake)
+}
+
 // dhCommitMessage = bob = x
 // Bob ---- DH Commit -----------> Alice
 func (c *conversation) dhCommitMessage() ([]byte, error) {
+	c.startAKE()
+
 	c.keys.ourKeyID = 0
 
 	x, ok := c.randMPI(make([]byte, 40))
@@ -96,6 +106,8 @@ func (c *conversation) serializeDHCommit(public *big.Int) []byte {
 // dhKeyMessage = alice = y
 // Alice -- DH Key --------------> Bob
 func (c *conversation) dhKeyMessage() ([]byte, error) {
+	c.startAKE()
+
 	y, ok := c.randMPI(make([]byte, 40)[:])
 
 	if !ok {
