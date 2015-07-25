@@ -17,14 +17,7 @@ const (
 	msgTypeSig       = byte(18)
 )
 
-// AKE is authenticated key exchange context
-type AKE struct {
-	akeContext
-	revealKey akeKeys
-	ssid      [8]byte
-}
-
-func (ake *AKE) calcAKEKeys(s *big.Int) {
+func (ake *akeContext) calcAKEKeys(s *big.Int) {
 	ake.ssid, ake.revealKey, ake.sigKey = calculateAKEKeys(s)
 }
 
@@ -33,11 +26,11 @@ func (ake *akeContext) setSecretExponent(val *big.Int) {
 	ake.ourPublicValue = modExp(g1, val)
 }
 
-func (ake *AKE) calcDHSharedSecret() *big.Int {
+func (ake *akeContext) calcDHSharedSecret() *big.Int {
 	return modExp(ake.theirPublicValue, ake.secretExponent)
 }
 
-func (ake *AKE) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
+func (ake *akeContext) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
 	verifyData := appendAll(ake.ourPublicValue, ake.theirPublicValue, &ake.ourKey.PublicKey, ake.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
@@ -53,7 +46,7 @@ func appendAll(one, two *big.Int, publicKey *PublicKey, keyID uint32) []byte {
 	return appendWord(append(appendMPI(appendMPI(nil, one), two), publicKey.serialize()...), keyID)
 }
 
-func (ake *AKE) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
+func (ake *akeContext) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	xb := ake.ourKey.PublicKey.serialize()
 	xb = appendWord(xb, ake.ourKeyID)
 
@@ -71,7 +64,7 @@ func (ake *AKE) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	return xb, nil
 }
 
-func (ake *AKE) randomInto(b []byte) error {
+func (ake *akeContext) randomInto(b []byte) error {
 	if _, err := io.ReadFull(ake.rand(), b); err != nil {
 		return errShortRandomRead
 	}
@@ -80,7 +73,7 @@ func (ake *AKE) randomInto(b []byte) error {
 
 // dhCommitMessage = bob = x
 // Bob ---- DH Commit -----------> Alice
-func (ake *AKE) dhCommitMessage() ([]byte, error) {
+func (ake *akeContext) dhCommitMessage() ([]byte, error) {
 	ake.ourKeyID = 0
 
 	x, ok := ake.randMPI(make([]byte, 40))
@@ -99,7 +92,7 @@ func (ake *AKE) dhCommitMessage() ([]byte, error) {
 	return ake.serializeDHCommit(ake.ourPublicValue), nil
 }
 
-func (ake *AKE) serializeDHCommit(public *big.Int) []byte {
+func (ake *akeContext) serializeDHCommit(public *big.Int) []byte {
 	dhCommitMsg := dhCommit{
 		messageHeader: ake.messageHeader(),
 		gx:            public,
@@ -110,7 +103,7 @@ func (ake *AKE) serializeDHCommit(public *big.Int) []byte {
 
 // dhKeyMessage = alice = y
 // Alice -- DH Key --------------> Bob
-func (ake *AKE) dhKeyMessage() ([]byte, error) {
+func (ake *akeContext) dhKeyMessage() ([]byte, error) {
 	y, ok := ake.randMPI(make([]byte, 40)[:])
 
 	if !ok {
@@ -121,7 +114,7 @@ func (ake *AKE) dhKeyMessage() ([]byte, error) {
 	return ake.serializeDHKey(), nil
 }
 
-func (ake *AKE) serializeDHKey() []byte {
+func (ake *akeContext) serializeDHKey() []byte {
 	dhKeyMsg := dhKey{
 		messageHeader: ake.messageHeader(),
 		gy:            ake.ourPublicValue,
@@ -132,7 +125,7 @@ func (ake *AKE) serializeDHKey() []byte {
 
 // revealSigMessage = bob = x
 // Bob ---- Reveal Signature ----> Alice
-func (ake *AKE) revealSigMessage() ([]byte, error) {
+func (ake *akeContext) revealSigMessage() ([]byte, error) {
 	ake.calcAKEKeys(ake.calcDHSharedSecret())
 	encryptedSig, err := ake.generateEncryptedSignature(&ake.revealKey)
 	if err != nil {
@@ -151,7 +144,7 @@ func (ake *AKE) revealSigMessage() ([]byte, error) {
 
 // sigMessage = alice = y
 // Alice -- Signature -----------> Bob
-func (ake *AKE) sigMessage() ([]byte, error) {
+func (ake *akeContext) sigMessage() ([]byte, error) {
 	ake.calcAKEKeys(ake.calcDHSharedSecret())
 	encryptedSig, err := ake.generateEncryptedSignature(&ake.sigKey)
 	if err != nil {
@@ -169,7 +162,7 @@ func (ake *AKE) sigMessage() ([]byte, error) {
 
 // processDHCommit = alice = y
 // Bob ---- DH Commit -----------> Alice
-func (ake *AKE) processDHCommit(msg []byte) error {
+func (ake *akeContext) processDHCommit(msg []byte) error {
 	dhCommitMsg := dhCommit{}
 	err := chainErrors(ake.ensureValidMessage, dhCommitMsg.deserialize, msg)
 	if err != nil {
@@ -182,7 +175,7 @@ func (ake *AKE) processDHCommit(msg []byte) error {
 
 // processDHKey = bob = x
 // Alice -- DH Key --------------> Bob
-func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
+func (ake *akeContext) processDHKey(msg []byte) (isSame bool, err error) {
 	dhKeyMsg := dhKey{}
 	err = chainErrors(ake.ensureValidMessage, dhKeyMsg.deserialize, msg)
 	if err != nil {
@@ -201,7 +194,7 @@ func (ake *AKE) processDHKey(msg []byte) (isSame bool, err error) {
 
 // processRevealSig = alice = y
 // Bob ---- Reveal Signature ----> Alice
-func (ake *AKE) processRevealSig(msg []byte) (err error) {
+func (ake *akeContext) processRevealSig(msg []byte) (err error) {
 	revealSigMsg := revealSig{}
 	err = chainErrors(ake.ensureValidMessage, revealSigMsg.deserialize, msg)
 	if err != nil {
@@ -240,7 +233,7 @@ func chainErrors(f1 func([]byte) ([]byte, error), f2 func([]byte) error, msg []b
 	return f2(res)
 }
 
-func (ake *AKE) ensureValidMessage(msg []byte) ([]byte, error) {
+func (ake *akeContext) ensureValidMessage(msg []byte) ([]byte, error) {
 	if len(msg) < ake.version.headerLen() {
 		return nil, errInvalidOTRMessage
 	}
@@ -249,7 +242,7 @@ func (ake *AKE) ensureValidMessage(msg []byte) ([]byte, error) {
 
 // processSig = bob = x
 // Alice -- Signature -----------> Bob
-func (ake *AKE) processSig(msg []byte) (err error) {
+func (ake *akeContext) processSig(msg []byte) (err error) {
 	sigMsg := sig{}
 	err = chainErrors(ake.ensureValidMessage, sigMsg.deserialize, msg)
 	if err != nil {
@@ -265,7 +258,7 @@ func (ake *AKE) processSig(msg []byte) (err error) {
 	return nil
 }
 
-func (ake *AKE) checkedSignatureVerification(mb, sig []byte) error {
+func (ake *akeContext) checkedSignatureVerification(mb, sig []byte) error {
 	rest, ok := ake.theirKey.verify(mb, sig)
 	if !ok {
 		return errors.New("bad signature in encrypted signature")
@@ -287,7 +280,7 @@ func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *ake
 	return nil
 }
 
-func (ake *AKE) parseTheirKey(key []byte) (sig []byte, keyID uint32, err error) {
+func (ake *akeContext) parseTheirKey(key []byte) (sig []byte, keyID uint32, err error) {
 	ake.theirKey = &PublicKey{}
 	rest, ok1 := ake.theirKey.parse(key)
 	sig, keyID, ok2 := extractWord(rest)
@@ -299,12 +292,12 @@ func (ake *AKE) parseTheirKey(key []byte) (sig []byte, keyID uint32, err error) 
 	return
 }
 
-func (ake *AKE) expectedMessageHMAC(keyID uint32, keys *akeKeys) []byte {
+func (ake *akeContext) expectedMessageHMAC(keyID uint32, keys *akeKeys) []byte {
 	verifyData := appendAll(ake.theirPublicValue, ake.ourPublicValue, ake.theirKey, keyID)
 	return sumHMAC(keys.m1[:], verifyData)
 }
 
-func (ake *AKE) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys) error {
+func (ake *akeContext) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys) error {
 	if err := verifyEncryptedSignatureMAC(encryptedSig, theirMAC, keys); err != nil {
 		return err
 	}

@@ -50,6 +50,8 @@ type akeContext struct {
 	revealSigMsg                     []byte
 	keyManagementContext
 	policies
+	revealKey akeKeys
+	ssid      [8]byte
 }
 
 type otrContext struct {
@@ -91,12 +93,6 @@ func newConversation(v otrVersion, rand io.Reader) *conversation {
 
 func newOtrContext(v otrVersion, rand io.Reader) *otrContext {
 	return &otrContext{version: v, Rand: rand}
-}
-
-func (c *akeContext) newAKE() AKE {
-	return AKE{
-		akeContext: *c,
-	}
 }
 
 func (c *akeContext) messageHeader() messageHeader {

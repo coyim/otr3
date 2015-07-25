@@ -91,17 +91,12 @@ func (s authStateNone) receiveQueryMessage(c *akeContext, msg []byte) (authState
 
 	//TODO set the version for every existing otrContext
 	c.version = v
+	c.senderInstanceTag = generateInstanceTag()
 
-	ake := c.newAKE()
-	ake.senderInstanceTag = generateInstanceTag()
-
-	out, err := ake.dhCommitMessage()
+	out, err := c.dhCommitMessage()
 	if err != nil {
 		return s, nil, err
 	}
-
-	c.r = ake.r
-	c.setSecretExponent(ake.secretExponent)
 
 	return authStateAwaitingDHKey{}, out, nil
 }
@@ -145,31 +140,25 @@ func (s authStateNone) acceptOTRRequest(p policies, msg []byte) (otrVersion, boo
 }
 
 func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	ake := c.newAKE()
-
-	if err := generateCommitMsgInstanceTags(&ake, msg); err != nil {
+	if err := generateCommitMsgInstanceTags(c, msg); err != nil {
 		return s, nil, err
 	}
 
-	ret, err := ake.dhKeyMessage()
+	ret, err := c.dhKeyMessage()
 	if err != nil {
 		return s, nil, err
 	}
 
-	c.setSecretExponent(ake.secretExponent)
-
-	if err = ake.processDHCommit(msg); err != nil {
+	if err = c.processDHCommit(msg); err != nil {
 		return s, nil, err
 	}
 
-	c.encryptedGx = ake.encryptedGx
-	c.hashedGx = ake.hashedGx
 	c.ourKeyID = 1
 
 	return authStateAwaitingRevealSig{}, ret, nil
 }
 
-func generateCommitMsgInstanceTags(ake *AKE, msg []byte) error {
+func generateCommitMsgInstanceTags(ake *akeContext, msg []byte) error {
 	if ake.version.needInstanceTag() {
 		if len(msg) < lenMsgHeader+4 {
 			return errInvalidOTRMessage
@@ -190,20 +179,15 @@ func generateInstanceTag() uint32 {
 func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
 	//Forget the DH-commit received before we sent the DH-Key
 
-	ake := c.newAKE()
-
-	if err := ake.processDHCommit(msg); err != nil {
+	if err := c.processDHCommit(msg); err != nil {
 		return s, nil, err
 	}
 
-	c.encryptedGx = ake.encryptedGx
-	c.hashedGx = ake.hashedGx
-
 	//TODO: this should not change my instanceTag, since this is supposed to be a retransmit
 	// We can ignore errors from this function, since processDHCommit checks for the sameconditions
-	generateCommitMsgInstanceTags(&ake, msg)
+	generateCommitMsgInstanceTags(c, msg)
 
-	return authStateAwaitingRevealSig{}, ake.serializeDHKey(), nil
+	return authStateAwaitingRevealSig{}, c.serializeDHKey(), nil
 }
 
 func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte) (authState, []byte, error) {
@@ -221,9 +205,8 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *akeContext, msg []byte
 	gxMPI := appendMPI(nil, c.theirPublicValue)
 	hashedGx := sha256.Sum256(gxMPI)
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
-		ake := c.newAKE()
 		//NOTE what about the sender and receiver instance tags?
-		return authStateAwaitingRevealSig{}, ake.serializeDHCommit(ake.theirPublicValue), nil
+		return authStateAwaitingRevealSig{}, c.serializeDHCommit(c.theirPublicValue), nil
 	}
 
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
@@ -238,21 +221,16 @@ func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *akeContext, msg []byt
 }
 
 func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	ake := c.newAKE()
-
-	_, err := ake.processDHKey(msg)
+	_, err := c.processDHKey(msg)
 	if err != nil {
 		return s, nil, err
 	}
 
-	if c.revealSigMsg, err = ake.revealSigMessage(); err != nil {
+	if c.revealSigMsg, err = c.revealSigMessage(); err != nil {
 		return s, nil, err
 	}
 
-	c.theirPublicValue = ake.theirPublicValue
-	c.sigKey = ake.sigKey
-
-	c.theirCurrentDHPubKey = ake.theirPublicValue
+	c.theirCurrentDHPubKey = c.theirPublicValue
 	c.ourCurrentDHKeys.pub = c.ourPublicValue
 	c.ourCurrentDHKeys.priv = c.secretExponent
 	c.ourCounter++
@@ -261,8 +239,7 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (
 }
 
 func (s authStateAwaitingSig) receiveDHKeyMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	ake := c.newAKE()
-	isSame, err := ake.processDHKey(msg)
+	isSame, err := c.processDHKey(msg)
 	if err != nil {
 		return s, nil, err
 	}
@@ -283,26 +260,24 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg [
 		return s, nil, nil
 	}
 
-	ake := c.newAKE()
-	err := ake.processRevealSig(msg)
+	err := c.processRevealSig(msg)
 
 	if err != nil {
 		return nil, nil, err
 	}
 
-	ret, err := ake.sigMessage()
+	ret, err := c.sigMessage()
 	if err != nil {
 		return s, nil, err
 	}
 
 	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
 	c.ourKeyID = 0
-	c.theirKeyID = ake.theirKeyID
-	c.theirCurrentDHPubKey = ake.theirPublicValue
+	c.theirCurrentDHPubKey = c.theirPublicValue
 	c.theirPreviousDHPubKey = nil
 
-	c.ourCurrentDHKeys.priv = ake.secretExponent
-	c.ourCurrentDHKeys.pub = ake.ourPublicValue
+	c.ourCurrentDHKeys.priv = c.secretExponent
+	c.ourCurrentDHKeys.pub = c.ourPublicValue
 	c.ourCounter++
 
 	return authStateNone{}, ret, nil
@@ -333,15 +308,12 @@ func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (auth
 		return s, nil, nil
 	}
 
-	ake := c.newAKE()
-	err := ake.processSig(msg)
+	err := c.processSig(msg)
 
 	if err != nil {
 		return nil, nil, err
 	}
 
-	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
-	c.theirKeyID = ake.theirKeyID
 	//gy was stored when we receive DH-Key
 	c.theirCurrentDHPubKey = c.theirPublicValue
 	c.theirPreviousDHPubKey = nil

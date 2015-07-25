@@ -21,18 +21,16 @@ func newAkeContext(v otrVersion, r io.Reader) akeContext {
 	}
 }
 
-func fixtureAKE() AKE {
+func fixtureAKE() akeContext {
 	return fixtureAKEWithVersion(otrV3{})
 }
 
-func fixtureAKEV2() AKE {
+func fixtureAKEV2() akeContext {
 	return fixtureAKEWithVersion(otrV2{})
 }
 
-func fixtureAKEWithVersion(v otrVersion) AKE {
-	return AKE{
-		akeContext: newAkeContext(v, fixtureRand()),
-	}
+func fixtureAKEWithVersion(v otrVersion) akeContext {
+	return newAkeContext(v, fixtureRand())
 }
 
 func fixtureDHCommitMsg() []byte {
@@ -50,8 +48,7 @@ func fixtureDHKeyMsg(v otrVersion) []byte {
 }
 
 func fixtureRevealSigMsg(v otrVersion) []byte {
-	ake := fixtureAKEWithVersion(v)
-	ake.akeContext = bobContextAtReceiveDHKey()
+	ake := bobContextAtReceiveDHKey()
 	ake.version = v
 
 	msg, _ := ake.revealSigMessage()
@@ -60,8 +57,7 @@ func fixtureRevealSigMsg(v otrVersion) []byte {
 }
 
 func fixtureSigMsg(v otrVersion) []byte {
-	ake := fixtureAKEWithVersion(v)
-	ake.akeContext = aliceContextAtReceiveRevealSig()
+	ake := aliceContextAtReceiveRevealSig()
 	ake.version = v
 
 	msg, _ := ake.sigMessage()
