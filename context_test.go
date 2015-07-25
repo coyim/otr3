@@ -5,7 +5,7 @@ import "testing"
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	c := newConversation(nil, fixtureRand())
-	c.policies.addPolicy(allowV3)
+	c.policies.add(allowV3)
 
 	exp := []byte{
 		0x00, 0x03, // protocol version
@@ -21,7 +21,7 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	cxt := newConversation(nil, fixtureRand())
-	cxt.policies.addPolicy(allowV3)
+	cxt.policies.add(allowV3)
 
 	cxt.receive(msg)
 
@@ -81,7 +81,7 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	dhCommitMsg, _ := dhCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
-	c.policies.addPolicy(allowV3)
+	c.policies.add(allowV3)
 
 	dhKeyMsg, err := c.receive(dhCommitMsg)
 

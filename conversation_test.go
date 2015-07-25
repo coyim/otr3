@@ -35,10 +35,10 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 func Test_AKEHappyPath(t *testing.T) {
 	alice := newConversation(otrV3{}, rand.Reader)
 	bob := newConversation(otrV3{}, rand.Reader)
-	alice.policies.addPolicy(allowV2)
-	bob.policies.addPolicy(allowV2)
-	alice.policies.addPolicy(allowV3)
-	bob.policies.addPolicy(allowV3)
+	alice.policies.add(allowV2)
+	bob.policies.add(allowV2)
+	alice.policies.add(allowV3)
+	bob.policies.add(allowV3)
 	alice.ourKey = alicePrivateKey
 	bob.ourKey = bobPrivateKey
 	alice.theirKey = &bobPrivateKey.PublicKey
@@ -76,8 +76,8 @@ func Test_AKEHappyPath(t *testing.T) {
 func Test_AKENotAllowV2(t *testing.T) {
 	alice := newConversation(otrV3{}, rand.Reader)
 	bob := newConversation(otrV3{}, rand.Reader)
-	alice.policies.addPolicy(allowV3)
-	bob.policies.addPolicy(allowV3)
+	alice.policies.add(allowV3)
+	bob.policies.add(allowV3)
 	alice.ourKey = alicePrivateKey
 	bob.ourKey = bobPrivateKey
 	alice.theirKey = &bobPrivateKey.PublicKey
@@ -112,10 +112,10 @@ func Test_AKENotAllowV2(t *testing.T) {
 func Test_processDataMessageShouldExtractData(t *testing.T) {
 	alice := newConversation(otrV3{}, rand.Reader)
 	bob := newConversation(otrV3{}, rand.Reader)
-	alice.policies.addPolicy(allowV2)
-	bob.policies.addPolicy(allowV2)
-	alice.policies.addPolicy(allowV3)
-	bob.policies.addPolicy(allowV3)
+	alice.policies.add(allowV2)
+	bob.policies.add(allowV2)
+	alice.policies.add(allowV3)
+	bob.policies.add(allowV3)
 	alice.ourKey = alicePrivateKey
 	bob.ourKey = bobPrivateKey
 	alice.theirKey = &bobPrivateKey.PublicKey
