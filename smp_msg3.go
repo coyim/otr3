@@ -28,7 +28,7 @@ func (m smpMessage3) tlv() tlv {
 	return genSMPTLV(0x0004, m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
 }
 
-func (c *conversation) generateThirdParameters() (s smp3, ok bool) {
+func (c *conversation) generateSMP3Parameters() (s smp3, ok bool) {
 	b := make([]byte, c.version.parameterLength())
 	var ok1, ok2, ok3, ok4 bool
 	s.r4, ok1 = c.randMPI(b)
@@ -38,7 +38,7 @@ func (c *conversation) generateThirdParameters() (s smp3, ok bool) {
 	return s, ok1 && ok2 && ok3 && ok4
 }
 
-func calculateMessageThree(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
+func generateSMP3Message(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
 	var m smpMessage3
 
 	g2 := modExp(m2.g2b, s1.a2)
@@ -64,11 +64,11 @@ func calculateMessageThree(s *smp3, s1 smp1, m2 smpMessage2) smpMessage3 {
 }
 
 func (c *conversation) generateSMP3(secret *big.Int, s1 smp1, m2 smpMessage2) (s smp3, ok bool) {
-	if s, ok = c.generateThirdParameters(); !ok {
+	if s, ok = c.generateSMP3Parameters(); !ok {
 		return s, false
 	}
 	s.x = secret
-	s.msg = calculateMessageThree(&s, s1, m2)
+	s.msg = generateSMP3Message(&s, s1, m2)
 	return s, true
 }
 

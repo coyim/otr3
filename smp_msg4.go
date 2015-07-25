@@ -22,12 +22,12 @@ func (m smpMessage4) tlv() tlv {
 }
 
 func (c *conversation) generateSMP4(secret *big.Int, s2 smp2, msg3 smpMessage3) (smp4, bool) {
-	s, ok := c.generateFourthParameters()
+	s, ok := c.generateSMP4Parameters()
 	if !ok {
 		return s, false
 	}
 	s.y = secret
-	s.msg = calculateMessageFour(s, s2, msg3)
+	s.msg = generateSMP4Message(s, s2, msg3)
 	return s, true
 }
 
@@ -43,13 +43,13 @@ func (c *conversation) verifySMP4(s3 smp3, msg smpMessage4) error {
 	return nil
 }
 
-func (c *conversation) generateFourthParameters() (s smp4, ok bool) {
+func (c *conversation) generateSMP4Parameters() (s smp4, ok bool) {
 	b := make([]byte, c.version.parameterLength())
 	s.r7, ok = c.randMPI(b)
 	return
 }
 
-func calculateMessageFour(s smp4, s2 smp2, msg3 smpMessage3) smpMessage4 {
+func generateSMP4Message(s smp4, s2 smp2, msg3 smpMessage3) smpMessage4 {
 	var m smpMessage4
 
 	qaqb := divMod(msg3.qa, s2.qb, p)

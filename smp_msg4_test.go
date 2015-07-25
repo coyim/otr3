@@ -13,10 +13,10 @@ func Test_generateSMP4_generatesLongerValuesForR7WithProtocolV3(t *testing.T) {
 	assertDeepEquals(t, ok, true)
 }
 
-func Test_generateFourthParameters_returnsNotOKIfThereIsntEnoughRandomnessToGenerateBlindingFactor(t *testing.T) {
+func Test_generateSMP4Parameters_returnsNotOKIfThereIsntEnoughRandomnessToGenerateBlindingFactor(t *testing.T) {
 	_, ok := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateFourthParameters()
+	})).generateSMP4Parameters()
 	assertDeepEquals(t, ok, false)
 }
 

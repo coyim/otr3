@@ -31,7 +31,7 @@ func (m smpMessage2) tlv() tlv {
 	return genSMPTLV(0x0003, m.g2b, m.c2, m.d2, m.g3b, m.c3, m.d3, m.pb, m.qb, m.cp, m.d5, m.d6)
 }
 
-func (c *conversation) generateSecondaryParameters() (s smp2, ok bool) {
+func (c *conversation) generateSMP2Parameters() (s smp2, ok bool) {
 	b := make([]byte, c.version.parameterLength())
 	var ok1, ok2, ok3, ok4, ok5, ok6, ok7 bool
 	s.b2, ok1 = c.randMPI(b)
@@ -44,7 +44,7 @@ func (c *conversation) generateSecondaryParameters() (s smp2, ok bool) {
 	return s, ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7
 }
 
-func generateMessageTwoFor(s *smp2, s1 smpMessage1) smpMessage2 {
+func generateSMP2Message(s *smp2, s1 smpMessage1) smpMessage2 {
 	var m smpMessage2
 
 	m.g2b = modExp(g1, s.b2)
@@ -71,11 +71,11 @@ func generateMessageTwoFor(s *smp2, s1 smpMessage1) smpMessage2 {
 }
 
 func (c *conversation) generateSMP2(secret *big.Int, s1 smpMessage1) (s smp2, ok bool) {
-	if s, ok = c.generateSecondaryParameters(); !ok {
+	if s, ok = c.generateSMP2Parameters(); !ok {
 		return s, false
 	}
 	s.y = secret
-	s.msg = generateMessageTwoFor(&s, s1)
+	s.msg = generateSMP2Message(&s, s1)
 	s.qb = s.msg.qb
 	return
 }

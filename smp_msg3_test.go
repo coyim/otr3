@@ -103,47 +103,47 @@ func Test_generateSMP3_computesD7Correctly(t *testing.T) {
 	assertDeepEquals(t, smp.msg.d7, fixtureMessage3().d7)
 }
 
-func Test_generateThirdParameters_returnsNotOKIfThereIsntRandomnessToGenerate_r4(t *testing.T) {
+func Test_generateSMP3Parameters_returnsNotOKIfThereIsntRandomnessToGenerate_r4(t *testing.T) {
 	_, ok := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateThirdParameters()
+	})).generateSMP3Parameters()
 	assertDeepEquals(t, ok, false)
 }
 
-func Test_generateThirdParameters_returnsNotOKIfThereIsntRandomnessToGenerate_r5(t *testing.T) {
+func Test_generateSMP3Parameters_returnsNotOKIfThereIsntRandomnessToGenerate_r5(t *testing.T) {
 	_, ok := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateThirdParameters()
+	})).generateSMP3Parameters()
 	assertDeepEquals(t, ok, false)
 }
 
-func Test_generateThirdParameters_returnsNotOKIfThereIsntRandomnessToGenerate_r6(t *testing.T) {
+func Test_generateSMP3Parameters_returnsNotOKIfThereIsntRandomnessToGenerate_r6(t *testing.T) {
 	_, ok := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateThirdParameters()
+	})).generateSMP3Parameters()
 	assertDeepEquals(t, ok, false)
 }
 
-func Test_generateThirdParameters_returnsNotOKIfThereIsntRandomnessToGenerate_r7(t *testing.T) {
+func Test_generateSMP3Parameters_returnsNotOKIfThereIsntRandomnessToGenerate_r7(t *testing.T) {
 	_, ok := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateThirdParameters()
+	})).generateSMP3Parameters()
 	assertDeepEquals(t, ok, false)
 }
 
-func Test_generateThirdParameters_returnsOKIfThereIsEnoughRandomnessToGenerateBlindingFactors(t *testing.T) {
+func Test_generateSMP3Parameters_returnsOKIfThereIsEnoughRandomnessToGenerateBlindingFactors(t *testing.T) {
 	_, ok := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
-	})).generateThirdParameters()
+	})).generateSMP3Parameters()
 	assertDeepEquals(t, ok, true)
 }
 

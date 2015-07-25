@@ -16,8 +16,8 @@ func Test_generatesLongerAandRValuesForOtrV3(t *testing.T) {
 	assertDeepEquals(t, ok, true)
 }
 
-func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForA2(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateInitialParameters()
+func Test_generateSMP1Parameters_ReturnsNotOKIfThereIsntEnoughRandomnessForA2(t *testing.T) {
+	_, ok := newConversation(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSMP1Parameters()
 	assertDeepEquals(t, ok, false)
 }
 
@@ -26,30 +26,30 @@ func Test_generateSMP1_ReturnsNotOKIfGenerateInitialParametersDoesntWork(t *test
 	assertDeepEquals(t, ok, false)
 }
 
-func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForA3(t *testing.T) {
+func Test_generateSMP1Parameters_ReturnsNotOKIfThereIsntEnoughRandomnessForA3(t *testing.T) {
 	_, ok := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateInitialParameters()
+	})).generateSMP1Parameters()
 	assertDeepEquals(t, ok, false)
 }
 
-func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR2(t *testing.T) {
+func Test_generateSMP1Parameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR2(t *testing.T) {
 	_, ok := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateInitialParameters()
+	})).generateSMP1Parameters()
 	assertDeepEquals(t, ok, false)
 }
 
-func Test_generateInitialParameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR3(t *testing.T) {
+func Test_generateSMP1Parameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR3(t *testing.T) {
 	_, ok := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateInitialParameters()
+	})).generateSMP1Parameters()
 	assertDeepEquals(t, ok, false)
 }
 
