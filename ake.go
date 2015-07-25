@@ -336,31 +336,6 @@ func sha256Sum(x []byte) [sha256.Size]byte {
 	return sha256.Sum256(x)
 }
 
-func encrypt(key, data []byte) (dst []byte, err error) {
-	aesCipher, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
-	dst = make([]byte, len(data))
-	iv := dst[:aes.BlockSize]
-	stream := cipher.NewCTR(aesCipher, iv)
-	stream.XORKeyStream(dst, data)
-
-	return dst, nil
-}
-
-func decrypt(r, dst, src []byte) error {
-	aesCipher, err := aes.NewCipher(r)
-	if err != nil {
-		return errors.New("otr: cannot create AES cipher from reveal signature message: " + err.Error())
-	}
-	var iv [aes.BlockSize]byte
-	ctr := cipher.NewCTR(aesCipher, iv[:])
-	ctr.XORKeyStream(dst, src)
-	return nil
-}
-
 func checkDecryptedGx(decryptedGx, hashedGx []byte) error {
 	digest := sha256Sum(decryptedGx)
 

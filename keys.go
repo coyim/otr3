@@ -2,6 +2,8 @@ package otr3
 
 import (
 	"bufio"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/dsa"
 	"errors"
 	"hash"
@@ -271,4 +273,27 @@ func (pub *PublicKey) verify(hashed, sig []byte) (nextPoint []byte, sigOk bool) 
 	s := new(big.Int).SetBytes(sig[20:40])
 	ok := dsa.Verify(&pub.PublicKey, hashed, r, s)
 	return sig[20*2:], ok
+}
+
+func counterEncipher(key, iv, src, dst []byte) error {
+	aesCipher, err := aes.NewCipher(key)
+
+	if err != nil {
+		return err
+	}
+
+	ctr := cipher.NewCTR(aesCipher, iv)
+	ctr.XORKeyStream(dst, src)
+
+	return nil
+}
+
+func encrypt(key, data []byte) (dst []byte, err error) {
+	dst = make([]byte, len(data))
+	err = counterEncipher(key, dst[:aes.BlockSize], data, dst)
+	return
+}
+
+func decrypt(key, dst, src []byte) error {
+	return counterEncipher(key, make([]byte, aes.BlockSize), src, dst)
 }
