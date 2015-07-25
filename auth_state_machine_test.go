@@ -67,13 +67,13 @@ func fixtureSigMsg(v otrVersion) []byte {
 
 func bobContextAfterAKE() akeContext {
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.ourKeyID = 1
-	c.ourCurrentDHKeys.pub = fixedgx
-	c.ourPreviousDHKeys.priv = fixedx
-	c.ourPreviousDHKeys.pub = fixedgx
+	c.keys.ourKeyID = 1
+	c.keys.ourCurrentDHKeys.pub = fixedgx
+	c.keys.ourPreviousDHKeys.priv = fixedx
+	c.keys.ourPreviousDHKeys.pub = fixedgx
 
-	c.theirKeyID = 1
-	c.theirCurrentDHPubKey = fixedgy
+	c.keys.theirKeyID = 1
+	c.keys.theirCurrentDHPubKey = fixedgy
 
 	return c
 }
@@ -81,7 +81,7 @@ func bobContextAfterAKE() akeContext {
 func bobContextAtAwaitingSig() akeContext {
 	c := bobContextAtReceiveDHKey()
 	c.version = otrV2{}
-	c.addPolicy(allowV2)
+	c.policies.addPolicy(allowV2)
 	c.authState = authStateAwaitingSig{}
 
 	return c
@@ -100,7 +100,7 @@ func bobContextAtReceiveDHKey() akeContext {
 
 func bobContextAtAwaitingDHKey() akeContext {
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.addPolicy(allowV3)
+	c.policies.addPolicy(allowV3)
 	c.authState = authStateAwaitingDHKey{}
 	c.ourKey = bobPrivateKey
 
@@ -119,7 +119,7 @@ func aliceContextAtReceiveRevealSig() akeContext {
 
 func aliceContextAtAwaitingRevealSig() akeContext {
 	c := newAkeContext(otrV2{}, fixtureRand())
-	c.addPolicy(allowV2)
+	c.policies.addPolicy(allowV2)
 	c.authState = authStateAwaitingRevealSig{}
 	c.ourKey = alicePrivateKey
 
@@ -143,7 +143,7 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 
 	for _, s := range states {
 		c := newAkeContext(nil, fixtureRand())
-		c.addPolicy(allowV3)
+		c.policies.addPolicy(allowV3)
 		state, msg, _ := s.receiveQueryMessage(&c, queryMsg)
 
 		assertEquals(t, state, authStateAwaitingDHKey{})
@@ -157,7 +157,7 @@ func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 
 	msg := []byte("?OTRv3?")
 	cxt := newAkeContext(nil, fixtureRand())
-	cxt.addPolicy(allowV3)
+	cxt.policies.addPolicy(allowV3)
 
 	cxt.receiveQueryMessage(msg)
 	assertDeepEquals(t, cxt.r, fixture.r)
@@ -374,10 +374,10 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeysAndIncreaseCounter
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(&c, fixtureDHKeyMsg(otrV3{}))
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, c.theirCurrentDHPubKey, fixedgy)
-	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgx)
-	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedx)
-	assertEquals(t, c.ourCounter, uint64(1))
+	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgy)
+	assertDeepEquals(t, c.keys.ourCurrentDHKeys.pub, fixedgx)
+	assertDeepEquals(t, c.keys.ourCurrentDHKeys.priv, fixedx)
+	assertEquals(t, c.keys.ourCounter, uint64(1))
 }
 
 func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
@@ -431,13 +431,13 @@ func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeysAndIncreas
 	_, _, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, revealSignMsg)
 
 	assertEquals(t, err, nil)
-	assertEquals(t, c.ourKeyID, uint32(0))
-	assertEquals(t, c.theirKeyID, uint32(0)) //TODO create a fixture with a different value?
-	assertDeepEquals(t, c.theirCurrentDHPubKey, fixedgx)
-	assertDeepEquals(t, c.theirPreviousDHPubKey, nilBigInt)
-	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgy)
-	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedy)
-	assertEquals(t, c.ourCounter, uint64(1))
+	assertEquals(t, c.keys.ourKeyID, uint32(0))
+	assertEquals(t, c.keys.theirKeyID, uint32(0)) //TODO create a fixture with a different value?
+	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgx)
+	assertDeepEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
+	assertDeepEquals(t, c.keys.ourCurrentDHKeys.pub, fixedgy)
+	assertDeepEquals(t, c.keys.ourCurrentDHKeys.priv, fixedy)
+	assertEquals(t, c.keys.ourCounter, uint64(1))
 }
 
 func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing.T) {
@@ -511,10 +511,10 @@ func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 func Test_receiveMessage_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.T) {
 	var nilB []byte
 	cV2 := newAkeContext(otrV2{}, fixtureRand())
-	cV2.addPolicy(allowV2)
+	cV2.policies.addPolicy(allowV2)
 
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
-	cV3.addPolicy(allowV3)
+	cV3.policies.addPolicy(allowV3)
 
 	ake := fixtureAKEV2()
 	msgV2, _ := ake.dhCommitMessage()
@@ -533,11 +533,11 @@ func Test_receiveMessage_ignoresDHKeyIfItsVersionIsNotInThePolicy(t *testing.T) 
 	var nilB []byte
 	cV2 := newAkeContext(otrV2{}, fixtureRand())
 	cV2.authState = authStateAwaitingDHKey{}
-	cV2.addPolicy(allowV2)
+	cV2.policies.addPolicy(allowV2)
 
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
 	cV3.authState = authStateAwaitingDHKey{}
-	cV3.addPolicy(allowV3)
+	cV3.policies.addPolicy(allowV3)
 
 	msgV2 := fixtureDHKeyMsg(otrV2{})
 	msgV3 := fixtureDHKeyMsg(otrV3{})
@@ -555,11 +555,11 @@ func Test_receiveMessage_ignoresRevealSigIfItsVersionIsNotInThePolicy(t *testing
 	var nilB []byte
 	cV2 := newAkeContext(otrV2{}, fixtureRand())
 	cV2.authState = authStateAwaitingRevealSig{}
-	cV2.addPolicy(allowV2)
+	cV2.policies.addPolicy(allowV2)
 
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
 	cV3.authState = authStateAwaitingRevealSig{}
-	cV3.addPolicy(allowV3)
+	cV3.policies.addPolicy(allowV3)
 
 	msgV2 := fixtureRevealSigMsg(otrV2{})
 	msgV3 := fixtureRevealSigMsg(otrV3{})
@@ -577,11 +577,11 @@ func Test_receiveMessage_ignoresSignatureIfItsVersionIsNotInThePolicy(t *testing
 	var nilB []byte
 	cV2 := newAkeContext(otrV2{}, fixtureRand())
 	cV2.authState = authStateAwaitingSig{}
-	cV2.addPolicy(allowV2)
+	cV2.policies.addPolicy(allowV2)
 
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
 	cV3.authState = authStateAwaitingSig{}
-	cV3.addPolicy(allowV3)
+	cV3.policies.addPolicy(allowV3)
 
 	msgV2 := fixtureSigMsg(otrV2{})
 	msgV3 := fixtureSigMsg(otrV3{})
@@ -599,11 +599,11 @@ func Test_receiveMessage_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
 	var nilB []byte
 	cV2 := newAkeContext(otrV2{}, fixtureRand())
 	cV2.authState = authStateAwaitingRevealSig{}
-	cV2.addPolicy(allowV3)
+	cV2.policies.addPolicy(allowV3)
 
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
 	cV3.authState = authStateAwaitingRevealSig{}
-	cV3.addPolicy(allowV3)
+	cV3.policies.addPolicy(allowV3)
 
 	msgV2 := fixtureRevealSigMsg(otrV2{})
 	msgV3 := fixtureRevealSigMsg(otrV3{})
@@ -621,11 +621,11 @@ func Test_receiveMessage_ignoresSignatureIfDoesNotAllowV2(t *testing.T) {
 	var nilB []byte
 	cV2 := newAkeContext(otrV2{}, fixtureRand())
 	cV2.authState = authStateAwaitingSig{}
-	cV2.addPolicy(allowV3)
+	cV2.policies.addPolicy(allowV3)
 
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
 	cV3.authState = authStateAwaitingSig{}
-	cV3.addPolicy(allowV3)
+	cV3.policies.addPolicy(allowV3)
 
 	msgV2 := fixtureSigMsg(otrV2{})
 	msgV3 := fixtureSigMsg(otrV3{})
@@ -642,7 +642,7 @@ func Test_receiveMessage_ignoresSignatureIfDoesNotAllowV2(t *testing.T) {
 func Test_receiveMessage_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 	cV3 := newAkeContext(otrV3{}, fixtureRand())
 	cV3.authState = authStateAwaitingSig{}
-	cV3.addPolicy(allowV3)
+	cV3.policies.addPolicy(allowV3)
 
 	_, err := cV3.receiveMessage([]byte{})
 	assertEquals(t, err, errInvalidOTRMessage)
@@ -656,14 +656,14 @@ func Test_receiveMessage_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 
 func Test_authStateAwaitingSig_receiveSigMessage_returnsErrorIfProcessSigFails(t *testing.T) {
 	c := newAkeContext(otrV2{}, fixtureRand())
-	c.addPolicy(allowV2)
+	c.policies.addPolicy(allowV2)
 	_, _, err := authStateAwaitingSig{}.receiveSigMessage(&c, []byte{0x00, 0x00})
 	assertEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_authStateAwaitingRevealSig_receiveRevealSigMessage_returnsErrorIfProcessRevealSigFails(t *testing.T) {
 	c := newAkeContext(otrV2{}, fixtureRand())
-	c.addPolicy(allowV2)
+	c.policies.addPolicy(allowV2)
 	_, _, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(&c, []byte{0x00, 0x00})
 	assertEquals(t, err, errInvalidOTRMessage)
 }
@@ -689,9 +689,9 @@ func Test_receiveMessage_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurre
 	_, err := c.receiveMessage(msg)
 
 	assertEquals(t, err, nil)
-	assertEquals(t, c.theirKeyID, uint32(0)) // should not be 0
-	assertDeepEquals(t, c.theirCurrentDHPubKey, fixedgx)
-	assertEquals(t, c.theirPreviousDHPubKey, nilBigInt)
+	assertEquals(t, c.keys.theirKeyID, uint32(0)) // should not be 0
+	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgx)
+	assertEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
 }
 
 func Test_receiveMessage_receiveSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
@@ -717,9 +717,9 @@ func Test_receiveMessage_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPu
 	_, err := c.receiveMessage(msg)
 
 	assertEquals(t, err, nil)
-	assertEquals(t, c.theirKeyID, uint32(0)) // should not be 0
-	assertDeepEquals(t, c.theirCurrentDHPubKey, fixedgy)
-	assertEquals(t, c.theirPreviousDHPubKey, nilBigInt)
+	assertEquals(t, c.keys.theirKeyID, uint32(0)) // should not be 0
+	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgy)
+	assertEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
 }
 
 func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
@@ -820,21 +820,21 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfPcoessDHCommitFails
 
 func Test_authStateNone_receiveQueryMessage_returnsNoErrorForValidMessage(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.addPolicy(allowV3)
+	c.policies.addPolicy(allowV3)
 	_, _, err := authStateNone{}.receiveQueryMessage(&c, []byte("?OTRv3?"))
 	assertEquals(t, err, nil)
 }
 
 func Test_authStateNone_receiveQueryMessage_returnsErrorIfNoCompatibleVersionCouldBeFound(t *testing.T) {
 	c := newAkeContext(otrV3{}, fixtureRand())
-	c.addPolicy(allowV3)
+	c.policies.addPolicy(allowV3)
 	_, _, err := authStateNone{}.receiveQueryMessage(&c, []byte("?OTRv2?"))
 	assertEquals(t, err, errInvalidVersion)
 }
 
 func Test_authStateNone_receiveQueryMessage_returnsErrorIfDhCommitMessageGeneratesError(t *testing.T) {
 	c := newAkeContext(otrV2{}, fixedRand([]string{"ABCDABCD"}))
-	c.addPolicy(allowV2)
+	c.policies.addPolicy(allowV2)
 	_, _, err := authStateNone{}.receiveQueryMessage(&c, []byte("?OTRv2?"))
 	assertEquals(t, err, errShortRandomRead)
 }

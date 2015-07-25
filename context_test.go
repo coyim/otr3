@@ -5,7 +5,7 @@ import "testing"
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	c := newConversation(nil, fixtureRand())
-	c.addPolicy(allowV3)
+	c.policies.addPolicy(allowV3)
 
 	exp := []byte{
 		0x00, 0x03, // protocol version
@@ -21,7 +21,7 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	cxt := newConversation(nil, fixtureRand())
-	cxt.addPolicy(allowV3)
+	cxt.policies.addPolicy(allowV3)
 
 	cxt.receive(msg)
 
@@ -81,7 +81,7 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	dhCommitMsg, _ := dhCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
-	c.addPolicy(allowV3)
+	c.policies.addPolicy(allowV3)
 
 	dhKeyMsg, err := c.receive(dhCommitMsg)
 
@@ -120,19 +120,19 @@ func Test_randMPI_returnsOKForARealRead(t *testing.T) {
 
 func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
 	c := bobContextAfterAKE()
-	c.ourKeyID = 2
-	c.theirKeyID = 3
-	c.ourCounter = 0x1011121314
+	c.keys.ourKeyID = 2
+	c.keys.theirKeyID = 3
+	c.keys.ourCounter = 0x1011121314
 
 	dataMsg := c.genDataMsg(nil)
 
 	assertEquals(t, dataMsg.senderKeyID, uint32(1))
 	assertEquals(t, dataMsg.recipientKeyID, uint32(3))
-	assertDeepEquals(t, dataMsg.y, c.ourCurrentDHKeys.pub)
+	assertDeepEquals(t, dataMsg.y, c.keys.ourCurrentDHKeys.pub)
 	assertDeepEquals(t, dataMsg.topHalfCtr, [8]byte{
 		0x00, 0x00, 0x00, 0x10, 0x11, 0x12, 0x13, 0x14,
 	})
-	assertEquals(t, c.ourCounter, uint64(0x1011121314+1))
+	assertEquals(t, c.keys.ourCounter, uint64(0x1011121314+1))
 }
 
 func Test_genDataMsg_hasEncryptedMessage(t *testing.T) {

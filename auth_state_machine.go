@@ -10,8 +10,8 @@ import (
 // ignoreMessage should never be called with a too small message buffer, it is assumed the caller will have checked this before calling it
 func (c *akeContext) ignoreMessage(msg []byte) bool {
 	_, protocolVersion, _ := extractShort(msg)
-	unexpectedV2Msg := protocolVersion == 2 && !c.has(allowV2)
-	unexpectedV3Msg := protocolVersion == 3 && !c.has(allowV3)
+	unexpectedV2Msg := protocolVersion == 2 && !c.policies.has(allowV2)
+	unexpectedV3Msg := protocolVersion == 3 && !c.policies.has(allowV3)
 
 	return unexpectedV2Msg || unexpectedV3Msg
 }
@@ -53,8 +53,8 @@ func (c *akeContext) receiveQueryMessage(msg []byte) (toSend []byte, err error) 
 	c.authState, toSend, err = c.authState.receiveQueryMessage(c, msg)
 
 	if err == nil {
-		c.ourKeyID = 0
-		c.ourCurrentDHKeys = dhKeyPair{}
+		c.keys.ourKeyID = 0
+		c.keys.ourCurrentDHKeys = dhKeyPair{}
 	}
 
 	return
@@ -153,7 +153,7 @@ func (s authStateNone) receiveDHCommitMessage(c *akeContext, msg []byte) (authSt
 		return s, nil, err
 	}
 
-	c.ourKeyID = 1
+	c.keys.ourKeyID = 1
 
 	return authStateAwaitingRevealSig{}, ret, nil
 }
@@ -230,10 +230,10 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *akeContext, msg []byte) (
 		return s, nil, err
 	}
 
-	c.theirCurrentDHPubKey = c.theirPublicValue
-	c.ourCurrentDHKeys.pub = c.ourPublicValue
-	c.ourCurrentDHKeys.priv = c.secretExponent
-	c.ourCounter++
+	c.keys.theirCurrentDHPubKey = c.theirPublicValue
+	c.keys.ourCurrentDHKeys.pub = c.ourPublicValue
+	c.keys.ourCurrentDHKeys.priv = c.secretExponent
+	c.keys.ourCounter++
 
 	return authStateAwaitingSig{}, c.revealSigMsg, nil
 }
@@ -256,7 +256,7 @@ func (s authStateNone) receiveRevealSigMessage(c *akeContext, msg []byte) (authS
 }
 
 func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	if !c.has(allowV2) {
+	if !c.policies.has(allowV2) {
 		return s, nil, nil
 	}
 
@@ -272,13 +272,13 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *akeContext, msg [
 	}
 
 	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
-	c.ourKeyID = 0
-	c.theirCurrentDHPubKey = c.theirPublicValue
-	c.theirPreviousDHPubKey = nil
+	c.keys.ourKeyID = 0
+	c.keys.theirCurrentDHPubKey = c.theirPublicValue
+	c.keys.theirPreviousDHPubKey = nil
 
-	c.ourCurrentDHKeys.priv = c.secretExponent
-	c.ourCurrentDHKeys.pub = c.ourPublicValue
-	c.ourCounter++
+	c.keys.ourCurrentDHKeys.priv = c.secretExponent
+	c.keys.ourCurrentDHKeys.pub = c.ourPublicValue
+	c.keys.ourCounter++
 
 	return authStateNone{}, ret, nil
 }
@@ -304,7 +304,7 @@ func (s authStateAwaitingDHKey) receiveSigMessage(c *akeContext, msg []byte) (au
 }
 
 func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (authState, []byte, error) {
-	if !c.has(allowV2) {
+	if !c.policies.has(allowV2) {
 		return s, nil, nil
 	}
 
@@ -315,9 +315,9 @@ func (s authStateAwaitingSig) receiveSigMessage(c *akeContext, msg []byte) (auth
 	}
 
 	//gy was stored when we receive DH-Key
-	c.theirCurrentDHPubKey = c.theirPublicValue
-	c.theirPreviousDHPubKey = nil
-	c.ourKeyID = 0
+	c.keys.theirCurrentDHPubKey = c.theirPublicValue
+	c.keys.theirPreviousDHPubKey = nil
+	c.keys.ourKeyID = 0
 
 	return authStateNone{}, nil, nil
 }

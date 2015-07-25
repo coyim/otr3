@@ -31,7 +31,7 @@ func (ake *akeContext) calcDHSharedSecret() *big.Int {
 }
 
 func (ake *akeContext) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
-	verifyData := appendAll(ake.ourPublicValue, ake.theirPublicValue, &ake.ourKey.PublicKey, ake.ourKeyID)
+	verifyData := appendAll(ake.ourPublicValue, ake.theirPublicValue, &ake.ourKey.PublicKey, ake.keys.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
 	xb, err := ake.calcXb(key, mb)
@@ -48,7 +48,7 @@ func appendAll(one, two *big.Int, publicKey *PublicKey, keyID uint32) []byte {
 
 func (ake *akeContext) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	xb := ake.ourKey.PublicKey.serialize()
-	xb = appendWord(xb, ake.ourKeyID)
+	xb = appendWord(xb, ake.keys.ourKeyID)
 
 	sigb, err := ake.ourKey.sign(ake.rand(), mb)
 	if err != nil {
@@ -74,7 +74,7 @@ func (ake *akeContext) randomInto(b []byte) error {
 // dhCommitMessage = bob = x
 // Bob ---- DH Commit -----------> Alice
 func (ake *akeContext) dhCommitMessage() ([]byte, error) {
-	ake.ourKeyID = 0
+	ake.keys.ourKeyID = 0
 
 	x, ok := ake.randMPI(make([]byte, 40))
 	if !ok {
@@ -317,7 +317,7 @@ func (ake *akeContext) processEncryptedSig(encryptedSig []byte, theirMAC []byte,
 		return err
 	}
 
-	ake.theirKeyID = keyID
+	ake.keys.theirKeyID = keyID
 
 	//zero(ake.theirLastCtr[:])
 	return nil

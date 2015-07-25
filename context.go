@@ -4,18 +4,12 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
-	"errors"
 	"io"
 	"math/big"
 )
 
 const (
 	lenMsgHeader = 3
-)
-
-var (
-	errUnsupportedOTRVersion = errors.New("unsupported OTR version")
-	errWrongProtocolVersion  = errors.New("wrong protocol version")
 )
 
 type conversation struct {
@@ -48,10 +42,10 @@ type akeContext struct {
 	ourKey                           *PrivateKey
 	theirKey                         *PublicKey
 	revealSigMsg                     []byte
-	keyManagementContext
-	policies
-	revealKey akeKeys
-	ssid      [8]byte
+	keys                             keyManagementContext
+	revealKey                        akeKeys
+	ssid                             [8]byte
+	policies                         policies
 }
 
 type otrContext struct {
@@ -105,15 +99,15 @@ func (c *akeContext) messageHeader() messageHeader {
 }
 
 func (c *akeContext) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
-	keys, err := c.calculateDHSessionKeys(c.ourKeyID-1, c.theirKeyID)
+	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	if err != nil {
 		//TODO errors
 		return dataMsg{}
 	}
 
 	topHalfCtr := [8]byte{}
-	binary.BigEndian.PutUint64(topHalfCtr[:], c.ourCounter)
-	c.ourCounter++
+	binary.BigEndian.PutUint64(topHalfCtr[:], c.keys.ourCounter)
+	c.keys.ourCounter++
 
 	plain := dataMsgPlainText{
 		plain: message,
@@ -127,9 +121,9 @@ func (c *akeContext) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		//TODO: implement IGNORE_UNREADABLE
 		flag: 0x00,
 
-		senderKeyID:    c.ourKeyID - 1,
-		recipientKeyID: c.theirKeyID,
-		y:              c.ourCurrentDHKeys.pub,
+		senderKeyID:    c.keys.ourKeyID - 1,
+		recipientKeyID: c.keys.theirKeyID,
+		y:              c.keys.ourCurrentDHKeys.pub,
 		topHalfCtr:     topHalfCtr,
 		encryptedMsg:   encrypted,
 		//TODO after key management
