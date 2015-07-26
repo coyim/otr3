@@ -342,7 +342,8 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 	state, msg, _ := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, fixtureDHKeyMsg(otrV3{}))
 
 	//TODO before generate rev si need to extract their gy from DH commit
-	assertEquals(t, state, authStateAwaitingSig{})
+	_, ok := state.(authStateAwaitingSig)
+	assertEquals(t, ok, true)
 	assertEquals(t, dhMsgType(msg), msgTypeRevealSig)
 }
 
@@ -391,7 +392,8 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 	state, msg, _ := sigState.receiveDHKeyMessage(c, sameDHKeyMsg)
 
 	//FIXME: What about gy and sigKey?
-	assertEquals(t, state, authStateAwaitingSig{})
+	_, sameStateType := state.(authStateAwaitingSig)
+	assertDeepEquals(t, sameStateType, true)
 	assertDeepEquals(t, msg, previousRevealSig)
 }
 
@@ -404,7 +406,8 @@ func Test_receiveDHKey_AtAuthAwaitingSigIgnoresMsgIfIsNotSameDHKeyMsg(t *testing
 
 	state, msg, _ := authStateAwaitingSig{}.receiveDHKeyMessage(c, newDHKeyMsg)
 
-	assertEquals(t, state, authStateAwaitingSig{})
+	_, sameStateType := state.(authStateAwaitingSig)
+	assertDeepEquals(t, sameStateType, true)
 	assertDeepEquals(t, msg, nilB)
 }
 
@@ -454,7 +457,7 @@ func Test_receiveRevealSig_IgnoreMessageIfNotInStateAwaitingRevealSig(t *testing
 		state, msg, err := s.receiveRevealSigMessage(c, revealSignMsg)
 
 		assertEquals(t, err, nil)
-		assertEquals(t, state, s)
+		assertDeepEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
 	}
 }
@@ -585,11 +588,13 @@ func Test_receiveMessage_ignoresSignatureIfItsVersionIsNotInThePolicy(t *testing
 	msgV3 := fixtureSigMsg(otrV3{})
 
 	toSend, _ := cV2.receiveAKE(msgV3)
-	assertEquals(t, cV2.authState, authStateAwaitingSig{})
+	_, sameStateType := cV2.authState.(authStateAwaitingSig)
+	assertDeepEquals(t, sameStateType, true)
 	assertDeepEquals(t, toSend, nilB)
 
 	toSend, _ = cV3.receiveAKE(msgV2)
-	assertEquals(t, cV3.authState, authStateAwaitingSig{})
+	_, sameStateType = cV3.authState.(authStateAwaitingSig)
+	assertDeepEquals(t, sameStateType, true)
 	assertDeepEquals(t, toSend, nilB)
 }
 
@@ -629,11 +634,11 @@ func Test_receiveMessage_ignoresSignatureIfDoesNotAllowV2(t *testing.T) {
 	msgV3 := fixtureSigMsg(otrV3{})
 
 	toSend, _ := cV3.receiveAKE(msgV3)
-	assertEquals(t, cV3.authState, authStateAwaitingSig{})
-	assertDeepEquals(t, toSend, nilB)
 
+	assertDeepEquals(t, cV3.authState, authStateAwaitingSig{})
+	assertDeepEquals(t, toSend, nilB)
 	toSend, _ = cV2.receiveAKE(msgV2)
-	assertEquals(t, cV2.authState, authStateAwaitingSig{})
+	assertDeepEquals(t, cV2.authState, authStateAwaitingSig{})
 	assertDeepEquals(t, toSend, nilB)
 }
 

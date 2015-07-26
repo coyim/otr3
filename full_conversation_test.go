@@ -59,7 +59,7 @@ func Test_AKEHappyPath(t *testing.T) {
 	//Alice send Bob DHKey
 	toSend, err = bob.receive(toSend)
 	assertEquals(t, err, nil)
-	assertEquals(t, bob.authState, authStateAwaitingSig{})
+	assertDeepEquals(t, bob.authState, authStateAwaitingSig{revealSigMsg: toSend})
 
 	//Bob send Alice RevealSig
 	toSend, err = alice.receive(toSend)
@@ -99,7 +99,7 @@ func Test_AKENotAllowV2(t *testing.T) {
 	//Alice send Bob DHKey
 	toSend, err = bob.receive(toSend)
 	assertEquals(t, err, nil)
-	assertEquals(t, bob.authState, authStateAwaitingSig{})
+	assertDeepEquals(t, bob.authState, authStateAwaitingSig{revealSigMsg: toSend})
 
 	//Bob send Alice RevealSig
 	toSend, err = alice.receive(toSend)
@@ -136,7 +136,7 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	//Alice send Bob DHKey
 	toSend, err = bob.receive(toSend)
 	assertEquals(t, err, nil)
-	assertEquals(t, bob.authState, authStateAwaitingSig{})
+	assertDeepEquals(t, bob.authState, authStateAwaitingSig{revealSigMsg: toSend})
 
 	//Bob send Alice RevealSig
 	toSend, err = alice.receive(toSend)

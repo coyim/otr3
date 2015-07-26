@@ -64,7 +64,11 @@ type authStateBase struct{}
 type authStateNone struct{ authStateBase }
 type authStateAwaitingDHKey struct{ authStateBase }
 type authStateAwaitingRevealSig struct{ authStateBase }
-type authStateAwaitingSig struct{ authStateBase }
+type authStateAwaitingSig struct {
+	authStateBase
+	// revealSigMsg is only used to store the message so we can re-transmit it if needed
+	revealSigMsg []byte
+}
 type authStateV1Setup struct{ authStateBase }
 
 type authState interface {
@@ -226,7 +230,8 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *conversation, msg []byte)
 		return s, nil, err
 	}
 
-	if c.revealSigMsg, err = c.revealSigMessage(); err != nil {
+	var revealSigMsg []byte
+	if revealSigMsg, err = c.revealSigMessage(); err != nil {
 		return s, nil, err
 	}
 
@@ -235,7 +240,7 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *conversation, msg []byte)
 	c.keys.ourCurrentDHKeys.priv = c.ake.secretExponent
 	c.keys.ourCounter++
 
-	return authStateAwaitingSig{}, c.revealSigMsg, nil
+	return authStateAwaitingSig{revealSigMsg: revealSigMsg}, revealSigMsg, nil
 }
 
 func (s authStateAwaitingSig) receiveDHKeyMessage(c *conversation, msg []byte) (authState, []byte, error) {
@@ -245,7 +250,7 @@ func (s authStateAwaitingSig) receiveDHKeyMessage(c *conversation, msg []byte) (
 	}
 
 	if isSame {
-		return s, c.revealSigMsg, nil
+		return s, s.revealSigMsg, nil
 	}
 
 	return s, nil, nil

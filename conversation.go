@@ -12,27 +12,30 @@ const (
 )
 
 type conversation struct {
-	version             otrVersion
-	Rand                io.Reader
-	smpState            smpState
-	secret              *big.Int
-	s1                  smp1State
-	s2                  smp2State
-	s3                  smp3State
+	version otrVersion
+	Rand    io.Reader
+
+	smpState smpState
+	secret   *big.Int
+	s1       smp1State
+	s2       smp2State
+	s3       smp3State
+
 	authState           authState
 	msgState            msgState
 	r                   [16]byte
 	sigKey              akeKeys
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
-	ourKey              *PrivateKey
-	theirKey            *PublicKey
-	revealSigMsg        []byte
-	keys                keyManagementContext
-	revealKey           akeKeys
-	ssid                [8]byte
-	policies            policies
-	ake                 *ake
+
+	ourKey   *PrivateKey
+	theirKey *PublicKey
+
+	keys      keyManagementContext
+	revealKey akeKeys
+	ssid      [8]byte
+	policies  policies
+	ake       *ake
 }
 
 type msgState int
