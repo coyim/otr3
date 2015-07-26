@@ -24,18 +24,17 @@ type conversation struct {
 	authState           authState
 	msgState            msgState
 	r                   [16]byte
-	sigKey              akeKeys
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
 
 	ourKey   *PrivateKey
 	theirKey *PublicKey
 
-	keys      keyManagementContext
-	revealKey akeKeys
-	ssid      [8]byte
-	policies  policies
-	ake       *ake
+	keys keyManagementContext
+
+	ssid     [8]byte
+	policies policies
+	ake      *ake
 }
 
 type msgState int

@@ -81,9 +81,9 @@ func bobContextAtReceiveDHKey() *conversation {
 	c := bobContextAtAwaitingDHKey()
 	c.ake.theirPublicValue = fixedgy // stored at receiveDHKey
 
-	copy(c.sigKey.c[:], bytesFromHex("d942cc80b66503414c05e3752d9ba5c4"))
-	copy(c.sigKey.m1[:], bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
-	copy(c.sigKey.m2[:], bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5"))
+	copy(c.ake.sigKey.c[:], bytesFromHex("d942cc80b66503414c05e3752d9ba5c4"))
+	copy(c.ake.sigKey.m1[:], bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
+	copy(c.ake.sigKey.m2[:], bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5"))
 
 	return c
 }
@@ -357,9 +357,9 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, c.ake.theirPublicValue, fixedgy)
-	assertDeepEquals(t, c.sigKey.c[:], expectedC)
-	assertDeepEquals(t, c.sigKey.m1[:], expectedM1)
-	assertDeepEquals(t, c.sigKey.m2[:], expectedM2)
+	assertDeepEquals(t, c.ake.sigKey.c[:], expectedC)
+	assertDeepEquals(t, c.ake.sigKey.m1[:], expectedM1)
+	assertDeepEquals(t, c.ake.sigKey.m2[:], expectedM2)
 }
 
 func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeysAndIncreaseCounter(t *testing.T) {

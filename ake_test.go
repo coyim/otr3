@@ -158,17 +158,18 @@ func Test_processEncryptedSig(t *testing.T) {
 
 	_, encryptedSig, _ := extractData(bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf"))
 	macSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
-	err := ake.processEncryptedSig(encryptedSig, macSignature[:20], &ake.revealKey)
+	err := ake.processEncryptedSig(encryptedSig, macSignature[:20], &ake.ake.revealKey)
 	assertEquals(t, err, nil)
 	assertEquals(t, ake.keys.theirKeyID, uint32(1))
 }
 
 func Test_processEncryptedSigWithBadSignatureMACError(t *testing.T) {
 	ake := conversation{}
+	ake.startAKE()
 
 	_, encryptedSig, _ := extractData(bytesFromHex("000001b2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf"))
 	macSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
-	err := ake.processEncryptedSig(encryptedSig, macSignature[:20], &ake.revealKey)
+	err := ake.processEncryptedSig(encryptedSig, macSignature[:20], &ake.ake.revealKey)
 	assertEquals(t, err.Error(), "bad signature MAC in encrypted signature")
 	assertEquals(t, ake.keys.theirKeyID, uint32(0))
 }
@@ -187,7 +188,7 @@ func Test_processEncryptedSigWithBadSignatureError(t *testing.T) {
 
 	_, encryptedSig, _ := extractData(bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbeca"))
 	macSignature := bytesFromHex("741f14776485e6c593928fd859afe1ab4896f1e6")
-	err := ake.processEncryptedSig(encryptedSig, macSignature[:20], &ake.revealKey)
+	err := ake.processEncryptedSig(encryptedSig, macSignature[:20], &ake.ake.revealKey)
 	assertEquals(t, err.Error(), "bad signature in encrypted signature")
 	assertEquals(t, ake.keys.theirKeyID, uint32(0))
 }
@@ -227,7 +228,7 @@ func Test_processSig(t *testing.T) {
 
 	ake2 := newConversation(otrV3{}, rnd)
 	ake2.startAKE()
-	ake2.sigKey = ake.sigKey
+	ake2.ake.sigKey = ake.ake.sigKey
 	ake2.ourKey = alicePrivateKey
 	ake2.setSecretExponent(fixedx)
 	ake2.ake.theirPublicValue = fixedgy
@@ -382,15 +383,16 @@ func Test_calcDHSharedSecret(t *testing.T) {
 
 func Test_calcAKEKeys(t *testing.T) {
 	var bob conversation
+	bob.startAKE()
 	bob.calcAKEKeys(expectedSharedSecret)
 
 	assertDeepEquals(t, bob.ssid[:], bytesFromHex("9cee5d2c7edbc86d"))
-	assertDeepEquals(t, bob.revealKey.c[:], bytesFromHex("5745340b350364a02a0ac1467a318dcc"))
-	assertDeepEquals(t, bob.sigKey.c[:], bytesFromHex("d942cc80b66503414c05e3752d9ba5c4"))
-	assertDeepEquals(t, bob.revealKey.m1[:], bytesFromHex("d3251498fb9d977d07392a96eafb8c048d6bc67064bd7da72aa38f20f87a2e3d"))
-	assertDeepEquals(t, bob.revealKey.m2[:], bytesFromHex("79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6"))
-	assertDeepEquals(t, bob.sigKey.m1[:], bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
-	assertDeepEquals(t, bob.sigKey.m2[:], bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5"))
+	assertDeepEquals(t, bob.ake.revealKey.c[:], bytesFromHex("5745340b350364a02a0ac1467a318dcc"))
+	assertDeepEquals(t, bob.ake.sigKey.c[:], bytesFromHex("d942cc80b66503414c05e3752d9ba5c4"))
+	assertDeepEquals(t, bob.ake.revealKey.m1[:], bytesFromHex("d3251498fb9d977d07392a96eafb8c048d6bc67064bd7da72aa38f20f87a2e3d"))
+	assertDeepEquals(t, bob.ake.revealKey.m2[:], bytesFromHex("79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6"))
+	assertDeepEquals(t, bob.ake.sigKey.m1[:], bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
+	assertDeepEquals(t, bob.ake.sigKey.m2[:], bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5"))
 }
 
 func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
@@ -408,8 +410,8 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 	expectedEncryptedSignature, _ := hex.DecodeString("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf")
 	expedctedMACSignature, _ := hex.DecodeString("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 
-	encryptedSig, err := ake.generateEncryptedSignature(&ake.revealKey)
-	macSig := sumHMAC(ake.revealKey.m2[:], encryptedSig)
+	encryptedSig, err := ake.generateEncryptedSignature(&ake.ake.revealKey)
+	macSig := sumHMAC(ake.ake.revealKey.m2[:], encryptedSig)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, encryptedSig, expectedEncryptedSignature)
 	assertDeepEquals(t, macSig, expedctedMACSignature)
@@ -430,8 +432,8 @@ func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 	expectedEncryptedSignature, _ := hex.DecodeString("000001d2b4f6ac650cc1d28f61a3b9bdf3cd60e2d1ea55d4c56e9f954eb22e10764861fb40d69917f5c4249fa701f3c04fae9449cd13a5054861f95fbc5775fc3cfd931cf5cc1a89eac82e7209b607c4fbf18df945e23bd0e91365fcc6c5dac072703dd8e2287372107f6a2cbb9139f5e82108d4cbcc1c6cdfcc772014136e756338745e2210d42c6e3ec4e9cf87fa8ebd8190e00f3a54bec86ee06cb7664059bb0fa79529e9d2e563ffecc5561477b3ba6bbf4ac679624b6da69a85822ed5c6ceb56a98740b1002026c503c39badab13b5d5ec948bbb961f0c90e68894a1fb70645a8e21ffe6b78e2e4ee62a62c48bd54e3d27c1166d098791518b53a10c409b5e55d16555b721a7750b7084e8972540bf0f1d76602e9b5fd58f94ed2dbf69fafccef84fdca2f9d800346b2358a200db060d8cf1b984a5213d02f7c27e452ad1cd893b0a668aaf6733809c31a392fc6cfc754691aca9a51582b636b92ea10abd661dd88bfd4c5f19b3ce265951728637b23fff7f7c0638721b6a01b3f1c3e923c10ea37d4e240fd973647d34dde6991cc3a04ce459c23e3ee2a858912ff78f405bbd9951935a120017904537db50f6e9e29338938f2b45ed323fc508d02fd0a0703e53ffc1889bccdec87e7c3d87e442fe29a7654d1")
 	expedctedMACSignature, _ := hex.DecodeString("66b47e29be91a7cf4803d731921482fd514b4a53a9dd1639b17705c90185f91d")
 
-	encryptedSig, err := ake.generateEncryptedSignature(&ake.sigKey)
-	macSig := sumHMAC(ake.sigKey.m2[:], encryptedSig)
+	encryptedSig, err := ake.generateEncryptedSignature(&ake.ake.sigKey)
+	macSig := sumHMAC(ake.ake.sigKey.m2[:], encryptedSig)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, encryptedSig, expectedEncryptedSignature)
 	assertDeepEquals(t, macSig, expedctedMACSignature)
@@ -490,7 +492,7 @@ func Test_generateEncryptedSignature_returnsErrorIfCalcXbFails(t *testing.T) {
 	ake.ake.theirPublicValue = fixedgx
 	ake.ake.ourPublicValue = fixedgy
 
-	_, err := ake.generateEncryptedSignature(&ake.revealKey)
+	_, err := ake.generateEncryptedSignature(&ake.ake.revealKey)
 	assertDeepEquals(t, err, errShortRandomRead)
 }
 

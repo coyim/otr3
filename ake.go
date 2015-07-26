@@ -15,6 +15,9 @@ type ake struct {
 	theirPublicValue *big.Int
 	encryptedGx      []byte
 	hashedGx         [sha256.Size]byte
+
+	revealKey akeKeys
+	sigKey    akeKeys
 }
 
 func (c *conversation) startAKE() {
@@ -26,7 +29,7 @@ func (c *conversation) finishAKE() {
 }
 
 func (c *conversation) calcAKEKeys(s *big.Int) {
-	c.ssid, c.revealKey, c.sigKey = calculateAKEKeys(s)
+	c.ssid, c.ake.revealKey, c.ake.sigKey = calculateAKEKeys(s)
 }
 
 func (c *conversation) setSecretExponent(val *big.Int) {
@@ -132,11 +135,11 @@ func (c *conversation) serializeDHKey() []byte {
 // Bob ---- Reveal Signature ----> Alice
 func (c *conversation) revealSigMessage() ([]byte, error) {
 	c.calcAKEKeys(c.calcDHSharedSecret())
-	encryptedSig, err := c.generateEncryptedSignature(&c.revealKey)
+	encryptedSig, err := c.generateEncryptedSignature(&c.ake.revealKey)
 	if err != nil {
 		return nil, err
 	}
-	macSig := sumHMAC(c.revealKey.m2[:], encryptedSig)
+	macSig := sumHMAC(c.ake.revealKey.m2[:], encryptedSig)
 
 	revealSigMsg := revealSig{
 		messageHeader: c.messageHeader(),
@@ -151,11 +154,11 @@ func (c *conversation) revealSigMessage() ([]byte, error) {
 // Alice -- Signature -----------> Bob
 func (c *conversation) sigMessage() ([]byte, error) {
 	c.calcAKEKeys(c.calcDHSharedSecret())
-	encryptedSig, err := c.generateEncryptedSignature(&c.sigKey)
+	encryptedSig, err := c.generateEncryptedSignature(&c.ake.sigKey)
 	if err != nil {
 		return nil, err
 	}
-	macSig := sumHMAC(c.sigKey.m2[:], encryptedSig)
+	macSig := sumHMAC(c.ake.sigKey.m2[:], encryptedSig)
 	sigMsg := sig{
 		messageHeader: c.messageHeader(),
 		encryptedSig:  encryptedSig,
@@ -223,7 +226,7 @@ func (c *conversation) processRevealSig(msg []byte) (err error) {
 	}
 
 	c.calcAKEKeys(c.calcDHSharedSecret())
-	if err = c.processEncryptedSig(encryptedSig, theirMAC, &c.revealKey); err != nil {
+	if err = c.processEncryptedSig(encryptedSig, theirMAC, &c.ake.revealKey); err != nil {
 		return newOtrError("in reveal signature message: " + err.Error())
 	}
 
@@ -256,7 +259,7 @@ func (c *conversation) processSig(msg []byte) (err error) {
 	theirMAC := sigMsg.macSig
 	encryptedSig := sigMsg.encryptedSig
 
-	if err := c.processEncryptedSig(encryptedSig, theirMAC, &c.sigKey); err != nil {
+	if err := c.processEncryptedSig(encryptedSig, theirMAC, &c.ake.sigKey); err != nil {
 		return errors.New("otr: in signature message: " + err.Error())
 	}
 
