@@ -25,7 +25,7 @@ func fixtureConversationWithVersion(v otrVersion) *conversation {
 
 func fixtureDHCommitMsg() []byte {
 	ake := fixtureConversation()
-	ake.senderInstanceTag = generateInstanceTag()
+	ake.ourInstanceTag = generateInstanceTag()
 	msg, _ := ake.dhCommitMessage()
 	return msg
 }
@@ -490,14 +490,14 @@ func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
 	senderInstanceTag := uint32(0x00000101)
 
 	dhCommitAke := fixtureConversation()
-	dhCommitAke.senderInstanceTag = senderInstanceTag
+	dhCommitAke.ourInstanceTag = senderInstanceTag
 	dhCommitMsg, _ := dhCommitAke.dhCommitMessage()
 
 	ake := fixtureConversation()
 	generateCommitMsgInstanceTags(ake, dhCommitMsg)
 
-	assertEquals(t, ake.receiverInstanceTag, senderInstanceTag)
-	assertEquals(t, ake.senderInstanceTag, generateInstanceTag())
+	assertEquals(t, ake.theirInstanceTag, senderInstanceTag)
+	assertEquals(t, ake.ourInstanceTag, generateInstanceTag())
 }
 
 func Test_receiveMessage_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.T) {

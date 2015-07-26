@@ -30,14 +30,14 @@ func Test_dhCommitMessage(t *testing.T) {
 	ake := newConversation(otrV3{}, rnd)
 
 	ake.ourKey = bobPrivateKey
-	ake.senderInstanceTag = 0x00000001
-	ake.receiverInstanceTag = 0x00000001
+	ake.ourInstanceTag = 0x00000001
+	ake.theirInstanceTag = 0x00000001
 
 	var out []byte
 	out = appendShort(out, ake.version.protocolVersion())
 	out = append(out, msgTypeDHCommit)
-	out = appendWord(out, ake.senderInstanceTag)
-	out = appendWord(out, ake.receiverInstanceTag)
+	out = appendWord(out, ake.ourInstanceTag)
+	out = appendWord(out, ake.theirInstanceTag)
 	out = appendData(out, expectedEncryptedGxValue)
 	out = appendData(out, expectedHashedGxValue)
 
@@ -51,15 +51,15 @@ func Test_dhKeyMessage(t *testing.T) {
 	ake := newConversation(otrV3{}, rnd)
 
 	ake.ourKey = alicePrivateKey
-	ake.senderInstanceTag = 0x00000001
-	ake.receiverInstanceTag = 0x00000001
+	ake.ourInstanceTag = 0x00000001
+	ake.theirInstanceTag = 0x00000001
 	expectedGyValue := bnFromHex("075dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 
 	var out []byte
 	out = appendShort(out, ake.version.protocolVersion())
 	out = append(out, msgTypeDHKey)
-	out = appendWord(out, ake.senderInstanceTag)
-	out = appendWord(out, ake.receiverInstanceTag)
+	out = appendWord(out, ake.ourInstanceTag)
+	out = appendWord(out, ake.theirInstanceTag)
 	out = appendMPI(out, expectedGyValue)
 
 	result, err := ake.dhKeyMessage()
@@ -78,8 +78,8 @@ func Test_revealSigMessage(t *testing.T) {
 	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	ake := newConversation(otrV3{}, rnd)
 
-	ake.senderInstanceTag = 0x000000010
-	ake.receiverInstanceTag = 0x00000001
+	ake.ourInstanceTag = 0x000000010
+	ake.theirInstanceTag = 0x00000001
 	ake.ourKey = bobPrivateKey
 	ake.startAKE()
 	copy(ake.ake.r[:], fixedr)
@@ -92,8 +92,8 @@ func Test_revealSigMessage(t *testing.T) {
 	var out []byte
 	out = appendShort(out, ake.version.protocolVersion())
 	out = append(out, msgTypeRevealSig)
-	out = appendWord(out, ake.senderInstanceTag)
-	out = appendWord(out, ake.receiverInstanceTag)
+	out = appendWord(out, ake.ourInstanceTag)
+	out = appendWord(out, ake.theirInstanceTag)
 	out = appendData(out, ake.ake.r[:])
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
@@ -276,8 +276,8 @@ func Test_sigMessage(t *testing.T) {
 	ake.startAKE()
 
 	ake.ourKey = alicePrivateKey
-	ake.senderInstanceTag = 0x000000010
-	ake.receiverInstanceTag = 0x00000001
+	ake.ourInstanceTag = 0x000000010
+	ake.theirInstanceTag = 0x00000001
 	ake.setSecretExponent(fixedy)
 	ake.ake.theirPublicValue = fixedgx
 	ake.keys.ourKeyID = 1
@@ -288,8 +288,8 @@ func Test_sigMessage(t *testing.T) {
 	var out []byte
 	out = appendShort(out, ake.version.protocolVersion())
 	out = append(out, msgTypeSig)
-	out = appendWord(out, ake.senderInstanceTag)
-	out = appendWord(out, ake.receiverInstanceTag)
+	out = appendWord(out, ake.ourInstanceTag)
+	out = appendWord(out, ake.theirInstanceTag)
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 

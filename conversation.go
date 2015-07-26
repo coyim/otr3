@@ -14,9 +14,10 @@ type conversation struct {
 	version otrVersion
 	Rand    io.Reader
 
-	msgState            msgState
-	senderInstanceTag   uint32
-	receiverInstanceTag uint32
+	msgState msgState
+
+	ourInstanceTag   uint32
+	theirInstanceTag uint32
 
 	ourKey   *PrivateKey
 	theirKey *PublicKey
@@ -52,8 +53,8 @@ func (c *conversation) messageHeader() messageHeader {
 	return messageHeader{
 		protocolVersion:     c.version.protocolVersion(),
 		needInstanceTag:     c.version.needInstanceTag(),
-		senderInstanceTag:   c.senderInstanceTag,
-		receiverInstanceTag: c.receiverInstanceTag,
+		senderInstanceTag:   c.ourInstanceTag,
+		receiverInstanceTag: c.theirInstanceTag,
 	}
 }
 

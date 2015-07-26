@@ -51,7 +51,7 @@ func (c *conversation) receiveQueryMessage(msg []byte) (toSend []byte, err error
 
 	//TODO set the version for every existing otrContext
 	c.version = v
-	c.senderInstanceTag = generateInstanceTag()
+	c.ourInstanceTag = generateInstanceTag()
 
 	toSend, err = c.dhCommitMessage()
 

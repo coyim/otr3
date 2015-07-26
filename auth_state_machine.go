@@ -98,8 +98,8 @@ func generateCommitMsgInstanceTags(ake *conversation, msg []byte) error {
 		}
 
 		_, receiverInstanceTag, _ := extractWord(msg[lenMsgHeader:])
-		ake.senderInstanceTag = generateInstanceTag()
-		ake.receiverInstanceTag = receiverInstanceTag
+		ake.ourInstanceTag = generateInstanceTag()
+		ake.theirInstanceTag = receiverInstanceTag
 	}
 	return nil
 }
