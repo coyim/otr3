@@ -23,22 +23,24 @@ func (c *conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 		return nil, errInvalidOTRMessage
 	}
 
+	c.ensureAKE()
+
 	if c.ignoreMessage(msg) {
 		return
 	}
 
 	switch msg[2] {
 	case msgTypeDHCommit:
-		c.authState, toSend, err = c.authState.receiveDHCommitMessage(c, msg)
+		c.ake.state, toSend, err = c.ake.state.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
-		c.authState, toSend, err = c.authState.receiveDHKeyMessage(c, msg)
+		c.ake.state, toSend, err = c.ake.state.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
-		c.authState, toSend, err = c.authState.receiveRevealSigMessage(c, msg)
+		c.ake.state, toSend, err = c.ake.state.receiveRevealSigMessage(c, msg)
 		if err == nil {
 			c.msgState = encrypted
 		}
 	case msgTypeSig:
-		c.authState, toSend, err = c.authState.receiveSigMessage(c, msg)
+		c.ake.state, toSend, err = c.ake.state.receiveSigMessage(c, msg)
 		if err == nil {
 			c.msgState = encrypted
 		}
@@ -50,7 +52,10 @@ func (c *conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 }
 
 func (c *conversation) receiveQueryMessage(msg []byte) (toSend []byte, err error) {
-	c.authState, toSend, err = c.authState.receiveQueryMessage(c, msg)
+	// TODO: this is not fit for auth state
+
+	c.ensureAKE()
+	c.ake.state, toSend, err = c.ake.state.receiveQueryMessage(c, msg)
 
 	if err == nil {
 		c.keys.ourKeyID = 0

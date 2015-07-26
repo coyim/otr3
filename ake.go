@@ -21,10 +21,19 @@ type ake struct {
 
 	revealKey akeKeys
 	sigKey    akeKeys
+
+	state authState
+}
+
+func (c *conversation) ensureAKE() {
+	if c.ake == nil {
+		c.startAKE()
+	}
 }
 
 func (c *conversation) startAKE() {
 	c.ake = new(ake)
+	c.ake.state = authStateNone{}
 }
 
 func (c *conversation) finishAKE() {

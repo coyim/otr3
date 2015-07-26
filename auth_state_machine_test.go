@@ -72,7 +72,7 @@ func bobContextAtAwaitingSig() *conversation {
 	c := bobContextAtReceiveDHKey()
 	c.version = otrV2{}
 	c.policies.add(allowV2)
-	c.authState = authStateAwaitingSig{}
+	c.ake.state = authStateAwaitingSig{}
 
 	return c
 }
@@ -92,7 +92,7 @@ func bobContextAtAwaitingDHKey() *conversation {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.startAKE()
 	c.policies.add(allowV3)
-	c.authState = authStateAwaitingDHKey{}
+	c.ake.state = authStateAwaitingDHKey{}
 	c.ourKey = bobPrivateKey
 
 	copy(c.ake.r[:], fixedr)    // stored at sendDHCommit
@@ -112,7 +112,7 @@ func aliceContextAtAwaitingRevealSig() *conversation {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.startAKE()
 	c.policies.add(allowV2)
-	c.authState = authStateAwaitingRevealSig{}
+	c.ake.state = authStateAwaitingRevealSig{}
 	c.ourKey = alicePrivateKey
 
 	copy(c.ake.hashedGx[:], expectedHashedGxValue) //stored at receiveDHCommit
@@ -522,78 +522,84 @@ func Test_receiveMessage_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.
 	msgV3 := fixtureDHCommitMsg()
 
 	toSend, _ := cV2.receiveAKE(msgV3)
-	assertEquals(t, cV2.authState, authStateNone{})
+	assertEquals(t, cV2.ake.state, authStateNone{})
 	assertDeepEquals(t, toSend, nilB)
 
 	toSend, _ = cV3.receiveAKE(msgV2)
-	assertEquals(t, cV3.authState, authStateNone{})
+	assertEquals(t, cV3.ake.state, authStateNone{})
 	assertDeepEquals(t, toSend, nilB)
 }
 
 func Test_receiveMessage_ignoresDHKeyIfItsVersionIsNotInThePolicy(t *testing.T) {
 	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
-	cV2.authState = authStateAwaitingDHKey{}
+	cV2.ensureAKE()
+	cV2.ake.state = authStateAwaitingDHKey{}
 	cV2.policies.add(allowV2)
 
 	cV3 := newConversation(otrV3{}, fixtureRand())
-	cV3.authState = authStateAwaitingDHKey{}
+	cV3.ensureAKE()
+	cV3.ake.state = authStateAwaitingDHKey{}
 	cV3.policies.add(allowV3)
 
 	msgV2 := fixtureDHKeyMsg(otrV2{})
 	msgV3 := fixtureDHKeyMsg(otrV3{})
 
 	toSend, _ := cV2.receiveAKE(msgV3)
-	assertEquals(t, cV2.authState, authStateAwaitingDHKey{})
+	assertEquals(t, cV2.ake.state, authStateAwaitingDHKey{})
 	assertDeepEquals(t, toSend, nilB)
 
 	toSend, _ = cV3.receiveAKE(msgV2)
-	assertEquals(t, cV3.authState, authStateAwaitingDHKey{})
+	assertEquals(t, cV3.ake.state, authStateAwaitingDHKey{})
 	assertDeepEquals(t, toSend, nilB)
 }
 
 func Test_receiveMessage_ignoresRevealSigIfItsVersionIsNotInThePolicy(t *testing.T) {
 	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
-	cV2.authState = authStateAwaitingRevealSig{}
+	cV2.ensureAKE()
+	cV2.ake.state = authStateAwaitingRevealSig{}
 	cV2.policies.add(allowV2)
 
 	cV3 := newConversation(otrV3{}, fixtureRand())
-	cV3.authState = authStateAwaitingRevealSig{}
+	cV3.ensureAKE()
+	cV3.ake.state = authStateAwaitingRevealSig{}
 	cV3.policies.add(allowV3)
 
 	msgV2 := fixtureRevealSigMsg(otrV2{})
 	msgV3 := fixtureRevealSigMsg(otrV3{})
 
 	toSend, _ := cV2.receiveAKE(msgV3)
-	assertEquals(t, cV2.authState, authStateAwaitingRevealSig{})
+	assertEquals(t, cV2.ake.state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, toSend, nilB)
 
 	toSend, _ = cV3.receiveAKE(msgV2)
-	assertEquals(t, cV3.authState, authStateAwaitingRevealSig{})
+	assertEquals(t, cV3.ake.state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, toSend, nilB)
 }
 
 func Test_receiveMessage_ignoresSignatureIfItsVersionIsNotInThePolicy(t *testing.T) {
 	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
-	cV2.authState = authStateAwaitingSig{}
+	cV2.ensureAKE()
+	cV2.ake.state = authStateAwaitingSig{}
 	cV2.policies.add(allowV2)
 
 	cV3 := newConversation(otrV3{}, fixtureRand())
-	cV3.authState = authStateAwaitingSig{}
+	cV3.ensureAKE()
+	cV3.ake.state = authStateAwaitingSig{}
 	cV3.policies.add(allowV3)
 
 	msgV2 := fixtureSigMsg(otrV2{})
 	msgV3 := fixtureSigMsg(otrV3{})
 
 	toSend, _ := cV2.receiveAKE(msgV3)
-	_, sameStateType := cV2.authState.(authStateAwaitingSig)
+	_, sameStateType := cV2.ake.state.(authStateAwaitingSig)
 	assertDeepEquals(t, sameStateType, true)
 	assertDeepEquals(t, toSend, nilB)
 
 	toSend, _ = cV3.receiveAKE(msgV2)
-	_, sameStateType = cV3.authState.(authStateAwaitingSig)
+	_, sameStateType = cV3.ake.state.(authStateAwaitingSig)
 	assertDeepEquals(t, sameStateType, true)
 	assertDeepEquals(t, toSend, nilB)
 }
@@ -601,33 +607,37 @@ func Test_receiveMessage_ignoresSignatureIfItsVersionIsNotInThePolicy(t *testing
 func Test_receiveMessage_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
 	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
-	cV2.authState = authStateAwaitingRevealSig{}
+	cV2.ensureAKE()
+	cV2.ake.state = authStateAwaitingRevealSig{}
 	cV2.policies.add(allowV3)
 
 	cV3 := newConversation(otrV3{}, fixtureRand())
-	cV3.authState = authStateAwaitingRevealSig{}
+	cV3.ensureAKE()
+	cV3.ake.state = authStateAwaitingRevealSig{}
 	cV3.policies.add(allowV3)
 
 	msgV2 := fixtureRevealSigMsg(otrV2{})
 	msgV3 := fixtureRevealSigMsg(otrV3{})
 
 	toSend, _ := cV3.receiveAKE(msgV3)
-	assertEquals(t, cV3.authState, authStateAwaitingRevealSig{})
+	assertEquals(t, cV3.ake.state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, toSend, nilB)
 
 	toSend, _ = cV2.receiveAKE(msgV2)
-	assertEquals(t, cV2.authState, authStateAwaitingRevealSig{})
+	assertEquals(t, cV2.ake.state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, toSend, nilB)
 }
 
 func Test_receiveMessage_ignoresSignatureIfDoesNotAllowV2(t *testing.T) {
 	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
-	cV2.authState = authStateAwaitingSig{}
+	cV2.ensureAKE()
+	cV2.ake.state = authStateAwaitingSig{}
 	cV2.policies.add(allowV3)
 
 	cV3 := newConversation(otrV3{}, fixtureRand())
-	cV3.authState = authStateAwaitingSig{}
+	cV3.ensureAKE()
+	cV3.ake.state = authStateAwaitingSig{}
 	cV3.policies.add(allowV3)
 
 	msgV2 := fixtureSigMsg(otrV2{})
@@ -635,16 +645,17 @@ func Test_receiveMessage_ignoresSignatureIfDoesNotAllowV2(t *testing.T) {
 
 	toSend, _ := cV3.receiveAKE(msgV3)
 
-	assertDeepEquals(t, cV3.authState, authStateAwaitingSig{})
+	assertDeepEquals(t, cV3.ake.state, authStateAwaitingSig{})
 	assertDeepEquals(t, toSend, nilB)
 	toSend, _ = cV2.receiveAKE(msgV2)
-	assertDeepEquals(t, cV2.authState, authStateAwaitingSig{})
+	assertDeepEquals(t, cV2.ake.state, authStateAwaitingSig{})
 	assertDeepEquals(t, toSend, nilB)
 }
 
 func Test_receiveMessage_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 	cV3 := newConversation(otrV3{}, fixtureRand())
-	cV3.authState = authStateAwaitingSig{}
+	cV3.ensureAKE()
+	cV3.ake.state = authStateAwaitingSig{}
 	cV3.policies.add(allowV3)
 
 	_, err := cV3.receiveAKE([]byte{})

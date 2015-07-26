@@ -14,7 +14,6 @@ type conversation struct {
 	version otrVersion
 	Rand    io.Reader
 
-	authState           authState
 	msgState            msgState
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
@@ -45,8 +44,7 @@ func newConversation(v otrVersion, rand io.Reader) *conversation {
 		smp: smp{
 			state: smpStateExpect1{},
 		},
-		authState: authStateNone{},
-		policies:  policies(0),
+		policies: policies(0),
 	}
 }
 
