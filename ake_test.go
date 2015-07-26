@@ -81,8 +81,8 @@ func Test_revealSigMessage(t *testing.T) {
 	ake.senderInstanceTag = 0x000000010
 	ake.receiverInstanceTag = 0x00000001
 	ake.ourKey = bobPrivateKey
-	copy(ake.r[:], fixedr)
 	ake.startAKE()
+	copy(ake.ake.r[:], fixedr)
 	ake.setSecretExponent(fixedx)
 	ake.ake.theirPublicValue = fixedgy
 	ake.keys.ourKeyID = 1
@@ -94,7 +94,7 @@ func Test_revealSigMessage(t *testing.T) {
 	out = append(out, msgTypeRevealSig)
 	out = appendWord(out, ake.senderInstanceTag)
 	out = appendWord(out, ake.receiverInstanceTag)
-	out = appendData(out, ake.r[:])
+	out = appendData(out, ake.ake.r[:])
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 
@@ -201,7 +201,7 @@ func Test_processRevealSig(t *testing.T) {
 	alice.startAKE()
 
 	bob.ourKey = bobPrivateKey
-	copy(bob.r[:], fixedr)
+	copy(bob.ake.r[:], fixedr)
 	bob.setSecretExponent(fixedx)
 	bob.ake.theirPublicValue = fixedgy
 	bob.keys.ourKeyID = 1
@@ -304,9 +304,9 @@ func Test_encrypt(t *testing.T) {
 	ake.startAKE()
 
 	ake.ake.theirPublicValue = fixedgx
-	io.ReadFull(ake.rand(), ake.r[:])
+	io.ReadFull(ake.rand(), ake.ake.r[:])
 
-	encryptedGx, err := encrypt(ake.r[:], appendMPI(nil, ake.ake.theirPublicValue))
+	encryptedGx, err := encrypt(ake.ake.r[:], appendMPI(nil, ake.ake.theirPublicValue))
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, len(encryptedGx), len(appendMPI([]byte{}, ake.ake.theirPublicValue)))
 }
@@ -317,11 +317,11 @@ func Test_decrypt(t *testing.T) {
 	ake.startAKE()
 
 	ake.ake.theirPublicValue = fixedgx
-	io.ReadFull(ake.rand(), ake.r[:])
+	io.ReadFull(ake.rand(), ake.ake.r[:])
 
-	encryptedGx, _ := encrypt(ake.r[:], appendMPI(nil, ake.ake.theirPublicValue))
+	encryptedGx, _ := encrypt(ake.ake.r[:], appendMPI(nil, ake.ake.theirPublicValue))
 	decryptedGx := encryptedGx
-	err := decrypt(ake.r[:], decryptedGx, encryptedGx)
+	err := decrypt(ake.ake.r[:], decryptedGx, encryptedGx)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, decryptedGx, appendMPI([]byte{}, ake.ake.theirPublicValue))

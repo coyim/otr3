@@ -95,7 +95,7 @@ func bobContextAtAwaitingDHKey() *conversation {
 	c.authState = authStateAwaitingDHKey{}
 	c.ourKey = bobPrivateKey
 
-	copy(c.r[:], fixedr)        // stored at sendDHCommit
+	copy(c.ake.r[:], fixedr)    // stored at sendDHCommit
 	c.setSecretExponent(fixedx) // stored at sendDHCommit
 
 	return c
@@ -152,7 +152,7 @@ func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 	cxt.policies.add(allowV3)
 
 	cxt.receiveQueryMessage(msg)
-	assertDeepEquals(t, cxt.r, fixture.r)
+	assertDeepEquals(t, cxt.ake.r, fixture.ake.r)
 	assertDeepEquals(t, cxt.ake.secretExponent, fixture.ake.secretExponent)
 	assertDeepEquals(t, cxt.ake.ourPublicValue, fixture.ake.ourPublicValue)
 }

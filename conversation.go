@@ -16,7 +16,6 @@ type conversation struct {
 
 	authState           authState
 	msgState            msgState
-	r                   [16]byte
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
 

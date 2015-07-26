@@ -13,10 +13,14 @@ type ake struct {
 	secretExponent   *big.Int
 	ourPublicValue   *big.Int
 	theirPublicValue *big.Int
-	encryptedGx      []byte
-	hashedGx         [sha256.Size]byte
-	revealKey        akeKeys
-	sigKey           akeKeys
+
+	r [16]byte
+
+	encryptedGx []byte
+	hashedGx    [sha256.Size]byte
+
+	revealKey akeKeys
+	sigKey    akeKeys
 }
 
 func (c *conversation) startAKE() {
@@ -88,12 +92,12 @@ func (c *conversation) dhCommitMessage() ([]byte, error) {
 
 	c.setSecretExponent(x)
 
-	if err := c.randomInto(c.r[:]); err != nil {
+	if err := c.randomInto(c.ake.r[:]); err != nil {
 		return nil, err
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
-	c.ake.encryptedGx, _ = encrypt(c.r[:], appendMPI(nil, c.ake.ourPublicValue))
+	c.ake.encryptedGx, _ = encrypt(c.ake.r[:], appendMPI(nil, c.ake.ourPublicValue))
 	return c.serializeDHCommit(c.ake.ourPublicValue), nil
 }
 
@@ -142,7 +146,7 @@ func (c *conversation) revealSigMessage() ([]byte, error) {
 
 	revealSigMsg := revealSig{
 		messageHeader: c.messageHeader(),
-		r:             c.r,
+		r:             c.ake.r,
 		encryptedSig:  encryptedSig,
 		macSig:        macSig,
 	}
