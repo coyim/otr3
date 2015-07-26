@@ -124,23 +124,14 @@ func aliceContextAtAwaitingRevealSig() *conversation {
 }
 
 func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *testing.T) {
-	states := []authState{
-		authStateNone{},
-		authStateAwaitingDHKey{},
-		authStateAwaitingRevealSig{},
-		authStateAwaitingSig{},
-	}
-
 	queryMsg := []byte("?OTRv3?")
 
-	for _, s := range states {
-		c := newConversation(nil, fixtureRand())
-		c.policies.add(allowV3)
-		state, msg, _ := s.receiveQueryMessage(c, queryMsg)
+	c := newConversation(nil, fixtureRand())
+	c.policies.add(allowV3)
+	msg, _ := c.receiveQueryMessage(queryMsg)
 
-		assertEquals(t, state, authStateAwaitingDHKey{})
-		assertDeepEquals(t, fixtureDHCommitMsg(), msg)
-	}
+	assertEquals(t, c.ake.state, authStateAwaitingDHKey{})
+	assertDeepEquals(t, fixtureDHCommitMsg(), msg)
 }
 
 func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
@@ -170,14 +161,14 @@ func Test_parseOTRQueryMessage(t *testing.T) {
 
 	for queryMsg, versions := range exp {
 		m := []byte(queryMsg)
-		assertDeepEquals(t, authStateNone{}.parseOTRQueryMessage(m), versions)
+		assertDeepEquals(t, parseOTRQueryMessage(m), versions)
 	}
 }
 
 func Test_acceptOTRRequest_returnsNilForUnsupportedVersions(t *testing.T) {
 	p := policies(0)
 	msg := []byte("?OTR?")
-	v, ok := authStateNone{}.acceptOTRRequest(p, msg)
+	v, ok := acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, nil)
 	assertEquals(t, ok, false)
@@ -188,7 +179,7 @@ func Test_acceptOTRRequest_acceptsOTRV3IfHasAllowV3Policy(t *testing.T) {
 	p := policies(0)
 	p.allowV2()
 	p.allowV3()
-	v, ok := authStateNone{}.acceptOTRRequest(p, msg)
+	v, ok := acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, otrV3{})
 	assertEquals(t, ok, true)
@@ -198,7 +189,7 @@ func Test_acceptOTRRequest_acceptsOTRV2IfHasOnlyAllowV2Policy(t *testing.T) {
 	msg := []byte("?OTRv32?")
 	p := policies(0)
 	p.allowV2()
-	v, ok := authStateNone{}.acceptOTRRequest(p, msg)
+	v, ok := acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, otrV2{})
 	assertEquals(t, ok, true)
@@ -842,21 +833,21 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfProcessDHCommitFail
 func Test_authStateNone_receiveQueryMessage_returnsNoErrorForValidMessage(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.policies.add(allowV3)
-	_, _, err := authStateNone{}.receiveQueryMessage(c, []byte("?OTRv3?"))
+	_, err := c.receiveQueryMessage([]byte("?OTRv3?"))
 	assertEquals(t, err, nil)
 }
 
 func Test_authStateNone_receiveQueryMessage_returnsErrorIfNoCompatibleVersionCouldBeFound(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.policies.add(allowV3)
-	_, _, err := authStateNone{}.receiveQueryMessage(c, []byte("?OTRv2?"))
+	_, err := c.receiveQueryMessage([]byte("?OTRv2?"))
 	assertEquals(t, err, errInvalidVersion)
 }
 
 func Test_authStateNone_receiveQueryMessage_returnsErrorIfDhCommitMessageGeneratesError(t *testing.T) {
 	c := newConversation(otrV2{}, fixedRand([]string{"ABCDABCD"}))
 	c.policies.add(allowV2)
-	_, _, err := authStateNone{}.receiveQueryMessage(c, []byte("?OTRv2?"))
+	_, err := c.receiveQueryMessage([]byte("?OTRv2?"))
 	assertEquals(t, err, errShortRandomRead)
 }
 

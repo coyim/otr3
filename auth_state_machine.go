@@ -52,12 +52,20 @@ func (c *conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 }
 
 func (c *conversation) receiveQueryMessage(msg []byte) (toSend []byte, err error) {
-	// TODO: this is not fit for auth state
+	v, ok := acceptOTRRequest(c.policies, msg)
+	if !ok {
+		return nil, errInvalidVersion
+	}
 
-	c.ensureAKE()
-	c.ake.state, toSend, err = c.ake.state.receiveQueryMessage(c, msg)
+	//TODO set the version for every existing otrContext
+	c.version = v
+	c.senderInstanceTag = generateInstanceTag()
+
+	toSend, err = c.dhCommitMessage()
 
 	if err == nil {
+		c.ensureAKE()
+		c.ake.state = authStateAwaitingDHKey{}
 		c.keys.ourKeyID = 0
 		c.keys.ourCurrentDHKeys = dhKeyPair{}
 	}
@@ -77,40 +85,17 @@ type authStateAwaitingSig struct {
 type authStateV1Setup struct{ authStateBase }
 
 type authState interface {
-	receiveQueryMessage(*conversation, []byte) (authState, []byte, error)
 	receiveDHCommitMessage(*conversation, []byte) (authState, []byte, error)
 	receiveDHKeyMessage(*conversation, []byte) (authState, []byte, error)
 	receiveRevealSigMessage(*conversation, []byte) (authState, []byte, error)
 	receiveSigMessage(*conversation, []byte) (authState, []byte, error)
 }
 
-func (authStateBase) receiveQueryMessage(c *conversation, msg []byte) (authState, []byte, error) {
-	return authStateNone{}.receiveQueryMessage(c, msg)
-}
-
 func (authStateBase) receiveDHCommitMessage(c *conversation, msg []byte) (authState, []byte, error) {
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
-func (s authStateNone) receiveQueryMessage(c *conversation, msg []byte) (authState, []byte, error) {
-	v, ok := s.acceptOTRRequest(c.policies, msg)
-	if !ok {
-		return nil, nil, errInvalidVersion
-	}
-
-	//TODO set the version for every existing otrContext
-	c.version = v
-	c.senderInstanceTag = generateInstanceTag()
-
-	out, err := c.dhCommitMessage()
-	if err != nil {
-		return s, nil, err
-	}
-
-	return authStateAwaitingDHKey{}, out, nil
-}
-
-func (authStateNone) parseOTRQueryMessage(msg []byte) []int {
+func parseOTRQueryMessage(msg []byte) []int {
 	ret := []int{}
 
 	if bytes.HasPrefix(msg, queryMarker) && len(msg) > len(queryMarker) {
@@ -133,8 +118,8 @@ func (authStateNone) parseOTRQueryMessage(msg []byte) []int {
 	return ret
 }
 
-func (s authStateNone) acceptOTRRequest(p policies, msg []byte) (otrVersion, bool) {
-	versions := s.parseOTRQueryMessage(msg)
+func acceptOTRRequest(p policies, msg []byte) (otrVersion, bool) {
+	versions := parseOTRQueryMessage(msg)
 
 	for _, v := range versions {
 		switch {
