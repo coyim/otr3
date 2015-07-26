@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
 	"io"
 	"math/big"
@@ -23,8 +22,6 @@ type conversation struct {
 	authState           authState
 	msgState            msgState
 	r                   [16]byte
-	encryptedGx         []byte
-	hashedGx            [sha256.Size]byte
 	sigKey              akeKeys
 	senderInstanceTag   uint32
 	receiverInstanceTag uint32
@@ -162,21 +159,4 @@ func (c *conversation) processDataMessage(msg []byte) []byte {
 	dataMessage.deserialize(msg)
 
 	return []byte{}
-}
-
-func (c *conversation) rand() io.Reader {
-	if c.Rand != nil {
-		return c.Rand
-	}
-	return c.Rand
-}
-
-func (c *conversation) randMPI(buf []byte) (*big.Int, bool) {
-	_, err := io.ReadFull(c.rand(), buf)
-
-	if err != nil {
-		return nil, false
-	}
-
-	return new(big.Int).SetBytes(buf), true
 }

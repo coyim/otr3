@@ -115,8 +115,8 @@ func aliceContextAtAwaitingRevealSig() *conversation {
 	c.authState = authStateAwaitingRevealSig{}
 	c.ourKey = alicePrivateKey
 
-	copy(c.hashedGx[:], expectedHashedGxValue) //stored at receiveDHCommit
-	c.encryptedGx = expectedEncryptedGxValue   //stored at receiveDHCommit
+	copy(c.ake.hashedGx[:], expectedHashedGxValue) //stored at receiveDHCommit
+	c.ake.encryptedGx = expectedEncryptedGxValue   //stored at receiveDHCommit
 
 	c.setSecretExponent(fixedy) //stored at sendDHKey
 
@@ -230,8 +230,8 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing
 
 	authStateNone{}.receiveDHCommitMessage(c, dhCommitMsg)
 
-	assertDeepEquals(t, c.hashedGx[:], hashedGx)
-	assertDeepEquals(t, c.encryptedGx, encryptedGx)
+	assertDeepEquals(t, c.ake.hashedGx[:], hashedGx)
+	assertDeepEquals(t, c.ake.encryptedGx, encryptedGx)
 }
 
 func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing.T) {
@@ -249,9 +249,10 @@ func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing
 
 func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedGx(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
+	c.startAKE()
 	//TODO needs to stores encryptedGx and hashedGx when it is generated
-	c.encryptedGx = []byte{0x02}         //some encryptedGx
-	c.hashedGx = [sha256.Size]byte{0x05} //some hashedGx
+	c.ake.encryptedGx = []byte{0x02}         //some encryptedGx
+	c.ake.hashedGx = [sha256.Size]byte{0x05} //some hashedGx
 
 	newDHCommitMsg := fixtureDHCommitMsg()
 	newMsg, newEncryptedGx, _ := extractData(newDHCommitMsg[c.version.headerLen():])
@@ -260,8 +261,8 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 	authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsg())
 
 	authStateAwaitingRevealSig{}.receiveDHCommitMessage(c, newDHCommitMsg)
-	assertDeepEquals(t, c.encryptedGx, newEncryptedGx)
-	assertDeepEquals(t, c.hashedGx[:], newHashedGx)
+	assertDeepEquals(t, c.ake.encryptedGx, newEncryptedGx)
+	assertDeepEquals(t, c.ake.hashedGx[:], newHashedGx)
 }
 
 func Test_receiveDHCommit_AtAuthAwaitingSigTransitionsToAwaitingRevSigAndSendsNewDHKeyMsg(t *testing.T) {
@@ -279,7 +280,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 	//make sure we store the same alues when creating the DH commit
 	c := newConversation(otrV3{}, fixtureRand())
 	c.startAKE()
-	c.encryptedGx = ourDHCommitAKE.encryptedGx
+	c.ake.encryptedGx = ourDHCommitAKE.ake.encryptedGx
 	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
 
 	// force their hashedGx to be lower than ours

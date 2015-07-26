@@ -13,6 +13,16 @@ type ake struct {
 	secretExponent   *big.Int
 	ourPublicValue   *big.Int
 	theirPublicValue *big.Int
+	encryptedGx      []byte
+	hashedGx         [sha256.Size]byte
+}
+
+func (c *conversation) startAKE() {
+	c.ake = new(ake)
+}
+
+func (c *conversation) finishAKE() {
+	c.ake = nil
 }
 
 func (c *conversation) calcAKEKeys(s *big.Int) {
@@ -62,17 +72,6 @@ func (c *conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	return xb, nil
 }
 
-func (c *conversation) randomInto(b []byte) error {
-	if _, err := io.ReadFull(c.rand(), b); err != nil {
-		return errShortRandomRead
-	}
-	return nil
-}
-
-func (c *conversation) startAKE() {
-	c.ake = new(ake)
-}
-
 // dhCommitMessage = bob = x
 // Bob ---- DH Commit -----------> Alice
 func (c *conversation) dhCommitMessage() ([]byte, error) {
@@ -92,7 +91,7 @@ func (c *conversation) dhCommitMessage() ([]byte, error) {
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
-	c.encryptedGx, _ = encrypt(c.r[:], appendMPI(nil, c.ake.ourPublicValue))
+	c.ake.encryptedGx, _ = encrypt(c.r[:], appendMPI(nil, c.ake.ourPublicValue))
 	return c.serializeDHCommit(c.ake.ourPublicValue), nil
 }
 
@@ -100,7 +99,7 @@ func (c *conversation) serializeDHCommit(public *big.Int) []byte {
 	dhCommitMsg := dhCommit{
 		messageHeader: c.messageHeader(),
 		gx:            public,
-		encryptedGx:   c.encryptedGx,
+		encryptedGx:   c.ake.encryptedGx,
 	}
 	return dhCommitMsg.serialize()
 }
@@ -174,8 +173,8 @@ func (c *conversation) processDHCommit(msg []byte) error {
 	if err != nil {
 		return err
 	}
-	c.encryptedGx = dhCommitMsg.encryptedGx
-	c.hashedGx = dhCommitMsg.hashedGx
+	c.ake.encryptedGx = dhCommitMsg.encryptedGx
+	c.ake.hashedGx = dhCommitMsg.hashedGx
 	return err
 }
 
@@ -211,11 +210,11 @@ func (c *conversation) processRevealSig(msg []byte) (err error) {
 	encryptedSig := revealSigMsg.encryptedSig
 
 	//check Decrypted Gx and signature
-	decryptedGx := make([]byte, len(c.encryptedGx))
-	if err = decrypt(r, decryptedGx, c.encryptedGx); err != nil {
+	decryptedGx := make([]byte, len(c.ake.encryptedGx))
+	if err = decrypt(r, decryptedGx, c.ake.encryptedGx); err != nil {
 		return
 	}
-	if err = checkDecryptedGx(decryptedGx, c.hashedGx[:]); err != nil {
+	if err = checkDecryptedGx(decryptedGx, c.ake.hashedGx[:]); err != nil {
 		return
 	}
 
