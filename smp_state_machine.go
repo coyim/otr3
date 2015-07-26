@@ -25,7 +25,7 @@ type smpState interface {
 
 func (c *conversation) restart() []byte {
 	var ret smpMessage
-	c.smpState, ret, _ = abortStateMachine()
+	c.smp.state, ret, _ = abortStateMachine()
 	return ret.tlv().serialize()
 }
 
@@ -78,7 +78,7 @@ func (smpStateExpect1) receiveMessage1(c *conversation, m smp1Message) (smpState
 		return abortStateMachineWith(err)
 	}
 
-	ret, ok := c.generateSMP2(c.secret, m)
+	ret, ok := c.generateSMP2(c.smp.secret, m)
 	if !ok {
 		return abortStateMachineWith(errShortRandomRead)
 	}
@@ -89,12 +89,12 @@ func (smpStateExpect1) receiveMessage1(c *conversation, m smp1Message) (smpState
 func (smpStateExpect2) receiveMessage2(c *conversation, m smp2Message) (smpState, smpMessage, error) {
 	//TODO: make sure c.s1 is stored when it is generated
 
-	err := c.verifySMP2(c.s1, m)
+	err := c.verifySMP2(c.smp.s1, m)
 	if err != nil {
 		return abortStateMachineWith(err)
 	}
 
-	ret, ok := c.generateSMP3(c.secret, c.s1, m)
+	ret, ok := c.generateSMP3(c.smp.secret, c.smp.s1, m)
 	if !ok {
 		return abortStateMachineWith(errShortRandomRead)
 	}
@@ -105,17 +105,17 @@ func (smpStateExpect2) receiveMessage2(c *conversation, m smp2Message) (smpState
 func (smpStateExpect3) receiveMessage3(c *conversation, m smp3Message) (smpState, smpMessage, error) {
 	//TODO: make sure c.s2 is stored when it is generated
 
-	err := c.verifySMP3(c.s2, m)
+	err := c.verifySMP3(c.smp.s2, m)
 	if err != nil {
 		return abortStateMachineWith(err)
 	}
 
-	err = c.verifySMP3ProtocolSuccess(c.s2, m)
+	err = c.verifySMP3ProtocolSuccess(c.smp.s2, m)
 	if err != nil {
 		return abortStateMachineWith(err)
 	}
 
-	ret, ok := c.generateSMP4(c.secret, c.s2, m)
+	ret, ok := c.generateSMP4(c.smp.secret, c.smp.s2, m)
 	if !ok {
 		return abortStateMachineWith(errShortRandomRead)
 	}
@@ -126,12 +126,12 @@ func (smpStateExpect3) receiveMessage3(c *conversation, m smp3Message) (smpState
 func (smpStateExpect4) receiveMessage4(c *conversation, m smp4Message) (smpState, smpMessage, error) {
 	//TODO: make sure c.s3 is stored when it is generated
 
-	err := c.verifySMP4(c.s3, m)
+	err := c.verifySMP4(c.smp.s3, m)
 	if err != nil {
 		return abortStateMachineWith(err)
 	}
 
-	err = c.verifySMP4ProtocolSuccess(c.s1, c.s3, m)
+	err = c.verifySMP4ProtocolSuccess(c.smp.s1, c.smp.s3, m)
 	if err != nil {
 		return abortStateMachineWith(err)
 	}
@@ -140,27 +140,27 @@ func (smpStateExpect4) receiveMessage4(c *conversation, m smp4Message) (smpState
 }
 
 func (m smp1Message) receivedMessage(c *conversation) (ret smpMessage, err error) {
-	c.smpState, ret, err = c.smpState.receiveMessage1(c, m)
+	c.smp.state, ret, err = c.smp.state.receiveMessage1(c, m)
 	return
 }
 
 func (m smp2Message) receivedMessage(c *conversation) (ret smpMessage, err error) {
-	c.smpState, ret, err = c.smpState.receiveMessage2(c, m)
+	c.smp.state, ret, err = c.smp.state.receiveMessage2(c, m)
 	return
 }
 
 func (m smp3Message) receivedMessage(c *conversation) (ret smpMessage, err error) {
-	c.smpState, ret, err = c.smpState.receiveMessage3(c, m)
+	c.smp.state, ret, err = c.smp.state.receiveMessage3(c, m)
 	return
 }
 
 func (m smp4Message) receivedMessage(c *conversation) (ret smpMessage, err error) {
-	c.smpState, ret, err = c.smpState.receiveMessage4(c, m)
+	c.smp.state, ret, err = c.smp.state.receiveMessage4(c, m)
 	return
 }
 
 func (m smpMessageAbort) receivedMessage(c *conversation) (ret smpMessage, err error) {
-	c.smpState, ret = c.smpState.receiveAbortMessage(c, m)
+	c.smp.state, ret = c.smp.state.receiveAbortMessage(c, m)
 	return
 }
 

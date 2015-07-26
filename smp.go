@@ -5,6 +5,14 @@ import (
 	"math/big"
 )
 
+type smp struct {
+	state  smpState
+	secret *big.Int
+	s1     smp1State
+	s2     smp2State
+	s3     smp3State
+}
+
 const smpVersion = 1
 
 func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) []byte {

@@ -15,9 +15,8 @@ type ake struct {
 	theirPublicValue *big.Int
 	encryptedGx      []byte
 	hashedGx         [sha256.Size]byte
-
-	revealKey akeKeys
-	sigKey    akeKeys
+	revealKey        akeKeys
+	sigKey           akeKeys
 }
 
 func (c *conversation) startAKE() {

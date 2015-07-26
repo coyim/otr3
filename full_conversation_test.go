@@ -7,7 +7,7 @@ import (
 
 func Test_conversation_SMPStateMachineStartsAtSmpExpect1(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	assertEquals(t, c.smpState, smpStateExpect1{})
+	assertEquals(t, c.smp.state, smpStateExpect1{})
 }
 
 func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T) {
@@ -26,7 +26,7 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 
 		toSend, err := c.receive(m)
 		assertEquals(t, err, errEncryptedMessageWithNoSecureChannel)
-		assertEquals(t, c.smpState, smpStateExpect1{})
+		assertEquals(t, c.smp.state, smpStateExpect1{})
 		assertDeepEquals(t, toSend, smpAbortMsg)
 	}
 }

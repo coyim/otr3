@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-	"math/big"
 )
 
 const (
@@ -14,12 +13,6 @@ const (
 type conversation struct {
 	version otrVersion
 	Rand    io.Reader
-
-	smpState smpState
-	secret   *big.Int
-	s1       smp1State
-	s2       smp2State
-	s3       smp3State
 
 	authState           authState
 	msgState            msgState
@@ -35,6 +28,7 @@ type conversation struct {
 	ssid     [8]byte
 	policies policies
 	ake      *ake
+	smp      smp
 }
 
 type msgState int
@@ -47,9 +41,11 @@ const (
 
 func newConversation(v otrVersion, rand io.Reader) *conversation {
 	return &conversation{
-		version:   v,
-		Rand:      rand,
-		smpState:  smpStateExpect1{},
+		version: v,
+		Rand:    rand,
+		smp: smp{
+			state: smpStateExpect1{},
+		},
 		authState: authStateNone{},
 		policies:  policies(0),
 	}
