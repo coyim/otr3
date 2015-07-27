@@ -162,7 +162,6 @@ type dataMsg struct {
 	y                           *big.Int
 	topHalfCtr                  [8]byte
 	encryptedMsg                []byte
-	macKey                      macKey
 	authenticator               [20]byte
 	oldMACKeys                  []macKey
 	serializeUnsignedCache      []byte
@@ -246,9 +245,8 @@ func (c *dataMsg) deserialize(msg []byte) error {
 		return errors.New("otr: dataMsg.deserialize corrupted encryptedMsg")
 	}
 
-	//FIXME: pass macKey instead of deserialize it from dataMsg
-	copy(c.macKey[:], in)
-	in = in[len(c.macKey):]
+	copy(c.authenticator[:], in)
+	in = in[len(c.authenticator):]
 
 	var revKeysBytes []byte
 	in, revKeysBytes, ok = extractData(in)
