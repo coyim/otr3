@@ -177,7 +177,7 @@ func (c *dataMsg) sign(key macKey) {
 	copy(c.authenticator[:], mac.Sum(nil))
 }
 
-func (c *dataMsg) checkSign(key macKey) error {
+func (c dataMsg) checkSign(key macKey) error {
 	var authenticatorReceived [20]byte
 	mac := hmac.New(sha1.New, key[:])
 	mac.Write(c.serializeUnsignedCache)
