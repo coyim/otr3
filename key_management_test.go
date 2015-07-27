@@ -132,3 +132,42 @@ func Test_rotateOurKeys_doesNotRotateIfWeDontReceiveOurCurrentKeyID(t *testing.T
 	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedx)
 	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgx)
 }
+
+func Test_revealMACKeys_ForgotOldKeysAfterBeenCalled(t *testing.T) {
+	oldMACKeys := []macKey{
+		macKey{0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03},
+	}
+	c := keyManagementContext{
+		oldMACKeys: oldMACKeys,
+	}
+
+	maKeys := c.revealMACKeys()
+
+	assertDeepEquals(t, maKeys, oldMACKeys)
+	assertDeepEquals(t, c.oldMACKeys, []macKey{})
+}
+
+func Test_rotateTheirKey_revealAllMACKeysAssociatedWithTheirPreviousPubKey(t *testing.T) {
+	k := macKey{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	k1 := macKey{0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	k2 := macKey{0x02, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+	expectedMACKeys := []macKey{
+		k1, k2,
+	}
+
+	c := keyManagementContext{
+		theirKeyID:            2,
+		theirPreviousDHPubKey: big.NewInt(1),
+		usedMACKeys: []macKeyHistory{
+			macKeyHistory{theirKeyID: 1, sendingKey: k1, receivingKey: k2},
+			macKeyHistory{theirKeyID: 2, sendingKey: k, receivingKey: k},
+		},
+	}
+
+	c.rotateTheirKey(2, big.NewInt(2))
+
+	assertDeepEquals(t, c.oldMACKeys, expectedMACKeys)
+	assertDeepEquals(t, len(c.usedMACKeys), 1)
+	assertDeepEquals(t, c.usedMACKeys[0].sendingKey, k)
+}

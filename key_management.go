@@ -33,12 +33,20 @@ type keyManagementContext struct {
 
 	ourCounter uint64
 
-	oldMACKeys []macKey
+	//finda better naming for used vs old MAC keys
+	usedMACKeys []macKeyHistory
+	oldMACKeys  []macKey
 }
 
-// should forget about MAC keys once they have been revealed
+type macKeyHistory struct {
+	ourKeyID, theirKeyID     uint32
+	sendingKey, receivingKey macKey
+}
+
 func (c *keyManagementContext) revealMACKeys() []macKey {
-	return c.oldMACKeys
+	ret := c.oldMACKeys
+	c.oldMACKeys = []macKey{}
+	return ret
 }
 
 func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, newPrivKey *big.Int) {
@@ -55,7 +63,17 @@ func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, newPrivKey *
 
 func (c *keyManagementContext) rotateTheirKey(senderKeyID uint32, pubDHKey *big.Int) {
 	if senderKeyID == c.theirKeyID {
-		//TODO: reveal MAC keys for c.theirPreviousDHPubKey
+
+		//reveal all previously used MAC keys for theirID
+		for index, key := range c.usedMACKeys {
+			if key.theirKeyID == (senderKeyID - 1) {
+				c.oldMACKeys = append(c.oldMACKeys, key.sendingKey, key.receivingKey)
+
+				l := len(c.usedMACKeys)
+				c.usedMACKeys[index], c.usedMACKeys = c.usedMACKeys[l-1], c.usedMACKeys[:l-1]
+			}
+		}
+
 		c.theirPreviousDHPubKey = c.theirCurrentDHPubKey
 		c.theirCurrentDHPubKey = pubDHKey
 		c.theirKeyID++
