@@ -17,6 +17,17 @@ func (c *conversation) ignoreMessage(msg []byte) bool {
 
 const minimumMessageLength = 3 // length of protocol version (SHORT) and message type (BYTE)
 
+func (c *conversation) generateNewDHKeyPair() error {
+	x, ok := c.randMPI(make([]byte, 40))
+	if !ok {
+		return errShortRandomRead
+	}
+
+	c.keys.generateNewDHKeyPair(x)
+
+	return nil
+}
+
 func (c *conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 	if len(msg) < minimumMessageLength {
 		return nil, errInvalidOTRMessage
@@ -37,11 +48,19 @@ func (c *conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 		c.ake.state, toSend, err = c.ake.state.receiveRevealSigMessage(c, msg)
 		if err == nil {
 			c.msgState = encrypted
+			c.keys.ourKeyID = 1
+			if err = c.generateNewDHKeyPair(); err != nil {
+				return
+			}
 		}
 	case msgTypeSig:
 		c.ake.state, toSend, err = c.ake.state.receiveSigMessage(c, msg)
 		if err == nil {
 			c.msgState = encrypted
+			c.keys.ourKeyID = 1
+			if err = c.generateNewDHKeyPair(); err != nil {
+				return
+			}
 		}
 	default:
 		err = fmt.Errorf("otr: unknown message type 0x%X", msg[2])

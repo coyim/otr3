@@ -70,6 +70,15 @@ func Test_AKEHappyPath(t *testing.T) {
 	toSend, err = bob.receive(toSend)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateNone{})
+
+	// "When starting a private conversation [...],
+	// generate two DH key pairs for yourself"
+	assertEquals(t, alice.keys.ourKeyID, uint32(2))
+	assertEquals(t, len(alice.keys.ourCurrentDHKeys.priv.Bytes()), 40)
+	assertEquals(t, len(alice.keys.ourPreviousDHKeys.priv.Bytes()), 40)
+	assertEquals(t, bob.keys.ourKeyID, uint32(2))
+	assertEquals(t, len(bob.keys.ourCurrentDHKeys.priv.Bytes()), 40)
+	assertEquals(t, len(bob.keys.ourPreviousDHKeys.priv.Bytes()), 40)
 }
 
 func Test_AKENotAllowV2(t *testing.T) {
