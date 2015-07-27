@@ -148,10 +148,18 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	return
 }
 
-func (c *conversation) processDataMessage(msg []byte) []byte {
+func (c *conversation) processDataMessage(msg []byte) ([]byte, error) {
 	msg = msg[c.version.headerLen():]
 	dataMessage := dataMsg{}
 	dataMessage.deserialize(msg)
+	sessionKeys, err := c.keys.calculateDHSessionKeys(dataMessage.recipientKeyID, dataMessage.senderKeyID)
+	if err != nil {
+		return nil, err
+	}
+	if err := dataMessage.checkSign(sessionKeys.receivingMACKey); err != nil {
+		return nil, err
+	}
+	//TODO: dataMessage.decrypt(sessionKeys.receivingAESKey)
 
-	return []byte{}
+	return []byte{}, nil
 }
