@@ -52,6 +52,16 @@ func (c *keyManagementContext) revealMACKeys() []macKey {
 func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, newPrivKey *big.Int) {
 	if recipientKeyID == c.ourKeyID {
 		//TODO: reveal MAC keys for c.ourPreviousDHKeys
+
+		for index, key := range c.usedMACKeys {
+			if key.ourKeyID == (recipientKeyID - 1) {
+				c.oldMACKeys = append(c.oldMACKeys, key.sendingKey, key.receivingKey)
+
+				l := len(c.usedMACKeys)
+				c.usedMACKeys[index], c.usedMACKeys = c.usedMACKeys[l-1], c.usedMACKeys[:l-1]
+			}
+		}
+
 		c.ourPreviousDHKeys = c.ourCurrentDHKeys
 		c.ourCurrentDHKeys = dhKeyPair{
 			priv: newPrivKey,
