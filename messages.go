@@ -163,10 +163,18 @@ type dataMsg struct {
 	topHalfCtr                  [8]byte
 	encryptedMsg                []byte
 	macKey                      macKey
+	authenticator               [20]byte
 	oldMACKeys                  []macKey
 }
 
-func (c dataMsg) serialize() []byte {
+func (c *dataMsg) sign() *dataMsg {
+	mac := hmac.New(sha1.New, c.macKey[:])
+	mac.Write(c.serializeUnsigned())
+	copy(c.authenticator[:], mac.Sum(nil))
+	return c
+}
+
+func (c dataMsg) serializeUnsigned() []byte {
 	var out []byte
 
 	out = appendShort(out, c.protocolVersion)
@@ -176,7 +184,6 @@ func (c dataMsg) serialize() []byte {
 		out = appendWord(out, c.senderInstanceTag)
 		out = appendWord(out, c.receiverInstanceTag)
 	}
-
 	//TODO: implement IGNORE_UNREADABLE
 	out = append(out, c.flag)
 	out = appendWord(out, c.senderKeyID)
@@ -184,10 +191,18 @@ func (c dataMsg) serialize() []byte {
 	out = appendMPI(out, c.y)
 	out = append(out, c.topHalfCtr[:]...)
 	out = appendData(out, c.encryptedMsg)
+	return out
+}
 
-	mac := hmac.New(sha1.New, c.macKey[:])
-	mac.Write(out)
-	out = mac.Sum(out)
+func (c dataMsg) serialize() []byte {
+	out := c.serializeUnsigned()
+	c.sign()
+	/*
+		mac := hmac.New(sha1.New, c.macKey[:])
+		mac.Write(out)
+		out = mac.Sum(out)
+	*/
+	out = append(out, c.authenticator[:]...)
 
 	keyLen := len(macKey{})
 	revKeys := make([]byte, 0, len(c.oldMACKeys)*keyLen)
