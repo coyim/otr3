@@ -57,6 +57,15 @@ func (c *keyManagementContext) revealMACKeys() []macKey {
 	return ret
 }
 
+func (c *keyManagementContext) generateNewDHKeyPair(newPrivKey *big.Int) {
+	c.ourPreviousDHKeys = c.ourCurrentDHKeys
+	c.ourCurrentDHKeys = dhKeyPair{
+		priv: newPrivKey,
+		pub:  modExp(g1, newPrivKey),
+	}
+	c.ourKeyID++
+}
+
 func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, newPrivKey *big.Int) {
 	if recipientKeyID == c.ourKeyID {
 		//TODO: reveal MAC keys for c.ourPreviousDHKeys
@@ -69,12 +78,7 @@ func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, newPrivKey *
 			}
 		}
 
-		c.ourPreviousDHKeys = c.ourCurrentDHKeys
-		c.ourCurrentDHKeys = dhKeyPair{
-			priv: newPrivKey,
-			pub:  modExp(g1, newPrivKey),
-		}
-		c.ourKeyID++
+		c.generateNewDHKeyPair(newPrivKey)
 	}
 }
 
