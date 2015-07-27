@@ -31,6 +31,32 @@ func Test_calculateDHSessionKeys(t *testing.T) {
 	assertDeepEquals(t, keys.receivingMACKey[:], receivingMACKey)
 }
 
+func Test_calculateDHSessionKeys_storesGeneratedMACKeys(t *testing.T) {
+	ourKeyID := uint32(1)
+	theirKeyID := uint32(2)
+
+	c := keyManagementContext{
+		ourKeyID:             ourKeyID,
+		theirKeyID:           theirKeyID,
+		theirCurrentDHPubKey: big.NewInt(1),
+		ourCurrentDHKeys: dhKeyPair{
+			priv: big.NewInt(1),
+			pub:  big.NewInt(1),
+		},
+	}
+	keys, _ := c.calculateDHSessionKeys(ourKeyID, theirKeyID)
+
+	expectedMACKeys := macKeyUsage{
+		ourKeyID:     ourKeyID,
+		theirKeyID:   theirKeyID,
+		sendingKey:   keys.sendingMACKey,
+		receivingKey: keys.receivingMACKey,
+	}
+
+	assertDeepEquals(t, len(c.macKeyHistory.items), 1)
+	assertDeepEquals(t, c.macKeyHistory.items[0], expectedMACKeys)
+}
+
 func Test_calculateDHSessionKeys_failsWhenOurKeyIsUnknown(t *testing.T) {
 	c := keyManagementContext{
 		ourKeyID:   1,

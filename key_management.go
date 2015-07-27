@@ -46,9 +46,19 @@ type macKeyHistory struct {
 	items []macKeyUsage
 }
 
-func (h *macKeyHistory) deleteKeyAt(index int) {
+func (h *macKeyHistory) deleteKeysAt(index int) {
 	l := len(h.items)
 	h.items[index], h.items = h.items[l-1], h.items[:l-1]
+}
+
+func (h *macKeyHistory) addKeys(ourKeyID uint32, theirKeyID uint32, sendingMACKey macKey, receivingMACKey macKey) {
+	macKeys := macKeyUsage{
+		ourKeyID:     ourKeyID,
+		theirKeyID:   theirKeyID,
+		sendingKey:   sendingMACKey,
+		receivingKey: receivingMACKey,
+	}
+	h.items = append(h.items, macKeys)
 }
 
 func (c *keyManagementContext) revealMACKeys() []macKey {
@@ -70,7 +80,7 @@ func (c *keyManagementContext) revealMACKeysForOurPreviousKeyID() {
 	for index, key := range c.macKeyHistory.items {
 		if key.ourKeyID == (c.ourKeyID - 1) {
 			c.oldMACKeys = append(c.oldMACKeys, key.sendingKey, key.receivingKey)
-			c.macKeyHistory.deleteKeyAt(index)
+			c.macKeyHistory.deleteKeysAt(index)
 		}
 	}
 }
@@ -87,7 +97,7 @@ func (c *keyManagementContext) revealMACKeysForTheirPreviousKeyID() {
 	for index, key := range c.macKeyHistory.items {
 		if key.theirKeyID == (c.theirKeyID - 1) {
 			c.oldMACKeys = append(c.oldMACKeys, key.sendingKey, key.receivingKey)
-			c.macKeyHistory.deleteKeyAt(index)
+			c.macKeyHistory.deleteKeysAt(index)
 		}
 	}
 }
@@ -150,6 +160,7 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	ret.sendingMACKey = sha1.Sum(ret.sendingAESKey[:])
 	ret.receivingMACKey = sha1.Sum(ret.receivingAESKey[:])
 
+	c.macKeyHistory.addKeys(ourKeyID, theirKeyID, ret.sendingMACKey, ret.receivingMACKey)
 	return ret, nil
 }
 
