@@ -270,12 +270,12 @@ func (c *dataMsg) deserialize(msg []byte) error {
 	var revKeysBytes []byte
 	msg, revKeysBytes, ok := extractData(msg)
 	if !ok {
-		return errors.New("otr: failed to deserialize data message")
+		return errors.New("otr: dataMsg.deserialize corrupted revealMACKeys")
 	}
 	for len(revKeysBytes) > 0 {
 		var revKey macKey
 		if len(revKeysBytes) < sha1.Size {
-			return errors.New("otr: failed to deserialize data message")
+			return errors.New("otr: dataMsg.deserialize corrupted revealMACKeys")
 		}
 		copy(revKey[:], revKeysBytes)
 		c.oldMACKeys = append(c.oldMACKeys, revKey)
