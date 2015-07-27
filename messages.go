@@ -5,6 +5,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/subtle"
 	"errors"
 	"math/big"
 )
@@ -176,6 +177,17 @@ func (c *dataMsg) sign(key macKey) {
 	copy(c.authenticator[:], mac.Sum(nil))
 }
 
+func (c *dataMsg) checkSign(key macKey) error {
+	var authenticatorReceived [20]byte
+	mac := hmac.New(sha1.New, key[:])
+	mac.Write(c.serializeUnsignedCache)
+	copy(authenticatorReceived[:], mac.Sum(nil))
+	if subtle.ConstantTimeCompare(c.authenticator[:], authenticatorReceived[:]) == 0 {
+		return errors.New("otr: bad authenticator MAC in data message")
+	}
+	return nil
+}
+
 func (c dataMsg) serializeUnsigned() []byte {
 	var out []byte
 
@@ -196,24 +208,7 @@ func (c dataMsg) serializeUnsigned() []byte {
 	return out
 }
 
-func (c dataMsg) serialize() []byte {
-	if c.serializeUnsignedCache == nil {
-		c.serializeUnsignedCache = c.serializeUnsigned()
-	}
-	out := c.serializeUnsignedCache
-	out = append(out, c.authenticator[:]...)
-
-	keyLen := len(macKey{})
-	revKeys := make([]byte, 0, len(c.oldMACKeys)*keyLen)
-	for _, k := range c.oldMACKeys {
-		revKeys = append(revKeys, k[:]...)
-	}
-	out = appendData(out, revKeys)
-
-	return out
-}
-
-func (c *dataMsg) deserialize(msg []byte) error {
+func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	if len(msg) == 0 {
 		return errors.New("otr: dataMsg.deserialize empty message")
 	}
@@ -243,17 +238,42 @@ func (c *dataMsg) deserialize(msg []byte) error {
 	if !ok {
 		return errors.New("otr: dataMsg.deserialize corrupted encryptedMsg")
 	}
+	c.serializeUnsignedCache = msg[:len(msg)-len(in)]
+	return nil
+}
 
-	copy(c.authenticator[:], in)
-	in = in[len(c.authenticator):]
+func (c dataMsg) serialize() []byte {
+	if c.serializeUnsignedCache == nil {
+		c.serializeUnsignedCache = c.serializeUnsigned()
+	}
+	out := c.serializeUnsignedCache
+	out = append(out, c.authenticator[:]...)
+
+	keyLen := len(macKey{})
+	revKeys := make([]byte, 0, len(c.oldMACKeys)*keyLen)
+	for _, k := range c.oldMACKeys {
+		revKeys = append(revKeys, k[:]...)
+	}
+	out = appendData(out, revKeys)
+
+	return out
+}
+
+func (c *dataMsg) deserialize(msg []byte) error {
+	if err := c.deserializeUnsigned(msg); err != nil {
+		return err
+	}
+	msg = msg[len(c.serializeUnsignedCache):]
+	copy(c.authenticator[:], msg)
+	msg = msg[len(c.authenticator):]
 
 	var revKeysBytes []byte
-	in, revKeysBytes, ok = extractData(in)
+	msg, revKeysBytes, ok := extractData(msg)
 	if !ok {
 		return errors.New("otr: failed to deserialize data message")
 	}
 	for len(revKeysBytes) > 0 {
-		var revKey [sha1.Size]byte
+		var revKey macKey
 		if len(revKeysBytes) < sha1.Size {
 			return errors.New("otr: failed to deserialize data message")
 		}
