@@ -327,14 +327,16 @@ func Test_dataMsg_serializeWithAuthenticator(t *testing.T) {
 	m := dataMsg{
 		y:            big.NewInt(0x01),
 		encryptedMsg: []byte{0x01},
-		macKey:       sendingMACKey,
-	}.serialize()
+	}
+	m.sign(sendingMACKey)
+
+	msg := m.serialize()
 
 	mac := hmac.New(sha1.New, sendingMACKey[:])
-	mac.Write(m[:bodyLen])
+	mac.Write(msg[:bodyLen])
 	auth := mac.Sum(nil)
 
-	assertDeepEquals(t, m[bodyLen:bodyLen+len(auth)], auth[:])
+	assertDeepEquals(t, msg[bodyLen:bodyLen+len(auth)], auth[:])
 }
 
 func Test_dataMsg_serializeExposesOldMACKeys(t *testing.T) {

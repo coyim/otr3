@@ -165,11 +165,15 @@ type dataMsg struct {
 	macKey                      macKey
 	authenticator               [20]byte
 	oldMACKeys                  []macKey
+	serializeUnsignedCache      []byte
 }
 
-func (c *dataMsg) sign() *dataMsg {
-	mac := hmac.New(sha1.New, c.macKey[:])
-	mac.Write(c.serializeUnsigned())
+func (c *dataMsg) sign(key macKey) *dataMsg {
+	if c.serializeUnsignedCache == nil {
+		c.serializeUnsignedCache = c.serializeUnsigned()
+	}
+	mac := hmac.New(sha1.New, key[:])
+	mac.Write(c.serializeUnsignedCache)
 	copy(c.authenticator[:], mac.Sum(nil))
 	return c
 }
@@ -195,13 +199,10 @@ func (c dataMsg) serializeUnsigned() []byte {
 }
 
 func (c dataMsg) serialize() []byte {
-	out := c.serializeUnsigned()
-	c.sign()
-	/*
-		mac := hmac.New(sha1.New, c.macKey[:])
-		mac.Write(out)
-		out = mac.Sum(out)
-	*/
+	if c.serializeUnsignedCache == nil {
+		c.serializeUnsignedCache = c.serializeUnsigned()
+	}
+	out := c.serializeUnsignedCache
 	out = append(out, c.authenticator[:]...)
 
 	keyLen := len(macKey{})
