@@ -86,8 +86,7 @@ func (c *conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		y:              c.keys.ourCurrentDHKeys.pub,
 		topHalfCtr:     topHalfCtr,
 		encryptedMsg:   encrypted,
-		//TODO after key management
-		oldMACKeys: []macKey{},
+		oldMACKeys:     c.keys.revealMACKeys(),
 	}
 
 	return dataMessage

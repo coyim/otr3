@@ -32,6 +32,13 @@ type keyManagementContext struct {
 	theirCurrentDHPubKey, theirPreviousDHPubKey *big.Int
 
 	ourCounter uint64
+
+	oldMACKeys []macKey
+}
+
+// should forget about MAC keys once they have been revealed
+func (c *keyManagementContext) revealMACKeys() []macKey {
+	return c.oldMACKeys
 }
 
 func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, newPrivKey *big.Int) {
