@@ -292,3 +292,12 @@ func Test_smpStateExpect2_String_returnsTheCorrectString(t *testing.T) {
 func Test_smpStateExpect3_String_returnsTheCorrectString(t *testing.T) {
 	assertEquals(t, smpStateExpect3{}.String(), "SMPSTATE_EXPECT3")
 }
+
+func Test_smpMessageAbort_receivedMessage_setsTheNewState(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.smp.state = smpStateExpect2{}
+	ret, err := smpMessageAbort{}.receivedMessage(c)
+	assertDeepEquals(t, ret, nil)
+	assertDeepEquals(t, err, nil)
+	assertDeepEquals(t, c.smp.state, smpStateExpect1{})
+}

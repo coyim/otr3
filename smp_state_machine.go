@@ -20,7 +20,6 @@ type smpState interface {
 	receiveMessage2(*conversation, smp2Message) (smpState, smpMessage, error)
 	receiveMessage3(*conversation, smp3Message) (smpState, smpMessage, error)
 	receiveMessage4(*conversation, smp4Message) (smpState, smpMessage, error)
-	receiveAbortMessage(*conversation, smpMessageAbort) (smpState, smpMessage)
 }
 
 func (c *conversation) restart() []byte {
@@ -65,11 +64,6 @@ func (smpStateBase) receiveMessage3(c *conversation, m smp3Message) (smpState, s
 
 func (smpStateBase) receiveMessage4(c *conversation, m smp4Message) (smpState, smpMessage, error) {
 	return abortStateMachine()
-}
-
-func (smpStateBase) receiveAbortMessage(c *conversation, m smpMessageAbort) (smpState, smpMessage) {
-	abortStateMachine()
-	return smpStateExpect1{}, nil
 }
 
 func (smpStateExpect1) receiveMessage1(c *conversation, m smp1Message) (smpState, smpMessage, error) {
@@ -160,7 +154,7 @@ func (m smp4Message) receivedMessage(c *conversation) (ret smpMessage, err error
 }
 
 func (m smpMessageAbort) receivedMessage(c *conversation) (ret smpMessage, err error) {
-	c.smp.state, ret = c.smp.state.receiveAbortMessage(c, m)
+	c.smp.state = smpStateExpect1{}
 	return
 }
 
