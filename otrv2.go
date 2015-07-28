@@ -37,3 +37,9 @@ func (v otrV2) needInstanceTag() bool {
 func (v otrV2) headerLen() int {
 	return 3
 }
+
+func (v otrV2) whitespaceTag() []byte {
+	return []byte{
+		0x20, 0x20, 0x09, 0x09, 0x20, 0x20, 0x09, 0x20,
+	}
+}

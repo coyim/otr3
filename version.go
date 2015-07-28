@@ -10,4 +10,5 @@ type otrVersion interface {
 	fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte
 	needInstanceTag() bool
 	headerLen() int
+	whitespaceTag() []byte
 }
