@@ -26,9 +26,11 @@ type ake struct {
 }
 
 func (c *conversation) ensureAKE() {
-	if c.ake == nil {
-		c.startAKE()
+	if c.ake != nil {
+		return
 	}
+
+	c.startAKE()
 }
 
 func (c *conversation) startAKE() {
@@ -153,8 +155,8 @@ func (c *conversation) revealSigMessage() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	macSig := sumHMAC(c.ake.revealKey.m2[:], encryptedSig)
 
+	macSig := sumHMAC(c.ake.revealKey.m2[:], encryptedSig)
 	revealSigMsg := revealSig{
 		messageHeader: c.messageHeader(),
 		r:             c.ake.r,
@@ -175,6 +177,7 @@ func (c *conversation) sigMessage() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	macSig := sumHMAC(c.ake.sigKey.m2[:], encryptedSig)
 	sigMsg := sig{
 		messageHeader: c.messageHeader(),
@@ -193,8 +196,10 @@ func (c *conversation) processDHCommit(msg []byte) error {
 	if err != nil {
 		return err
 	}
+
 	c.ake.encryptedGx = dhCommitMsg.encryptedGx
 	c.ake.hashedGx = dhCommitMsg.hashedGx
+
 	return err
 }
 
@@ -206,6 +211,7 @@ func (c *conversation) processDHKey(msg []byte) (isSame bool, err error) {
 	if err != nil {
 		return false, err
 	}
+
 	//NOTE: This keeps only the first Gy received
 	//Not sure if this is part of the spec,
 	//or simply a crypto/otr safeguard
@@ -213,6 +219,7 @@ func (c *conversation) processDHKey(msg []byte) (isSame bool, err error) {
 		isSame = eq(c.ake.theirPublicValue, dhKeyMsg.gy)
 		return
 	}
+
 	c.ake.theirPublicValue = dhKeyMsg.gy
 	return
 }
@@ -225,6 +232,7 @@ func (c *conversation) processRevealSig(msg []byte) (err error) {
 	if err != nil {
 		return
 	}
+
 	r := revealSigMsg.r[:]
 	theirMAC := revealSigMsg.macSig
 	encryptedSig := revealSigMsg.encryptedSig
@@ -234,6 +242,7 @@ func (c *conversation) processRevealSig(msg []byte) (err error) {
 	if err = decrypt(r, decryptedGx, c.ake.encryptedGx); err != nil {
 		return
 	}
+
 	if err = checkDecryptedGx(decryptedGx, c.ake.hashedGx[:]); err != nil {
 		return
 	}
@@ -273,6 +282,7 @@ func (c *conversation) processSig(msg []byte) (err error) {
 	if err != nil {
 		return
 	}
+
 	theirMAC := sigMsg.macSig
 	encryptedSig := sigMsg.encryptedSig
 
@@ -288,9 +298,11 @@ func (c *conversation) checkedSignatureVerification(mb, sig []byte) error {
 	if !ok {
 		return errors.New("bad signature in encrypted signature")
 	}
+
 	if len(rest) > 0 {
 		return errCorruptEncryptedSignature
 	}
+
 	return nil
 }
 
@@ -354,10 +366,11 @@ func extractGx(decryptedGx []byte) (*big.Int, error) {
 		return gx, errors.New("otr: gx corrupt after decryption")
 	}
 
-	// TODO: is this valid in otrv2 or only otrv3?
+	//FIXME: is this valid in otrv2 or only otrv3?
 	if lt(gx, g1) || gt(gx, pMinusTwo) {
 		return gx, errors.New("otr: DH value out of range")
 	}
+
 	return gx, nil
 }
 
