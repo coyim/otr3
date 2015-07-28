@@ -160,10 +160,12 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	toSend, err = bob.receive(toSend)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateNone{})
+	datamsg := alice.genDataMsg([]byte("hello")).serialize()
 
-	//datamsg := alice.genDataMsg([]byte("hello")).serialize()
-	//out, err := bob.processDataMessage(datamsg)
+	plain, tlvs, err := bob.processDataMessage(datamsg)
 
-	//	assertDeepEquals(t, err, nil)
-	//	assertDeepEquals(t, out, []byte("hello"))
+	assertDeepEquals(t, err, nil)
+	assertDeepEquals(t, plain, []byte("hello"))
+	padding := paddingGranularity - ((len(plain) + tlvHeaderLen + nulByteLen) % paddingGranularity)
+	assertDeepEquals(t, tlvs, []tlv{tlv{tlvType: 0, tlvLength: uint16(padding), tlvValue: make([]byte, padding)}})
 }

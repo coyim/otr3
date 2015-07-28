@@ -74,7 +74,7 @@ func (c *conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		tlvs:  tlvs,
 	}
 
-	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
+	encrypted := plain.encrypt(keys.sendingAESKey)
 	msgHeader := c.messageHeader()
 	dataMessage := dataMsg{
 		messageHeader: msgHeader,
@@ -149,18 +149,19 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	return
 }
 
-func (c *conversation) processDataMessage(msg []byte) ([]byte, error) {
+func (c *conversation) processDataMessage(msg []byte) ([]byte, []tlv, error) {
 	msg = msg[c.version.headerLen():]
 	dataMessage := dataMsg{}
 	dataMessage.deserialize(msg)
 	sessionKeys, err := c.keys.calculateDHSessionKeys(dataMessage.recipientKeyID, dataMessage.senderKeyID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if err := dataMessage.checkSign(sessionKeys.receivingMACKey); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	//TODO: dataMessage.decrypt(sessionKeys.receivingAESKey)
+	plain := dataMsgPlainText{}
+	err = plain.decrypt(sessionKeys.receivingAESKey, dataMessage.encryptedMsg)
 
-	return []byte{}, nil
+	return plain.plain, plain.tlvs, err
 }

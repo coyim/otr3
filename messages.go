@@ -350,10 +350,20 @@ func (c dataMsgPlainText) pad() dataMsgPlainText {
 	return c
 }
 
-func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte, counter [8]byte) []byte {
+func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte) []byte {
 	// This can not cause an error
 	encrypted, _ := encrypt(key[:], c.pad().serialize())
 	return encrypted
+}
+
+func (c *dataMsgPlainText) decrypt(key [aes.BlockSize]byte, src []byte) error {
+	// TODO: why this should equal to the size of encryptedMsg?
+	dst := src
+	if err := decrypt(key[:], dst[:], src); err != nil {
+		return err
+	}
+	c.deserialize(dst[:])
+	return nil
 }
 
 type tlv struct {
