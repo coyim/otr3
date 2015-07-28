@@ -206,3 +206,28 @@ func Test_OTRisDisabledIfNoVersionIsAllowedInThePolicy(t *testing.T) {
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, r, nilB)
 }
+
+func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {
+	expectedWhitespaceTag := []byte{
+		0x20, 0x09, 0x20, 0x20, 0x09, 0x09, 0x09, 0x09,
+		0x20, 0x09, 0x20, 0x09, 0x20, 0x09, 0x20, 0x20,
+		0x20, 0x20, 0x09, 0x09, 0x20, 0x20, 0x09, 0x09,
+	}
+
+	c := newConversation(nil, nil)
+	c.policies = policies(allowV3 | sendWhitespaceTag)
+
+	m := c.send([]byte("hello"))
+	wsPos := len(m) - len(expectedWhitespaceTag)
+	assertDeepEquals(t, m[wsPos:], expectedWhitespaceTag)
+
+}
+
+func Test_send_doesNotAppendWhitespaceTagsWhenItsNotAllowedbyThePolicy(t *testing.T) {
+	m := []byte("hello")
+	c := newConversation(nil, nil)
+	c.policies = policies(allowV3 | ^sendWhitespaceTag)
+
+	toSend := c.send(m)
+	assertDeepEquals(t, toSend, m)
+}

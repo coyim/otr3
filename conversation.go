@@ -102,14 +102,25 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	return dataMessage
 }
 
+func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
+	if !c.policies.has(sendWhitespaceTag) {
+		return message
+	}
+
+	return append(message, genWhitespaceTag(c.policies)...)
+}
+
 func (c *Conversation) send(message []byte) []byte {
 	// FIXME Dummy for now
+	var ret []byte
 
 	if !c.policies.isOTREnabled() {
 		return message
 	}
 
-	return nil
+	ret = c.appendWhitespaceTag(message)
+
+	return ret
 }
 
 var queryMarker = []byte("?OTR")
