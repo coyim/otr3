@@ -888,3 +888,23 @@ func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractSecond
 	_, _, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(c, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x02})
 	assertEquals(t, err, errInvalidOTRMessage)
 }
+
+func Test_authStateNone_String_returnsTheCorrectString(t *testing.T) {
+	assertEquals(t, authStateNone{}.String(), "AUTHSTATE_NONE")
+}
+
+func Test_authStateAwaitingDHKey_String_returnsTheCorrectString(t *testing.T) {
+	assertEquals(t, authStateAwaitingDHKey{}.String(), "AUTHSTATE_AWAITING_DHKEY")
+}
+
+func Test_authStateAwaitingRevealSig_String_returnsTheCorrectString(t *testing.T) {
+	assertEquals(t, authStateAwaitingRevealSig{}.String(), "AUTHSTATE_AWAITING_REVEALSIG")
+}
+
+func Test_authStateAwaitingSig_String_returnsTheCorrectString(t *testing.T) {
+	assertEquals(t, authStateAwaitingSig{}.String(), "AUTHSTATE_AWAITING_SIG")
+}
+
+func Test_authStateV1Setup_String_returnsTheCorrectString(t *testing.T) {
+	assertEquals(t, authStateV1Setup{}.String(), "AUTHSTATE_V1_SETUP")
+}

@@ -280,3 +280,15 @@ func Test_receive_returnsAnyErrorThatOccurs(t *testing.T) {
 	_, err := c.receiveSMP(m)
 	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
 }
+
+func Test_smpStateExpect1_String_returnsTheCorrectString(t *testing.T) {
+	assertEquals(t, smpStateExpect1{}.String(), "SMPSTATE_EXPECT1")
+}
+
+func Test_smpStateExpect2_String_returnsTheCorrectString(t *testing.T) {
+	assertEquals(t, smpStateExpect2{}.String(), "SMPSTATE_EXPECT2")
+}
+
+func Test_smpStateExpect3_String_returnsTheCorrectString(t *testing.T) {
+	assertEquals(t, smpStateExpect3{}.String(), "SMPSTATE_EXPECT3")
+}
