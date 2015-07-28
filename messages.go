@@ -350,16 +350,21 @@ func (c dataMsgPlainText) pad() dataMsgPlainText {
 	return c
 }
 
-func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte) []byte {
+func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte) []byte {
 	// This can not cause an error
-	encrypted, _ := encrypt(key[:], c.pad().serialize())
-	return encrypted
+	data := c.pad().serialize()
+	dst := make([]byte, len(data))
+	iv := [aes.BlockSize]byte{}
+	copy(iv[:], topHalfCtr[:])
+	counterEncipher(key[:], iv[:], data, dst)
+	return dst
 }
 
-func (c *dataMsgPlainText) decrypt(key [aes.BlockSize]byte, src []byte) error {
-	// TODO: why this should equal to the size of encryptedMsg?
+func (c *dataMsgPlainText) decrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte, src []byte) error {
 	dst := src
-	if err := decrypt(key[:], dst[:], src); err != nil {
+	iv := [aes.BlockSize]byte{}
+	copy(iv[:], topHalfCtr[:])
+	if err := counterEncipher(key[:], iv[:], src, dst); err != nil {
 		return err
 	}
 	c.deserialize(dst[:])

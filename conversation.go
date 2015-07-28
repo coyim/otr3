@@ -74,7 +74,7 @@ func (c *conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		tlvs:  tlvs,
 	}
 
-	encrypted := plain.encrypt(keys.sendingAESKey)
+	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
 	msgHeader := c.messageHeader()
 	dataMessage := dataMsg{
 		messageHeader: msgHeader,
@@ -161,7 +161,7 @@ func (c *conversation) processDataMessage(msg []byte) ([]byte, []tlv, error) {
 		return nil, nil, err
 	}
 	plain := dataMsgPlainText{}
-	err = plain.decrypt(sessionKeys.receivingAESKey, dataMessage.encryptedMsg)
+	err = plain.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
 
 	return plain.plain, plain.tlvs, err
 }
