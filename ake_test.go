@@ -27,106 +27,119 @@ var (
 
 func Test_dhCommitMessage(t *testing.T) {
 	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
-	ake := newConversation(otrV3{}, rnd)
+	c := newConversation(otrV3{}, rnd)
 
-	ake.ourKey = bobPrivateKey
-	ake.ourInstanceTag = 0x00000001
-	ake.theirInstanceTag = 0x00000001
+	c.ourKey = bobPrivateKey
+	c.ourInstanceTag = 0x00000001
+	c.theirInstanceTag = 0x00000001
 
 	var out []byte
-	out = appendShort(out, ake.version.protocolVersion())
+	out = appendShort(out, c.version.protocolVersion())
 	out = append(out, msgTypeDHCommit)
-	out = appendWord(out, ake.ourInstanceTag)
-	out = appendWord(out, ake.theirInstanceTag)
+	out = appendWord(out, c.ourInstanceTag)
+	out = appendWord(out, c.theirInstanceTag)
 	out = appendData(out, expectedEncryptedGxValue)
 	out = appendData(out, expectedHashedGxValue)
 
-	result, err := ake.dhCommitMessage()
+	result, err := c.dhCommitMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
 
 func Test_dhKeyMessage(t *testing.T) {
 	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
-	ake := newConversation(otrV3{}, rnd)
+	c := newConversation(otrV3{}, rnd)
 
-	ake.ourKey = alicePrivateKey
-	ake.ourInstanceTag = 0x00000001
-	ake.theirInstanceTag = 0x00000001
+	c.ourKey = alicePrivateKey
+	c.ourInstanceTag = 0x00000001
+	c.theirInstanceTag = 0x00000001
 	expectedGyValue := bnFromHex("075dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 
 	var out []byte
-	out = appendShort(out, ake.version.protocolVersion())
+	out = appendShort(out, c.version.protocolVersion())
 	out = append(out, msgTypeDHKey)
-	out = appendWord(out, ake.ourInstanceTag)
-	out = appendWord(out, ake.theirInstanceTag)
+	out = appendWord(out, c.ourInstanceTag)
+	out = appendWord(out, c.theirInstanceTag)
 	out = appendMPI(out, expectedGyValue)
 
-	result, err := ake.dhKeyMessage()
+	result, err := c.dhKeyMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
 
 func Test_dhKeyMessage_returnsAnErrorIfTheresNotEnoughRandomnessForAnMPI(t *testing.T) {
 	rnd := fixedRand([]string{"0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A"})
-	ake := newConversation(otrV3{}, rnd)
-	_, err := ake.dhKeyMessage()
+	c := newConversation(otrV3{}, rnd)
+	_, err := c.dhKeyMessage()
 	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_revealSigMessage(t *testing.T) {
 	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
-	ake := newConversation(otrV3{}, rnd)
+	c := newConversation(otrV3{}, rnd)
 
-	ake.ourInstanceTag = 0x000000010
-	ake.theirInstanceTag = 0x00000001
-	ake.ourKey = bobPrivateKey
-	ake.startAKE()
-	copy(ake.ake.r[:], fixedr)
-	ake.setSecretExponent(fixedx)
-	ake.ake.theirPublicValue = fixedgy
-	ake.keys.ourKeyID = 1
+	c.ourInstanceTag = 0x000000010
+	c.theirInstanceTag = 0x00000001
+	c.ourKey = bobPrivateKey
+	c.startAKE()
+	copy(c.ake.r[:], fixedr)
+	c.setSecretExponent(fixedx)
+	c.ake.theirPublicValue = fixedgy
 	expectedEncryptedSignature := bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf")
 	expedctedMACSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 
 	var out []byte
-	out = appendShort(out, ake.version.protocolVersion())
+	out = appendShort(out, c.version.protocolVersion())
 	out = append(out, msgTypeRevealSig)
-	out = appendWord(out, ake.ourInstanceTag)
-	out = appendWord(out, ake.theirInstanceTag)
-	out = appendData(out, ake.ake.r[:])
+	out = appendWord(out, c.ourInstanceTag)
+	out = appendWord(out, c.theirInstanceTag)
+	out = appendData(out, c.ake.r[:])
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 
-	result, err := ake.revealSigMessage()
+	result, err := c.revealSigMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
 
+func Test_revealSigMessage_increasesOurKeyId(t *testing.T) {
+	var ourKeyID uint32 = 1
+	c := newConversation(otrV3{}, fixtureRand())
+	c.ourKey = bobPrivateKey
+	c.startAKE()
+	c.setSecretExponent(fixedx)
+	c.ake.theirPublicValue = fixedgy
+	c.keys.ourKeyID = ourKeyID
+
+	_, err := c.revealSigMessage()
+	assertEquals(t, err, nil)
+	assertEquals(t, c.keys.ourKeyID, ourKeyID+1)
+}
+
 func Test_processDHKey(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	ake.startAKE()
-	ake.ake.theirPublicValue = fixedgy
+	c := newConversation(otrV2{}, fixtureRand())
+	c.startAKE()
+	c.ake.theirPublicValue = fixedgy
 
-	msg := appendShort([]byte{}, ake.version.protocolVersion())
+	msg := appendShort([]byte{}, c.version.protocolVersion())
 	msg = append(msg, msgTypeDHKey)
-	msg = appendMPI(msg, ake.ake.theirPublicValue)
+	msg = appendMPI(msg, c.ake.theirPublicValue)
 
-	isSame, err := ake.processDHKey(msg)
+	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, isSame, true)
 }
 
 func Test_processDHKeyNotSame(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	ake.startAKE()
-	ake.ake.theirPublicValue = fixedgy
+	c := newConversation(otrV2{}, fixtureRand())
+	c.startAKE()
+	c.ake.theirPublicValue = fixedgy
 
-	msg := appendShort([]byte{}, ake.version.protocolVersion())
+	msg := appendShort([]byte{}, c.version.protocolVersion())
 	msg = append(msg, msgTypeDHKey)
 	msg = appendMPI(msg, fixedgx)
 
-	isSame, err := ake.processDHKey(msg)
+	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, isSame, false)
 }
@@ -134,63 +147,63 @@ func Test_processDHKeyNotSame(t *testing.T) {
 func Test_processDHKeyHavingError(t *testing.T) {
 	invalidGy := bnFromHex("751234566dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 
-	ake := newConversation(otrV2{}, fixtureRand())
-	ake.startAKE()
-	ake.ake.theirPublicValue = fixedgy
+	c := newConversation(otrV2{}, fixtureRand())
+	c.startAKE()
+	c.ake.theirPublicValue = fixedgy
 
-	msg := appendShort([]byte{}, ake.version.protocolVersion())
+	msg := appendShort([]byte{}, c.version.protocolVersion())
 	msg = append(msg, msgTypeDHKey)
 	msg = appendMPI(msg, invalidGy)
 
-	isSame, err := ake.processDHKey(msg)
+	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err.Error(), "otr: DH value out of range")
 	assertDeepEquals(t, isSame, false)
 }
 
 func Test_processEncryptedSig(t *testing.T) {
 	rnd := fixedRand([]string{})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
-	ake.setSecretExponent(fixedy)
-	ake.ake.theirPublicValue = fixedgx
-	ake.keys.ourKeyID = 1
-	ake.calcAKEKeys(ake.calcDHSharedSecret())
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
+	c.setSecretExponent(fixedy)
+	c.ake.theirPublicValue = fixedgx
+	c.keys.ourKeyID = 1
+	c.calcAKEKeys(c.calcDHSharedSecret())
 
 	_, encryptedSig, _ := extractData(bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf"))
 	macSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
-	err := ake.processEncryptedSig(encryptedSig, macSignature[:20], &ake.ake.revealKey)
+	err := c.processEncryptedSig(encryptedSig, macSignature[:20], &c.ake.revealKey)
 	assertEquals(t, err, nil)
-	assertEquals(t, ake.keys.theirKeyID, uint32(1))
+	assertEquals(t, c.keys.theirKeyID, uint32(1))
 }
 
 func Test_processEncryptedSigWithBadSignatureMACError(t *testing.T) {
-	ake := conversation{}
-	ake.startAKE()
+	c := conversation{}
+	c.startAKE()
 
 	_, encryptedSig, _ := extractData(bytesFromHex("000001b2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf"))
 	macSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
-	err := ake.processEncryptedSig(encryptedSig, macSignature[:20], &ake.ake.revealKey)
+	err := c.processEncryptedSig(encryptedSig, macSignature[:20], &c.ake.revealKey)
 	assertEquals(t, err.Error(), "bad signature MAC in encrypted signature")
-	assertEquals(t, ake.keys.theirKeyID, uint32(0))
+	assertEquals(t, c.keys.theirKeyID, uint32(0))
 }
 
 func Test_processEncryptedSigWithBadSignatureError(t *testing.T) {
 	rnd := fixedRand([]string{})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
-	ake.ourKey = bobPrivateKey
-	ake.theirKey = &bobPrivateKey.PublicKey
-	ake.setSecretExponent(fixedx)
-	ake.ake.theirPublicValue = fixedgy
-	ake.keys.ourKeyID = 1
-	s := ake.calcDHSharedSecret()
-	ake.calcAKEKeys(s)
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
+	c.ourKey = bobPrivateKey
+	c.theirKey = &bobPrivateKey.PublicKey
+	c.setSecretExponent(fixedx)
+	c.ake.theirPublicValue = fixedgy
+	c.keys.ourKeyID = 1
+	s := c.calcDHSharedSecret()
+	c.calcAKEKeys(s)
 
 	_, encryptedSig, _ := extractData(bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbeca"))
 	macSignature := bytesFromHex("741f14776485e6c593928fd859afe1ab4896f1e6")
-	err := ake.processEncryptedSig(encryptedSig, macSignature[:20], &ake.ake.revealKey)
+	err := c.processEncryptedSig(encryptedSig, macSignature[:20], &c.ake.revealKey)
 	assertEquals(t, err.Error(), "bad signature in encrypted signature")
-	assertEquals(t, ake.keys.theirKeyID, uint32(0))
+	assertEquals(t, c.keys.theirKeyID, uint32(0))
 }
 
 func Test_processRevealSig(t *testing.T) {
@@ -204,7 +217,6 @@ func Test_processRevealSig(t *testing.T) {
 	copy(bob.ake.r[:], fixedr)
 	bob.setSecretExponent(fixedx)
 	bob.ake.theirPublicValue = fixedgy
-	bob.keys.ourKeyID = 1
 	msg, err := bob.revealSigMessage()
 
 	alice.setSecretExponent(fixedy)
@@ -214,117 +226,131 @@ func Test_processRevealSig(t *testing.T) {
 
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.keys.theirKeyID, uint32(1))
+	assertEquals(t, bob.keys.ourKeyID, uint32(1))
 }
 
 func Test_processSig(t *testing.T) {
 	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
-	ake.ourKey = bobPrivateKey
-	ake.setSecretExponent(fixedy)
-	ake.ake.theirPublicValue = fixedgx
-	ake.keys.ourKeyID = 1
-	result, err := ake.sigMessage()
+	alice := newConversation(otrV3{}, rnd)
+	alice.startAKE()
+	alice.ourKey = bobPrivateKey
+	alice.setSecretExponent(fixedy)
+	alice.ake.theirPublicValue = fixedgx
+	msg, _ := alice.sigMessage()
 
-	ake2 := newConversation(otrV3{}, rnd)
-	ake2.startAKE()
-	ake2.ake.sigKey = ake.ake.sigKey
-	ake2.ourKey = alicePrivateKey
-	ake2.setSecretExponent(fixedx)
-	ake2.ake.theirPublicValue = fixedgy
-	ake2.keys.ourKeyID = 1
+	bob := newConversation(otrV3{}, rnd)
+	bob.startAKE()
+	bob.ake.sigKey = alice.ake.sigKey
+	bob.ourKey = alicePrivateKey
+	bob.setSecretExponent(fixedx)
+	bob.ake.theirPublicValue = fixedgy
 
-	err = ake2.processSig(result)
+	err := bob.processSig(msg)
 
 	assertEquals(t, err, nil)
-	assertEquals(t, ake2.keys.theirKeyID, uint32(1))
+	assertEquals(t, alice.keys.ourKeyID, uint32(1))
+	assertEquals(t, bob.keys.theirKeyID, uint32(1))
 }
 
 func Test_processSig_returnsErrorIfDataIsNotLongEnoughForHeader(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	err := ake.processSig([]byte{0x01, 0x00})
+	c := newConversation(otrV2{}, fixtureRand())
+	err := c.processSig([]byte{0x01, 0x00})
 	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_processSig_returnsErrorIfTheSignatureDataIsInvalid(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	err := ake.processSig([]byte{0x01, 0x00, 0x01, 0x01, 0x01, 0x00})
+	c := newConversation(otrV2{}, fixtureRand())
+	err := c.processSig([]byte{0x01, 0x00, 0x01, 0x01, 0x01, 0x00})
 	assertDeepEquals(t, err, errors.New("otr: corrupt signature message"))
 }
 
 func Test_processRevealSig_returnsErrorIfDataIsNotLongEnoughForHeader(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	err := ake.processRevealSig([]byte{0x01, 0x00})
+	c := newConversation(otrV2{}, fixtureRand())
+	err := c.processRevealSig([]byte{0x01, 0x00})
 	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_processRevealSig_returnsErrorIfTheRDataIsInvalid(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	err := ake.processRevealSig([]byte{0x01, 0x00, 0x01, 0x01, 0x01, 0x00})
+	c := newConversation(otrV2{}, fixtureRand())
+	err := c.processRevealSig([]byte{0x01, 0x00, 0x01, 0x01, 0x01, 0x00})
 	assertDeepEquals(t, err, errors.New("otr: corrupt reveal signature message"))
 }
 
 func Test_processRevealSig_returnsErrorIfTheSignatureDataIsInvalid(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	err := ake.processRevealSig([]byte{0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
+	c := newConversation(otrV2{}, fixtureRand())
+	err := c.processRevealSig([]byte{0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
 	assertDeepEquals(t, err, errors.New("otr: corrupt reveal signature message"))
 }
 
 func Test_sigMessage(t *testing.T) {
 	rnd := fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
 
-	ake.ourKey = alicePrivateKey
-	ake.ourInstanceTag = 0x000000010
-	ake.theirInstanceTag = 0x00000001
-	ake.setSecretExponent(fixedy)
-	ake.ake.theirPublicValue = fixedgx
-	ake.keys.ourKeyID = 1
+	c.ourKey = alicePrivateKey
+	c.ourInstanceTag = 0x000000010
+	c.theirInstanceTag = 0x00000001
+	c.setSecretExponent(fixedy)
+	c.ake.theirPublicValue = fixedgx
 
 	expectedEncryptedSignature, _ := hex.DecodeString("000001d2b4f6ac650cc1d28f61a3b9bdf3cd60e2d1ea55d4c56e9f954eb22e10764861fb40d69917f5c4249fa701f3c04fae9449cd13a5054861f95fbc5775fc3cfd931cf5cc1a89eac82e7209b607c4fbf18df945e23bd0e91365fcc6c5dac072703dd8e2287372107f6a2cbb9139f5e82108d4cbcc1c6cdfcc772014136e756338745e2210d42c6e3ec4e9cf87fa8ebd8190e00f3a54bec86ee06cb7664059bb0fa79529e9d2e563ffecc5561477b3ba6bbf4ac679624b6da69a85822ed5c6ceb56a98740b1002026c503c39badab13b5d5ec948bbb961f0c90e68894a1fb70645a8e21ffe6b78e2e4ee62a62c48bd54e3d27c1166d098791518b53a10c409b5e55d16555b721a7750b7084e8972540bf0f1d76602e9b5fd58f94ed2dbf69fafccef84fdca2f9d800346b2358a200db060d8cf1b984a5213d02f7c27e452ad1cd893b0a668aaf6733809c31a392fc6cfc754691aca9a51582b636b92ea10abd661dd88bfd4c5f19b3ce265951728637b23fff7f7c0638721b6a01b3f1c3e923c10ea37d4e240fd973647d34dde6991cc3a04ce459c23e3ee2a858912ff78f405bbd9951935a120017904537db50f6e9e29338938f2b45ed323fc508d02fd0a0703e53ffc1889bccdec87e7c3d87e442fe29a7654d1")
 	expedctedMACSignature, _ := hex.DecodeString("66b47e29be91a7cf4803d731921482fd514b4a53a9dd1639b17705c90185f91d")
 
 	var out []byte
-	out = appendShort(out, ake.version.protocolVersion())
+	out = appendShort(out, c.version.protocolVersion())
 	out = append(out, msgTypeSig)
-	out = appendWord(out, ake.ourInstanceTag)
-	out = appendWord(out, ake.theirInstanceTag)
+	out = appendWord(out, c.ourInstanceTag)
+	out = appendWord(out, c.theirInstanceTag)
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 
-	result, err := ake.sigMessage()
+	result, err := c.sigMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
 }
 
+func Test_sigMessage_increasesOurKeyId(t *testing.T) {
+	var ourKeyID uint32 = 1
+	c := newConversation(otrV3{}, fixtureRand())
+	c.startAKE()
+
+	c.ourKey = alicePrivateKey
+	c.setSecretExponent(fixedy)
+	c.ake.theirPublicValue = fixedgx
+	c.keys.ourKeyID = ourKeyID
+
+	_, err := c.sigMessage()
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, c.keys.ourKeyID, ourKeyID+1)
+}
+
 func Test_encrypt(t *testing.T) {
 	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes())})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
 
-	ake.ake.theirPublicValue = fixedgx
-	io.ReadFull(ake.rand(), ake.ake.r[:])
+	c.ake.theirPublicValue = fixedgx
+	io.ReadFull(c.rand(), c.ake.r[:])
 
-	encryptedGx, err := encrypt(ake.ake.r[:], appendMPI(nil, ake.ake.theirPublicValue))
+	encryptedGx, err := encrypt(c.ake.r[:], appendMPI(nil, c.ake.theirPublicValue))
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, len(encryptedGx), len(appendMPI([]byte{}, ake.ake.theirPublicValue)))
+	assertDeepEquals(t, len(encryptedGx), len(appendMPI([]byte{}, c.ake.theirPublicValue)))
 }
 
 func Test_decrypt(t *testing.T) {
 	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes())})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
 
-	ake.ake.theirPublicValue = fixedgx
-	io.ReadFull(ake.rand(), ake.ake.r[:])
+	c.ake.theirPublicValue = fixedgx
+	io.ReadFull(c.rand(), c.ake.r[:])
 
-	encryptedGx, _ := encrypt(ake.ake.r[:], appendMPI(nil, ake.ake.theirPublicValue))
+	encryptedGx, _ := encrypt(c.ake.r[:], appendMPI(nil, c.ake.theirPublicValue))
 	decryptedGx := encryptedGx
-	err := decrypt(ake.ake.r[:], decryptedGx, encryptedGx)
+	err := decrypt(c.ake.r[:], decryptedGx, encryptedGx)
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, decryptedGx, appendMPI([]byte{}, ake.ake.theirPublicValue))
+	assertDeepEquals(t, decryptedGx, appendMPI([]byte{}, c.ake.theirPublicValue))
 }
 
 func Test_checkDecryptedGxWithoutError(t *testing.T) {
@@ -397,21 +423,21 @@ func Test_calcAKEKeys(t *testing.T) {
 
 func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
 
-	ake.ourKey = bobPrivateKey
-	ake.setSecretExponent(fixedx)
-	ake.ake.theirPublicValue = fixedgy
-	ake.keys.ourKeyID = 1
+	c.ourKey = bobPrivateKey
+	c.setSecretExponent(fixedx)
+	c.ake.theirPublicValue = fixedgy
+	c.keys.ourKeyID = 1
 
-	key := ake.calcDHSharedSecret()
-	ake.calcAKEKeys(key)
+	key := c.calcDHSharedSecret()
+	c.calcAKEKeys(key)
 	expectedEncryptedSignature, _ := hex.DecodeString("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf")
 	expedctedMACSignature, _ := hex.DecodeString("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 
-	encryptedSig, err := ake.generateEncryptedSignature(&ake.ake.revealKey)
-	macSig := sumHMAC(ake.ake.revealKey.m2[:], encryptedSig)
+	encryptedSig, err := c.generateEncryptedSignature(&c.ake.revealKey)
+	macSig := sumHMAC(c.ake.revealKey.m2[:], encryptedSig)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, encryptedSig, expectedEncryptedSignature)
 	assertDeepEquals(t, macSig, expedctedMACSignature)
@@ -419,57 +445,57 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 
 func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 	rnd := fixedRand([]string{"bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
 
-	ake.ourKey = alicePrivateKey
-	ake.setSecretExponent(fixedy)
-	ake.ake.theirPublicValue = fixedgx
-	ake.keys.ourKeyID = 1
+	c.ourKey = alicePrivateKey
+	c.setSecretExponent(fixedy)
+	c.ake.theirPublicValue = fixedgx
+	c.keys.ourKeyID = 1
 
-	key := ake.calcDHSharedSecret()
-	ake.calcAKEKeys(key)
+	key := c.calcDHSharedSecret()
+	c.calcAKEKeys(key)
 	expectedEncryptedSignature, _ := hex.DecodeString("000001d2b4f6ac650cc1d28f61a3b9bdf3cd60e2d1ea55d4c56e9f954eb22e10764861fb40d69917f5c4249fa701f3c04fae9449cd13a5054861f95fbc5775fc3cfd931cf5cc1a89eac82e7209b607c4fbf18df945e23bd0e91365fcc6c5dac072703dd8e2287372107f6a2cbb9139f5e82108d4cbcc1c6cdfcc772014136e756338745e2210d42c6e3ec4e9cf87fa8ebd8190e00f3a54bec86ee06cb7664059bb0fa79529e9d2e563ffecc5561477b3ba6bbf4ac679624b6da69a85822ed5c6ceb56a98740b1002026c503c39badab13b5d5ec948bbb961f0c90e68894a1fb70645a8e21ffe6b78e2e4ee62a62c48bd54e3d27c1166d098791518b53a10c409b5e55d16555b721a7750b7084e8972540bf0f1d76602e9b5fd58f94ed2dbf69fafccef84fdca2f9d800346b2358a200db060d8cf1b984a5213d02f7c27e452ad1cd893b0a668aaf6733809c31a392fc6cfc754691aca9a51582b636b92ea10abd661dd88bfd4c5f19b3ce265951728637b23fff7f7c0638721b6a01b3f1c3e923c10ea37d4e240fd973647d34dde6991cc3a04ce459c23e3ee2a858912ff78f405bbd9951935a120017904537db50f6e9e29338938f2b45ed323fc508d02fd0a0703e53ffc1889bccdec87e7c3d87e442fe29a7654d1")
 	expedctedMACSignature, _ := hex.DecodeString("66b47e29be91a7cf4803d731921482fd514b4a53a9dd1639b17705c90185f91d")
 
-	encryptedSig, err := ake.generateEncryptedSignature(&ake.ake.sigKey)
-	macSig := sumHMAC(ake.ake.sigKey.m2[:], encryptedSig)
+	encryptedSig, err := c.generateEncryptedSignature(&c.ake.sigKey)
+	macSig := sumHMAC(c.ake.sigKey.m2[:], encryptedSig)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, encryptedSig, expectedEncryptedSignature)
 	assertDeepEquals(t, macSig, expedctedMACSignature)
 }
 
 func Test_processDHCommit_returnsErrorIfTheMessageIsNotLongEnoughForMessageHeader(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	err := ake.processDHCommit([]byte{0x01, 0x02})
+	c := newConversation(otrV2{}, fixtureRand())
+	err := c.processDHCommit([]byte{0x01, 0x02})
 	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_processDHCommit_returnsErrorIfTheEncryptedGXPartIsNotCorrect(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	err := ake.processDHCommit([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x02, 0x01})
+	c := newConversation(otrV2{}, fixtureRand())
+	err := c.processDHCommit([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x02, 0x01})
 	assertDeepEquals(t, err, errors.New("otr: corrupt DH commit message"))
 }
 
 func Test_processDHCommit_returnsErrorIfTheHashedGXPartIsNotCorrect(t *testing.T) {
-	ake := newConversation(otrV2{}, fixtureRand())
-	err := ake.processDHCommit([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
+	c := newConversation(otrV2{}, fixtureRand())
+	err := c.processDHCommit([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
 	assertDeepEquals(t, err, errors.New("otr: corrupt DH commit message"))
 }
 
 func Test_calcXBb_returnsErrorIfTheSigningDoesntWork(t *testing.T) {
-	ake := newConversation(otrV2{}, fixedRand([]string{"AB"}))
-	ake.ourKey = bobPrivateKey
-	ake.keys.ourKeyID = 1
+	c := newConversation(otrV2{}, fixedRand([]string{"AB"}))
+	c.ourKey = bobPrivateKey
+	c.keys.ourKeyID = 1
 
-	_, err := ake.calcXb(nil, []byte{0x00})
+	_, err := c.calcXb(nil, []byte{0x00})
 	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_dhCommitMessage_returnsErrorIfNoRandomnessIsAvailable(t *testing.T) {
 	rnd := fixedRand([]string{"ABCD"})
-	ake := newConversation(otrV3{}, rnd)
-	_, err := ake.dhCommitMessage()
+	c := newConversation(otrV3{}, rnd)
+	_, err := c.dhCommitMessage()
 	assertDeepEquals(t, err, errShortRandomRead)
 }
 
@@ -478,64 +504,64 @@ func Test_dhCommitMessage_returnsErrorIfNoRandomnessIsAvailableForR(t *testing.T
 		"ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",
 		"ABCDABCDABCDABCDABCDABCDABCDAB",
 	})
-	ake := newConversation(otrV3{}, rnd)
-	_, err := ake.dhCommitMessage()
+	c := newConversation(otrV3{}, rnd)
+	_, err := c.dhCommitMessage()
 	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_generateEncryptedSignature_returnsErrorIfCalcXbFails(t *testing.T) {
 	rnd := fixedRand([]string{"abcd"})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
 
-	ake.ourKey = bobPrivateKey
-	ake.ake.theirPublicValue = fixedgx
-	ake.ake.ourPublicValue = fixedgy
+	c.ourKey = bobPrivateKey
+	c.ake.theirPublicValue = fixedgx
+	c.ake.ourPublicValue = fixedgy
 
-	_, err := ake.generateEncryptedSignature(&ake.ake.revealKey)
+	_, err := c.generateEncryptedSignature(&c.ake.revealKey)
 	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_revealSigMessage_returnsErrorFromGenerateEncryptedSignature(t *testing.T) {
 	rnd := fixedRand([]string{"abcd"})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
 
-	ake.ourKey = bobPrivateKey
-	ake.setSecretExponent(fixedy)
-	ake.ake.theirPublicValue = fixedgx
+	c.ourKey = bobPrivateKey
+	c.setSecretExponent(fixedy)
+	c.ake.theirPublicValue = fixedgx
 
-	_, err := ake.revealSigMessage()
+	_, err := c.revealSigMessage()
 	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_sigMessage_returnsErrorFromgenerateEncryptedSignature(t *testing.T) {
 	rnd := fixedRand([]string{"cbcd"})
-	ake := newConversation(otrV3{}, rnd)
-	ake.startAKE()
+	c := newConversation(otrV3{}, rnd)
+	c.startAKE()
 
-	ake.ourKey = bobPrivateKey
-	ake.setSecretExponent(fixedy)
-	ake.ake.theirPublicValue = fixedgx
-	ake.keys.ourKeyID = 1
-	_, err := ake.sigMessage()
+	c.ourKey = bobPrivateKey
+	c.setSecretExponent(fixedy)
+	c.ake.theirPublicValue = fixedgx
+	c.keys.ourKeyID = 1
+	_, err := c.sigMessage()
 	assertEquals(t, err, errShortRandomRead)
 }
 
 func Test_processDHKey_returnsErrorIfTheMessageIsNotLongEnoughForMessageHeader(t *testing.T) {
-	ake := newConversation(otrV2{}, fixedRand([]string{}))
-	_, err := ake.processDHKey([]byte{0x01, 0x02})
+	c := newConversation(otrV2{}, fixedRand([]string{}))
+	_, err := c.processDHKey([]byte{0x01, 0x02})
 	assertDeepEquals(t, err, errInvalidOTRMessage)
 }
 
 func Test_processDHKey_returnsErrorIfTheMessageHasAnIncorrectGyParameter(t *testing.T) {
-	ake := newConversation(otrV2{}, fixedRand([]string{}))
-	_, err := ake.processDHKey([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x02, 0x01})
+	c := newConversation(otrV2{}, fixedRand([]string{}))
+	_, err := c.processDHKey([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x02, 0x01})
 	assertDeepEquals(t, err, errors.New("otr: corrupt DH key message"))
 }
 
 func Test_processDHKey_returnsErrorIfGyIsNotAValidDHParameter(t *testing.T) {
-	ake := newConversation(otrV2{}, fixedRand([]string{}))
-	_, err := ake.processDHKey([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x01, 0x01})
+	c := newConversation(otrV2{}, fixedRand([]string{}))
+	_, err := c.processDHKey([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x01, 0x01})
 	assertDeepEquals(t, err, errors.New("otr: DH value out of range"))
 }

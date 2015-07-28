@@ -147,6 +147,8 @@ func (c *conversation) serializeDHKey() []byte {
 // Bob ---- Reveal Signature ----> Alice
 func (c *conversation) revealSigMessage() ([]byte, error) {
 	c.calcAKEKeys(c.calcDHSharedSecret())
+	c.keys.ourKeyID++
+
 	encryptedSig, err := c.generateEncryptedSignature(&c.ake.revealKey)
 	if err != nil {
 		return nil, err
@@ -159,6 +161,7 @@ func (c *conversation) revealSigMessage() ([]byte, error) {
 		encryptedSig:  encryptedSig,
 		macSig:        macSig,
 	}
+
 	return revealSigMsg.serialize(), nil
 }
 
@@ -166,6 +169,8 @@ func (c *conversation) revealSigMessage() ([]byte, error) {
 // Alice -- Signature -----------> Bob
 func (c *conversation) sigMessage() ([]byte, error) {
 	c.calcAKEKeys(c.calcDHSharedSecret())
+	c.keys.ourKeyID++
+
 	encryptedSig, err := c.generateEncryptedSignature(&c.ake.sigKey)
 	if err != nil {
 		return nil, err

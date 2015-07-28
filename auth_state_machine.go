@@ -48,7 +48,6 @@ func (c *conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 		c.ake.state, toSend, err = c.ake.state.receiveRevealSigMessage(c, msg)
 		if err == nil {
 			c.msgState = encrypted
-			c.keys.ourKeyID = 1
 			if err = c.generateNewDHKeyPair(); err != nil {
 				return
 			}
@@ -57,7 +56,6 @@ func (c *conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 		c.ake.state, toSend, err = c.ake.state.receiveSigMessage(c, msg)
 		if err == nil {
 			c.msgState = encrypted
-			c.keys.ourKeyID = 1
 			if err = c.generateNewDHKeyPair(); err != nil {
 				return
 			}
@@ -104,8 +102,6 @@ func (s authStateNone) receiveDHCommitMessage(c *conversation, msg []byte) (auth
 	if err = c.processDHCommit(msg); err != nil {
 		return s, nil, err
 	}
-
-	c.keys.ourKeyID = 1
 
 	return authStateAwaitingRevealSig{}, ret, nil
 }
@@ -224,8 +220,6 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *conversation, msg
 		return s, nil, err
 	}
 
-	//TODO: check if theirKeyID (or the previous) mathches what we have stored for this
-	c.keys.ourKeyID = 0
 	c.keys.theirCurrentDHPubKey = c.ake.theirPublicValue
 	c.keys.theirPreviousDHPubKey = nil
 
@@ -270,7 +264,6 @@ func (s authStateAwaitingSig) receiveSigMessage(c *conversation, msg []byte) (au
 	//gy was stored when we receive DH-Key
 	c.keys.theirCurrentDHPubKey = c.ake.theirPublicValue
 	c.keys.theirPreviousDHPubKey = nil
-	c.keys.ourKeyID = 0
 
 	return authStateNone{}, nil, nil
 }
