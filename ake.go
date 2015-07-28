@@ -9,7 +9,7 @@ import (
 	"math/big"
 )
 
-var QueryMessage = "?OTRv2?"
+//TODO: var QueryMessage = "?OTRv2?"
 
 type ake struct {
 	secretExponent   *big.Int
