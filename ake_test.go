@@ -177,7 +177,7 @@ func Test_processEncryptedSig(t *testing.T) {
 }
 
 func Test_processEncryptedSigWithBadSignatureMACError(t *testing.T) {
-	c := conversation{}
+	c := Conversation{}
 	c.startAKE()
 
 	_, encryptedSig, _ := extractData(bytesFromHex("000001b2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf"))
@@ -389,7 +389,7 @@ func Test_extractGxWithRangeError(t *testing.T) {
 }
 
 func Test_calcDHSharedSecret(t *testing.T) {
-	var bob conversation
+	var bob Conversation
 	bob.startAKE()
 	bob.setSecretExponent(fixedx)
 	bob.ake.theirPublicValue = fixedgy
@@ -397,7 +397,7 @@ func Test_calcDHSharedSecret(t *testing.T) {
 	sharedSecretB := bob.calcDHSharedSecret()
 	assertDeepEquals(t, sharedSecretB, expectedSharedSecret)
 
-	var alice conversation
+	var alice Conversation
 	alice.startAKE()
 	alice.setSecretExponent(fixedy)
 	alice.ake.theirPublicValue = fixedgx
@@ -408,7 +408,7 @@ func Test_calcDHSharedSecret(t *testing.T) {
 }
 
 func Test_calcAKEKeys(t *testing.T) {
-	var bob conversation
+	var bob Conversation
 	bob.startAKE()
 	bob.calcAKEKeys(expectedSharedSecret)
 

@@ -21,7 +21,7 @@ func (m smp1Message) tlv() tlv {
 	return genSMPTLV(0x0002, m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
 }
 
-func (c *conversation) generateSMP1Parameters() (s smp1State, ok bool) {
+func (c *Conversation) generateSMP1Parameters() (s smp1State, ok bool) {
 	b := make([]byte, c.version.parameterLength())
 	var ok1, ok2, ok3, ok4 bool
 	s.a2, ok1 = c.randMPI(b)
@@ -39,7 +39,7 @@ func generateSMP1Message(s smp1State) (m smp1Message) {
 	return
 }
 
-func (c *conversation) generateSMP1() (s smp1State, ok bool) {
+func (c *Conversation) generateSMP1() (s smp1State, ok bool) {
 	if s, ok = c.generateSMP1Parameters(); !ok {
 		return s, false
 	}
@@ -47,7 +47,7 @@ func (c *conversation) generateSMP1() (s smp1State, ok bool) {
 	return s, true
 }
 
-func (c *conversation) verifySMP1(msg smp1Message) error {
+func (c *Conversation) verifySMP1(msg smp1Message) error {
 	if !c.version.isGroupElement(msg.g2a) {
 		return errors.New("g2a is an invalid group element")
 	}

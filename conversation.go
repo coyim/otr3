@@ -10,7 +10,7 @@ const (
 	lenMsgHeader = 3
 )
 
-type conversation struct {
+type Conversation struct {
 	version otrVersion
 	Rand    io.Reader
 
@@ -39,7 +39,7 @@ const (
 )
 
 //NOTE: this should be only used in tests
-func newConversation(v otrVersion, rand io.Reader) *conversation {
+func newConversation(v otrVersion, rand io.Reader) *Conversation {
 	var p policy
 	switch v {
 	case otrV3{}:
@@ -48,7 +48,7 @@ func newConversation(v otrVersion, rand io.Reader) *conversation {
 		p = allowV2
 	}
 
-	return &conversation{
+	return &Conversation{
 		version: v,
 		Rand:    rand,
 		smp: smp{
@@ -58,7 +58,7 @@ func newConversation(v otrVersion, rand io.Reader) *conversation {
 	}
 }
 
-func (c *conversation) messageHeader() messageHeader {
+func (c *Conversation) messageHeader() messageHeader {
 	return messageHeader{
 		protocolVersion:     c.version.protocolVersion(),
 		needInstanceTag:     c.version.needInstanceTag(),
@@ -67,7 +67,7 @@ func (c *conversation) messageHeader() messageHeader {
 	}
 }
 
-func (c *conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
+func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	if err != nil {
 		//TODO errors
@@ -102,7 +102,7 @@ func (c *conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	return dataMessage
 }
 
-func (c *conversation) send(message []byte) []byte {
+func (c *Conversation) send(message []byte) []byte {
 	// FIXME Dummy for now
 
 	if !c.policies.isOTREnabled() {
@@ -120,7 +120,7 @@ func isQueryMessage(msg []byte) bool {
 
 // This should be used by the xmpp-client to received OTR messages in plain
 //TODO toSend needs fragmentation to be implemented
-func (c *conversation) receive(message []byte) (toSend []byte, err error) {
+func (c *Conversation) receive(message []byte) (toSend []byte, err error) {
 	if !c.policies.isOTREnabled() {
 		return
 	}
@@ -131,7 +131,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	}
 
 	// TODO check the message instanceTag for V3
-	// I should ignore the message if it is not for my conversation
+	// I should ignore the message if it is not for my Conversation
 
 	_, msgProtocolVersion, ok := extractShort(message)
 	if !ok {
@@ -168,7 +168,7 @@ func (c *conversation) receive(message []byte) (toSend []byte, err error) {
 	return
 }
 
-func (c *conversation) processDataMessage(msg []byte) ([]byte, []tlv, error) {
+func (c *Conversation) processDataMessage(msg []byte) ([]byte, []tlv, error) {
 	msg = msg[c.version.headerLen():]
 	dataMessage := dataMsg{}
 	dataMessage.deserialize(msg)

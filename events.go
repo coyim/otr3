@@ -55,10 +55,10 @@ type MessageEvent int
  *      was not sent.
  * - OTRL_MSGEVENT_CONNECTION_ENDED
  *      Message has not been sent because our buddy has ended the
- *      private conversation. We should either close the connection,
+ *      private Conversation. We should either close the connection,
  *      or refresh it.
  * - OTRL_MSGEVENT_SETUP_ERROR
- *      A private conversation could not be set up. A gcry_error_t
+ *      A private Conversation could not be set up. A gcry_error_t
  *      will be passed.
  * - OTRL_MSGEVENT_MSG_REFLECTED
  *      Received our own OTR messages.

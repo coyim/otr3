@@ -43,7 +43,7 @@ func acceptOTRRequest(p policies, msg []byte) (otrVersion, bool) {
 	return nil, false
 }
 
-func (c *conversation) receiveQueryMessage(msg []byte) (toSend []byte, err error) {
+func (c *Conversation) receiveQueryMessage(msg []byte) (toSend []byte, err error) {
 	v, ok := acceptOTRRequest(c.policies, msg)
 	if !ok {
 		return nil, errInvalidVersion

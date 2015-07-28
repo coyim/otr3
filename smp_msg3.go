@@ -28,7 +28,7 @@ func (m smp3Message) tlv() tlv {
 	return genSMPTLV(0x0004, m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
 }
 
-func (c *conversation) generateSMP3Parameters() (s smp3State, ok bool) {
+func (c *Conversation) generateSMP3Parameters() (s smp3State, ok bool) {
 	b := make([]byte, c.version.parameterLength())
 	var ok1, ok2, ok3, ok4 bool
 	s.r4, ok1 = c.randMPI(b)
@@ -63,7 +63,7 @@ func generateSMP3Message(s *smp3State, s1 smp1State, m2 smp2Message) smp3Message
 	return m
 }
 
-func (c *conversation) generateSMP3(secret *big.Int, s1 smp1State, m2 smp2Message) (s smp3State, ok bool) {
+func (c *Conversation) generateSMP3(secret *big.Int, s1 smp1State, m2 smp2Message) (s smp3State, ok bool) {
 	if s, ok = c.generateSMP3Parameters(); !ok {
 		return s, false
 	}
@@ -72,7 +72,7 @@ func (c *conversation) generateSMP3(secret *big.Int, s1 smp1State, m2 smp2Messag
 	return s, true
 }
 
-func (c *conversation) verifySMP3(s2 smp2State, msg smp3Message) error {
+func (c *Conversation) verifySMP3(s2 smp2State, msg smp3Message) error {
 	if !c.version.isGroupElement(msg.pa) {
 		return errors.New("Pa is an invalid group element")
 	}
@@ -99,7 +99,7 @@ func (c *conversation) verifySMP3(s2 smp2State, msg smp3Message) error {
 	return nil
 }
 
-func (c *conversation) verifySMP3ProtocolSuccess(s2 smp2State, msg smp3Message) error {
+func (c *Conversation) verifySMP3ProtocolSuccess(s2 smp2State, msg smp3Message) error {
 	papb := divMod(msg.pa, s2.msg.pb, p)
 
 	rab := modExp(msg.ra, s2.b3)

@@ -11,15 +11,15 @@ func dhMsgType(msg []byte) byte {
 	return msg[2]
 }
 
-func fixtureConversation() *conversation {
+func fixtureConversation() *Conversation {
 	return fixtureConversationWithVersion(otrV3{})
 }
 
-func fixtureConversationV2() *conversation {
+func fixtureConversationV2() *Conversation {
 	return fixtureConversationWithVersion(otrV2{})
 }
 
-func fixtureConversationWithVersion(v otrVersion) *conversation {
+func fixtureConversationWithVersion(v otrVersion) *Conversation {
 	return newConversation(v, fixtureRand())
 }
 
@@ -55,7 +55,7 @@ func fixtureSigMsg(v otrVersion) []byte {
 	return msg
 }
 
-func bobContextAfterAKE() *conversation {
+func bobContextAfterAKE() *Conversation {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.keys.ourKeyID = 1
 	c.keys.ourCurrentDHKeys.pub = fixedgx
@@ -68,7 +68,7 @@ func bobContextAfterAKE() *conversation {
 	return c
 }
 
-func bobContextAtAwaitingSig() *conversation {
+func bobContextAtAwaitingSig() *Conversation {
 	c := bobContextAtReceiveDHKey()
 	c.version = otrV2{}
 	c.policies.add(allowV2)
@@ -77,7 +77,7 @@ func bobContextAtAwaitingSig() *conversation {
 	return c
 }
 
-func bobContextAtReceiveDHKey() *conversation {
+func bobContextAtReceiveDHKey() *Conversation {
 	c := bobContextAtAwaitingDHKey()
 	c.ake.theirPublicValue = fixedgy // stored at receiveDHKey
 
@@ -88,7 +88,7 @@ func bobContextAtReceiveDHKey() *conversation {
 	return c
 }
 
-func bobContextAtAwaitingDHKey() *conversation {
+func bobContextAtAwaitingDHKey() *Conversation {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.startAKE()
 	c.policies.add(allowV3)
@@ -101,14 +101,14 @@ func bobContextAtAwaitingDHKey() *conversation {
 	return c
 }
 
-func aliceContextAtReceiveRevealSig() *conversation {
+func aliceContextAtReceiveRevealSig() *Conversation {
 	c := aliceContextAtAwaitingRevealSig()
 	c.ake.theirPublicValue = fixedgx // Alice decrypts encryptedGx using r
 
 	return c
 }
 
-func aliceContextAtAwaitingRevealSig() *conversation {
+func aliceContextAtAwaitingRevealSig() *Conversation {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.startAKE()
 	c.policies.add(allowV2)

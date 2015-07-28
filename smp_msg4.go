@@ -21,7 +21,7 @@ func (m smp4Message) tlv() tlv {
 	return genSMPTLV(0x0005, m.rb, m.cr, m.d7)
 }
 
-func (c *conversation) generateSMP4(secret *big.Int, s2 smp2State, msg3 smp3Message) (smp4State, bool) {
+func (c *Conversation) generateSMP4(secret *big.Int, s2 smp2State, msg3 smp3Message) (smp4State, bool) {
 	s, ok := c.generateSMP4Parameters()
 	if !ok {
 		return s, false
@@ -31,7 +31,7 @@ func (c *conversation) generateSMP4(secret *big.Int, s2 smp2State, msg3 smp3Mess
 	return s, true
 }
 
-func (c *conversation) verifySMP4(s3 smp3State, msg smp4Message) error {
+func (c *Conversation) verifySMP4(s3 smp3State, msg smp4Message) error {
 	if !c.version.isGroupElement(msg.rb) {
 		return errors.New("Rb is an invalid group element")
 	}
@@ -43,7 +43,7 @@ func (c *conversation) verifySMP4(s3 smp3State, msg smp4Message) error {
 	return nil
 }
 
-func (c *conversation) generateSMP4Parameters() (s smp4State, ok bool) {
+func (c *Conversation) generateSMP4Parameters() (s smp4State, ok bool) {
 	b := make([]byte, c.version.parameterLength())
 	s.r7, ok = c.randMPI(b)
 	return
@@ -61,7 +61,7 @@ func generateSMP4Message(s smp4State, s2 smp2State, msg3 smp3Message) smp4Messag
 	return m
 }
 
-func (c *conversation) verifySMP4ProtocolSuccess(s1 smp1State, s3 smp3State, msg smp4Message) error {
+func (c *Conversation) verifySMP4ProtocolSuccess(s1 smp1State, s3 smp3State, msg smp4Message) error {
 	rab := modExp(msg.rb, s1.a3)
 	if !eq(rab, s3.papb) {
 		return errors.New("protocol failed: x != y")
