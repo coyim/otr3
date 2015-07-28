@@ -366,7 +366,6 @@ func extractGx(decryptedGx []byte) (*big.Int, error) {
 		return gx, errors.New("otr: gx corrupt after decryption")
 	}
 
-	//FIXME: is this valid in otrv2 or only otrv3?
 	if lt(gx, g1) || gt(gx, pMinusTwo) {
 		return gx, errors.New("otr: DH value out of range")
 	}
