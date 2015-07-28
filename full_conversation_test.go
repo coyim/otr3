@@ -78,6 +78,7 @@ func Test_AKEHappyPath(t *testing.T) {
 	assertEquals(t, len(alice.keys.ourCurrentDHKeys.pub.Bytes()), 192)
 	assertEquals(t, len(alice.keys.ourPreviousDHKeys.priv.Bytes()), 40)
 	assertEquals(t, len(alice.keys.ourPreviousDHKeys.pub.Bytes()), 192)
+
 	assertEquals(t, bob.keys.ourKeyID, uint32(2))
 	assertEquals(t, len(bob.keys.ourCurrentDHKeys.priv.Bytes()), 40)
 	assertEquals(t, len(bob.keys.ourCurrentDHKeys.pub.Bytes()), 192)

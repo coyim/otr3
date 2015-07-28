@@ -38,8 +38,8 @@ type keyManagementContext struct {
 }
 
 type macKeyUsage struct {
-	ourKeyID, theirKeyID     uint32
-	sendingKey, receivingKey macKey
+	ourKeyID, theirKeyID uint32
+	receivingKey         macKey
 }
 
 type macKeyHistory struct {
@@ -57,7 +57,6 @@ func (h *macKeyHistory) addKeys(ourKeyID uint32, theirKeyID uint32, sendingMACKe
 	macKeys := macKeyUsage{
 		ourKeyID:     ourKeyID,
 		theirKeyID:   theirKeyID,
-		sendingKey:   sendingMACKey,
 		receivingKey: receivingMACKey,
 	}
 	h.items = append(h.items, macKeys)
@@ -69,7 +68,7 @@ func (h *macKeyHistory) forgetMACKeysForOurKey(ourKeyID uint32) []macKey {
 
 	for i, k := range h.items {
 		if k.ourKeyID == ourKeyID {
-			ret = append(ret, k.sendingKey, k.receivingKey)
+			ret = append(ret, k.receivingKey)
 			del = append(del, i)
 		}
 	}
@@ -85,7 +84,7 @@ func (h *macKeyHistory) forgetMACKeysForTheirKey(theirKeyID uint32) []macKey {
 
 	for i, k := range h.items {
 		if k.theirKeyID == theirKeyID {
-			ret = append(ret, k.sendingKey, k.receivingKey)
+			ret = append(ret, k.receivingKey)
 			del = append(del, i)
 		}
 	}

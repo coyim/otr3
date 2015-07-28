@@ -49,7 +49,6 @@ func Test_calculateDHSessionKeys_storesGeneratedMACKeys(t *testing.T) {
 	expectedMACKeys := macKeyUsage{
 		ourKeyID:     ourKeyID,
 		theirKeyID:   theirKeyID,
-		sendingKey:   keys.sendingMACKey,
 		receivingKey: keys.receivingMACKey,
 	}
 
@@ -174,13 +173,11 @@ func Test_revealMACKeys_ForgotOldKeysAfterBeenCalled(t *testing.T) {
 }
 
 func Test_rotateTheirKey_revealAllMACKeysAssociatedWithTheirPreviousPubKey(t *testing.T) {
-	k := macKey{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 	k1 := macKey{0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 	k2 := macKey{0x02, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
 	expectedMACKeys := []macKey{
-		k1, k2,
-		k1, k2,
+		k2, k2,
 	}
 
 	c := keyManagementContext{
@@ -190,9 +187,9 @@ func Test_rotateTheirKey_revealAllMACKeysAssociatedWithTheirPreviousPubKey(t *te
 
 	c.macKeyHistory = macKeyHistory{
 		items: []macKeyUsage{
-			macKeyUsage{theirKeyID: 1, sendingKey: k1, receivingKey: k2},
-			macKeyUsage{theirKeyID: 2, sendingKey: k, receivingKey: k},
-			macKeyUsage{theirKeyID: 1, sendingKey: k1, receivingKey: k2},
+			macKeyUsage{theirKeyID: 1, receivingKey: k2},
+			macKeyUsage{theirKeyID: 2, receivingKey: k1},
+			macKeyUsage{theirKeyID: 1, receivingKey: k2},
 		},
 	}
 
@@ -200,17 +197,15 @@ func Test_rotateTheirKey_revealAllMACKeysAssociatedWithTheirPreviousPubKey(t *te
 
 	assertDeepEquals(t, c.oldMACKeys, expectedMACKeys)
 	assertDeepEquals(t, len(c.macKeyHistory.items), 1)
-	assertDeepEquals(t, c.macKeyHistory.items[0].sendingKey, k)
+	assertDeepEquals(t, c.macKeyHistory.items[0].receivingKey, k1)
 }
 
 func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testing.T) {
-	k := macKey{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 	k1 := macKey{0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 	k2 := macKey{0x02, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
 	expectedMACKeys := []macKey{
-		k1, k2,
-		k1, k2,
+		k2, k2,
 	}
 
 	c := keyManagementContext{
@@ -223,9 +218,9 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 
 	c.macKeyHistory = macKeyHistory{
 		items: []macKeyUsage{
-			macKeyUsage{ourKeyID: 1, sendingKey: k1, receivingKey: k2},
-			macKeyUsage{ourKeyID: 2, sendingKey: k, receivingKey: k},
-			macKeyUsage{ourKeyID: 1, sendingKey: k1, receivingKey: k2},
+			macKeyUsage{ourKeyID: 1, receivingKey: k2},
+			macKeyUsage{ourKeyID: 2, receivingKey: k1},
+			macKeyUsage{ourKeyID: 1, receivingKey: k2},
 		},
 	}
 
@@ -233,5 +228,5 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 
 	assertDeepEquals(t, c.oldMACKeys, expectedMACKeys)
 	assertDeepEquals(t, len(c.macKeyHistory.items), 1)
-	assertDeepEquals(t, c.macKeyHistory.items[0].sendingKey, k)
+	assertDeepEquals(t, c.macKeyHistory.items[0].receivingKey, k1)
 }
