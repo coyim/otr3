@@ -425,6 +425,21 @@ func Test_encrypt_EncryptsPlainMessageUsingSendingAESKeyAndCounter(t *testing.T)
 	assertDeepEquals(t, encrypted, expectedEncrypted)
 }
 
+func Test_encrypt_EncryptsPlainMessageUsingSendingAESKeyAndCounterNotZero(t *testing.T) {
+	plain := dataMsgPlainText{
+		plain: []byte("we are awesome"),
+	}
+
+	var sendingAESKey [aes.BlockSize]byte
+	topHalfCtr := [8]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+	copy(sendingAESKey[:], bytesFromHex("42e258bebf031acf442f52d6ef52d6f1"))
+	expectedEncrypted := bytesFromHex("2dccced4937a337e01bc2ed969b4f60d3ab0a4844aef0a02ebc5c6f09f71a7819687cdbcf2a912be1e8ceda086d188ce3e0bbfecaa77a050a5ed9f98f0c6590579e4d1fb9f753102955dcfc5535af3906ff7d62490362e6e89e28c3b41081f2ce3e8c2ea154a582ff7a1449e7ad8abf295b5e3f8fb80e9b6482fc3bae869ccdb9144f0242604ddee924f388c308c6ce123b5ae22a93ac7c315b13019d474134dd9fd15334fade1b6737b11f79a3cfeed8dd18d72739436ebb560ecdca71a9a67c7b97c2526119a4b1323a6de7c70dffaf7229d798aaea4a692410a139249305d3059685b6ecd0760323ea16db9e02497f5657d1a5d82e09df0088e572b5d0bd7")
+
+	encrypted := plain.encrypt(sendingAESKey, topHalfCtr)
+
+	assertDeepEquals(t, encrypted, expectedEncrypted)
+}
+
 func Test_pad_PlainMessageUsingTLV0(t *testing.T) {
 	plain := dataMsgPlainText{
 		plain: []byte("123456"),

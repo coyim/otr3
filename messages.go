@@ -351,7 +351,6 @@ func (c dataMsgPlainText) pad() dataMsgPlainText {
 }
 
 func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte) []byte {
-	// This can not cause an error
 	data := c.pad().serialize()
 	dst := make([]byte, len(data))
 	iv := [aes.BlockSize]byte{}
