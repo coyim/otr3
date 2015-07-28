@@ -9,6 +9,8 @@ import (
 	"math/big"
 )
 
+var QueryMessage = "?OTRv2?"
+
 type ake struct {
 	secretExponent   *big.Int
 	ourPublicValue   *big.Int
@@ -319,7 +321,7 @@ func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *ake
 
 func (c *Conversation) parseTheirKey(key []byte) (sig []byte, keyID uint32, err error) {
 	c.theirKey = &PublicKey{}
-	rest, ok1 := c.theirKey.parse(key)
+	rest, ok1 := c.theirKey.Parse(key)
 	sig, keyID, ok2 := extractWord(rest)
 
 	if !ok1 || !ok2 {

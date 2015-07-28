@@ -54,6 +54,6 @@ func bnFromHex(s string) *big.Int {
 func parseIntoPrivateKey(hexString string) *PrivateKey {
 	b, _ := hex.DecodeString(hexString)
 	var pk PrivateKey
-	pk.parse(b)
+	pk.Parse(b)
 	return &pk
 }

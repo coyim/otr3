@@ -521,7 +521,7 @@ func Test_readAccounts_willReturnMoreThanOneAccount(t *testing.T) {
 
 func Test_PublicKey_parse_ParsePofAPublicKeyCorrectly(t *testing.T) {
 	var pk PublicKey
-	_, ok := pk.parse(serializedPublicKey)
+	_, ok := pk.Parse(serializedPublicKey)
 
 	assertDeepEquals(t, pk.P, bnFromHex("00F24843F9447B62138AE49BF83188D1353ADA5CAC118890CFDEC01BF349D75E887B19C221665C7857CAD583AF656C67FB04A99FD8F8D69D09C9529C6C14D426F1E3924DC9243AF2970E3E4B04A23489A09E8A90E7E81EBA763AD4F0636B8A43415B6FC16A02C3624CE76272FA00783C8DB850D3A996B58136F7A0EB80AE0BC613"))
 	assertDeepEquals(t, ok, true)
@@ -529,14 +529,14 @@ func Test_PublicKey_parse_ParsePofAPublicKeyCorrectly(t *testing.T) {
 
 func Test_PublicKey_parse_ReturnsNotOKIfThereIsTooLittleDataForTheKeyTypeTag(t *testing.T) {
 	var pk PublicKey
-	_, ok := pk.parse([]byte{0x00})
+	_, ok := pk.Parse([]byte{0x00})
 
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_PublicKey_parse_ReturnsNotOKIfTheTypeTagIsNotCorrect(t *testing.T) {
 	var pk PublicKey
-	_, ok := pk.parse([]byte{
+	_, ok := pk.Parse([]byte{
 		// key type for something else
 		0x00, 0x01,
 
@@ -566,7 +566,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfTheTypeTagIsNotCorrect(t *testing.T) {
 
 func Test_PublicKey_parse_ReturnsNotOKIfPCannotBeParsedCorrectly(t *testing.T) {
 	var pk PublicKey
-	_, ok := pk.parse([]byte{
+	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
 
@@ -596,7 +596,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfPCannotBeParsedCorrectly(t *testing.T) {
 
 func Test_PublicKey_parse_ReturnsNotOKIfQCannotBeParsedCorrectly(t *testing.T) {
 	var pk PublicKey
-	_, ok := pk.parse([]byte{
+	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
 
@@ -626,7 +626,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfQCannotBeParsedCorrectly(t *testing.T) {
 
 func Test_PublicKey_parse_ReturnsNotOKIfGCannotBeParsedCorrectly(t *testing.T) {
 	var pk PublicKey
-	_, ok := pk.parse([]byte{
+	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
 
@@ -656,7 +656,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfGCannotBeParsedCorrectly(t *testing.T) {
 
 func Test_PublicKey_parse_ReturnsNotOKIfYCannotBeParsedCorrectly(t *testing.T) {
 	var pk PublicKey
-	_, ok := pk.parse([]byte{
+	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
 
@@ -686,7 +686,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfYCannotBeParsedCorrectly(t *testing.T) {
 
 func Test_PublicKey_parse_ReturnsNotOKIfParametersAreMissing(t *testing.T) {
 	var pk PublicKey
-	_, ok := pk.parse([]byte{
+	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
 
@@ -706,21 +706,21 @@ func Test_PublicKey_parse_ReturnsNotOKIfParametersAreMissing(t *testing.T) {
 
 func Test_PublicKey_parse_ParseQofAPublicKeyCorrectly(t *testing.T) {
 	var pk PublicKey
-	pk.parse(serializedPublicKey)
+	pk.Parse(serializedPublicKey)
 
 	assertDeepEquals(t, pk.Q, bnFromHex("00D16B2607FCBC0EDC639F763A54F34475B1CC8473"))
 }
 
 func Test_PublicKey_parse_ParseGofAPublicKeyCorrectly(t *testing.T) {
 	var pk PublicKey
-	pk.parse(serializedPublicKey)
+	pk.Parse(serializedPublicKey)
 
 	assertDeepEquals(t, pk.G, bnFromHex("00B15AFEF5F96EFEE41006F136C23A18849DA8133069A879D083F7C7AA362E187DAE3ED0C4F372D0D4E3AAE567008A1872A6E85D8F84E53A3FE1B352AF0B4E2F0CB033A6D34285ECD3E4A93653BDE99C3A8D840D9D35F82AC2FA8539DB6C7F7A1DAD77FEECD62803757FF1E2DE4CEC4A5A2AD643271514DDEEEF3D008F66FBF9DB"))
 }
 
 func Test_PublicKey_parse_ParseYofAPublicKeyCorrectly(t *testing.T) {
 	var pk PublicKey
-	pk.parse(serializedPublicKey)
+	pk.Parse(serializedPublicKey)
 
 	assertDeepEquals(t, pk.Y, bnFromHex("01F9BE7DA0E4E84774048058B53202B2704BF688A306092ED533A55E68EABA814C8D62F45AAD8FF30C3055DCA461B7DBA6B78938FC4D69780A830C6457CC107F3D275C21D00E53147C14162176C77169D3BCA586DC30F15F4B482160E276869AA336F38AF7FC3686A764AB5A02C751D921A42B8B9AE8E06918059CD73C424154"))
 }
@@ -728,22 +728,22 @@ func Test_PublicKey_parse_ParseYofAPublicKeyCorrectly(t *testing.T) {
 func Test_PrivateKey_parse_ParsePublicKeyofAPrivateKeyCorrectly(t *testing.T) {
 	var priv PrivateKey
 	var pk PublicKey
-	priv.parse(serializedPrivateKey)
-	pk.parse(serializedPublicKey)
+	priv.Parse(serializedPrivateKey)
+	pk.Parse(serializedPublicKey)
 
 	assertDeepEquals(t, priv.PublicKey, pk)
 }
 
 func Test_PrivateKey_parse_ParseXofAPrivateKeyCorrectly(t *testing.T) {
 	var priv PrivateKey
-	ok := priv.parse(serializedPrivateKey)
+	_, ok := priv.Parse(serializedPrivateKey)
 	assertDeepEquals(t, priv.X, bnFromHex("14D0345A3562C480A039E3C72764F72D79043216"))
 	assertDeepEquals(t, ok, true)
 }
 
 func Test_PrivateKey_parse_ReturnsNotOKIfPublicKeyIsNotOK(t *testing.T) {
 	var priv PrivateKey
-	ok := priv.parse([]byte{
+	_, ok := priv.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
 
@@ -762,7 +762,7 @@ func Test_PrivateKey_parse_ReturnsNotOKIfPublicKeyIsNotOK(t *testing.T) {
 
 func Test_PrivateKey_parse_ReturnsNotOKIfPrivateKeyIsNotOK(t *testing.T) {
 	var priv PrivateKey
-	ok := priv.parse([]byte{
+	_, ok := priv.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
 
@@ -796,14 +796,14 @@ func Test_PrivateKey_parse_ReturnsNotOKIfPrivateKeyIsNotOK(t *testing.T) {
 
 func Test_PublicKey_serialize_willSerializeAPublicKeyCorrectly(t *testing.T) {
 	var pk PublicKey
-	pk.parse(serializedPublicKey)
+	pk.Parse(serializedPublicKey)
 	result := pk.serialize()
 	assertDeepEquals(t, result, serializedPublicKey)
 }
 
 func Test_PrivateKey_roundTripGeneratesCorrectValue(t *testing.T) {
 	var pk PrivateKey
-	pk.parse(serializedPrivateKey)
+	pk.Parse(serializedPrivateKey)
 	result := pk.serialize()
 	assertDeepEquals(t, result, serializedPrivateKey)
 }
@@ -816,7 +816,7 @@ func Test_PublicKey_fingerprint_willGenerateACorrectFingerprint(t *testing.T) {
 
 func Test_PublicKey_Verify_willReturnOK(t *testing.T) {
 	var pk PublicKey
-	pk.parse(bytesFromHex("000000000080a5138eb3d3eb9c1d85716faecadb718f87d31aaed1157671d7fee7e488f95e8e0ba60ad449ec732710a7dec5190f7182af2e2f98312d98497221dff160fd68033dd4f3a33b7c078d0d9f66e26847e76ca7447d4bab35486045090572863d9e4454777f24d6706f63e02548dfec2d0a620af37bbc1d24f884708a212c343b480d00000014e9c58f0ea21a5e4dfd9f44b6a9f7f6a9961a8fa9000000803c4d111aebd62d3c50c2889d420a32cdf1e98b70affcc1fcf44d59cca2eb019f6b774ef88153fb9b9615441a5fe25ea2d11b74ce922ca0232bd81b3c0fcac2a95b20cb6e6c0c5c1ace2e26f65dc43c751af0edbb10d669890e8ab6beea91410b8b2187af1a8347627a06ecea7e0f772c28aae9461301e83884860c9b656c722f0000008065af8625a555ea0e008cd04743671a3cda21162e83af045725db2eb2bb52712708dc0cc1a84c08b3649b88a966974bde27d8612c2861792ec9f08786a246fcadd6d8d3a81a32287745f309238f47618c2bd7612cb8b02d940571e0f30b96420bcd462ff542901b46109b1e5ad6423744448d20a57818a8cbb1647d0fea3b664e"))
+	pk.Parse(bytesFromHex("000000000080a5138eb3d3eb9c1d85716faecadb718f87d31aaed1157671d7fee7e488f95e8e0ba60ad449ec732710a7dec5190f7182af2e2f98312d98497221dff160fd68033dd4f3a33b7c078d0d9f66e26847e76ca7447d4bab35486045090572863d9e4454777f24d6706f63e02548dfec2d0a620af37bbc1d24f884708a212c343b480d00000014e9c58f0ea21a5e4dfd9f44b6a9f7f6a9961a8fa9000000803c4d111aebd62d3c50c2889d420a32cdf1e98b70affcc1fcf44d59cca2eb019f6b774ef88153fb9b9615441a5fe25ea2d11b74ce922ca0232bd81b3c0fcac2a95b20cb6e6c0c5c1ace2e26f65dc43c751af0edbb10d669890e8ab6beea91410b8b2187af1a8347627a06ecea7e0f772c28aae9461301e83884860c9b656c722f0000008065af8625a555ea0e008cd04743671a3cda21162e83af045725db2eb2bb52712708dc0cc1a84c08b3649b88a966974bde27d8612c2861792ec9f08786a246fcadd6d8d3a81a32287745f309238f47618c2bd7612cb8b02d940571e0f30b96420bcd462ff542901b46109b1e5ad6423744448d20a57818a8cbb1647d0fea3b664e"))
 	hashed := bytesFromHex("122773a99f5eafbaaa04b419b5c417b9949ce11bf199ea1bee3586619b94bb29")
 	sig := bytesFromHex("2e9e1c92773e6e51541f47f674f17e24138c48af2c86aea3e5689bd9116b5d6d28562c0aeb84a989")
 	result, ok := pk.verify(hashed, sig)
@@ -826,7 +826,7 @@ func Test_PublicKey_Verify_willReturnOK(t *testing.T) {
 
 func Test_PublicKey_Verify_willReturnNotOK(t *testing.T) {
 	var pk PublicKey
-	pk.parse(serializedPublicKey)
+	pk.Parse(serializedPublicKey)
 	hashed := bytesFromHex("122773a99f5eafbaaa04b419b5c417b9949ce11bf199ea1bee3586619b94bb29")
 	sig := bytesFromHex("2e9e1c92773e6e51541f47f674f17e24138c48af2c86aea3e5689bd9116b5d6d28562c0aeb84a989")
 	result, ok := pk.verify(hashed, sig)

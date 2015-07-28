@@ -197,7 +197,7 @@ func readParameter(r *bufio.Reader) (tag string, value *big.Int, end bool, ok bo
 	return
 }
 
-func (pub *PublicKey) parse(in []byte) (index []byte, ok bool) {
+func (pub *PublicKey) Parse(in []byte) (index []byte, ok bool) {
 	var typeTag uint16
 	if index, typeTag, ok = extractShort(in); !ok || typeTag != dsaKeyTypeValue {
 		return in, false
@@ -217,15 +217,15 @@ func (pub *PublicKey) parse(in []byte) (index []byte, ok bool) {
 	return
 }
 
-func (priv *PrivateKey) parse(in []byte) (ok bool) {
-	if in, ok = priv.PublicKey.parse(in); !ok {
-		return false
+func (priv *PrivateKey) Parse(in []byte) (index []byte, ok bool) {
+	if in, ok = priv.PublicKey.Parse(in); !ok {
+		return nil, false
 	}
 
 	priv.PrivateKey.PublicKey = priv.PublicKey.PublicKey
-	_, priv.X, ok = extractMPI(in)
+	index, priv.X, ok = extractMPI(in)
 
-	return ok
+	return index, ok
 }
 
 var dsaKeyType = []byte{0x00, 0x00}
@@ -297,3 +297,72 @@ func encrypt(key, data []byte) (dst []byte, err error) {
 func decrypt(key, dst, src []byte) error {
 	return counterEncipher(key, make([]byte, aes.BlockSize), src, dst)
 }
+
+// Import parses the contents of a libotr private key file.
+/*TODO:Import
+func (priv *PrivateKey) Import(in []byte) bool {
+	mpiStart := []byte(" #")
+
+	mpis := make([]*big.Int, 5)
+
+	for i := 0; i < len(mpis); i++ {
+		start := bytes.Index(in, mpiStart)
+		if start == -1 {
+			return false
+		}
+		in = in[start+len(mpiStart):]
+		end := bytes.IndexFunc(in, notHex)
+		if end == -1 {
+			return false
+		}
+		hexBytes := in[:end]
+		in = in[end:]
+
+		if len(hexBytes)&1 != 0 {
+			return false
+		}
+
+		mpiBytes := make([]byte, len(hexBytes)/2)
+		if _, err := hex.Decode(mpiBytes, hexBytes); err != nil {
+			return false
+		}
+
+		mpis[i] = new(big.Int).SetBytes(mpiBytes)
+	}
+
+	priv.PrivateKey.P = mpis[0]
+	priv.PrivateKey.Q = mpis[1]
+	priv.PrivateKey.G = mpis[2]
+	priv.PrivateKey.Y = mpis[3]
+	priv.PrivateKey.X = mpis[4]
+	priv.PublicKey.PublicKey = priv.PrivateKey.PublicKey
+
+	a := new(big.Int).Exp(priv.PrivateKey.G, priv.PrivateKey.X, priv.PrivateKey.P)
+	return a.Cmp(priv.PrivateKey.Y) == 0
+	return true
+}
+*/
+
+/*TODO:Generate
+func (priv *PrivateKey) Generate(rand io.Reader) {
+	if err := dsa.GenerateParameters(&priv.PrivateKey.PublicKey.Parameters, rand, dsa.L1024N160); err != nil {
+		panic(err.Error())
+	}
+	if err := dsa.GenerateKey(&priv.PrivateKey, rand); err != nil {
+		panic(err.Error())
+	}
+	priv.PublicKey.PublicKey = priv.PrivateKey.PublicKey
+}
+*/
+
+/*TODO:notHex
+func notHex(r rune) bool {
+	if r >= '0' && r <= '9' ||
+		r >= 'a' && r <= 'f' ||
+		r >= 'A' && r <= 'F' {
+		return false
+	}
+
+	return true
+}
+*/
