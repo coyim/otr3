@@ -1,6 +1,7 @@
 package otr3
 
 import (
+	"crypto/rand"
 	"io"
 	"math/big"
 )
@@ -9,7 +10,7 @@ func (c *conversation) rand() io.Reader {
 	if c.Rand != nil {
 		return c.Rand
 	}
-	return c.Rand
+	return rand.Reader
 }
 
 func (c *conversation) randMPI(buf []byte) (*big.Int, bool) {
