@@ -14,6 +14,10 @@ const (
 	errorStartAke
 )
 
+func (p *policies) isOTREnabled() bool {
+	return p.has(allowV1) || p.has(allowV2) || p.has(allowV3)
+}
+
 func (p *policies) has(c policy) bool {
 	return int(*p)&int(c) == int(c)
 }

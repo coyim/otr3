@@ -38,14 +38,23 @@ const (
 	finished
 )
 
+//NOTE: this should be only used in tests
 func newConversation(v otrVersion, rand io.Reader) *conversation {
+	var p policy
+	switch v {
+	case otrV3{}:
+		p = allowV3
+	case otrV2{}:
+		p = allowV2
+	}
+
 	return &conversation{
 		version: v,
 		Rand:    rand,
 		smp: smp{
 			state: smpStateExpect1{},
 		},
-		policies: policies(0),
+		policies: policies(p),
 	}
 }
 
@@ -93,8 +102,14 @@ func (c *conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	return dataMessage
 }
 
-func (c *conversation) send(message []byte) {
+func (c *conversation) send(message []byte) []byte {
 	// FIXME Dummy for now
+
+	if !c.policies.isOTREnabled() {
+		return message
+	}
+
+	return nil
 }
 
 var queryMarker = []byte("?OTR")
@@ -106,6 +121,10 @@ func isQueryMessage(msg []byte) bool {
 // This should be used by the xmpp-client to received OTR messages in plain
 //TODO toSend needs fragmentation to be implemented
 func (c *conversation) receive(message []byte) (toSend []byte, err error) {
+	if !c.policies.isOTREnabled() {
+		return
+	}
+
 	if isQueryMessage(message) {
 		toSend, err = c.receiveQueryMessage(message)
 		return

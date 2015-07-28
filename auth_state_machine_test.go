@@ -603,12 +603,12 @@ func Test_receiveMessage_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
 	cV2 := newConversation(otrV2{}, fixtureRand())
 	cV2.ensureAKE()
 	cV2.ake.state = authStateAwaitingRevealSig{}
-	cV2.policies.add(allowV3)
+	cV2.policies = policies(allowV3)
 
 	cV3 := newConversation(otrV3{}, fixtureRand())
 	cV3.ensureAKE()
 	cV3.ake.state = authStateAwaitingRevealSig{}
-	cV3.policies.add(allowV3)
+	cV3.policies = policies(allowV3)
 
 	msgV2 := fixtureRevealSigMsg(otrV2{})
 	msgV3 := fixtureRevealSigMsg(otrV3{})
@@ -627,12 +627,12 @@ func Test_receiveMessage_ignoresSignatureIfDoesNotAllowV2(t *testing.T) {
 	cV2 := newConversation(otrV2{}, fixtureRand())
 	cV2.ensureAKE()
 	cV2.ake.state = authStateAwaitingSig{}
-	cV2.policies.add(allowV3)
+	cV2.policies = policies(allowV3)
 
 	cV3 := newConversation(otrV3{}, fixtureRand())
 	cV3.ensureAKE()
 	cV3.ake.state = authStateAwaitingSig{}
-	cV3.policies.add(allowV3)
+	cV3.policies = policies(allowV3)
 
 	msgV2 := fixtureSigMsg(otrV2{})
 	msgV3 := fixtureSigMsg(otrV3{})

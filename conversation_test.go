@@ -155,3 +155,17 @@ func Test_genDataMsg_revealOldMACKeysFromKeyManagementContext(t *testing.T) {
 
 	assertDeepEquals(t, dataMsg.oldMACKeys, oldMACKeys)
 }
+
+func Test_OTRisDisabledIfNoVersionIsAllowedInThePolicy(t *testing.T) {
+	var nilB []byte
+	msg := []byte("?OTRv3?")
+
+	c := newConversation(nil, fixtureRand())
+
+	s := c.send(msg)
+	assertDeepEquals(t, s, msg)
+
+	r, err := c.receive(msg)
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, r, nilB)
+}
