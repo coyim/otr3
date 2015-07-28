@@ -180,6 +180,7 @@ func Test_rotateTheirKey_revealAllMACKeysAssociatedWithTheirPreviousPubKey(t *te
 
 	expectedMACKeys := []macKey{
 		k1, k2,
+		k1, k2,
 	}
 
 	c := keyManagementContext{
@@ -191,6 +192,7 @@ func Test_rotateTheirKey_revealAllMACKeysAssociatedWithTheirPreviousPubKey(t *te
 		items: []macKeyUsage{
 			macKeyUsage{theirKeyID: 1, sendingKey: k1, receivingKey: k2},
 			macKeyUsage{theirKeyID: 2, sendingKey: k, receivingKey: k},
+			macKeyUsage{theirKeyID: 1, sendingKey: k1, receivingKey: k2},
 		},
 	}
 
@@ -208,6 +210,7 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 
 	expectedMACKeys := []macKey{
 		k1, k2,
+		k1, k2,
 	}
 
 	c := keyManagementContext{
@@ -222,6 +225,7 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 		items: []macKeyUsage{
 			macKeyUsage{ourKeyID: 1, sendingKey: k1, receivingKey: k2},
 			macKeyUsage{ourKeyID: 2, sendingKey: k, receivingKey: k},
+			macKeyUsage{ourKeyID: 1, sendingKey: k1, receivingKey: k2},
 		},
 	}
 

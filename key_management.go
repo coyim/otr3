@@ -46,9 +46,11 @@ type macKeyHistory struct {
 	items []macKeyUsage
 }
 
-func (h *macKeyHistory) deleteKeysAt(index int) {
-	l := len(h.items)
-	h.items[index], h.items = h.items[l-1], h.items[:l-1]
+func (h *macKeyHistory) deleteKeysAt(del ...int) {
+	for j := len(del) - 1; j >= 0; j-- {
+		l := len(h.items)
+		h.items[del[j]], h.items = h.items[l-1], h.items[:l-1]
+	}
 }
 
 func (h *macKeyHistory) addKeys(ourKeyID uint32, theirKeyID uint32, sendingMACKey macKey, receivingMACKey macKey) {
@@ -63,26 +65,32 @@ func (h *macKeyHistory) addKeys(ourKeyID uint32, theirKeyID uint32, sendingMACKe
 
 func (h *macKeyHistory) forgetMACKeysForOurKey(ourKeyID uint32) []macKey {
 	var ret []macKey
+	var del []int
 
 	for i, k := range h.items {
 		if k.ourKeyID == ourKeyID {
 			ret = append(ret, k.sendingKey, k.receivingKey)
-			h.deleteKeysAt(i)
+			del = append(del, i)
 		}
 	}
+
+	h.deleteKeysAt(del...)
 
 	return ret
 }
 
 func (h *macKeyHistory) forgetMACKeysForTheirKey(theirKeyID uint32) []macKey {
 	var ret []macKey
+	var del []int
 
 	for i, k := range h.items {
 		if k.theirKeyID == theirKeyID {
 			ret = append(ret, k.sendingKey, k.receivingKey)
-			h.deleteKeysAt(i)
+			del = append(del, i)
 		}
 	}
+
+	h.deleteKeysAt(del...)
 
 	return ret
 }
