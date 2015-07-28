@@ -61,6 +61,32 @@ func (h *macKeyHistory) addKeys(ourKeyID uint32, theirKeyID uint32, sendingMACKe
 	h.items = append(h.items, macKeys)
 }
 
+func (h *macKeyHistory) forgetMACKeysForOurKey(ourKeyID uint32) []macKey {
+	var ret []macKey
+
+	for i, k := range h.items {
+		if k.ourKeyID == ourKeyID {
+			ret = append(ret, k.sendingKey, k.receivingKey)
+			h.deleteKeysAt(i)
+		}
+	}
+
+	return ret
+}
+
+func (h *macKeyHistory) forgetMACKeysForTheirKey(theirKeyID uint32) []macKey {
+	var ret []macKey
+
+	for i, k := range h.items {
+		if k.theirKeyID == theirKeyID {
+			ret = append(ret, k.sendingKey, k.receivingKey)
+			h.deleteKeysAt(i)
+		}
+	}
+
+	return ret
+}
+
 func (c *keyManagementContext) revealMACKeys() []macKey {
 	ret := c.oldMACKeys
 	c.oldMACKeys = []macKey{}
@@ -77,29 +103,20 @@ func (c *keyManagementContext) generateNewDHKeyPair(newPrivKey *big.Int) {
 }
 
 func (c *keyManagementContext) revealMACKeysForOurPreviousKeyID() {
-	for index, key := range c.macKeyHistory.items {
-		if key.ourKeyID == (c.ourKeyID - 1) {
-			c.oldMACKeys = append(c.oldMACKeys, key.sendingKey, key.receivingKey)
-			c.macKeyHistory.deleteKeysAt(index)
-		}
-	}
+	keys := c.macKeyHistory.forgetMACKeysForOurKey(c.ourKeyID - 1)
+	c.oldMACKeys = append(c.oldMACKeys, keys...)
 }
 
 func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, newPrivKey *big.Int) {
 	if recipientKeyID == c.ourKeyID {
-		//TODO: reveal MAC keys for c.ourPreviousDHKeys
 		c.revealMACKeysForOurPreviousKeyID()
 		c.generateNewDHKeyPair(newPrivKey)
 	}
 }
 
 func (c *keyManagementContext) revealMACKeysForTheirPreviousKeyID() {
-	for index, key := range c.macKeyHistory.items {
-		if key.theirKeyID == (c.theirKeyID - 1) {
-			c.oldMACKeys = append(c.oldMACKeys, key.sendingKey, key.receivingKey)
-			c.macKeyHistory.deleteKeysAt(index)
-		}
-	}
+	keys := c.macKeyHistory.forgetMACKeysForTheirKey(c.theirKeyID - 1)
+	c.oldMACKeys = append(c.oldMACKeys, keys...)
 }
 
 func (c *keyManagementContext) rotateTheirKey(senderKeyID uint32, pubDHKey *big.Int) {
