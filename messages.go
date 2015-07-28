@@ -191,13 +191,6 @@ func (c dataMsg) checkSign(key macKey) error {
 func (c dataMsg) serializeUnsigned() []byte {
 	var out []byte
 
-	out = appendShort(out, c.protocolVersion)
-	out = append(out, msgTypeData)
-
-	if c.needInstanceTag {
-		out = appendWord(out, c.senderInstanceTag)
-		out = appendWord(out, c.receiverInstanceTag)
-	}
 	//TODO: implement IGNORE_UNREADABLE
 	out = append(out, c.flag)
 	out = appendWord(out, c.senderKeyID)
@@ -243,10 +236,18 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 }
 
 func (c dataMsg) serialize() []byte {
+	var out []byte
+	out = appendShort(out, c.protocolVersion)
+	out = append(out, msgTypeData)
+	if c.needInstanceTag {
+		out = appendWord(out, c.senderInstanceTag)
+		out = appendWord(out, c.receiverInstanceTag)
+	}
+
 	if c.serializeUnsignedCache == nil {
 		c.serializeUnsignedCache = c.serializeUnsigned()
 	}
-	out := c.serializeUnsignedCache
+	out = append(out, c.serializeUnsignedCache...)
 	out = append(out, c.authenticator[:]...)
 
 	keyLen := len(macKey{})

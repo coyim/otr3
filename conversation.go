@@ -88,6 +88,7 @@ func (c *conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		encryptedMsg:   encrypted,
 		oldMACKeys:     c.keys.revealMACKeys(),
 	}
+	dataMessage.sign(keys.sendingMACKey)
 
 	return dataMessage
 }
