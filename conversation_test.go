@@ -12,7 +12,7 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 		msgTypeDHCommit,
 	}
 
-	toSend, err := c.receive(msg)
+	toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, toSend[:3], exp)
@@ -23,7 +23,7 @@ func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 	cxt := newConversation(nil, fixtureRand())
 	cxt.policies.add(allowV3)
 
-	cxt.receive(msg)
+	cxt.Receive(msg)
 
 	assertDeepEquals(t, cxt.version, otrV3{})
 }
@@ -33,7 +33,7 @@ func Test_receiveVerifiesMessageProtocolVersion(t *testing.T) {
 	msg := []byte{0x00, 0x02}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, err := c.receive(msg)
+	_, err := c.Receive(msg)
 
 	assertEquals(t, err, errWrongProtocolVersion)
 }
@@ -42,7 +42,7 @@ func Test_receive_returnsAnErrorForAnInvalidOTRMessageWithoutVersionData(t *test
 	msg := []byte{0x00}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, err := c.receive(msg)
+	_, err := c.Receive(msg)
 
 	assertEquals(t, err, errInvalidOTRMessage)
 }
@@ -54,7 +54,7 @@ func Test_receive_returnsAnErrorForADataMessageWhenNoEncryptionIsActive(t *testi
 	}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, err := c.receive(m)
+	_, err := c.Receive(m)
 	assertDeepEquals(t, err, errEncryptedMessageWithNoSecureChannel)
 }
 
@@ -66,7 +66,7 @@ func Test_receive_returnsAnErrorForAnIncorrectTLVMessage(t *testing.T) {
 	}
 	c := newConversation(otrV3{}, fixtureRand())
 	c.msgState = encrypted
-	_, err := c.receive(m)
+	_, err := c.Receive(m)
 	assertDeepEquals(t, err, newOtrError("corrupt data message"))
 }
 
@@ -82,7 +82,7 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.policies.add(allowV3)
 
-	dhKeyMsg, err := c.receive(dhCommitMsg)
+	dhKeyMsg, err := c.Receive(dhCommitMsg)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhKeyMsg[:lenMsgHeader], exp)
@@ -94,7 +94,7 @@ func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
 	msg := fixtureDHKeyMsg(v)
 	c := bobContextAtAwaitingDHKey()
 
-	toSend, err := c.receive(msg)
+	toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhMsgType(toSend), msgTypeRevealSig)
@@ -199,10 +199,10 @@ func Test_OTRisDisabledIfNoVersionIsAllowedInThePolicy(t *testing.T) {
 
 	c := newConversation(nil, fixtureRand())
 
-	s := c.send(msg)
+	s := c.Send(msg)
 	assertDeepEquals(t, s, msg)
 
-	r, err := c.receive(msg)
+	r, err := c.Receive(msg)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, r, nilB)
 }
@@ -217,7 +217,7 @@ func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {
 	c := newConversation(nil, nil)
 	c.policies = policies(allowV3 | sendWhitespaceTag)
 
-	m := c.send([]byte("hello"))
+	m := c.Send([]byte("hello"))
 	wsPos := len(m) - len(expectedWhitespaceTag)
 	assertDeepEquals(t, m[wsPos:], expectedWhitespaceTag)
 
@@ -228,6 +228,6 @@ func Test_send_doesNotAppendWhitespaceTagsWhenItsNotAllowedbyThePolicy(t *testin
 	c := newConversation(nil, nil)
 	c.policies = policies(allowV3 | ^sendWhitespaceTag)
 
-	toSend := c.send(m)
+	toSend := c.Send(m)
 	assertDeepEquals(t, toSend, m)
 }

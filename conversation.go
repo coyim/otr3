@@ -110,7 +110,7 @@ func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
 	return append(message, genWhitespaceTag(c.policies)...)
 }
 
-func (c *Conversation) send(message []byte) []byte {
+func (c *Conversation) Send(message []byte) []byte {
 	// FIXME Dummy for now
 	var ret []byte
 
@@ -131,7 +131,7 @@ func isQueryMessage(msg []byte) bool {
 
 // This should be used by the xmpp-client to received OTR messages in plain
 //TODO toSend needs fragmentation to be implemented
-func (c *Conversation) receive(message []byte) (toSend []byte, err error) {
+func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
 	if !c.policies.isOTREnabled() {
 		return
 	}
@@ -195,3 +195,19 @@ func (c *Conversation) processDataMessage(msg []byte) ([]byte, []tlv, error) {
 
 	return plain.plain, plain.tlvs, err
 }
+
+/*TODO: IsEncrypted
+func (c *Conversation) IsEncrypted() bool {
+	return true
+}
+*/
+/*TODO: End
+func (c *Conversation) End() (toSend [][]byte) {
+	return [][]byte{}
+}
+*/
+/*TODO: Authenticate
+func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend [][]byte, err error) {
+	return [][]byte{}, nil
+}
+*/

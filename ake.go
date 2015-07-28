@@ -9,7 +9,12 @@ import (
 	"math/big"
 )
 
-//TODO: var QueryMessage = "?OTRv2?"
+// QueryMessage can be sent to a peer to start an OTR conversation.
+//TODO:var QueryMessage = "?OTRv2?"
+
+// ErrorPrefix can be used to make an OTR error by appending an error message
+// to it.
+//TODO:var ErrorPrefix = "?OTR Error:"
 
 type ake struct {
 	secretExponent   *big.Int

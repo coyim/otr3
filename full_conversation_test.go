@@ -24,7 +24,7 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 	for _, s := range states {
 		c.msgState = s
 
-		toSend, err := c.receive(m)
+		toSend, err := c.Receive(m)
 		assertEquals(t, err, errEncryptedMessageWithNoSecureChannel)
 		assertEquals(t, c.smp.state, smpStateExpect1{})
 		assertDeepEquals(t, toSend, smpAbortMsg)
@@ -47,27 +47,27 @@ func Test_AKEHappyPath(t *testing.T) {
 	var toSend []byte
 	var err error
 	//Alice send Bob queryMsg
-	toSend, err = bob.receive(msg)
+	toSend, err = bob.Receive(msg)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
 
 	//Bob send Alice DHCommit
-	toSend, err = alice.receive(toSend)
+	toSend, err = alice.Receive(toSend)
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
 	assertEquals(t, err, nil)
 
 	//Alice send Bob DHKey
-	toSend, err = bob.receive(toSend)
+	toSend, err = bob.Receive(toSend)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: toSend})
 
 	//Bob send Alice RevealSig
-	toSend, err = alice.receive(toSend)
+	toSend, err = alice.Receive(toSend)
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.ake.state, authStateNone{})
 
 	//Alice send Bob Sig
-	toSend, err = bob.receive(toSend)
+	toSend, err = bob.Receive(toSend)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateNone{})
 
@@ -101,22 +101,22 @@ func Test_AKENotAllowV2(t *testing.T) {
 	var nilB []byte
 	var err error
 	//Alice send Bob queryMsg
-	toSend, err = bob.receive(msg)
+	toSend, err = bob.Receive(msg)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
 
 	//Bob send Alice DHCommit
-	toSend, err = alice.receive(toSend)
+	toSend, err = alice.Receive(toSend)
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
 	assertEquals(t, err, nil)
 
 	//Alice send Bob DHKey
-	toSend, err = bob.receive(toSend)
+	toSend, err = bob.Receive(toSend)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: toSend})
 
 	//Bob send Alice RevealSig
-	toSend, err = alice.receive(toSend)
+	toSend, err = alice.Receive(toSend)
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, toSend, nilB)
@@ -138,27 +138,27 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	var toSend []byte
 	var err error
 	//Alice send Bob queryMsg
-	toSend, err = bob.receive(msg)
+	toSend, err = bob.Receive(msg)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
 
 	//Bob send Alice DHCommit
-	toSend, err = alice.receive(toSend)
+	toSend, err = alice.Receive(toSend)
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
 	assertEquals(t, err, nil)
 
 	//Alice send Bob DHKey
-	toSend, err = bob.receive(toSend)
+	toSend, err = bob.Receive(toSend)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: toSend})
 
 	//Bob send Alice RevealSig
-	toSend, err = alice.receive(toSend)
+	toSend, err = alice.Receive(toSend)
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.ake.state, authStateNone{})
 
 	//Alice send Bob Sig
-	toSend, err = bob.receive(toSend)
+	toSend, err = bob.Receive(toSend)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateNone{})
 	datamsg := alice.genDataMsg([]byte("hello")).serialize()
