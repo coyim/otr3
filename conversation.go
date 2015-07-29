@@ -103,11 +103,37 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 }
 
 func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
+	//TODO: stop sending after receiving a plaintext (nonDH-Commit) message
 	if !c.policies.has(sendWhitespaceTag) {
 		return message
 	}
 
 	return append(message, genWhitespaceTag(c.policies)...)
+}
+
+func (c *Conversation) acceptWhitespacetag(message []byte) (ret, toSend []byte, err error) {
+	wsPos := bytes.Index(message, whitespaceTagHeader)
+	if wsPos == -1 {
+		ret = message
+		return
+	}
+
+	ret = message[:wsPos]
+	tag := message[wsPos:]
+
+	switch {
+	case c.policies.has(allowV3) && bytes.Contains(tag, otrV3{}.whitespaceTag()):
+		c.version = otrV3{}
+	case c.policies.has(allowV2) && bytes.Contains(tag, otrV2{}.whitespaceTag()):
+		c.version = otrV2{}
+	default:
+		err = errInvalidVersion
+		return
+	}
+
+	toSend, err = c.sendDHCommit()
+
+	return
 }
 
 func (c *Conversation) Send(message []byte) []byte {
@@ -136,8 +162,16 @@ func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
 		return
 	}
 
+	//TODO: warn the user for REQUIRE_ENCRYPTION
+	//See: Receiving plaintext with/without the whitespace tag
+
 	if isQueryMessage(message) {
 		toSend, err = c.receiveQueryMessage(message)
+		return
+	}
+
+	message, toSend, err = c.acceptWhitespacetag(message)
+	if err != nil || toSend != nil {
 		return
 	}
 

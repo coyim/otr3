@@ -11,6 +11,11 @@ func dhMsgType(msg []byte) byte {
 	return msg[2]
 }
 
+func dhMsgVersion(msg []byte) uint16 {
+	_, protocolVersion, _ := extractShort(msg)
+	return protocolVersion
+}
+
 func fixtureConversation() *Conversation {
 	return fixtureConversationWithVersion(otrV3{})
 }

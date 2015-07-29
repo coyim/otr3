@@ -231,3 +231,55 @@ func Test_send_doesNotAppendWhitespaceTagsWhenItsNotAllowedbyThePolicy(t *testin
 	toSend := c.Send(m)
 	assertDeepEquals(t, toSend, m)
 }
+
+func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV2)
+
+	msg := genWhitespaceTag(policies(allowV2))
+
+	toSend, err := c.Receive(msg)
+
+	assertEquals(t, err, nil)
+	assertEquals(t, dhMsgType(toSend), msgTypeDHCommit)
+	assertEquals(t, dhMsgVersion(toSend), uint16(2))
+}
+
+func Test_receive_ignoresV2WhitespaceTagIfV2IsNotInThePolicy(t *testing.T) {
+	var nilB []byte
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV3)
+
+	msg := genWhitespaceTag(policies(allowV2))
+
+	toSend, err := c.Receive(msg)
+
+	assertEquals(t, err, errInvalidVersion)
+	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV2 | allowV3)
+
+	msg := genWhitespaceTag(policies(allowV2 | allowV3))
+
+	toSend, err := c.Receive(msg)
+
+	assertEquals(t, err, nil)
+	assertEquals(t, dhMsgType(toSend), msgTypeDHCommit)
+	assertEquals(t, dhMsgVersion(toSend), uint16(3))
+}
+
+func Test_receive_ignoresV3WhitespaceTagIfV3IsNotInThePolicy(t *testing.T) {
+	var nilB []byte
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV2)
+
+	msg := genWhitespaceTag(policies(allowV3))
+
+	toSend, err := c.Receive(msg)
+
+	assertEquals(t, err, errInvalidVersion)
+	assertDeepEquals(t, toSend, nilB)
+}

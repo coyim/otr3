@@ -43,14 +43,7 @@ func acceptOTRRequest(p policies, msg []byte) (otrVersion, bool) {
 	return nil, false
 }
 
-func (c *Conversation) receiveQueryMessage(msg []byte) (toSend []byte, err error) {
-	v, ok := acceptOTRRequest(c.policies, msg)
-	if !ok {
-		return nil, errInvalidVersion
-	}
-
-	//TODO set the version for every existing otrContext
-	c.version = v
+func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
 	c.ourInstanceTag = generateInstanceTag()
 
 	toSend, err = c.dhCommitMessage()
@@ -63,4 +56,16 @@ func (c *Conversation) receiveQueryMessage(msg []byte) (toSend []byte, err error
 	}
 
 	return
+}
+
+func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
+	v, ok := acceptOTRRequest(c.policies, msg)
+	if !ok {
+		return nil, errInvalidVersion
+	}
+
+	//TODO set the version for every existing otrContext
+	c.version = v
+
+	return c.sendDHCommit()
 }
