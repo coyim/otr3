@@ -7,9 +7,7 @@ import (
 	"io"
 )
 
-const (
-	lenMsgHeader = 3
-)
+const ()
 
 type Conversation struct {
 	//TODO:xmpp is using TheirPublicKey
@@ -204,7 +202,9 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]byte, error) {
 }
 
 func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err error) {
-	msg = msg[c.version.headerLen():]
+	// FIXME: deal with errors in this function
+	msg, _ = c.parseMessageHeader(msg)
+
 	dataMessage := dataMsg{}
 	dataMessage.deserialize(msg)
 
@@ -226,6 +226,14 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 	plain = p.plain
 
 	return
+}
+
+func (c *Conversation) messageHeader(msgType byte) []byte {
+	return c.version.messageHeader(c, msgType)
+}
+
+func (c *Conversation) parseMessageHeader(msg []byte) ([]byte, error) {
+	return c.version.parseMessageHeader(c, msg)
 }
 
 func (c *Conversation) IsEncrypted() bool {

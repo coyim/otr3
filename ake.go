@@ -295,10 +295,7 @@ func chainErrors(f1 func([]byte) ([]byte, error), f2 func([]byte) error, msg []b
 }
 
 func (c *Conversation) ensureValidMessage(msg []byte) ([]byte, error) {
-	if len(msg) < c.version.headerLen() {
-		return nil, errInvalidOTRMessage
-	}
-	return msg[c.version.headerLen():], nil
+	return c.parseMessageHeader(msg)
 }
 
 // processSig = bob = x

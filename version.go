@@ -8,10 +8,11 @@ type otrVersion interface {
 	isGroupElement(n *big.Int) bool
 	isFragmented(data []byte) bool
 	fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte
-	needInstanceTag() bool
-	headerLen() int
+	// needInstanceTag() bool
+	// headerLen() int
 	whitespaceTag() []byte
-	serializedMessageHeader(c *Conversation, msgType byte) []byte
+	messageHeader(c *Conversation, msgType byte) []byte
+	parseMessageHeader(c *Conversation, msg []byte) ([]byte, error)
 }
 
 func newOtrVersion(v uint16) otrVersion {

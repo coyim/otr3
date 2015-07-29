@@ -10,6 +10,8 @@ import (
 	"math/big"
 )
 
+const messageHeaderPrefix = 3
+
 const (
 	msgTypeData      = byte(3)
 	msgTypeDHCommit  = byte(2)
@@ -30,7 +32,7 @@ type dhCommit struct {
 }
 
 func (c dhCommit) serialize(conv *Conversation) []byte {
-	out := conv.version.serializedMessageHeader(conv, msgTypeDHCommit)
+	out := conv.messageHeader(msgTypeDHCommit)
 	out = appendData(out, c.encryptedGx)
 	if c.hashedGx == [sha256.Size]byte{} {
 		c.hashedGx = sha256.Sum256(appendMPI(nil, c.gx))
@@ -56,7 +58,7 @@ type dhKey struct {
 }
 
 func (c dhKey) serialize(conv *Conversation) []byte {
-	out := conv.version.serializedMessageHeader(conv, msgTypeDHKey)
+	out := conv.messageHeader(msgTypeDHKey)
 	return appendMPI(out, c.gy)
 }
 
@@ -82,7 +84,7 @@ type revealSig struct {
 }
 
 func (c revealSig) serialize(conv *Conversation) []byte {
-	out := conv.version.serializedMessageHeader(conv, msgTypeRevealSig)
+	out := conv.messageHeader(msgTypeRevealSig)
 	out = appendData(out, c.r[:])
 	out = append(out, c.encryptedSig...)
 	return append(out, c.macSig[:20]...)
@@ -107,7 +109,7 @@ type sig struct {
 }
 
 func (c sig) serialize(conv *Conversation) []byte {
-	out := conv.version.serializedMessageHeader(conv, msgTypeSig)
+	out := conv.messageHeader(msgTypeSig)
 	out = append(out, c.encryptedSig...)
 	return append(out, c.macSig[:20]...)
 }
@@ -208,7 +210,7 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 }
 
 func (c dataMsg) serialize(conv *Conversation) []byte {
-	out := conv.version.serializedMessageHeader(conv, msgTypeData)
+	out := conv.messageHeader(msgTypeData)
 
 	if c.serializeUnsignedCache == nil {
 		c.serializeUnsignedCache = c.serializeUnsigned()

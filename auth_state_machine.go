@@ -95,7 +95,7 @@ func (authStateBase) receiveDHCommitMessage(c *Conversation, msg []byte) (authSt
 }
 
 func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
-	if err := generateCommitMsgInstanceTags(c, msg); err != nil {
+	if _, err := c.parseMessageHeader(msg); err != nil {
 		return s, nil, err
 	}
 
@@ -111,24 +111,6 @@ func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (auth
 	return authStateAwaitingRevealSig{}, ret, nil
 }
 
-func generateCommitMsgInstanceTags(ake *Conversation, msg []byte) error {
-	if ake.version.needInstanceTag() {
-		if len(msg) < lenMsgHeader+4 {
-			return errInvalidOTRMessage
-		}
-
-		_, receiverInstanceTag, _ := extractWord(msg[lenMsgHeader:])
-		ake.ourInstanceTag = generateInstanceTag()
-		ake.theirInstanceTag = receiverInstanceTag
-	}
-	return nil
-}
-
-func generateInstanceTag() uint32 {
-	//TODO generate this
-	return 0x00000100 + 0x01
-}
-
 func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
 	//Forget the DH-commit received before we sent the DH-Key
 
@@ -138,17 +120,18 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg 
 
 	//TODO: this should not change my instanceTag, since this is supposed to be a retransmit
 	// We can ignore errors from this function, since processDHCommit checks for the sameconditions
-	generateCommitMsgInstanceTags(c, msg)
+	c.parseMessageHeader(msg)
 
 	return authStateAwaitingRevealSig{}, c.serializeDHKey(), nil
 }
 
 func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
-	if len(msg) < c.version.headerLen() {
-		return s, nil, errInvalidOTRMessage
+	newMsg, err := c.parseMessageHeader(msg)
+	if err != nil {
+		return s, nil, err
 	}
 
-	newMsg, _, ok1 := extractData(msg[c.version.headerLen():])
+	newMsg, _, ok1 := extractData(newMsg)
 	_, theirHashedGx, ok2 := extractData(newMsg)
 
 	if !ok1 || !ok2 {

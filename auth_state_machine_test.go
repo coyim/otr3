@@ -227,7 +227,7 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing
 	c := newConversation(otrV3{}, fixtureRand())
 
 	dhCommitMsg := fixtureDHCommitMsg()
-	newMsg, encryptedGx, _ := extractData(dhCommitMsg[c.version.headerLen():])
+	newMsg, encryptedGx, _ := extractData(dhCommitMsg[otrv3HeaderLen:])
 	_, hashedGx, _ := extractData(newMsg)
 
 	authStateNone{}.receiveDHCommitMessage(c, dhCommitMsg)
@@ -257,7 +257,7 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 	c.ake.hashedGx = [sha256.Size]byte{0x05} //some hashedGx
 
 	newDHCommitMsg := fixtureDHCommitMsg()
-	newMsg, newEncryptedGx, _ := extractData(newDHCommitMsg[c.version.headerLen():])
+	newMsg, newEncryptedGx, _ := extractData(newDHCommitMsg[otrv3HeaderLen:])
 	_, newHashedGx, _ := extractData(newMsg)
 
 	authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsg())
@@ -279,7 +279,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 	ourDHCommitAKE := fixtureConversation()
 	ourDHMsg, _ := ourDHCommitAKE.dhCommitMessage()
 
-	//make sure we store the same alues when creating the DH commit
+	//make sure we store the same values when creating the DH commit
 	c := newConversation(otrV3{}, fixtureRand())
 	c.startAKE()
 	c.ake.encryptedGx = ourDHCommitAKE.ake.encryptedGx
@@ -287,12 +287,13 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 
 	// force their hashedGx to be lower than ours
 	msg := fixtureDHCommitMsg()
-	newPoint, _, _ := extractData(msg[c.version.headerLen():])
+	newPoint, _, _ := extractData(msg[otrv3HeaderLen:])
 	newPoint[4] = 0x00
 
-	state, newMsg, _ := authStateAwaitingDHKey{}.receiveDHCommitMessage(c, msg)
+	state, newMsg, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(c, msg)
+	assertDeepEquals(t, err, nil)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, newMsg, ourDHMsg)
+	assertDeepEquals(t, newMsg[otrv3HeaderLen:], ourDHMsg[otrv3HeaderLen:])
 }
 
 func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaitingRevealSig(t *testing.T) {
@@ -306,7 +307,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 
 	// force their hashedGx to be higher than ours
 	msg := fixtureDHCommitMsg()
-	newPoint, _, _ := extractData(msg[c.version.headerLen():])
+	newPoint, _, _ := extractData(msg[otrv3HeaderLen:])
 	newPoint[4] = 0xFF
 
 	state, newMsg, _ := authStateAwaitingDHKey{}.receiveDHCommitMessage(c, msg)
@@ -505,20 +506,6 @@ func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {
 		assertEquals(t, state, s)
 		assertDeepEquals(t, msg, nilB)
 	}
-}
-
-func Test_generateDHCommitMsgInstanceTags(t *testing.T) {
-	senderInstanceTag := uint32(0x00000101)
-
-	dhCommitAke := fixtureConversation()
-	dhCommitAke.ourInstanceTag = senderInstanceTag
-	dhCommitMsg, _ := dhCommitAke.dhCommitMessage()
-
-	ake := fixtureConversation()
-	generateCommitMsgInstanceTags(ake, dhCommitMsg)
-
-	assertEquals(t, ake.theirInstanceTag, senderInstanceTag)
-	assertEquals(t, ake.ourInstanceTag, generateInstanceTag())
 }
 
 func Test_receiveAKE_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.T) {
@@ -796,18 +783,6 @@ func Test_authStateAwaitingSig_receiveSigMessage_returnsErrorIfProcessSigFails(t
 	assertEquals(t, err, errInvalidOTRMessage)
 }
 
-func Test_generateCommitMsgInstanceTags_returnsErrorIfMsgDoesntHaveMsgHeader(t *testing.T) {
-	ake := fixtureConversation()
-	err := generateCommitMsgInstanceTags(ake, []byte{0x00, 0x01})
-	assertEquals(t, err, errInvalidOTRMessage)
-}
-
-func Test_generateCommitMsgInstanceTags_returnsErrorIfMsgIsntLongEnoughForInstanceTag(t *testing.T) {
-	ake := fixtureConversation()
-	err := generateCommitMsgInstanceTags(ake, []byte{0x00, 0x01, 0x02, 0x00, 0x00, 0x00})
-	assertEquals(t, err, errInvalidOTRMessage)
-}
-
 func Test_authStateAwaitingRevealSig_receiveDHCommitMessage_returnsErrorIfProcessDHCommitOrGenerateCommitInstanceTagsFailsFails(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
 	ourDHCommitAKE.dhCommitMessage()
@@ -840,7 +815,7 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfdhKeyMessageFails(t
 	c.startAKE()
 	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
 
-	_, _, err := authStateNone{}.receiveDHCommitMessage(c, []byte{0x00, 0x00})
+	_, _, err := authStateNone{}.receiveDHCommitMessage(c, []byte{0x00, 0x00, 0x00})
 	assertEquals(t, err, errShortRandomRead)
 }
 

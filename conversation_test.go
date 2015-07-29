@@ -88,7 +88,7 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	dhKeyMsg, err := c.Receive(dhCommitMsg)
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, dhKeyMsg[:lenMsgHeader], exp)
+	assertDeepEquals(t, dhKeyMsg[:messageHeaderPrefix], exp)
 }
 
 func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {

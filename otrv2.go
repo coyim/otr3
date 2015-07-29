@@ -18,6 +18,8 @@ func (v otrV2) isGroupElement(n *big.Int) bool {
 
 var otrv2FragmentationPrefix = []byte("?OTR,")
 
+const otrv2HeaderLen = 3
+
 func (v otrV2) isFragmented(data []byte) bool {
 	return bytes.HasPrefix(data, otrv2FragmentationPrefix)
 }
@@ -30,22 +32,21 @@ func (v otrV2) protocolVersion() uint16 {
 	return 2
 }
 
-func (v otrV2) needInstanceTag() bool {
-	return false
-}
-
-func (v otrV2) headerLen() int {
-	return 3
-}
-
 func (v otrV2) whitespaceTag() []byte {
 	return []byte{
 		0x20, 0x20, 0x09, 0x09, 0x20, 0x20, 0x09, 0x20,
 	}
 }
 
-func (v otrV2) serializedMessageHeader(c *Conversation, msgType byte) []byte {
+func (v otrV2) messageHeader(c *Conversation, msgType byte) []byte {
 	out := appendShort(nil, v.protocolVersion())
 	out = append(out, msgType)
 	return out
+}
+
+func (v otrV2) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
+	if len(msg) < otrv2HeaderLen {
+		return nil, errInvalidOTRMessage
+	}
+	return msg[otrv2HeaderLen:], nil
 }

@@ -485,7 +485,7 @@ func Test_dataMsg_serializeWithAuthenticator(t *testing.T) {
 	msg := m.serialize(conv)
 
 	mac := hmac.New(sha1.New, sendingMACKey[:])
-	mac.Write(msg[otrV2{}.headerLen():bodyLen])
+	mac.Write(msg[otrv2HeaderLen:bodyLen])
 	auth := mac.Sum(nil)
 
 	assertDeepEquals(t, msg[bodyLen:bodyLen+len(auth)], auth[:])
