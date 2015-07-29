@@ -145,11 +145,10 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 
 func (c *Conversation) serializeDHCommit(public *big.Int) []byte {
 	dhCommitMsg := dhCommit{
-		messageHeader: c.messageHeader(),
-		gx:            public,
-		encryptedGx:   c.ake.encryptedGx,
+		gx:          public,
+		encryptedGx: c.ake.encryptedGx,
 	}
-	return dhCommitMsg.serialize()
+	return dhCommitMsg.serialize(c)
 }
 
 // dhKeyMessage = alice = y
@@ -169,11 +168,10 @@ func (c *Conversation) dhKeyMessage() ([]byte, error) {
 
 func (c *Conversation) serializeDHKey() []byte {
 	dhKeyMsg := dhKey{
-		messageHeader: c.messageHeader(),
-		gy:            c.ake.ourPublicValue,
+		gy: c.ake.ourPublicValue,
 	}
 
-	return dhKeyMsg.serialize()
+	return dhKeyMsg.serialize(c)
 }
 
 // revealSigMessage = bob = x
@@ -189,13 +187,12 @@ func (c *Conversation) revealSigMessage() ([]byte, error) {
 
 	macSig := sumHMAC(c.ake.revealKey.m2[:], encryptedSig)
 	revealSigMsg := revealSig{
-		messageHeader: c.messageHeader(),
-		r:             c.ake.r,
-		encryptedSig:  encryptedSig,
-		macSig:        macSig,
+		r:            c.ake.r,
+		encryptedSig: encryptedSig,
+		macSig:       macSig,
 	}
 
-	return revealSigMsg.serialize(), nil
+	return revealSigMsg.serialize(c), nil
 }
 
 // sigMessage = alice = y
@@ -211,12 +208,11 @@ func (c *Conversation) sigMessage() ([]byte, error) {
 
 	macSig := sumHMAC(c.ake.sigKey.m2[:], encryptedSig)
 	sigMsg := sig{
-		messageHeader: c.messageHeader(),
-		encryptedSig:  encryptedSig,
-		macSig:        macSig,
+		encryptedSig: encryptedSig,
+		macSig:       macSig,
 	}
 
-	return sigMsg.serialize(), nil
+	return sigMsg.serialize(c), nil
 }
 
 // processDHCommit = alice = y

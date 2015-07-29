@@ -43,3 +43,9 @@ func (v otrV2) whitespaceTag() []byte {
 		0x20, 0x20, 0x09, 0x09, 0x20, 0x20, 0x09, 0x20,
 	}
 }
+
+func (v otrV2) serializedMessageHeader(c *Conversation, msgType byte) []byte {
+	out := appendShort(nil, v.protocolVersion())
+	out = append(out, msgType)
+	return out
+}

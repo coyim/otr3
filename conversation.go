@@ -64,15 +64,6 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 	}
 }
 
-func (c *Conversation) messageHeader() messageHeader {
-	return messageHeader{
-		protocolVersion:     c.version.protocolVersion(),
-		needInstanceTag:     c.version.needInstanceTag(),
-		senderInstanceTag:   c.ourInstanceTag,
-		receiverInstanceTag: c.theirInstanceTag,
-	}
-}
-
 func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	if err != nil {
@@ -90,9 +81,7 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	}
 
 	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
-	msgHeader := c.messageHeader()
 	dataMessage := dataMsg{
-		messageHeader: msgHeader,
 		//TODO: implement IGNORE_UNREADABLE
 		flag: 0x00,
 

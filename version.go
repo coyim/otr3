@@ -11,6 +11,7 @@ type otrVersion interface {
 	needInstanceTag() bool
 	headerLen() int
 	whitespaceTag() []byte
+	serializedMessageHeader(c *Conversation, msgType byte) []byte
 }
 
 func newOtrVersion(v uint16) otrVersion {

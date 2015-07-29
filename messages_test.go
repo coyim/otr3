@@ -3,6 +3,7 @@ package otr3
 import (
 	"crypto/aes"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha1"
 	"math/big"
 	"testing"
@@ -473,6 +474,7 @@ func Test_dataMsg_serializeWithAuthenticator(t *testing.T) {
 	var sendingMACKey macKey
 	copy(sendingMACKey[:], bytesFromHex("a45e2b122f58bbe2042f73f092329ad9b5dfe23e"))
 
+	conv := newConversation(otrV2{}, rand.Reader)
 	bodyLen := 30
 	m := dataMsg{
 		y:            big.NewInt(0x01),
@@ -480,7 +482,7 @@ func Test_dataMsg_serializeWithAuthenticator(t *testing.T) {
 	}
 	m.sign(sendingMACKey)
 
-	msg := m.serialize()
+	msg := m.serialize(conv)
 
 	mac := hmac.New(sha1.New, sendingMACKey[:])
 	mac.Write(msg[otrV2{}.headerLen():bodyLen])
@@ -494,13 +496,14 @@ func Test_dataMsg_serializeExposesOldMACKeys(t *testing.T) {
 	copy(macKey1[:], bytesFromHex("a45e2b122f58bbe2042f73f092329ad9b5dfe23e"))
 	copy(macKey2[:], bytesFromHex("e55a2b111f60bbe1041f73f003333ad9a5dfe22a"))
 
+	conv := newConversation(otrV2{}, rand.Reader)
 	keyLen := len(macKey{})
 
 	m := dataMsg{
 		y:          big.NewInt(0x01),
 		oldMACKeys: []macKey{macKey1, macKey2},
 	}
-	msg := m.serialize()
+	msg := m.serialize(conv)
 	MACsIndex := len(msg) - 2*keyLen - 4
 
 	_, expectedData, _ := extractData(msg[MACsIndex:])

@@ -19,31 +19,18 @@ const (
 )
 
 type message interface {
-	serialize() []byte
+	serialize(conv *Conversation) []byte
 	deserialize(msg []byte) error
 }
 
-type messageHeader struct {
-	protocolVersion     uint16
-	needInstanceTag     bool
-	senderInstanceTag   uint32
-	receiverInstanceTag uint32
-}
-
 type dhCommit struct {
-	messageHeader
 	gx          *big.Int
 	encryptedGx []byte
 	hashedGx    [sha256.Size]byte
 }
 
-func (c dhCommit) serialize() []byte {
-	out := appendShort(nil, c.protocolVersion)
-	out = append(out, msgTypeDHCommit)
-	if c.needInstanceTag {
-		out = appendWord(out, c.senderInstanceTag)
-		out = appendWord(out, c.receiverInstanceTag)
-	}
+func (c dhCommit) serialize(conv *Conversation) []byte {
+	out := conv.version.serializedMessageHeader(conv, msgTypeDHCommit)
 	out = appendData(out, c.encryptedGx)
 	if c.hashedGx == [sha256.Size]byte{} {
 		c.hashedGx = sha256.Sum256(appendMPI(nil, c.gx))
@@ -65,18 +52,11 @@ func (c *dhCommit) deserialize(msg []byte) error {
 }
 
 type dhKey struct {
-	messageHeader
 	gy *big.Int
 }
 
-func (c dhKey) serialize() []byte {
-	out := appendShort(nil, c.protocolVersion)
-	out = append(out, msgTypeDHKey)
-	if c.needInstanceTag {
-		out = appendWord(out, c.senderInstanceTag)
-		out = appendWord(out, c.receiverInstanceTag)
-	}
-
+func (c dhKey) serialize(conv *Conversation) []byte {
+	out := conv.version.serializedMessageHeader(conv, msgTypeDHKey)
 	return appendMPI(out, c.gy)
 }
 
@@ -96,19 +76,13 @@ func (c *dhKey) deserialize(msg []byte) error {
 }
 
 type revealSig struct {
-	messageHeader
 	r            [16]byte
 	encryptedSig []byte
 	macSig       []byte
 }
 
-func (c revealSig) serialize() []byte {
-	out := appendShort(nil, c.protocolVersion)
-	out = append(out, msgTypeRevealSig)
-	if c.needInstanceTag {
-		out = appendWord(out, c.senderInstanceTag)
-		out = appendWord(out, c.receiverInstanceTag)
-	}
+func (c revealSig) serialize(conv *Conversation) []byte {
+	out := conv.version.serializedMessageHeader(conv, msgTypeRevealSig)
 	out = appendData(out, c.r[:])
 	out = append(out, c.encryptedSig...)
 	return append(out, c.macSig[:20]...)
@@ -128,18 +102,12 @@ func (c *revealSig) deserialize(msg []byte) error {
 }
 
 type sig struct {
-	messageHeader
 	encryptedSig []byte
 	macSig       []byte
 }
 
-func (c sig) serialize() []byte {
-	out := appendShort(nil, c.protocolVersion)
-	out = append(out, msgTypeSig)
-	if c.needInstanceTag {
-		out = appendWord(out, c.senderInstanceTag)
-		out = appendWord(out, c.receiverInstanceTag)
-	}
+func (c sig) serialize(conv *Conversation) []byte {
+	out := conv.version.serializedMessageHeader(conv, msgTypeSig)
 	out = append(out, c.encryptedSig...)
 	return append(out, c.macSig[:20]...)
 }
@@ -156,7 +124,6 @@ func (c *sig) deserialize(msg []byte) error {
 }
 
 type dataMsg struct {
-	messageHeader
 	flag                        byte
 	senderKeyID, recipientKeyID uint32
 	y                           *big.Int
@@ -240,18 +207,13 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	return nil
 }
 
-func (c dataMsg) serialize() []byte {
-	var out []byte
-	out = appendShort(out, c.protocolVersion)
-	out = append(out, msgTypeData)
-	if c.needInstanceTag {
-		out = appendWord(out, c.senderInstanceTag)
-		out = appendWord(out, c.receiverInstanceTag)
-	}
+func (c dataMsg) serialize(conv *Conversation) []byte {
+	out := conv.version.serializedMessageHeader(conv, msgTypeData)
 
 	if c.serializeUnsignedCache == nil {
 		c.serializeUnsignedCache = c.serializeUnsigned()
 	}
+
 	out = append(out, c.serializeUnsignedCache...)
 	out = append(out, c.authenticator[:]...)
 
