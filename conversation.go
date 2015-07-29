@@ -211,3 +211,8 @@ func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSen
 	return [][]byte{}, nil
 }
 */
+/*TODO: SMPQuestion
+func (c *Conversation) SMPQuestion() string {
+	return c.smp.question
+}
+*/
