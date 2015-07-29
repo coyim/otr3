@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/subtle"
+	"encoding/binary"
 	"errors"
 	"math/big"
 )
@@ -210,6 +211,8 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 
 	in = in[1:]
 	var ok bool
+	//TODO
+	//Extracts sender and receiver depends on OTR version
 	in, c.senderKeyID, ok = extractWord(in)
 	if !ok {
 		return errors.New("otr: dataMsg.deserialize corrupted senderKeyID")
@@ -225,6 +228,10 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	if len(in) < len(c.topHalfCtr) {
 		return errors.New("otr: dataMsg.deserialize corrupted topHalfCtr")
 	}
+	if binary.BigEndian.Uint64(in) <= 0 {
+		return errors.New("otr: dataMsg.deserialize invalid topHalfCtr")
+	}
+
 	copy(c.topHalfCtr[:], in)
 	in = in[len(c.topHalfCtr):]
 	in, c.encryptedMsg, ok = extractData(in)
