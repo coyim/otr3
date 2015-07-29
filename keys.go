@@ -2,10 +2,12 @@ package otr3
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/dsa"
 	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"hash"
 	"io"
@@ -305,7 +307,6 @@ func decrypt(key, dst, src []byte) error {
 }
 
 // Import parses the contents of a libotr private key file.
-/*TODO:Import
 func (priv *PrivateKey) Import(in []byte) bool {
 	mpiStart := []byte(" #")
 
@@ -345,23 +346,26 @@ func (priv *PrivateKey) Import(in []byte) bool {
 
 	a := new(big.Int).Exp(priv.PrivateKey.G, priv.PrivateKey.X, priv.PrivateKey.P)
 	return a.Cmp(priv.PrivateKey.Y) == 0
-	return true
 }
-*/
 
-/*TODO:Generate
-func (priv *PrivateKey) Generate(rand io.Reader) {
+func (priv *PrivateKey) generate(rand io.Reader) error {
 	if err := dsa.GenerateParameters(&priv.PrivateKey.PublicKey.Parameters, rand, dsa.L1024N160); err != nil {
-		panic(err.Error())
+		return err
 	}
 	if err := dsa.GenerateKey(&priv.PrivateKey, rand); err != nil {
-		panic(err.Error())
+		return err
 	}
 	priv.PublicKey.PublicKey = priv.PrivateKey.PublicKey
+	return nil
 }
-*/
 
-/*TODO:notHex
+func (priv *PrivateKey) Generate(rand io.Reader) {
+	if err := priv.generate(rand); err != nil {
+		//TODO: this is not handled in xmpp, and is treated as panic in old version
+		panic(err.Error())
+	}
+}
+
 func notHex(r rune) bool {
 	if r >= '0' && r <= '9' ||
 		r >= 'a' && r <= 'f' ||
@@ -371,4 +375,3 @@ func notHex(r rune) bool {
 
 	return true
 }
-*/
