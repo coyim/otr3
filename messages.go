@@ -309,7 +309,7 @@ func (c dataMsgPlainText) pad() dataMsgPlainText {
 	padding := paddingGranularity - ((len(c.plain) + tlvHeaderLen + nulByteLen) % paddingGranularity)
 
 	paddingTlv := tlv{
-		tlvType:   0,
+		tlvType:   uint16(tlvTypePadding),
 		tlvLength: uint16(padding),
 		tlvValue:  make([]byte, padding),
 	}
@@ -336,34 +336,5 @@ func (c *dataMsgPlainText) decrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte, 
 		return err
 	}
 	c.deserialize(dst[:])
-	return nil
-}
-
-type tlv struct {
-	tlvType   uint16
-	tlvLength uint16
-	tlvValue  []byte
-}
-
-func (c tlv) serialize() []byte {
-	out := appendShort([]byte{}, c.tlvType)
-	out = appendShort(out, c.tlvLength)
-	return append(out, c.tlvValue...)
-}
-
-func (c *tlv) deserialize(tlvsBytes []byte) error {
-	var ok bool
-	tlvsBytes, c.tlvType, ok = extractShort(tlvsBytes)
-	if !ok {
-		return newOtrError("wrong tlv type")
-	}
-	tlvsBytes, c.tlvLength, ok = extractShort(tlvsBytes)
-	if !ok {
-		return newOtrError("wrong tlv length")
-	}
-	if len(tlvsBytes) < int(c.tlvLength) {
-		return newOtrError("wrong tlv value")
-	}
-	c.tlvValue = tlvsBytes[:int(c.tlvLength)]
 	return nil
 }

@@ -2,6 +2,47 @@ package otr3
 
 const tlvHeaderLength = 4
 
+const (
+	tlvTypePadding      = 0
+	tlvTypeDisconnected = 1
+	tlvTypeSMP1         = 2
+	tlvTypeSMP2         = 3
+	tlvTypeSMP3         = 4
+	tlvTypeSMP4         = 5
+	tlvTypeSMPAbort     = 6
+	//TODO: Question is not done
+	tlvTypeSMP1WithQuestion = 7
+)
+
+type tlv struct {
+	tlvType   uint16
+	tlvLength uint16
+	tlvValue  []byte
+}
+
+func (c tlv) serialize() []byte {
+	out := appendShort([]byte{}, c.tlvType)
+	out = appendShort(out, c.tlvLength)
+	return append(out, c.tlvValue...)
+}
+
+func (c *tlv) deserialize(tlvsBytes []byte) error {
+	var ok bool
+	tlvsBytes, c.tlvType, ok = extractShort(tlvsBytes)
+	if !ok {
+		return newOtrError("wrong tlv type")
+	}
+	tlvsBytes, c.tlvLength, ok = extractShort(tlvsBytes)
+	if !ok {
+		return newOtrError("wrong tlv length")
+	}
+	if len(tlvsBytes) < int(c.tlvLength) {
+		return newOtrError("wrong tlv value")
+	}
+	c.tlvValue = tlvsBytes[:int(c.tlvLength)]
+	return nil
+}
+
 func parseTLV(data []byte) (smpMessage, bool) {
 	_, tlvType, ok := extractShort(data)
 	if !ok {

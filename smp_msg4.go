@@ -15,7 +15,7 @@ type smp4Message struct {
 }
 
 func (m smp4Message) tlv() tlv {
-	return genSMPTLV(0x0005, m.rb, m.cr, m.d7)
+	return genSMPTLV(uint16(tlvTypeSMP4), m.rb, m.cr, m.d7)
 }
 
 func (c *Conversation) generateSMP4(secret *big.Int, s2 smp2State, msg3 smp3Message) (smp4State, bool) {

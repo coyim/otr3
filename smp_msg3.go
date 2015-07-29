@@ -22,7 +22,7 @@ type smp3Message struct {
 }
 
 func (m smp3Message) tlv() tlv {
-	return genSMPTLV(0x0004, m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
+	return genSMPTLV(uint16(tlvTypeSMP3), m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
 }
 
 func (c *Conversation) generateSMP3Parameters() (s smp3State, ok bool) {
