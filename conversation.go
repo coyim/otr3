@@ -11,6 +11,12 @@ const (
 )
 
 type Conversation struct {
+	//TODO:xmpp is using TheirPublicKey
+	//TheirPublicKey PublicKey
+	//TODO:xmpp is using PrivateKey
+	//PrivateKey PrivateKey
+	//TODO:xmpp is using SSID
+	//SSID    [8]byte
 	version otrVersion
 	Rand    io.Reader
 
