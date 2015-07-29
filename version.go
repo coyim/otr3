@@ -13,13 +13,13 @@ type otrVersion interface {
 	whitespaceTag() []byte
 }
 
-func newOtrVersion(v uint16) (otrVersion, error) {
+func newOtrVersion(v uint16) otrVersion {
 	switch v {
 	case 2:
-		return otrV2{}, nil
+		return otrV2{}
 	case 3:
-		return otrV3{}, nil
+		return otrV3{}
+	default:
+		return nil
 	}
-
-	return nil, errInvalidVersion
 }

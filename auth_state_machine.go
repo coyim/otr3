@@ -28,12 +28,7 @@ func (c *Conversation) generateNewDHKeyPair() error {
 	return nil
 }
 
-func (c *Conversation) resolveVersionFromDHCommitMessage(message []byte) (v otrVersion, err error) {
-	if c.ignoreMessage(message) {
-		err = errInvalidVersion
-		return
-	}
-
+func (c *Conversation) resolveVersionFromDHCommitMessage(message []byte) otrVersion {
 	_, msgProtocolVersion, _ := extractShort(message)
 	return newOtrVersion(msgProtocolVersion)
 }
@@ -51,11 +46,7 @@ func (c *Conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 
 	switch msg[2] {
 	case msgTypeDHCommit:
-		c.version, err = c.resolveVersionFromDHCommitMessage(msg)
-		if err != nil {
-			return
-		}
-
+		c.version = c.resolveVersionFromDHCommitMessage(msg)
 		c.ake.state, toSend, err = c.ake.state.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
 		c.ake.state, toSend, err = c.ake.state.receiveDHKeyMessage(c, msg)
