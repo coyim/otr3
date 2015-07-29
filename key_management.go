@@ -195,7 +195,7 @@ func (c *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int,
 		pubKey = c.theirCurrentDHPubKey
 	case c.theirKeyID - 1:
 		if c.theirPreviousDHPubKey == nil {
-			err = fmt.Errorf("otr: previous key not found")
+			err = fmt.Errorf("otr: unexpected theirKeyID %d", theirKeyID-1)
 		} else {
 			pubKey = c.theirPreviousDHPubKey
 		}

@@ -76,7 +76,7 @@ func Test_calculateDHSessionKeys_failsWhenTheirPreviousPubliKeyIsNull(t *testing
 	}
 	_, err := c.calculateDHSessionKeys(2, 1)
 
-	assertEquals(t, err.Error(), "otr: previous key not found")
+	assertEquals(t, err.Error(), "otr: unexpected theirKeyID 0")
 }
 
 func Test_calculateAKEKeys(t *testing.T) {
