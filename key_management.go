@@ -161,6 +161,9 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	case c.theirKeyID:
 		theirPubKey = c.theirCurrentDHPubKey
 	case c.theirKeyID - 1:
+		if c.theirPreviousDHPubKey == nil {
+			return ret, fmt.Errorf("otr: previous key not found")
+		}
 		theirPubKey = c.theirPreviousDHPubKey
 	default:
 		return ret, fmt.Errorf("otr: unexpected theirKeyID %d", theirKeyID)

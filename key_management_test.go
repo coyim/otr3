@@ -56,7 +56,7 @@ func Test_calculateDHSessionKeys_storesGeneratedMACKeys(t *testing.T) {
 	assertDeepEquals(t, c.macKeyHistory.items[0], expectedMACKeys)
 }
 
-func Test_calculateDHSessionKeys_failsWhenOurKeyIsUnknown(t *testing.T) {
+func Test_calculateDHSessionKeys_failsWhenOurOrTheyKeyIsUnknown(t *testing.T) {
 	c := keyManagementContext{
 		ourKeyID:   1,
 		theirKeyID: 1,
@@ -67,6 +67,16 @@ func Test_calculateDHSessionKeys_failsWhenOurKeyIsUnknown(t *testing.T) {
 
 	_, err = c.calculateDHSessionKeys(1, 3)
 	assertDeepEquals(t, err, errors.New("otr: unexpected theirKeyID 3"))
+}
+
+func Test_calculateDHSessionKeys_failsWhenTheirPreviousPubliKeyIsNull(t *testing.T) {
+	c := keyManagementContext{
+		ourKeyID:   2,
+		theirKeyID: 2,
+	}
+	_, err := c.calculateDHSessionKeys(2, 1)
+
+	assertEquals(t, err.Error(), "otr: previous key not found")
 }
 
 func Test_calculateAKEKeys(t *testing.T) {
