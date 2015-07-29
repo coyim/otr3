@@ -10,8 +10,8 @@ const (
 	allowV3
 	requireEncryption
 	sendWhitespaceTag
-	whitespaceStartAke
-	errorStartAke
+	whitespaceStartAKE
+	errorStartAKE
 )
 
 func (p *policies) isOTREnabled() bool {
@@ -47,9 +47,9 @@ func (p *policies) sendWhitespaceTag() {
 }
 
 func (p *policies) whitespaceStartAKE() {
-	p.add(whitespaceStartAke)
+	p.add(whitespaceStartAKE)
 }
 
 func (p *policies) errorStartAKE() {
-	p.add(errorStartAke)
+	p.add(errorStartAKE)
 }

@@ -117,7 +117,7 @@ func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
 	return append(message, genWhitespaceTag(c.policies)...)
 }
 
-func (c *Conversation) acceptWhitespacetag(message []byte) (ret, toSend []byte, err error) {
+func (c *Conversation) processWhitespaceTag(message []byte) (ret, toSend []byte, err error) {
 	wsPos := bytes.Index(message, whitespaceTagHeader)
 	if wsPos == -1 {
 		ret = message
@@ -126,6 +126,10 @@ func (c *Conversation) acceptWhitespacetag(message []byte) (ret, toSend []byte, 
 
 	ret = message[:wsPos]
 	tag := message[wsPos:]
+
+	if !c.policies.has(whitespaceStartAKE) {
+		return
+	}
 
 	switch {
 	case c.policies.has(allowV3) && bytes.Contains(tag, otrV3{}.whitespaceTag()):
@@ -176,7 +180,7 @@ func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
 		return
 	}
 
-	message, toSend, err = c.acceptWhitespacetag(message)
+	message, toSend, err = c.processWhitespaceTag(message)
 	if err != nil || toSend != nil {
 		return
 	}

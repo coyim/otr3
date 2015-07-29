@@ -23,11 +23,11 @@ func Test_policies_sendWhitespaceTag_addsPolicyForSendingWhitespaceTag(t *testin
 func Test_policies_whitespaceStartAKE_addsWhitespaceStartAKEPolicy(t *testing.T) {
 	p := policies(0)
 	p.whitespaceStartAKE()
-	assertEquals(t, p.has(whitespaceStartAke), true)
+	assertEquals(t, p.has(whitespaceStartAKE), true)
 }
 
 func Test_policies_errorStartAKE_addsErrorStartAKEPolicy(t *testing.T) {
 	p := policies(0)
 	p.errorStartAKE()
-	assertEquals(t, p.has(errorStartAke), true)
+	assertEquals(t, p.has(errorStartAKE), true)
 }

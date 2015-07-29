@@ -234,7 +234,7 @@ func Test_send_doesNotAppendWhitespaceTagsWhenItsNotAllowedbyThePolicy(t *testin
 
 func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV2)
+	c.policies = policies(allowV2 | whitespaceStartAKE)
 
 	msg := genWhitespaceTag(policies(allowV2))
 
@@ -245,10 +245,25 @@ func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
 	assertEquals(t, dhMsgVersion(toSend), uint16(2))
 }
 
-func Test_receive_ignoresV2WhitespaceTagIfV2IsNotInThePolicy(t *testing.T) {
+func Test_receive_ignoresV2WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {
 	var nilB []byte
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV3)
+	c.policies = policies(allowV2 | ^whitespaceStartAKE)
+
+	msg := genWhitespaceTag(policies(allowV2))
+
+	toSend, err := c.Receive(msg)
+
+	//FIXME: err should be nil, but at the moment is not possible to distinguish
+	//between plaintext messages and OTR-encoded messages
+	assertEquals(t, err, errInvalidOTRMessage)
+	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receive_failsWhenReceivesV2WhitespaceTagIfV2IsNotInThePolicy(t *testing.T) {
+	var nilB []byte
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV3 | whitespaceStartAKE)
 
 	msg := genWhitespaceTag(policies(allowV2))
 
@@ -260,7 +275,7 @@ func Test_receive_ignoresV2WhitespaceTagIfV2IsNotInThePolicy(t *testing.T) {
 
 func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV2 | allowV3)
+	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
 
 	msg := genWhitespaceTag(policies(allowV2 | allowV3))
 
@@ -271,10 +286,25 @@ func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
 	assertEquals(t, dhMsgVersion(toSend), uint16(3))
 }
 
-func Test_receive_ignoresV3WhitespaceTagIfV3IsNotInThePolicy(t *testing.T) {
+func Test_receive_ignoresV3WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {
 	var nilB []byte
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV2)
+	c.policies = policies(allowV2 | allowV3 | ^whitespaceStartAKE)
+
+	msg := genWhitespaceTag(policies(allowV3))
+
+	toSend, err := c.Receive(msg)
+
+	//FIXME: err should be nil, but at the moment is not possible to distinguish
+	//between plaintext messages and OTR-encoded messages
+	assertEquals(t, err, errInvalidOTRMessage)
+	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testing.T) {
+	var nilB []byte
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV2 | whitespaceStartAKE)
 
 	msg := genWhitespaceTag(policies(allowV3))
 
