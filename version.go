@@ -12,3 +12,14 @@ type otrVersion interface {
 	headerLen() int
 	whitespaceTag() []byte
 }
+
+func newOtrVersion(v uint16) (otrVersion, error) {
+	switch v {
+	case 2:
+		return otrV2{}, nil
+	case 3:
+		return otrV3{}, nil
+	}
+
+	return nil, errInvalidVersion
+}

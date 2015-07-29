@@ -155,29 +155,22 @@ func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
 		return nil, errInvalidOTRMessage
 	}
 
-	if c.version.protocolVersion() != msgProtocolVersion {
+	msgType := message[2]
+	if msgType != msgTypeDHCommit && c.version.protocolVersion() != msgProtocolVersion {
 		return nil, errWrongProtocolVersion
 	}
 
-	switch message[2] {
+	switch msgType {
 	case msgTypeData:
 		if c.msgState != encrypted {
 			return c.restart(), errEncryptedMessageWithNoSecureChannel
 		}
 
-		//TODO: c.processDataMessage(message)
-		//TODO: decrypt data from data message and extract TLVs from it
-		tlv := message
-		smpMessage, ok := parseTLV(tlv)
-		if !ok {
-			return nil, newOtrError("corrupt data message")
+		//TODO: return plain
+		_, toSend, err = c.processDataMessage(message)
+		if err != nil {
+			return
 		}
-
-		//TODO: rotate their key
-		//c.rotateTheirKey(msg.senderKeyID, msg.y)
-
-		//TODO: encrypt toSend and wrap in a DATA message
-		c.receiveSMP(smpMessage)
 	default:
 		return c.receiveAKE(message)
 	}
@@ -185,21 +178,56 @@ func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
 	return
 }
 
-func (c *Conversation) processDataMessage(msg []byte) ([]byte, []tlv, error) {
+func (c *Conversation) processTLVs(tlvs []tlv) ([]byte, error) {
+	var toSend []byte
+	var err error
+
+	for _, tlv := range tlvs {
+		//FIXME: ignore non SMP messages for now
+		if tlv.tlvType == 0x00 {
+			continue
+		}
+
+		//FIXME: dont need to serialize again
+		//Change parseTLV to convert tlv objects to smpMessages
+		smpMessage, ok := parseTLV(tlv.serialize())
+		if !ok {
+			return nil, newOtrError("corrupt data message")
+		}
+
+		//FIXME: What if it receives multiple SMP messages in the same data message?
+		toSend, err = c.receiveSMP(smpMessage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return toSend, err
+}
+
+func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err error) {
 	msg = msg[c.version.headerLen():]
 	dataMessage := dataMsg{}
 	dataMessage.deserialize(msg)
+
 	sessionKeys, err := c.keys.calculateDHSessionKeys(dataMessage.recipientKeyID, dataMessage.senderKeyID)
 	if err != nil {
-		return nil, nil, err
+		return
 	}
-	if err := dataMessage.checkSign(sessionKeys.receivingMACKey); err != nil {
-		return nil, nil, err
-	}
-	plain := dataMsgPlainText{}
-	err = plain.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
 
-	return plain.plain, plain.tlvs, err
+	if err = dataMessage.checkSign(sessionKeys.receivingMACKey); err != nil {
+		return
+	}
+
+	p := dataMsgPlainText{}
+	err = p.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
+	if err != nil {
+		return
+	}
+
+	plain = p.plain
+
+	return
 }
 
 /*TODO: IsEncrypted
