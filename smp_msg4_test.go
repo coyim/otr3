@@ -1,7 +1,6 @@
 package otr3
 
 import (
-	"errors"
 	"math/big"
 	"testing"
 )
@@ -61,7 +60,7 @@ func Test_verifySMP4_succeedsForValidZKPS(t *testing.T) {
 func Test_verifySMP4_failsIfRbIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
 	err := otr.verifySMP4(fixtureSmp3(), smp4Message{rb: big.NewInt(1)})
-	assertDeepEquals(t, err, errors.New("Rb is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Rb is an invalid group element"))
 }
 
 func Test_verifySMP4_failsIfCrIsNotACorrectZKP(t *testing.T) {
@@ -69,5 +68,5 @@ func Test_verifySMP4_failsIfCrIsNotACorrectZKP(t *testing.T) {
 	m := fixtureMessage4()
 	m.cr = sub(m.cr, big.NewInt(1))
 	err := otr.verifySMP4(fixtureSmp3(), m)
-	assertDeepEquals(t, err, errors.New("cR is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("cR is not a valid zero knowledge proof"))
 }

@@ -19,13 +19,14 @@ var (
 	ErrGPGEntityExist = errors.New("GPG Error: Entity exist (32803)")
 )
 
-var errShortRandomRead = newOtrError("short read from random source")
-var errInvalidOTRMessage = newOtrError("invalid OTR message")
 var errCorruptEncryptedSignature = newOtrError("corrupt encrypted signature")
-var errInvalidVersion = newOtrError("no valid version agreement could be found") //libotr ignores this situation
 var errEncryptedMessageWithNoSecureChannel = newOtrError("encrypted message received without encrypted session established")
-var errUnsupportedOTRVersion = errors.New("unsupported OTR version")
-var errWrongProtocolVersion = errors.New("wrong protocol version")
+var errInvalidOTRMessage = newOtrError("invalid OTR message")
+var errInvalidVersion = newOtrError("no valid version agreement could be found") //libotr ignores this situation
+var errShortRandomRead = newOtrError("short read from random source")
+var errUnexpectedMessage = newOtrError("unexpected SMP message")
+var errUnsupportedOTRVersion = newOtrError("unsupported OTR version")
+var errWrongProtocolVersion = newOtrError("wrong protocol version")
 
 // OtrError is an error in the OTR library
 type OtrError struct {

@@ -3,7 +3,6 @@ package otr3
 import (
 	"bytes"
 	"crypto/sha256"
-	"fmt"
 )
 
 // ignoreMessage should never be called with a too small message buffer, it is assumed the caller will have checked this before calling it
@@ -67,7 +66,7 @@ func (c *Conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 			}
 		}
 	default:
-		err = fmt.Errorf("otr: unknown message type 0x%X", msg[2])
+		err = newOtrErrorf("unknown message type 0x%X", msg[2])
 	}
 
 	return

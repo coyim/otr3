@@ -1,9 +1,6 @@
 package otr3
 
-import (
-	"bytes"
-	"errors"
-)
+import "bytes"
 
 var (
 	fragmentSeparator = []byte{','}
@@ -108,7 +105,7 @@ func receiveFragment(beforeCtx fragmentationContext, data []byte) (fragmentation
 	resultData, ix, l, ok := parseFragment(data)
 
 	if !ok {
-		return beforeCtx, errors.New("otr: invalid OTR fragment")
+		return beforeCtx, newOtrError("invalid OTR fragment")
 	}
 
 	switch {

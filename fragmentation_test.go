@@ -1,9 +1,6 @@
 package otr3
 
-import (
-	"errors"
-	"testing"
-)
+import "testing"
 
 const defaultInstanceTag = 0x00000100
 
@@ -166,5 +163,5 @@ func Test_parseFragment_returnsOKIfThereAreExactlyTheRightAmountOfParts(t *testi
 
 func Test_receiveFragment_returnsErrorIfTheFragmentIsNotCorrect(t *testing.T) {
 	_, e := receiveFragment(fragmentationContext{}, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x30, 0x30, 0x30, 0x29, 0x2C, 0x30, 0x30, 0x30, 0x30, 0x31, 0x2C, 0x01, 0x2C})
-	assertDeepEquals(t, e, errors.New("otr: invalid OTR fragment"))
+	assertDeepEquals(t, e, newOtrError("invalid OTR fragment"))
 }

@@ -1,9 +1,6 @@
 package otr3
 
-import (
-	"errors"
-	"math/big"
-)
+import "math/big"
 
 type smp4State struct {
 	y   *big.Int
@@ -33,11 +30,11 @@ func (c *Conversation) generateSMP4(secret *big.Int, s2 smp2State, msg3 smp3Mess
 
 func (c *Conversation) verifySMP4(s3 smp3State, msg smp4Message) error {
 	if !c.version.isGroupElement(msg.rb) {
-		return errors.New("Rb is an invalid group element")
+		return newOtrError("Rb is an invalid group element")
 	}
 
 	if !verifyZKP4(msg.cr, s3.g3b, msg.d7, s3.qaqb, msg.rb, 8) {
-		return errors.New("cR is not a valid zero knowledge proof")
+		return newOtrError("cR is not a valid zero knowledge proof")
 	}
 
 	return nil
@@ -64,7 +61,7 @@ func generateSMP4Message(s smp4State, s2 smp2State, msg3 smp3Message) smp4Messag
 func (c *Conversation) verifySMP4ProtocolSuccess(s1 smp1State, s3 smp3State, msg smp4Message) error {
 	rab := modExp(msg.rb, s1.a3)
 	if !eq(rab, s3.papb) {
-		return errors.New("protocol failed: x != y")
+		return newOtrError("protocol failed: x != y")
 	}
 
 	return nil

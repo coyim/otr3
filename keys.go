@@ -8,7 +8,6 @@ import (
 	"crypto/dsa"
 	"crypto/sha1"
 	"encoding/hex"
-	"errors"
 	"hash"
 	"io"
 	"math/big"
@@ -84,7 +83,7 @@ func ImportKeysFromFile(fname string) ([]*Account, error) {
 func ImportKeys(r io.Reader) ([]*Account, error) {
 	res, ok := readAccounts(bufio.NewReader(r))
 	if !ok {
-		return nil, errors.New("couldn't import data into private key")
+		return nil, newOtrError("couldn't import data into private key")
 	}
 	return res, nil
 }

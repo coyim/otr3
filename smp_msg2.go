@@ -1,9 +1,6 @@
 package otr3
 
-import (
-	"errors"
-	"math/big"
-)
+import "math/big"
 
 // FIXME should store g3a*, g2, g3, b3, Pb and Qb
 // after generating smp2Message
@@ -82,34 +79,34 @@ func (c *Conversation) generateSMP2(secret *big.Int, s1 smp1Message) (s smp2Stat
 
 func (c *Conversation) verifySMP2(s1 smp1State, msg smp2Message) error {
 	if !c.version.isGroupElement(msg.g2b) {
-		return errors.New("g2b is an invalid group element")
+		return newOtrError("g2b is an invalid group element")
 	}
 
 	if !c.version.isGroupElement(msg.g3b) {
-		return errors.New("g3b is an invalid group element")
+		return newOtrError("g3b is an invalid group element")
 	}
 
 	if !c.version.isGroupElement(msg.pb) {
-		return errors.New("Pb is an invalid group element")
+		return newOtrError("Pb is an invalid group element")
 	}
 
 	if !c.version.isGroupElement(msg.qb) {
-		return errors.New("Qb is an invalid group element")
+		return newOtrError("Qb is an invalid group element")
 	}
 
 	if !verifyZKP(msg.d2, msg.g2b, msg.c2, 3) {
-		return errors.New("c2 is not a valid zero knowledge proof")
+		return newOtrError("c2 is not a valid zero knowledge proof")
 	}
 
 	if !verifyZKP(msg.d3, msg.g3b, msg.c3, 4) {
-		return errors.New("c3 is not a valid zero knowledge proof")
+		return newOtrError("c3 is not a valid zero knowledge proof")
 	}
 
 	g2 := modExp(msg.g2b, s1.a2)
 	g3 := modExp(msg.g3b, s1.a3)
 
 	if !verifyZKP2(g2, g3, msg.d5, msg.d6, msg.pb, msg.qb, msg.cp, 5) {
-		return errors.New("cP is not a valid zero knowledge proof")
+		return newOtrError("cP is not a valid zero knowledge proof")
 	}
 
 	return nil

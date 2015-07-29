@@ -1,7 +1,6 @@
 package otr3
 
 import (
-	"errors"
 	"math/big"
 	"testing"
 )
@@ -93,13 +92,13 @@ func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
 func Test_thatVerifySMPStartParametersCheckG2AForOtrV3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	err := c.verifySMP1(smp1Message{g2a: new(big.Int).SetInt64(1)})
-	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("g2a is an invalid group element"))
 }
 
 func Test_thatVerifySMPStartParametersCheckG3AForOtrV3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	err := c.verifySMP1(smp1Message{g2a: new(big.Int).SetInt64(3), g3a: p})
-	assertDeepEquals(t, err, errors.New("g3a is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("g3a is an invalid group element"))
 }
 
 func Test_thatVerifySMPStartParametersDoesntCheckG2AForOtrV2(t *testing.T) {
@@ -112,7 +111,7 @@ func Test_thatVerifySMPStartParametersDoesntCheckG2AForOtrV2(t *testing.T) {
 		d2:  new(big.Int).SetInt64(1),
 		d3:  new(big.Int).SetInt64(1),
 	})
-	assertDeepEquals(t, err, errors.New("c2 is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("c2 is not a valid zero knowledge proof"))
 }
 
 func Test_thatVerifySMPStartParametersDoesntCheckG3AForOtrV2(t *testing.T) {
@@ -125,7 +124,7 @@ func Test_thatVerifySMPStartParametersDoesntCheckG3AForOtrV2(t *testing.T) {
 		d2:  new(big.Int).SetInt64(1),
 		d3:  new(big.Int).SetInt64(1),
 	})
-	assertDeepEquals(t, err, errors.New("c2 is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("c2 is not a valid zero knowledge proof"))
 }
 
 func Test_thatVerifySMPStartParametersChecksThatc2IsAValidZeroKnowledgeProof(t *testing.T) {
@@ -138,7 +137,7 @@ func Test_thatVerifySMPStartParametersChecksThatc2IsAValidZeroKnowledgeProof(t *
 		d2:  new(big.Int).SetInt64(3),
 		d3:  new(big.Int).SetInt64(3),
 	})
-	assertDeepEquals(t, err, errors.New("c2 is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("c2 is not a valid zero knowledge proof"))
 }
 
 func Test_thatVerifySMPStartParametersChecksThatc3IsAValidZeroKnowledgeProof(t *testing.T) {
@@ -151,7 +150,7 @@ func Test_thatVerifySMPStartParametersChecksThatc3IsAValidZeroKnowledgeProof(t *
 		d2:  fixtureMessage1().d2,
 		d3:  new(big.Int).SetInt64(3),
 	})
-	assertDeepEquals(t, err, errors.New("c3 is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("c3 is not a valid zero knowledge proof"))
 }
 
 func Test_thatVerifySMPStartParametersIsOKWithAValidParameterMessage(t *testing.T) {

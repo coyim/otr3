@@ -1,9 +1,6 @@
 package otr3
 
-import (
-	"errors"
-	"math/big"
-)
+import "math/big"
 
 type smp1State struct {
 	a2, a3 *big.Int
@@ -49,19 +46,19 @@ func (c *Conversation) generateSMP1() (s smp1State, ok bool) {
 
 func (c *Conversation) verifySMP1(msg smp1Message) error {
 	if !c.version.isGroupElement(msg.g2a) {
-		return errors.New("g2a is an invalid group element")
+		return newOtrError("g2a is an invalid group element")
 	}
 
 	if !c.version.isGroupElement(msg.g3a) {
-		return errors.New("g3a is an invalid group element")
+		return newOtrError("g3a is an invalid group element")
 	}
 
 	if !verifyZKP(msg.d2, msg.g2a, msg.c2, 1) {
-		return errors.New("c2 is not a valid zero knowledge proof")
+		return newOtrError("c2 is not a valid zero knowledge proof")
 	}
 
 	if !verifyZKP(msg.d3, msg.g3a, msg.c3, 2) {
-		return errors.New("c3 is not a valid zero knowledge proof")
+		return newOtrError("c3 is not a valid zero knowledge proof")
 	}
 
 	return nil

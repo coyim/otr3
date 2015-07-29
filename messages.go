@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/binary"
-	"errors"
 	"math/big"
 )
 
@@ -59,7 +58,7 @@ func (c *dhCommit) deserialize(msg []byte) error {
 	msg, c.encryptedGx, ok1 = extractData(msg)
 	_, h, ok2 := extractData(msg)
 	if !ok1 || !ok2 {
-		return errors.New("otr: corrupt DH commit message")
+		return newOtrError("corrupt DH commit message")
 	}
 	copy(c.hashedGx[:], h)
 	return nil
@@ -85,12 +84,11 @@ func (c *dhKey) deserialize(msg []byte) error {
 	_, gy, ok := extractMPI(msg)
 
 	if !ok {
-		return errors.New("otr: corrupt DH key message")
+		return newOtrError("corrupt DH key message")
 	}
 
-	// TODO: is this only for otrv3 or for v2 too?
 	if lt(gy, g1) || gt(gy, pMinusTwo) {
-		return errors.New("otr: DH value out of range")
+		return newOtrError("DH value out of range")
 	}
 
 	c.gy = gy
@@ -120,7 +118,7 @@ func (c *revealSig) deserialize(msg []byte) error {
 	in, r, ok1 := extractData(msg)
 	macSig, encryptedSig, ok2 := extractData(in)
 	if !ok1 || !ok2 || len(macSig) != 20 {
-		return errors.New("otr: corrupt reveal signature message")
+		return newOtrError("corrupt reveal signature message")
 	}
 
 	copy(c.r[:], r)
@@ -150,7 +148,7 @@ func (c *sig) deserialize(msg []byte) error {
 	macSig, encryptedSig, ok := extractData(msg)
 
 	if !ok || len(macSig) != 20 {
-		return errors.New("otr: corrupt signature message")
+		return newOtrError("corrupt signature message")
 	}
 	c.encryptedSig = encryptedSig
 	c.macSig = macSig
@@ -184,7 +182,7 @@ func (c dataMsg) checkSign(key macKey) error {
 	mac.Write(c.serializeUnsignedCache)
 	copy(authenticatorReceived[:], mac.Sum(nil))
 	if subtle.ConstantTimeCompare(c.authenticator[:], authenticatorReceived[:]) == 0 {
-		return errors.New("otr: bad authenticator MAC in data message")
+		return newOtrError("bad authenticator MAC in data message")
 	}
 	return nil
 }
@@ -204,7 +202,7 @@ func (c dataMsg) serializeUnsigned() []byte {
 
 func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	if len(msg) == 0 {
-		return errors.New("otr: dataMsg.deserialize empty message")
+		return newOtrError("dataMsg.deserialize empty message")
 	}
 	in := msg
 	c.flag = in[0]
@@ -215,28 +213,28 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	//Extracts sender and receiver depends on OTR version
 	in, c.senderKeyID, ok = extractWord(in)
 	if !ok {
-		return errors.New("otr: dataMsg.deserialize corrupted senderKeyID")
+		return newOtrError("dataMsg.deserialize corrupted senderKeyID")
 	}
 	in, c.recipientKeyID, ok = extractWord(in)
 	if !ok {
-		return errors.New("otr: dataMsg.deserialize corrupted recipientKeyID")
+		return newOtrError("dataMsg.deserialize corrupted recipientKeyID")
 	}
 	in, c.y, ok = extractMPI(in)
 	if !ok {
-		return errors.New("otr: dataMsg.deserialize corrupted y")
+		return newOtrError("dataMsg.deserialize corrupted y")
 	}
 	if len(in) < len(c.topHalfCtr) {
-		return errors.New("otr: dataMsg.deserialize corrupted topHalfCtr")
+		return newOtrError("dataMsg.deserialize corrupted topHalfCtr")
 	}
 	if binary.BigEndian.Uint64(in) == 0 {
-		return errors.New("otr: dataMsg.deserialize invalid topHalfCtr")
+		return newOtrError("dataMsg.deserialize invalid topHalfCtr")
 	}
 
 	copy(c.topHalfCtr[:], in)
 	in = in[len(c.topHalfCtr):]
 	in, c.encryptedMsg, ok = extractData(in)
 	if !ok {
-		return errors.New("otr: dataMsg.deserialize corrupted encryptedMsg")
+		return newOtrError("dataMsg.deserialize corrupted encryptedMsg")
 	}
 	c.serializeUnsignedCache = msg[:len(msg)-len(in)]
 	return nil
@@ -278,12 +276,12 @@ func (c *dataMsg) deserialize(msg []byte) error {
 	var revKeysBytes []byte
 	msg, revKeysBytes, ok := extractData(msg)
 	if !ok {
-		return errors.New("otr: dataMsg.deserialize corrupted revealMACKeys")
+		return newOtrError("dataMsg.deserialize corrupted revealMACKeys")
 	}
 	for len(revKeysBytes) > 0 {
 		var revKey macKey
 		if len(revKeysBytes) < sha1.Size {
-			return errors.New("otr: dataMsg.deserialize corrupted revealMACKeys")
+			return newOtrError("dataMsg.deserialize corrupted revealMACKeys")
 		}
 		copy(revKey[:], revKeysBytes)
 		c.oldMACKeys = append(c.oldMACKeys, revKey)
@@ -393,14 +391,14 @@ func (c *tlv) deserialize(tlvsBytes []byte) error {
 	var ok bool
 	tlvsBytes, c.tlvType, ok = extractShort(tlvsBytes)
 	if !ok {
-		return errors.New("otr: wrong tlv type")
+		return newOtrError("wrong tlv type")
 	}
 	tlvsBytes, c.tlvLength, ok = extractShort(tlvsBytes)
 	if !ok {
-		return errors.New("otr: wrong tlv length")
+		return newOtrError("wrong tlv length")
 	}
 	if len(tlvsBytes) < int(c.tlvLength) {
-		return errors.New("otr: wrong tlv value")
+		return newOtrError("wrong tlv value")
 	}
 	c.tlvValue = tlvsBytes[:int(c.tlvLength)]
 	return nil

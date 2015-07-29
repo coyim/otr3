@@ -1,14 +1,10 @@
 package otr3
 
-import "errors"
-
 type smpStateBase struct{}
 type smpStateExpect1 struct{ smpStateBase }
 type smpStateExpect2 struct{ smpStateBase }
 type smpStateExpect3 struct{ smpStateBase }
 type smpStateExpect4 struct{ smpStateBase }
-
-var errUnexpectedMessage = errors.New("unexpected SMP message")
 
 type smpMessage interface {
 	receivedMessage(*Conversation) (smpMessage, error)

@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/subtle"
-	"errors"
 	"io"
 	"math/big"
 )
@@ -319,7 +318,7 @@ func (c *Conversation) processSig(msg []byte) (err error) {
 	encryptedSig := sigMsg.encryptedSig
 
 	if err := c.processEncryptedSig(encryptedSig, theirMAC, &c.ake.sigKey); err != nil {
-		return errors.New("otr: in signature message: " + err.Error())
+		return newOtrError("in signature message: " + err.Error())
 	}
 
 	return nil
@@ -328,7 +327,7 @@ func (c *Conversation) processSig(msg []byte) (err error) {
 func (c *Conversation) checkedSignatureVerification(mb, sig []byte) error {
 	rest, ok := c.theirKey.verify(mb, sig)
 	if !ok {
-		return errors.New("bad signature in encrypted signature")
+		return newOtrError("bad signature in encrypted signature")
 	}
 
 	if len(rest) > 0 {
@@ -343,7 +342,7 @@ func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *ake
 	myMAC := sumHMAC(keys.m2[:], tomac)[:20]
 
 	if len(myMAC) != len(theirMAC) || subtle.ConstantTimeCompare(myMAC, theirMAC) == 0 {
-		return errors.New("bad signature MAC in encrypted signature")
+		return newOtrError("bad signature MAC in encrypted signature")
 	}
 
 	return nil
@@ -395,11 +394,11 @@ func (c *Conversation) processEncryptedSig(encryptedSig []byte, theirMAC []byte,
 func extractGx(decryptedGx []byte) (*big.Int, error) {
 	newData, gx, ok := extractMPI(decryptedGx)
 	if !ok || len(newData) > 0 {
-		return gx, errors.New("otr: gx corrupt after decryption")
+		return gx, newOtrError("gx corrupt after decryption")
 	}
 
 	if lt(gx, g1) || gt(gx, pMinusTwo) {
-		return gx, errors.New("otr: DH value out of range")
+		return gx, newOtrError("DH value out of range")
 	}
 
 	return gx, nil
@@ -415,7 +414,7 @@ func checkDecryptedGx(decryptedGx, hashedGx []byte) error {
 	digest := sha256.Sum256(decryptedGx)
 
 	if subtle.ConstantTimeCompare(digest[:], hashedGx[:]) == 0 {
-		return errors.New("otr: bad commit MAC in reveal signature message")
+		return newOtrError("bad commit MAC in reveal signature message")
 	}
 
 	return nil

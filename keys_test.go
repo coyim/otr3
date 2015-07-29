@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha1"
-	"errors"
 	"os"
 	"syscall"
 	"testing"
@@ -939,7 +938,7 @@ func Test_ImportKeys_willReturnARelevantErrorForIncorrectData(t *testing.T) {
   (px #00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858#)
   ))))`))
 	_, err := ImportKeys(from)
-	assertDeepEquals(t, err, errors.New("couldn't import data into private key"))
+	assertDeepEquals(t, err, newOtrError("couldn't import data into private key"))
 }
 
 func Test_ImportKeys_willReturnTheParsedAccountInformation(t *testing.T) {
@@ -967,7 +966,7 @@ func Test_ImportKeysFromFile_willReturnAValidAccountReadFromAFile(t *testing.T) 
 
 func Test_ImportKeysFromFile_willReturnAnErrorIfTheFileIsinvalid(t *testing.T) {
 	_, err := ImportKeysFromFile("test_resources/invalid_key.asc")
-	assertDeepEquals(t, err, errors.New("couldn't import data into private key"))
+	assertDeepEquals(t, err, newOtrError("couldn't import data into private key"))
 }
 
 func Test_PrivateKey_ImportWithoutError(t *testing.T) {

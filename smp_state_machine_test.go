@@ -1,7 +1,6 @@
 package otr3
 
 import (
-	"errors"
 	"math/big"
 	"testing"
 )
@@ -159,7 +158,7 @@ func Test_smpStateExpect1_receiveMessage1_returnsErrorIfVerifySMP1ReturnsError(t
 	c := newConversation(otrV3{}, fixtureRand())
 	_, _, err := smpStateExpect1{}.receiveMessage1(c, smp1Message{g2a: big.NewInt(1)})
 
-	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("g2a is an invalid group element"))
 }
 
 func Test_smp1Message_receivedMessage_returnsErrorIfreceiveMessage1ReturnsError(t *testing.T) {
@@ -168,7 +167,7 @@ func Test_smp1Message_receivedMessage_returnsErrorIfreceiveMessage1ReturnsError(
 	m := smp1Message{g2a: big.NewInt(1)}
 	_, err := m.receivedMessage(c)
 
-	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("g2a is an invalid group element"))
 }
 
 func Test_smpStateExpect1_receiveMessage1_returnsErrorIfgenerateSMP2Fails(t *testing.T) {
@@ -184,7 +183,7 @@ func Test_smpStateExpect2_receiveMessage2_returnsErrorIfVerifySMPReturnsError(t 
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	_, _, err := smpStateExpect2{}.receiveMessage2(c, smp2Message{g2b: big.NewInt(1)})
 
-	assertDeepEquals(t, err, errors.New("g2b is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("g2b is an invalid group element"))
 }
 
 func Test_smp2Message_receivedMessage_returnsErrorIfUnderlyingPrimitiveHasErrors(t *testing.T) {
@@ -194,7 +193,7 @@ func Test_smp2Message_receivedMessage_returnsErrorIfUnderlyingPrimitiveHasErrors
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	_, err := smp2Message{g2b: big.NewInt(1)}.receivedMessage(c)
 
-	assertDeepEquals(t, err, errors.New("g2b is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("g2b is an invalid group element"))
 }
 
 func Test_smpStateExpect2_receiveMessage2_returnsErrorIfgenerateSMPFails(t *testing.T) {
@@ -212,7 +211,7 @@ func Test_smpStateExpect3_receiveMessage3_returnsErrorIfVerifySMPReturnsError(t 
 	c.smp.s2 = fixtureSmp2()
 	_, _, err := smpStateExpect3{}.receiveMessage3(c, smp3Message{pa: big.NewInt(1)})
 
-	assertDeepEquals(t, err, errors.New("Pa is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Pa is an invalid group element"))
 }
 
 func Test_smp3Message_receivedMessage_returnsErrorIfUnderlyingPrimitiveDoes(t *testing.T) {
@@ -222,7 +221,7 @@ func Test_smp3Message_receivedMessage_returnsErrorIfUnderlyingPrimitiveDoes(t *t
 	c.smp.s2 = fixtureSmp2()
 	_, err := smp3Message{pa: big.NewInt(1)}.receivedMessage(c)
 
-	assertDeepEquals(t, err, errors.New("Pa is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Pa is an invalid group element"))
 }
 
 func Test_smpStateExpect3_receiveMessage3_returnsErrorIfProtocolFails(t *testing.T) {
@@ -232,7 +231,7 @@ func Test_smpStateExpect3_receiveMessage3_returnsErrorIfProtocolFails(t *testing
 	c.smp.s2.b3 = sub(c.smp.s2.b3, big.NewInt(1))
 	_, _, err := smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
 
-	assertDeepEquals(t, err, errors.New("protocol failed: x != y"))
+	assertDeepEquals(t, err, newOtrError("protocol failed: x != y"))
 }
 
 func Test_smpStateExpect3_receiveMessage3_returnsErrorIfCantGenerateFinalParameters(t *testing.T) {
@@ -250,7 +249,7 @@ func Test_smpStateExpect4_receiveMessage4_returnsErrorIfVerifySMPReturnsError(t 
 	c.smp.s3 = fixtureSmp3()
 	_, _, err := smpStateExpect4{}.receiveMessage4(c, smp4Message{rb: big.NewInt(1)})
 
-	assertDeepEquals(t, err, errors.New("Rb is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Rb is an invalid group element"))
 }
 
 func Test_smpStateExpect4_receiveMessage4_returnsErrorIfProtocolFails(t *testing.T) {
@@ -260,7 +259,7 @@ func Test_smpStateExpect4_receiveMessage4_returnsErrorIfProtocolFails(t *testing
 	c.smp.s3.papb = sub(c.smp.s3.papb, big.NewInt(1))
 	_, _, err := smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
 
-	assertDeepEquals(t, err, errors.New("protocol failed: x != y"))
+	assertDeepEquals(t, err, newOtrError("protocol failed: x != y"))
 }
 
 func Test_smp4Message_receivedMessage_returnsErrorIfTheUnderlyingPrimitiveDoes(t *testing.T) {
@@ -270,7 +269,7 @@ func Test_smp4Message_receivedMessage_returnsErrorIfTheUnderlyingPrimitiveDoes(t
 	c.smp.s3 = fixtureSmp3()
 	_, err := smp4Message{rb: big.NewInt(1)}.receivedMessage(c)
 
-	assertDeepEquals(t, err, errors.New("Rb is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Rb is an invalid group element"))
 }
 
 func Test_receive_returnsAnyErrorThatOccurs(t *testing.T) {
@@ -278,7 +277,7 @@ func Test_receive_returnsAnyErrorThatOccurs(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	//c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	_, err := c.receiveSMP(m)
-	assertDeepEquals(t, err, errors.New("g2a is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("g2a is an invalid group element"))
 }
 
 func Test_smpStateExpect1_String_returnsTheCorrectString(t *testing.T) {

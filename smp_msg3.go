@@ -1,9 +1,6 @@
 package otr3
 
-import (
-	"errors"
-	"math/big"
-)
+import "math/big"
 
 // FIXME should store g3b, (Pa / Pb), (Qa / Qb) and Ra
 // after generating smpMessage3
@@ -74,26 +71,26 @@ func (c *Conversation) generateSMP3(secret *big.Int, s1 smp1State, m2 smp2Messag
 
 func (c *Conversation) verifySMP3(s2 smp2State, msg smp3Message) error {
 	if !c.version.isGroupElement(msg.pa) {
-		return errors.New("Pa is an invalid group element")
+		return newOtrError("Pa is an invalid group element")
 	}
 
 	if !c.version.isGroupElement(msg.qa) {
-		return errors.New("Qa is an invalid group element")
+		return newOtrError("Qa is an invalid group element")
 	}
 
 	if !c.version.isGroupElement(msg.ra) {
-		return errors.New("Ra is an invalid group element")
+		return newOtrError("Ra is an invalid group element")
 	}
 
 	if !verifyZKP3(msg.cp, s2.g2, s2.g3, msg.d5, msg.d6, msg.pa, msg.qa, 6) {
-		return errors.New("cP is not a valid zero knowledge proof")
+		return newOtrError("cP is not a valid zero knowledge proof")
 	}
 
 	//FIXME should it calculate it here?
 	qaqb := divMod(msg.qa, s2.qb, p)
 
 	if !verifyZKP4(msg.cr, s2.g3a, msg.d7, qaqb, msg.ra, 7) {
-		return errors.New("cR is not a valid zero knowledge proof")
+		return newOtrError("cR is not a valid zero knowledge proof")
 	}
 
 	return nil
@@ -104,7 +101,7 @@ func (c *Conversation) verifySMP3ProtocolSuccess(s2 smp2State, msg smp3Message) 
 
 	rab := modExp(msg.ra, s2.b3)
 	if !eq(rab, papb) {
-		return errors.New("protocol failed: x != y")
+		return newOtrError("protocol failed: x != y")
 	}
 
 	return nil

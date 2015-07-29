@@ -1,7 +1,6 @@
 package otr3
 
 import (
-	"errors"
 	"math/big"
 	"testing"
 )
@@ -194,7 +193,7 @@ func Test_generateSMP2_computesD6Correctly(t *testing.T) {
 func Test_verifySMP2_checkG2bForOtrV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
 	err := otr.verifySMP2(fixtureSmp1(), smp2Message{g2b: new(big.Int).SetInt64(1)})
-	assertDeepEquals(t, err, errors.New("g2b is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("g2b is an invalid group element"))
 }
 
 func Test_verifySMP2_checkG3bForOtrV3(t *testing.T) {
@@ -203,7 +202,7 @@ func Test_verifySMP2_checkG3bForOtrV3(t *testing.T) {
 		g2b: new(big.Int).SetInt64(3),
 		g3b: new(big.Int).SetInt64(1),
 	})
-	assertDeepEquals(t, err, errors.New("g3b is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("g3b is an invalid group element"))
 }
 
 func Test_verifySMP2_checkPbForOtrV3(t *testing.T) {
@@ -213,7 +212,7 @@ func Test_verifySMP2_checkPbForOtrV3(t *testing.T) {
 		g3b: new(big.Int).SetInt64(3),
 		pb:  p,
 	})
-	assertDeepEquals(t, err, errors.New("Pb is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Pb is an invalid group element"))
 }
 
 func Test_verifySMP2_checkQbForOtrV3(t *testing.T) {
@@ -224,7 +223,7 @@ func Test_verifySMP2_checkQbForOtrV3(t *testing.T) {
 		pb:  pMinusTwo,
 		qb:  new(big.Int).SetInt64(1),
 	})
-	assertDeepEquals(t, err, errors.New("Qb is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Qb is an invalid group element"))
 }
 
 func Test_verifySMP2_failsIfC2IsNotACorrectZKP(t *testing.T) {
@@ -232,7 +231,7 @@ func Test_verifySMP2_failsIfC2IsNotACorrectZKP(t *testing.T) {
 	s2 := fixtureMessage2()
 	s2.c2 = sub(s2.c2, big.NewInt(1))
 	err := otr.verifySMP2(fixtureSmp1(), s2)
-	assertDeepEquals(t, err, errors.New("c2 is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("c2 is not a valid zero knowledge proof"))
 }
 
 func Test_verifySMP2_failsIfC3IsNotACorrectZKP(t *testing.T) {
@@ -240,7 +239,7 @@ func Test_verifySMP2_failsIfC3IsNotACorrectZKP(t *testing.T) {
 	s2 := fixtureMessage2()
 	s2.c3 = sub(s2.c3, big.NewInt(1))
 	err := otr.verifySMP2(fixtureSmp1(), s2)
-	assertDeepEquals(t, err, errors.New("c3 is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("c3 is not a valid zero knowledge proof"))
 }
 
 func Test_verifySMP2_failsIfCpIsNotACorrectZKP(t *testing.T) {
@@ -248,7 +247,7 @@ func Test_verifySMP2_failsIfCpIsNotACorrectZKP(t *testing.T) {
 	s2 := fixtureMessage2()
 	s2.cp = sub(s2.cp, big.NewInt(1))
 	err := otr.verifySMP2(fixtureSmp1(), s2)
-	assertDeepEquals(t, err, errors.New("cP is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("cP is not a valid zero knowledge proof"))
 }
 
 func Test_verifySMP2_succeedsForACorrectZKP(t *testing.T) {

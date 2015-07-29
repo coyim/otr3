@@ -1,7 +1,6 @@
 package otr3
 
 import (
-	"errors"
 	"math/big"
 	"testing"
 )
@@ -160,7 +159,7 @@ func Test_generateSMP3_returnsNotOKIfThereIsNotEnoughRandomnessForBlinding(t *te
 func Test_verifySMP3_failsIfPaIsNotInTheGroupForProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
 	err := otr.verifySMP3(fixtureSmp2(), smp3Message{pa: big.NewInt(1)})
-	assertDeepEquals(t, err, errors.New("Pa is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Pa is an invalid group element"))
 }
 
 func Test_verifySMP3_failsIfQaIsNotInTheGroupForProtocolV3(t *testing.T) {
@@ -169,7 +168,7 @@ func Test_verifySMP3_failsIfQaIsNotInTheGroupForProtocolV3(t *testing.T) {
 		pa: big.NewInt(2),
 		qa: big.NewInt(1),
 	})
-	assertDeepEquals(t, err, errors.New("Qa is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Qa is an invalid group element"))
 }
 
 func Test_verifySMP3_failsIfRaIsNotInTheGroupForProtocolV3(t *testing.T) {
@@ -179,7 +178,7 @@ func Test_verifySMP3_failsIfRaIsNotInTheGroupForProtocolV3(t *testing.T) {
 		qa: big.NewInt(2),
 		ra: big.NewInt(1),
 	})
-	assertDeepEquals(t, err, errors.New("Ra is an invalid group element"))
+	assertDeepEquals(t, err, newOtrError("Ra is an invalid group element"))
 }
 
 func Test_verifySMP3_succeedsForValidZKPS(t *testing.T) {
@@ -193,7 +192,7 @@ func Test_verifySMP3_failsIfCpIsNotAValidZKP(t *testing.T) {
 	m := fixtureMessage3()
 	m.cp = sub(m.cp, big.NewInt(1))
 	err := otr.verifySMP3(fixtureSmp2(), m)
-	assertDeepEquals(t, err, errors.New("cP is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("cP is not a valid zero knowledge proof"))
 }
 
 func Test_verifySMP3_failsIfCrIsNotAValidZKP(t *testing.T) {
@@ -201,5 +200,5 @@ func Test_verifySMP3_failsIfCrIsNotAValidZKP(t *testing.T) {
 	m := fixtureMessage3()
 	m.cr = sub(m.cr, big.NewInt(1))
 	err := otr.verifySMP3(fixtureSmp2(), m)
-	assertDeepEquals(t, err, errors.New("cR is not a valid zero knowledge proof"))
+	assertDeepEquals(t, err, newOtrError("cR is not a valid zero knowledge proof"))
 }

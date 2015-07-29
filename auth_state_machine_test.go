@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"crypto/sha256"
-	"errors"
 	"math/big"
 	"testing"
 )
@@ -691,7 +690,7 @@ func Test_receiveAKE_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 	assertEquals(t, err, errInvalidOTRMessage)
 
 	_, err = cV3.receiveAKE([]byte{0x00, 0x03, 0x56})
-	assertDeepEquals(t, err, errors.New("otr: unknown message type 0x56"))
+	assertDeepEquals(t, err, newOtrError("unknown message type 0x56"))
 }
 
 func Test_receiveAKE_receiveRevealSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
