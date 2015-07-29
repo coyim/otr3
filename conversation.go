@@ -256,6 +256,21 @@ func (c *Conversation) encode(msg []byte) [][]byte {
 	return c.fragment(b64, uint16(bytesPerFragment), uint32(0), uint32(0))
 }
 
+func (c *Conversation) End() (toSend [][]byte) {
+	switch c.msgState {
+	case plainText:
+		return nil
+	case encrypted:
+		c.msgState = plainText
+		return c.encode(c.genDataMsg(nil, tlv{tlvType: tlvTypeDisconnected}).serialize(c))
+	case finished:
+		c.msgState = plainText
+		return nil
+	}
+	//FIXME: old implementation has panic("unreachable")
+	return nil
+}
+
 /*TODO: Authenticate
 func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend [][]byte, err error) {
 	return [][]byte{}, nil
