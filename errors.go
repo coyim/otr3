@@ -1,6 +1,9 @@
 package otr3
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	// GPG_ERR_NO_ERROR is matched to nil
@@ -31,6 +34,10 @@ type OtrError struct {
 
 func newOtrError(s string) error {
 	return OtrError{s}
+}
+
+func newOtrErrorf(format string, a ...interface{}) error {
+	return OtrError{fmt.Sprintf(format, a...)}
 }
 
 func (oe OtrError) Error() string {

@@ -4,7 +4,6 @@ import (
 	"crypto/aes"
 	"crypto/sha1"
 	"crypto/sha256"
-	"fmt"
 	"hash"
 	"math/big"
 )
@@ -182,7 +181,7 @@ func (c *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *bi
 		case c.ourKeyID - 1:
 			privKey, pubKey = c.ourPreviousDHKeys.priv, c.ourPreviousDHKeys.pub
 		default:
-			err = fmt.Errorf("otr: unexpected ourKeyID %d", ourKeyID)
+			err = newOtrErrorf("unexpected ourKeyID %d", ourKeyID)
 		}
 	}
 
@@ -195,12 +194,12 @@ func (c *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int,
 		pubKey = c.theirCurrentDHPubKey
 	case c.theirKeyID - 1:
 		if c.theirPreviousDHPubKey == nil {
-			err = fmt.Errorf("otr: unexpected theirKeyID %d", theirKeyID-1)
+			err = newOtrErrorf("unexpected theirKeyID %d", theirKeyID-1)
 		} else {
 			pubKey = c.theirPreviousDHPubKey
 		}
 	default:
-		err = fmt.Errorf("otr: unexpected theirKeyID %d", theirKeyID)
+		err = newOtrErrorf("unexpected theirKeyID %d", theirKeyID)
 	}
 
 	return pubKey, err

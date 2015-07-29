@@ -1,7 +1,6 @@
 package otr3
 
 import (
-	"errors"
 	"math/big"
 	"testing"
 )
@@ -63,10 +62,10 @@ func Test_calculateDHSessionKeys_failsWhenOurOrTheyKeyIsUnknown(t *testing.T) {
 	}
 
 	_, err := c.calculateDHSessionKeys(2, 1)
-	assertDeepEquals(t, err, errors.New("otr: unexpected ourKeyID 2"))
+	assertDeepEquals(t, err, newOtrError("unexpected ourKeyID 2"))
 
 	_, err = c.calculateDHSessionKeys(1, 3)
-	assertDeepEquals(t, err, errors.New("otr: unexpected theirKeyID 3"))
+	assertDeepEquals(t, err, newOtrError("unexpected theirKeyID 3"))
 }
 
 func Test_calculateDHSessionKeys_failsWhenTheirPreviousPubliKeyIsNull(t *testing.T) {
