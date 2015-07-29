@@ -316,3 +316,37 @@ func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testin
 	assertEquals(t, err, errInvalidVersion)
 	assertDeepEquals(t, toSend, nilB)
 }
+
+func Test_encodeWithoutFragment(t *testing.T) {
+	c := newConversation(otrV2{}, fixtureRand())
+	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
+	c.FragmentSize = 64
+
+	msg := c.encode([]byte("one two three"))
+
+	expectedFragments := [][]byte{
+		[]byte("?OTR:b25lIHR3byB0aHJlZQ==."),
+	}
+	assertDeepEquals(t, msg, expectedFragments)
+}
+
+func Test_encodeWithFragment(t *testing.T) {
+	c := newConversation(otrV2{}, fixtureRand())
+	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
+	c.FragmentSize = 22
+
+	msg := c.encode([]byte("one two three"))
+
+	//FIXME: old implementation is not having leading zero in fragment index, who is correct?
+	expectedFragments := [][]byte{
+		[]byte("?OTR,00001,00007,?OTR,"),
+		[]byte("?OTR,00002,00007,:b25,"),
+		[]byte("?OTR,00003,00007,lIHR,"),
+		[]byte("?OTR,00004,00007,3byB,"),
+		[]byte("?OTR,00005,00007,0aHJ,"),
+		[]byte("?OTR,00006,00007,lZQ=,"),
+		[]byte("?OTR,00007,00007,=.,"),
+	}
+
+	assertDeepEquals(t, msg, expectedFragments)
+}

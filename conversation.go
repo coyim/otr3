@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/binary"
 	"io"
 )
@@ -17,6 +18,9 @@ type Conversation struct {
 	//PrivateKey PrivateKey
 	//TODO:xmpp is using SSID
 	//SSID    [8]byte
+	//TODO:move FragmentSize to compat pack
+	FragmentSize int
+
 	version otrVersion
 	Rand    io.Reader
 
@@ -42,6 +46,13 @@ const (
 	plainText msgState = iota
 	encrypted
 	finished
+)
+
+//TODO: is these const necessary?
+var (
+	msgPrefix       = []byte("?OTR:")
+	queryMarker     = []byte("?OTR")
+	minFragmentSize = 18
 )
 
 //NOTE: this should be only used in tests
@@ -109,8 +120,6 @@ func (c *Conversation) Send(message []byte) []byte {
 
 	return ret
 }
-
-var queryMarker = []byte("?OTR")
 
 func isQueryMessage(msg []byte) bool {
 	return bytes.HasPrefix(msg, []byte(queryMarker))
@@ -219,16 +228,26 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 	return
 }
 
-/*TODO: IsEncrypted
 func (c *Conversation) IsEncrypted() bool {
-	return true
+	return c.msgState == encrypted
 }
-*/
-/*TODO: End
-func (c *Conversation) End() (toSend [][]byte) {
-	return [][]byte{}
+
+func (c *Conversation) encode(msg []byte) [][]byte {
+	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgPrefix)+1)
+	base64.StdEncoding.Encode(b64[len(msgPrefix):], msg)
+	copy(b64, msgPrefix)
+	b64[len(b64)-1] = '.'
+
+	if c.FragmentSize < minFragmentSize || len(b64) <= c.FragmentSize {
+		// We can encode this in a single fragment.
+		return [][]byte{b64}
+	}
+
+	bytesPerFragment := c.FragmentSize - minFragmentSize
+	//TODO: need implementation of InstanceTag ready
+	return c.fragment(b64, uint16(bytesPerFragment), uint32(0), uint32(0))
 }
-*/
+
 /*TODO: Authenticate
 func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend [][]byte, err error) {
 	return [][]byte{}, nil
