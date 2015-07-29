@@ -184,17 +184,21 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted senderKeyID")
 	}
+
 	in, c.recipientKeyID, ok = extractWord(in)
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted recipientKeyID")
 	}
+
 	in, c.y, ok = extractMPI(in)
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted y")
 	}
+
 	if len(in) < len(c.topHalfCtr) {
 		return newOtrError("dataMsg.deserialize corrupted topHalfCtr")
 	}
+
 	if binary.BigEndian.Uint64(in) == 0 {
 		return newOtrError("dataMsg.deserialize invalid topHalfCtr")
 	}
@@ -205,6 +209,7 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted encryptedMsg")
 	}
+
 	c.serializeUnsignedCache = msg[:len(msg)-len(in)]
 	return nil
 }
@@ -233,6 +238,7 @@ func (c *dataMsg) deserialize(msg []byte) error {
 	if err := c.deserializeUnsigned(msg); err != nil {
 		return err
 	}
+
 	msg = msg[len(c.serializeUnsignedCache):]
 	copy(c.authenticator[:], msg)
 	msg = msg[len(c.authenticator):]

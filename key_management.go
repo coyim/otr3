@@ -137,7 +137,6 @@ func (c *keyManagementContext) rotateTheirKey(senderKeyID uint32, pubDHKey *big.
 
 func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint32) (sessionKeys, error) {
 	var ret sessionKeys
-	var sendbyte, recvbyte byte
 
 	ourPrivKey, ourPubKey, err := c.pickOurKeys(ourKeyID)
 	if err != nil {
@@ -148,6 +147,16 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	if err != nil {
 		return ret, err
 	}
+
+	ret = calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey)
+	c.macKeyHistory.addKeys(ourKeyID, theirKeyID, ret.sendingMACKey, ret.receivingMACKey)
+
+	return ret, nil
+}
+
+func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int) sessionKeys {
+	var ret sessionKeys
+	var sendbyte, recvbyte byte
 
 	if gt(ourPubKey, theirPubKey) {
 		//we are high end
@@ -167,11 +176,11 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	ret.sendingMACKey = sha1.Sum(ret.sendingAESKey[:])
 	ret.receivingMACKey = sha1.Sum(ret.receivingAESKey[:])
 
-	c.macKeyHistory.addKeys(ourKeyID, theirKeyID, ret.sendingMACKey, ret.receivingMACKey)
-	return ret, nil
+	return ret
 }
 
 func (c *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *big.Int, err error) {
+	//FIXME: there should not be an if here
 	if c.ourKeyID == 0 {
 		privKey, pubKey = c.ourCurrentDHKeys.priv, c.ourCurrentDHKeys.pub
 	} else {

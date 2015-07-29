@@ -2,6 +2,36 @@ package otr3
 
 import "testing"
 
+func fixtureDataMsg(plain dataMsgPlainText) ([]byte, keyManagementContext) {
+	var senderKeyID uint32 = 1
+	var recipientKeyID uint32 = 1
+
+	receiverContext := keyManagementContext{
+		ourKeyID:   senderKeyID + 1,
+		theirKeyID: recipientKeyID,
+		ourPreviousDHKeys: dhKeyPair{
+			priv: fixedy,
+			pub:  fixedgy,
+		},
+		theirCurrentDHPubKey: fixedgx,
+	}
+
+	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)
+
+	m := dataMsg{
+		senderKeyID:    senderKeyID,
+		recipientKeyID: recipientKeyID,
+
+		y:            fixedgx,
+		topHalfCtr:   [8]byte{1},
+		encryptedMsg: plain.encrypt(keys.sendingAESKey, [8]byte{1}),
+	}
+
+	m.sign(keys.sendingMACKey)
+
+	return m.serialize(newConversation(otrV3{}, nil)), receiverContext
+}
+
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	c := newConversation(nil, fixtureRand())
@@ -59,18 +89,34 @@ func Test_receive_returnsAnErrorForADataMessageWhenNoEncryptionIsActive(t *testi
 }
 
 func Test_processTLVs_returnsAnErrorForAnIncorrectTLVMessage(t *testing.T) {
-	aTLV := tlv{}
-	aTLV.deserialize([]byte{
-		0x00, 0x03, // protocol version
-		msgTypeData,
-		0x99,
-	})
+	aTLV := tlv{
+		tlvType:   9,
+		tlvLength: 1,
+		tlvValue:  []byte{0x01},
+	}
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.msgState = encrypted
 
 	_, err := c.processTLVs([]tlv{aTLV})
 	assertDeepEquals(t, err, newOtrError("corrupt data message"))
+}
+
+func Test_processTLVs_ignoresPaddingTLV(t *testing.T) {
+	var nilB []byte
+
+	aTLV := tlv{
+		tlvType:   0,
+		tlvLength: 1,
+		tlvValue:  []byte{0x00},
+	}
+
+	c := newConversation(otrV3{}, fixtureRand())
+	c.msgState = encrypted
+
+	toSend, err := c.processTLVs([]tlv{aTLV})
+	assertDeepEquals(t, err, nil)
+	assertDeepEquals(t, toSend, nilB)
 }
 
 func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
@@ -177,6 +223,30 @@ func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, plain, []byte("hello"))
 	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_processDataMessage_processSMPMessage(t *testing.T) {
+	bob := newConversation(otrV3{}, nil)
+	bob.policies.add(allowV3)
+	bob.ourKey = bobPrivateKey
+	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+
+	plain := dataMsgPlainText{
+		tlvs: []tlv{
+			fixtureMessage1().tlv(),
+		},
+	}
+
+	msg, k := fixtureDataMsg(plain)
+	bob.keys = k
+
+	_, toSend, err := bob.processDataMessage(msg)
+
+	expectedTlv := tlv{}
+	expectedTlv.deserialize(toSend)
+
+	assertDeepEquals(t, err, nil)
+	assertDeepEquals(t, expectedTlv.tlvType, uint16(3))
 }
 
 func Test_processDataMessage_returnErrorWhenOurKeyIDUnexpected(t *testing.T) {

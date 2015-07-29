@@ -167,6 +167,7 @@ func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
 		if err != nil {
 			return
 		}
+
 	default:
 		return c.receiveAKE(message)
 	}
@@ -192,6 +193,7 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]byte, error) {
 		}
 
 		//FIXME: What if it receives multiple SMP messages in the same data message?
+		//FIXME: toSend should be a DATA message. It is a TLV serialized
 		toSend, err = c.receiveSMP(smpMessage)
 		if err != nil {
 			return nil, err
@@ -206,7 +208,11 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 	msg, _ = c.parseMessageHeader(msg)
 
 	dataMessage := dataMsg{}
-	dataMessage.deserialize(msg)
+
+	err = dataMessage.deserialize(msg)
+	if err != nil {
+		return
+	}
 
 	sessionKeys, err := c.keys.calculateDHSessionKeys(dataMessage.recipientKeyID, dataMessage.senderKeyID)
 	if err != nil {
@@ -224,6 +230,10 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 	}
 
 	plain = p.plain
+	toSend, err = c.processTLVs(p.tlvs)
+	if err != nil {
+		return
+	}
 
 	return
 }
