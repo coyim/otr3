@@ -256,7 +256,7 @@ func (c *Conversation) encode(msg []byte) [][]byte {
 	copy(b64, msgPrefix)
 	b64[len(b64)-1] = '.'
 
-	if c.FragmentSize < minFragmentSize || len(b64) <= c.FragmentSize {
+	if c.FragmentSize < minFragmentSize {
 		// We can encode this in a single fragment.
 		return [][]byte{b64}
 	}
