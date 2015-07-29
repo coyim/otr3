@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/dsa"
+	"crypto/sha1"
 	"errors"
 	"hash"
 	"io"
@@ -245,10 +246,15 @@ func (pub *PublicKey) serialize() []byte {
 	return result
 }
 
-func (pub *PublicKey) Fingerprint(h hash.Hash) []byte {
+//TODO: Do we need to keep Fingerprint for API
+func (pub *PublicKey) fingerprint(h hash.Hash) []byte {
 	b := pub.serialize()
 	h.Write(b[2:]) // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
 	return h.Sum(nil)
+}
+
+func (pub *PublicKey) Fingerprint() []byte {
+	return pub.fingerprint(sha1.New())
 }
 
 func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
