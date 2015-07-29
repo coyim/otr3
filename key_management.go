@@ -138,35 +138,16 @@ func (c *keyManagementContext) rotateTheirKey(senderKeyID uint32, pubDHKey *big.
 
 func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint32) (sessionKeys, error) {
 	var ret sessionKeys
-	var ourPubKey, ourPrivKey, theirPubKey *big.Int
 	var sendbyte, recvbyte byte
 
-	if c.ourKeyID == 0 {
-		ourPrivKey = c.ourCurrentDHKeys.priv
-		ourPubKey = c.ourCurrentDHKeys.pub
-	} else {
-		switch ourKeyID {
-		case c.ourKeyID:
-			ourPrivKey = c.ourCurrentDHKeys.priv
-			ourPubKey = c.ourCurrentDHKeys.pub
-		case c.ourKeyID - 1:
-			ourPrivKey = c.ourPreviousDHKeys.priv
-			ourPubKey = c.ourPreviousDHKeys.pub
-		default:
-			return ret, fmt.Errorf("otr: unexpected ourKeyID %d", ourKeyID)
-		}
+	ourPrivKey, ourPubKey, err := c.pickOurKeys(ourKeyID)
+	if err != nil {
+		return ret, err
 	}
 
-	switch theirKeyID {
-	case c.theirKeyID:
-		theirPubKey = c.theirCurrentDHPubKey
-	case c.theirKeyID - 1:
-		if c.theirPreviousDHPubKey == nil {
-			return ret, fmt.Errorf("otr: previous key not found")
-		}
-		theirPubKey = c.theirPreviousDHPubKey
-	default:
-		return ret, fmt.Errorf("otr: unexpected theirKeyID %d", theirKeyID)
+	theirPubKey, err := c.pickTheirKey(theirKeyID)
+	if err != nil {
+		return ret, err
 	}
 
 	if gt(ourPubKey, theirPubKey) {
@@ -189,6 +170,40 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 
 	c.macKeyHistory.addKeys(ourKeyID, theirKeyID, ret.sendingMACKey, ret.receivingMACKey)
 	return ret, nil
+}
+
+func (c *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *big.Int, err error) {
+	if c.ourKeyID == 0 {
+		privKey, pubKey = c.ourCurrentDHKeys.priv, c.ourCurrentDHKeys.pub
+	} else {
+		switch ourKeyID {
+		case c.ourKeyID:
+			privKey, pubKey = c.ourCurrentDHKeys.priv, c.ourCurrentDHKeys.pub
+		case c.ourKeyID - 1:
+			privKey, pubKey = c.ourPreviousDHKeys.priv, c.ourPreviousDHKeys.pub
+		default:
+			err = fmt.Errorf("otr: unexpected ourKeyID %d", ourKeyID)
+		}
+	}
+
+	return privKey, pubKey, err
+}
+
+func (c *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int, err error) {
+	switch theirKeyID {
+	case c.theirKeyID:
+		pubKey = c.theirCurrentDHPubKey
+	case c.theirKeyID - 1:
+		if c.theirPreviousDHPubKey == nil {
+			err = fmt.Errorf("otr: previous key not found")
+		} else {
+			pubKey = c.theirPreviousDHPubKey
+		}
+	default:
+		err = fmt.Errorf("otr: unexpected theirKeyID %d", theirKeyID)
+	}
+
+	return pubKey, err
 }
 
 func calculateAKEKeys(s *big.Int) (ssid [8]byte, revealSigKeys, signatureKeys akeKeys) {
