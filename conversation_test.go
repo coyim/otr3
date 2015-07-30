@@ -2,6 +2,9 @@ package otr3
 
 import "testing"
 
+//Alice generates a encrypted message to Bob
+//Fixture data msg never rotates the receiver keys when the returned context is
+//used before receiving the message
 func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	var senderKeyID uint32 = 1
 	var recipientKeyID uint32 = 1
@@ -13,7 +16,8 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 		ourKeyID:   senderKeyID + 1,
 		theirKeyID: recipientKeyID + 1,
 		ourCurrentDHKeys: dhKeyPair{
-			pub: fixedgy,
+			priv: fixedy,
+			pub:  fixedgy,
 		},
 		ourPreviousDHKeys: dhKeyPair{
 			priv: fixedy,
@@ -29,7 +33,7 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 		senderKeyID:    senderKeyID,
 		recipientKeyID: recipientKeyID,
 
-		y:            fixedgx,
+		y:            fixedgy, //this is alices current Pub
 		topHalfCtr:   [8]byte{1},
 		encryptedMsg: plain.encrypt(keys.sendingAESKey, [8]byte{1}),
 	}
@@ -39,6 +43,8 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	return m.serialize(newConversation(otrV3{}, nil)), receiverContext
 }
 
+//Alice decrypts a encrypted message from Bob, generated after receiving
+//an encrypted message from Alice generated with fixtureDataMsg()
 func fixtureDecryptDataMsg(encryptedDataMsg []byte) plainDataMsg {
 	c := newConversation(otrV3{}, nil)
 	withoutHeader, _ := c.parseMessageHeader(encryptedDataMsg)
@@ -278,6 +284,47 @@ func Test_processDataMessage_returnsErrorIfSomethingGoesWrongWithDeserialize(t *
 	_, _, err := c.processDataMessage([]byte{})
 
 	assertEquals(t, err.Error(), "otr: dataMsg.deserialize empty message")
+}
+
+func Test_processDataMessage_rotateOurKeys(t *testing.T) {
+	var nilB []byte
+	bob := newConversation(otrV3{}, nil)
+	bob.policies.add(allowV3)
+	bob.ourKey = bobPrivateKey
+
+	var msg []byte
+	msg, bob.keys = fixtureDataMsg(plainDataMsg{})
+
+	bob.keys.ourKeyID = 1
+	bobCurrentDHKeys := bob.keys.ourCurrentDHKeys
+
+	_, toSend, err := bob.processDataMessage(msg)
+
+	assertDeepEquals(t, err, nil)
+	assertDeepEquals(t, toSend, nilB)
+	assertDeepEquals(t, bobCurrentDHKeys, bob.keys.ourPreviousDHKeys)
+	assertEquals(t, eq(bobCurrentDHKeys.pub, bob.keys.ourCurrentDHKeys.pub), false)
+	assertEquals(t, eq(bobCurrentDHKeys.priv, bob.keys.ourCurrentDHKeys.priv), false)
+}
+
+func Test_processDataMessage_rotateTheirKeys(t *testing.T) {
+	var nilB []byte
+	bob := newConversation(otrV3{}, nil)
+	bob.policies.add(allowV3)
+	bob.ourKey = bobPrivateKey
+
+	var msg []byte
+	msg, bob.keys = fixtureDataMsg(plainDataMsg{})
+
+	bob.keys.theirKeyID = 1
+	aliceCurrentDHPubKey := bob.keys.theirCurrentDHPubKey
+
+	_, toSend, err := bob.processDataMessage(msg)
+
+	assertDeepEquals(t, err, nil)
+	assertDeepEquals(t, toSend, nilB)
+	assertDeepEquals(t, aliceCurrentDHPubKey, bob.keys.theirPreviousDHPubKey)
+	assertEquals(t, eq(aliceCurrentDHPubKey, bob.keys.theirCurrentDHPubKey), false)
 }
 
 func Test_processDataMessage_returnErrorWhenOurKeyIDUnexpected(t *testing.T) {

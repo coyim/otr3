@@ -117,7 +117,8 @@ func isQueryMessage(msg []byte) bool {
 }
 
 // This should be used by the xmpp-client to received OTR messages in plain
-//TODO toSend needs fragmentation to be implemented
+//TODO For the exported Receive, toSend needs fragmentation, base64 encoding and
+//to be a data message
 func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
 	if !c.policies.isOTREnabled() {
 		return
@@ -197,6 +198,22 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
 	return retTLVs, err
 }
 
+func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
+	c.keys.rotateTheirKey(dataMessage.senderKeyID, dataMessage.y)
+
+	x, ok := c.randMPI(make([]byte, 40))
+	if !ok {
+		//NOTE: what should we do?
+		//This is one kind of error that breaks the encrypted channel. I believe we
+		//should change the msgState to != encrypted
+		return errShortRandomRead
+	}
+
+	c.keys.rotateOurKeys(dataMessage.recipientKeyID, x)
+
+	return nil
+}
+
 func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err error) {
 	// FIXME: deal with errors in this function
 	msg, _ = c.parseMessageHeader(msg)
@@ -207,6 +224,8 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 	if err != nil {
 		return
 	}
+
+	//TODO: Check that the counter in the Data message is strictly larger than the last counter you saw using this pair of keys. If not, reject the message.
 
 	sessionKeys, err := c.keys.calculateDHSessionKeys(dataMessage.recipientKeyID, dataMessage.senderKeyID)
 	if err != nil {
@@ -224,7 +243,13 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 	}
 
 	plain = p.message
+	err = c.rotateKeys(dataMessage)
+	if err != nil {
+		return
+	}
 
+	//TODO: TEST. Should not process TLVs if it fails to rotate keys. This is how
+	//libotr does
 	var tlvs []tlv
 	tlvs, err = c.processTLVs(p.tlvs)
 	if err != nil {
