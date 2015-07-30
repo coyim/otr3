@@ -151,7 +151,7 @@ func Test_contextUnexpectedMessageTransitionsToSmpExpected1(t *testing.T) {
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.smp.state, smpStateExpect1{})
-	assertDeepEquals(t, toSend, smpMessageAbort{}.tlv().serialize())
+	assertDeepEquals(t, toSend, smpMessageAbort{}.tlv())
 }
 
 func Test_smpStateExpect1_receiveMessage1_returnsErrorIfVerifySMP1ReturnsError(t *testing.T) {

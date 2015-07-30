@@ -2,18 +2,25 @@ package otr3
 
 import "testing"
 
-func fixtureDataMsg(plain dataMsgPlainText) ([]byte, keyManagementContext) {
+func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	var senderKeyID uint32 = 1
 	var recipientKeyID uint32 = 1
 
+	//We use a combination of ourKeyId, theirKeyID, senderKeyID and recipientKeyID
+	//to make sure both sender and receiver will use the same DH session keys
 	receiverContext := keyManagementContext{
+		ourCounter: 1,
 		ourKeyID:   senderKeyID + 1,
-		theirKeyID: recipientKeyID,
+		theirKeyID: recipientKeyID + 1,
+		ourCurrentDHKeys: dhKeyPair{
+			pub: fixedgy,
+		},
 		ourPreviousDHKeys: dhKeyPair{
 			priv: fixedy,
 			pub:  fixedgy,
 		},
-		theirCurrentDHPubKey: fixedgx,
+		theirCurrentDHPubKey:  fixedgx,
+		theirPreviousDHPubKey: fixedgx,
 	}
 
 	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)
@@ -30,6 +37,21 @@ func fixtureDataMsg(plain dataMsgPlainText) ([]byte, keyManagementContext) {
 	m.sign(keys.sendingMACKey)
 
 	return m.serialize(newConversation(otrV3{}, nil)), receiverContext
+}
+
+func fixtureDecryptDataMsg(encryptedDataMsg []byte) plainDataMsg {
+	c := newConversation(otrV3{}, nil)
+	withoutHeader, _ := c.parseMessageHeader(encryptedDataMsg)
+
+	m := dataMsg{}
+	m.deserialize(withoutHeader)
+
+	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)
+
+	exp := plainDataMsg{}
+	exp.decrypt(keys.receivingAESKey, m.topHalfCtr, m.encryptedMsg)
+
+	return exp
 }
 
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
@@ -103,7 +125,7 @@ func Test_processTLVs_returnsAnErrorForAnIncorrectTLVMessage(t *testing.T) {
 }
 
 func Test_processTLVs_ignoresPaddingTLV(t *testing.T) {
-	var nilB []byte
+	var nilB []tlv
 
 	aTLV := tlv{
 		tlvType:   0,
@@ -114,9 +136,9 @@ func Test_processTLVs_ignoresPaddingTLV(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.msgState = encrypted
 
-	toSend, err := c.processTLVs([]tlv{aTLV})
+	tlvs, err := c.processTLVs([]tlv{aTLV})
 	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, toSend, nilB)
+	assertDeepEquals(t, tlvs, nilB)
 }
 
 func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
@@ -218,6 +240,7 @@ func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 	bob.keys.ourPreviousDHKeys.priv = bnFromHex("28cea443a1ddeae5c39fd9061a429243eeb52f9f963dcb483a77ec9ed201f8eb3e898fb645657f27")
 	bob.keys.ourPreviousDHKeys.pub = bnFromHex("e291f2e06da00d59c9666d80d6c511a0bd9ae54d916b65db7e72f70904ae05d55259df42fb7b29d11babf11e78cd584d0f137ca1187b4f920e0fbef85c0e5f4b55bf907ea6e119dcfa7e339e72d6b52e874dc46afedd9290360659928ad30f504dad43160946dbd9de7748d18417c223790e528a6f13bf25285318416ccfed0bceafbca70dce832ca8216a654c49ac29dc6af098e7e2744a1dfaf7d2643eb1b3787c4c1db4f649096c3241f69165f965a290651304e23fd2422dae180796d52f")
 	bob.keys.theirCurrentDHPubKey = bnFromHex("da61b77be39426456fecfd6df16645bd2c967bc1a27b165dbf77fea4753ece7a8b938532395bbd1def2890a2792f1854c2d736ee27139356b3bb2583afa4c96a9083209d9f2bb1caeb6fe5ee608715ae6dc1c470e38b895e48e0532af5388c8e591d9ebe361f118ad54d8640f24fa54fdb1d07594d496150554094e5ec4bcfcc6b1b4b058b679824306ad7ae481a25d0758cc01c29c281ce33ac2f58d6eaa99985f855e9ce667ff287b4d27d7c73a7717277546d17e8dd5539861bc26fa04c1b")
+	bob.keys.ourCurrentDHKeys.pub = fixedgx
 	plain, toSend, err := bob.processDataMessage(datamsg)
 
 	assertDeepEquals(t, err, nil)
@@ -231,22 +254,23 @@ func Test_processDataMessage_processSMPMessage(t *testing.T) {
 	bob.ourKey = bobPrivateKey
 	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	plain := dataMsgPlainText{
+	plain := plainDataMsg{
 		tlvs: []tlv{
 			fixtureMessage1().tlv(),
 		},
 	}
 
-	msg, k := fixtureDataMsg(plain)
-	bob.keys = k
+	var msg []byte
+	msg, bob.keys = fixtureDataMsg(plain)
 
 	_, toSend, err := bob.processDataMessage(msg)
 
-	expectedTlv := tlv{}
-	expectedTlv.deserialize(toSend)
+	exp := fixtureDecryptDataMsg(toSend)
 
 	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, expectedTlv.tlvType, uint16(3))
+	assertDeepEquals(t, len(exp.tlvs), 2)
+	assertDeepEquals(t, exp.tlvs[0].tlvType, uint16(3))
+	assertDeepEquals(t, exp.tlvs[1].tlvType, uint16(0))
 }
 
 func Test_processDataMessage_returnsErrorIfSomethingGoesWrongWithDeserialize(t *testing.T) {

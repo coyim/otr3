@@ -261,12 +261,12 @@ func (c *dataMsg) deserialize(msg []byte) error {
 	return nil
 }
 
-type dataMsgPlainText struct {
-	plain []byte
-	tlvs  []tlv
+type plainDataMsg struct {
+	message []byte
+	tlvs    []tlv
 }
 
-func (c *dataMsgPlainText) deserialize(msg []byte) error {
+func (c *plainDataMsg) deserialize(msg []byte) error {
 	nulPos := 0
 	for nulPos < len(msg) && msg[nulPos] != 0x00 {
 		nulPos++
@@ -274,10 +274,10 @@ func (c *dataMsgPlainText) deserialize(msg []byte) error {
 
 	var tlvsBytes []byte
 	if nulPos < len(msg) {
-		c.plain = msg[:nulPos]
+		c.message = msg[:nulPos]
 		tlvsBytes = msg[nulPos+1:]
 	} else {
-		c.plain = msg
+		c.message = msg
 	}
 
 	for len(tlvsBytes) > 0 {
@@ -291,8 +291,8 @@ func (c *dataMsgPlainText) deserialize(msg []byte) error {
 	return nil
 }
 
-func (c dataMsgPlainText) serialize() []byte {
-	out := c.plain
+func (c plainDataMsg) serialize() []byte {
+	out := c.message
 	out = append(out, 0x00)
 
 	if len(c.tlvs) > 0 {
@@ -311,8 +311,8 @@ const (
 	nulByteLen         = 1
 )
 
-func (c dataMsgPlainText) pad() dataMsgPlainText {
-	padding := paddingGranularity - ((len(c.plain) + tlvHeaderLen + nulByteLen) % paddingGranularity)
+func (c plainDataMsg) pad() plainDataMsg {
+	padding := paddingGranularity - ((len(c.message) + tlvHeaderLen + nulByteLen) % paddingGranularity)
 
 	paddingTlv := tlv{
 		tlvType:   uint16(tlvTypePadding),
@@ -325,7 +325,7 @@ func (c dataMsgPlainText) pad() dataMsgPlainText {
 	return c
 }
 
-func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte) []byte {
+func (c plainDataMsg) encrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte) []byte {
 	data := c.pad().serialize()
 	dst := make([]byte, len(data))
 	iv := [aes.BlockSize]byte{}
@@ -334,7 +334,7 @@ func (c dataMsgPlainText) encrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte) [
 	return dst
 }
 
-func (c *dataMsgPlainText) decrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte, src []byte) error {
+func (c *plainDataMsg) decrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte, src []byte) error {
 	dst := src
 	iv := [aes.BlockSize]byte{}
 	copy(iv[:], topHalfCtr[:])

@@ -336,12 +336,12 @@ func Test_dataMsgDeserialzeErrorWhenCorruptedRevealMACKeyEnding(t *testing.T) {
 	assertEquals(t, err.Error(), "otr: dataMsg.deserialize corrupted revealMACKeys")
 }
 
-func Test_dataMsgPlainTextShouldDeserializeOneTLV(t *testing.T) {
+func Test_plainDataMsgShouldDeserializeOneTLV(t *testing.T) {
 	plain := []byte("helloworld")
 	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	msg := append(plain, 0x00)
 	msg = append(msg, atlvBytes...)
-	aDataMsg := dataMsgPlainText{}
+	aDataMsg := plainDataMsg{}
 	err := aDataMsg.deserialize(msg)
 	atlv := tlv{
 		tlvType:   0x0001,
@@ -350,18 +350,18 @@ func Test_dataMsgPlainTextShouldDeserializeOneTLV(t *testing.T) {
 	}
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, aDataMsg.plain, plain)
+	assertDeepEquals(t, aDataMsg.message, plain)
 	assertDeepEquals(t, aDataMsg.tlvs[0], atlv)
 }
 
-func Test_dataMsgPlainTextShouldDeserializeMultiTLV(t *testing.T) {
+func Test_plainDataMsgShouldDeserializeMultiTLV(t *testing.T) {
 	plain := []byte("helloworld")
 	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	btlvBytes := []byte{0x00, 0x02, 0x00, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01}
 	msg := append(plain, 0x00)
 	msg = append(msg, atlvBytes...)
 	msg = append(msg, btlvBytes...)
-	aDataMsg := dataMsgPlainText{}
+	aDataMsg := plainDataMsg{}
 	err := aDataMsg.deserialize(msg)
 	atlv := tlv{
 		tlvType:   0x0001,
@@ -376,28 +376,28 @@ func Test_dataMsgPlainTextShouldDeserializeMultiTLV(t *testing.T) {
 	}
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, aDataMsg.plain, plain)
+	assertDeepEquals(t, aDataMsg.message, plain)
 	assertDeepEquals(t, aDataMsg.tlvs[0], atlv)
 	assertDeepEquals(t, aDataMsg.tlvs[1], btlv)
 }
 
-func Test_dataMsgPlainTextShouldDeserializeNoTLV(t *testing.T) {
+func Test_plainDataMsgShouldDeserializeNoTLV(t *testing.T) {
 	plain := []byte("helloworld")
-	aDataMsg := dataMsgPlainText{}
+	aDataMsg := plainDataMsg{}
 	err := aDataMsg.deserialize(plain)
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, aDataMsg.plain, plain)
+	assertDeepEquals(t, aDataMsg.message, plain)
 	assertDeepEquals(t, len(aDataMsg.tlvs), 0)
 }
 
-func Test_dataMsgPlainTextShouldSerialize(t *testing.T) {
+func Test_plainDataMsgShouldSerialize(t *testing.T) {
 	plain := []byte("helloworld")
 	atlvBytes := []byte{0x00, 0x01, 0x00, 0x02, 0x01, 0x01}
 	btlvBytes := []byte{0x00, 0x02, 0x00, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01}
 	msg := append(plain, 0x00)
 	msg = append(msg, atlvBytes...)
 	msg = append(msg, btlvBytes...)
-	aDataMsg := dataMsgPlainText{}
+	aDataMsg := plainDataMsg{}
 	atlv := tlv{
 		tlvType:   0x0001,
 		tlvLength: 0x0002,
@@ -409,26 +409,26 @@ func Test_dataMsgPlainTextShouldSerialize(t *testing.T) {
 		tlvLength: 0x0005,
 		tlvValue:  []byte{0x01, 0x01, 0x01, 0x01, 0x01},
 	}
-	aDataMsg.plain = plain
+	aDataMsg.message = plain
 	aDataMsg.tlvs = []tlv{atlv, btlv}
 
 	assertDeepEquals(t, aDataMsg.serialize(), msg)
 }
 
-func Test_dataMsgPlainTextShouldSerializeWithoutTLVs(t *testing.T) {
+func Test_plainDataMsgShouldSerializeWithoutTLVs(t *testing.T) {
 	plain := []byte("helloworld")
 	expected := append(plain, 0x00)
 
-	dataMsg := dataMsgPlainText{
-		plain: plain,
+	dataMsg := plainDataMsg{
+		message: plain,
 	}
 
 	assertDeepEquals(t, dataMsg.serialize(), expected)
 }
 
 func Test_encrypt_EncryptsPlainMessageUsingSendingAESKeyAndCounter(t *testing.T) {
-	plain := dataMsgPlainText{
-		plain: []byte("we are awesome"),
+	plain := plainDataMsg{
+		message: []byte("we are awesome"),
 	}
 
 	var sendingAESKey [aes.BlockSize]byte
@@ -442,8 +442,8 @@ func Test_encrypt_EncryptsPlainMessageUsingSendingAESKeyAndCounter(t *testing.T)
 }
 
 func Test_encrypt_EncryptsPlainMessageUsingSendingAESKeyAndCounterNotZero(t *testing.T) {
-	plain := dataMsgPlainText{
-		plain: []byte("we are awesome"),
+	plain := plainDataMsg{
+		message: []byte("we are awesome"),
 	}
 
 	var sendingAESKey [aes.BlockSize]byte
@@ -457,8 +457,8 @@ func Test_encrypt_EncryptsPlainMessageUsingSendingAESKeyAndCounterNotZero(t *tes
 }
 
 func Test_pad_PlainMessageUsingTLV0(t *testing.T) {
-	plain := dataMsgPlainText{
-		plain: []byte("123456"),
+	plain := plainDataMsg{
+		message: []byte("123456"),
 		tlvs: []tlv{
 			smpMessageAbort{}.tlv(),
 		},

@@ -84,9 +84,9 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	binary.BigEndian.PutUint64(topHalfCtr[:], c.keys.ourCounter)
 	c.keys.ourCounter++
 
-	plain := dataMsgPlainText{
-		plain: message,
-		tlvs:  tlvs,
+	plain := plainDataMsg{
+		message: message,
+		tlvs:    tlvs,
 	}
 
 	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
@@ -175,12 +175,11 @@ func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
 	return
 }
 
-func (c *Conversation) processTLVs(tlvs []tlv) ([]byte, error) {
-	var toSend []byte
+func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
+	var retTLVs []tlv
 	var err error
 
 	for _, tlv := range tlvs {
-		//FIXME: ignore non SMP messages for now
 		if tlv.tlvType == 0x00 {
 			continue
 		}
@@ -194,13 +193,15 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]byte, error) {
 
 		//FIXME: What if it receives multiple SMP messages in the same data message?
 		//FIXME: toSend should be a DATA message. It is a TLV serialized
-		toSend, err = c.receiveSMP(smpMessage)
+		tlv, err = c.receiveSMP(smpMessage)
 		if err != nil {
 			return nil, err
 		}
+
+		retTLVs = append(retTLVs, tlv)
 	}
 
-	return toSend, err
+	return retTLVs, err
 }
 
 func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err error) {
@@ -223,16 +224,22 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 		return
 	}
 
-	p := dataMsgPlainText{}
+	p := plainDataMsg{}
 	err = p.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
 	if err != nil {
 		return
 	}
 
-	plain = p.plain
-	toSend, err = c.processTLVs(p.tlvs)
+	plain = p.message
+
+	var tlvs []tlv
+	tlvs, err = c.processTLVs(p.tlvs)
 	if err != nil {
 		return
+	}
+
+	if len(tlvs) > 0 {
+		toSend = c.genDataMsg(nil, tlvs...).serialize(c)
 	}
 
 	return
