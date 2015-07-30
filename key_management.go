@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/sha1"
 	"crypto/sha256"
+	"encoding/binary"
 	"hash"
 	"math/big"
 )
@@ -30,7 +31,8 @@ type keyManagementContext struct {
 	ourCurrentDHKeys, ourPreviousDHKeys         dhKeyPair
 	theirCurrentDHPubKey, theirPreviousDHPubKey *big.Int
 
-	ourCounter uint64
+	ourCounter   uint64
+	theirCounter uint64
 
 	macKeyHistory macKeyHistory
 	oldMACKeys    []macKey
@@ -91,6 +93,16 @@ func (h *macKeyHistory) forgetMACKeysForTheirKey(theirKeyID uint32) []macKey {
 	h.deleteKeysAt(del...)
 
 	return ret
+}
+
+func (c *keyManagementContext) checkMessageCounter(message dataMsg) error {
+	theirNextCounter := binary.BigEndian.Uint64(message.topHalfCtr[:])
+	if theirNextCounter <= c.theirCounter {
+		return errInvalidOTRMessage
+	}
+
+	c.theirCounter = theirNextCounter
+	return nil
 }
 
 func (c *keyManagementContext) revealMACKeys() []macKey {

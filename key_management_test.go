@@ -239,3 +239,32 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 	assertDeepEquals(t, len(c.macKeyHistory.items), 1)
 	assertDeepEquals(t, c.macKeyHistory.items[0].receivingKey, k1)
 }
+
+func Test_checkMessageCounter_messageIsInvalidWhenCounterIsNotLargerThanTheLastReceived(t *testing.T) {
+	c := keyManagementContext{
+		theirCounter: 1,
+	}
+
+	msg := dataMsg{}
+
+	err := c.checkMessageCounter(msg)
+	assertEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, c.theirCounter, uint64(1))
+
+	msg.topHalfCtr[7] = 1
+	err = c.checkMessageCounter(msg)
+	assertEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, c.theirCounter, uint64(1))
+}
+
+func Test_checkMessageCounter_messageIsValidWhenCounterIsLargerThanTheLastReceived(t *testing.T) {
+	c := keyManagementContext{
+		theirCounter: 1,
+	}
+
+	msg := dataMsg{}
+	msg.topHalfCtr[7] = 2
+	err := c.checkMessageCounter(msg)
+	assertEquals(t, err, nil)
+	assertEquals(t, c.theirCounter, uint64(2))
+}
