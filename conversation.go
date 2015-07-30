@@ -7,18 +7,7 @@ import (
 	"io"
 )
 
-const ()
-
 type Conversation struct {
-	//TODO:xmpp is using TheirPublicKey
-	//TheirPublicKey PublicKey
-	//TODO:xmpp is using PrivateKey
-	//PrivateKey PrivateKey
-	//TODO:xmpp is using SSID
-	//SSID    [8]byte
-	//TODO:move FragmentSize to compat pack
-	FragmentSize int
-
 	version otrVersion
 	Rand    io.Reader
 
@@ -32,10 +21,11 @@ type Conversation struct {
 
 	keys keyManagementContext
 
-	ssid     [8]byte
-	policies policies
-	ake      *ake
-	smp      smp
+	ssid         [8]byte
+	policies     policies
+	ake          *ake
+	smp          smp
+	fragmentSize uint16
 }
 
 type msgState int
@@ -257,15 +247,21 @@ func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
 }
 
+func (c *Conversation) setFragmentSize(size uint16) {
+	if size < c.version.minFragmentSize() {
+		c.fragmentSize = c.version.minFragmentSize()
+	}
+	c.fragmentSize = size
+}
+
 func (c *Conversation) encode(msg []byte) [][]byte {
 	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgPrefix)+1)
 	base64.StdEncoding.Encode(b64[len(msgPrefix):], msg)
 	copy(b64, msgPrefix)
 	b64[len(b64)-1] = '.'
 
-	bytesPerFragment := c.FragmentSize - minFragmentSize
-	//TODO: need implementation of InstanceTag ready
-	return c.fragment(b64, uint16(bytesPerFragment), uint32(0), uint32(0))
+	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
+	return c.fragment(b64, bytesPerFragment, uint32(0), uint32(0))
 }
 
 func (c *Conversation) End() (toSend [][]byte) {

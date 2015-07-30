@@ -421,7 +421,7 @@ func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testin
 func Test_encodeWithoutFragment(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
-	c.FragmentSize = 64
+	c.setFragmentSize(64)
 
 	msg := c.encode([]byte("one two three"))
 
@@ -434,7 +434,7 @@ func Test_encodeWithoutFragment(t *testing.T) {
 func Test_encodeWithoutFragmentTooSmall(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
-	c.FragmentSize = 18
+	c.setFragmentSize(18)
 
 	msg := c.encode([]byte("one two three"))
 
@@ -447,7 +447,7 @@ func Test_encodeWithoutFragmentTooSmall(t *testing.T) {
 func Test_encodeWithFragment(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
-	c.FragmentSize = 22
+	c.setFragmentSize(22)
 
 	msg := c.encode([]byte("one two three"))
 
