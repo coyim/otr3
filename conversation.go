@@ -52,8 +52,8 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 	case otrV2{}:
 		p = allowV2
 	}
-    akeNotStarted := new(ake)
-    akeNotStarted.state = authStateNone{}
+	akeNotStarted := new(ake)
+	akeNotStarted.state = authStateNone{}
 
 	return &Conversation{
 		version: v,
@@ -61,7 +61,7 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 		smp: smp{
 			state: smpStateExpect1{},
 		},
-        ake: akeNotStarted,
+		ake:      akeNotStarted,
 		policies: policies(p),
 	}
 }
@@ -117,9 +117,8 @@ func isQueryMessage(msg []byte) bool {
 }
 
 // This should be used by the xmpp-client to received OTR messages in plain
-//TODO For the exported Receive, toSend needs fragmentation, base64 encoding and
-//to be a data message
-func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
+//TODO For the exported Receive, toSend needs fragmentation, base64 encoding
+func (c *Conversation) Receive(message []byte) (plain, toSend []byte, err error) {
 	if !c.policies.isOTREnabled() {
 		return
 	}
@@ -142,28 +141,31 @@ func (c *Conversation) Receive(message []byte) (toSend []byte, err error) {
 
 	_, msgProtocolVersion, ok := extractShort(message)
 	if !ok {
-		return nil, errInvalidOTRMessage
+		err = errInvalidOTRMessage
+		return
 	}
 
 	msgType := message[2]
 	if msgType != msgTypeDHCommit && c.version.protocolVersion() != msgProtocolVersion {
-		return nil, errWrongProtocolVersion
+		err = errWrongProtocolVersion
+		return
 	}
 
 	switch msgType {
 	case msgTypeData:
 		if c.msgState != encrypted {
-			return c.restart(), errEncryptedMessageWithNoSecureChannel
+			toSend = c.restart()
+			err = errEncryptedMessageWithNoSecureChannel
+			return
 		}
 
-		//TODO: return plain
-		_, toSend, err = c.processDataMessage(message)
+		plain, toSend, err = c.processDataMessage(message)
 		if err != nil {
 			return
 		}
 
 	default:
-		return c.receiveAKE(message)
+		toSend, err = c.receiveAKE(message)
 	}
 
 	return

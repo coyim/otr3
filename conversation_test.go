@@ -70,7 +70,7 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 		msgTypeDHCommit,
 	}
 
-	toSend, err := c.Receive(msg)
+	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, toSend[:3], exp)
@@ -91,7 +91,7 @@ func Test_receive_verifiesMessageProtocolVersion(t *testing.T) {
 	msg := []byte{0x00, 0x02, 0x00, msgTypeDHKey}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, err := c.Receive(msg)
+	_, _, err := c.Receive(msg)
 
 	assertEquals(t, err, errWrongProtocolVersion)
 }
@@ -100,7 +100,7 @@ func Test_receive_returnsAnErrorForAnInvalidOTRMessageWithoutVersionData(t *test
 	msg := []byte{0x00}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, err := c.Receive(msg)
+	_, _, err := c.Receive(msg)
 
 	assertEquals(t, err, errInvalidOTRMessage)
 }
@@ -112,7 +112,7 @@ func Test_receive_returnsAnErrorForADataMessageWhenNoEncryptionIsActive(t *testi
 	}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, err := c.Receive(m)
+	_, _, err := c.Receive(m)
 	assertDeepEquals(t, err, errEncryptedMessageWithNoSecureChannel)
 }
 
@@ -159,7 +159,7 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.policies.add(allowV3)
 
-	dhKeyMsg, err := c.Receive(dhCommitMsg)
+	_, dhKeyMsg, err := c.Receive(dhCommitMsg)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhKeyMsg[:messageHeaderPrefix], exp)
@@ -171,7 +171,7 @@ func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
 	msg := fixtureDHKeyMsg(v)
 	c := bobContextAtAwaitingDHKey()
 
-	toSend, err := c.Receive(msg)
+	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhMsgType(toSend), msgTypeRevealSig)
@@ -353,7 +353,7 @@ func Test_OTRisDisabledIfNoVersionIsAllowedInThePolicy(t *testing.T) {
 	s := c.Send(msg)
 	assertDeepEquals(t, s, msg)
 
-	r, err := c.Receive(msg)
+	_, r, err := c.Receive(msg)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, r, nilB)
 }
@@ -389,7 +389,7 @@ func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
 
 	msg := genWhitespaceTag(policies(allowV2))
 
-	toSend, err := c.Receive(msg)
+	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, dhMsgType(toSend), msgTypeDHCommit)
@@ -403,7 +403,7 @@ func Test_receive_ignoresV2WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE
 
 	msg := genWhitespaceTag(policies(allowV2))
 
-	toSend, err := c.Receive(msg)
+	_, toSend, err := c.Receive(msg)
 
 	//FIXME: err should be nil, but at the moment is not possible to distinguish
 	//between plaintext messages and OTR-encoded messages
@@ -418,7 +418,7 @@ func Test_receive_failsWhenReceivesV2WhitespaceTagIfV2IsNotInThePolicy(t *testin
 
 	msg := genWhitespaceTag(policies(allowV2))
 
-	toSend, err := c.Receive(msg)
+	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, errInvalidVersion)
 	assertDeepEquals(t, toSend, nilB)
@@ -430,7 +430,7 @@ func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
 
 	msg := genWhitespaceTag(policies(allowV2 | allowV3))
 
-	toSend, err := c.Receive(msg)
+	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, dhMsgType(toSend), msgTypeDHCommit)
@@ -444,7 +444,7 @@ func Test_receive_ignoresV3WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE
 
 	msg := genWhitespaceTag(policies(allowV3))
 
-	toSend, err := c.Receive(msg)
+	_, toSend, err := c.Receive(msg)
 
 	//FIXME: err should be nil, but at the moment is not possible to distinguish
 	//between plaintext messages and OTR-encoded messages
@@ -459,7 +459,7 @@ func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testin
 
 	msg := genWhitespaceTag(policies(allowV3))
 
-	toSend, err := c.Receive(msg)
+	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, errInvalidVersion)
 	assertDeepEquals(t, toSend, nilB)
