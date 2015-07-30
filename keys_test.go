@@ -993,13 +993,13 @@ func Test_PrivateKey_ImportWithoutError(t *testing.T) {
 func Test_PrivateKey_GenerateWithoutError(t *testing.T) {
 	priv := PrivateKey{}
 	//TODO: key generate is using big prime
-	err := priv.generate(rand.Reader)
+	err := priv.Generate(rand.Reader)
 	assertEquals(t, err, nil)
 }
 
 func Test_PrivateKey_GenerateErrorWhenGenerateParams(t *testing.T) {
 	priv := PrivateKey{}
-	err := priv.generate(fixedRand([]string{"ABCDEF"}))
+	err := priv.Generate(fixedRand([]string{"ABCDEF"}))
 	assertEquals(t, err.Error(), "unexpected EOF")
 }
 

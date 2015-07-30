@@ -347,7 +347,7 @@ func (priv *PrivateKey) Import(in []byte) bool {
 	return a.Cmp(priv.PrivateKey.Y) == 0
 }
 
-func (priv *PrivateKey) generate(rand io.Reader) error {
+func (priv *PrivateKey) Generate(rand io.Reader) error {
 	if err := dsa.GenerateParameters(&priv.PrivateKey.PublicKey.Parameters, rand, dsa.L1024N160); err != nil {
 		return err
 	}
@@ -356,13 +356,6 @@ func (priv *PrivateKey) generate(rand io.Reader) error {
 	}
 	priv.PublicKey.PublicKey = priv.PrivateKey.PublicKey
 	return nil
-}
-
-func (priv *PrivateKey) Generate(rand io.Reader) {
-	if err := priv.generate(rand); err != nil {
-		//TODO: this is not handled in xmpp, and is treated as panic in old version
-		panic(err.Error())
-	}
 }
 
 func notHex(r rune) bool {
