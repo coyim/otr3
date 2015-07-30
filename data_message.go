@@ -102,30 +102,32 @@ func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
 	return nil
 }
 
+func (c *Conversation) processSMPTLV(t tlv) (toSend tlv, err error) {
+	smpMessage, ok := t.smpMessage()
+	if !ok {
+		return tlv{}, newOtrError("corrupt data message")
+	}
+
+	return c.receiveSMP(smpMessage)
+}
+
 func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
 	var retTLVs []tlv
 	var err error
 
-	for _, tlv := range tlvs {
-		if tlv.tlvType == 0x00 {
+	for _, t := range tlvs {
+		if !t.isSMPMessage() {
 			continue
 		}
 
-		//FIXME: dont need to serialize again
-		//Change parseTLV to convert tlv objects to smpMessages
-		smpMessage, ok := parseTLV(tlv.serialize())
-		if !ok {
-			return nil, newOtrError("corrupt data message")
-		}
-
-		//FIXME: What if it receives multiple SMP messages in the same data message?
-		//FIXME: toSend should be a DATA message. It is a TLV serialized
-		tlv, err = c.receiveSMP(smpMessage)
+		toSend, err := c.processSMPTLV(t)
 		if err != nil {
-			return nil, err
+			//TODO: Double check how libotr handles this. Should we realy stop
+			//processing at first error?
+			return retTLVs, err
 		}
 
-		retTLVs = append(retTLVs, tlv)
+		retTLVs = append(retTLVs, toSend)
 	}
 
 	return retTLVs, err

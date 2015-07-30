@@ -43,27 +43,27 @@ func (c *tlv) deserialize(tlvsBytes []byte) error {
 	return nil
 }
 
-func parseTLV(data []byte) (smpMessage, bool) {
-	_, tlvType, ok := extractShort(data)
-	if !ok {
-		return nil, false
-	}
-	switch tlvType {
+func (t tlv) isSMPMessage() bool {
+	return t.tlvType >= tlvTypeSMP1 && t.tlvType <= tlvTypeSMP1WithQuestion
+}
+
+func (t tlv) smpMessage() (smpMessage, bool) {
+	switch t.tlvType {
 	case 0x02:
-		return parseSMP1TLV(data)
+		return toSmpMessage1(t)
 	case 0x03:
-		return parseSMP2TLV(data)
+		return toSmpMessage2(t)
 	case 0x04:
-		return parseSMP3TLV(data)
+		return toSmpMessage3(t)
 	case 0x05:
-		return parseSMP4TLV(data)
+		return toSmpMessage4(t)
 	}
 
 	return nil, false
 }
 
-func parseSMP1TLV(data []byte) (msg smp1Message, ok bool) {
-	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
+func toSmpMessage1(t tlv) (msg smp1Message, ok bool) {
+	_, mpis, ok := extractMPIs(t.tlvValue)
 	if !ok || len(mpis) < 6 {
 		return msg, false
 	}
@@ -76,8 +76,8 @@ func parseSMP1TLV(data []byte) (msg smp1Message, ok bool) {
 	return msg, true
 }
 
-func parseSMP2TLV(data []byte) (msg smp2Message, ok bool) {
-	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
+func toSmpMessage2(t tlv) (msg smp2Message, ok bool) {
+	_, mpis, ok := extractMPIs(t.tlvValue)
 	if !ok || len(mpis) < 11 {
 		return msg, false
 	}
@@ -95,8 +95,8 @@ func parseSMP2TLV(data []byte) (msg smp2Message, ok bool) {
 	return msg, true
 }
 
-func parseSMP3TLV(data []byte) (msg smp3Message, ok bool) {
-	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
+func toSmpMessage3(t tlv) (msg smp3Message, ok bool) {
+	_, mpis, ok := extractMPIs(t.tlvValue)
 	if !ok || len(mpis) < 8 {
 		return msg, false
 	}
@@ -111,8 +111,8 @@ func parseSMP3TLV(data []byte) (msg smp3Message, ok bool) {
 	return msg, true
 }
 
-func parseSMP4TLV(data []byte) (msg smp4Message, ok bool) {
-	_, mpis, ok := extractMPIs(data[tlvHeaderLength:])
+func toSmpMessage4(t tlv) (msg smp4Message, ok bool) {
+	_, mpis, ok := extractMPIs(t.tlvValue)
 	if !ok || len(mpis) < 3 {
 		return msg, false
 	}
