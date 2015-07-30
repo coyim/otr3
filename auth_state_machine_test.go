@@ -134,6 +134,11 @@ func aliceContextAtAwaitingRevealSig() *Conversation {
 	return c
 }
 
+func Test_conversationInitialState(t *testing.T) {
+    c := newConversation(nil, fixtureRand())
+	assertEquals(t, c.ake.state, authStateNone{})
+}
+
 func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *testing.T) {
 	queryMsg := []byte("?OTRv3?")
 

@@ -52,6 +52,8 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 	case otrV2{}:
 		p = allowV2
 	}
+    akeNotStarted := new(ake)
+    akeNotStarted.state = authStateNone{}
 
 	return &Conversation{
 		version: v,
@@ -59,6 +61,7 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 		smp: smp{
 			state: smpStateExpect1{},
 		},
+        ake: akeNotStarted,
 		policies: policies(p),
 	}
 }
