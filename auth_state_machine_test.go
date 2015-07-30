@@ -145,6 +145,16 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 	assertDeepEquals(t, fixtureDHCommitMsg(), msg)
 }
 
+func Test_receiveQueryMessageV2_SendDHCommitv2(t *testing.T) {
+	queryMsg := []byte("?OTRv2?")
+
+	c := newConversation(nil, fixtureRand())
+    c.policies.add(allowV2)
+	msg, _ := c.receiveQueryMessage(queryMsg)
+
+	assertDeepEquals(t, fixtureDHCommitMsgV2(), msg)
+}
+
 func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 	fixture := fixtureConversation()
 	fixture.dhCommitMessage()
