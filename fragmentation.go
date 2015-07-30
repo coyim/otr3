@@ -32,6 +32,13 @@ func fragmentData(data []byte, i int, fraglen, l uint16) []byte {
 	return data[fragmentStart(uint16(i), fraglen):fragmentEnd(uint16(i), fraglen, l)]
 }
 
+func (c *Conversation) setFragmentSize(size uint16) {
+	if size < c.version.minFragmentSize() {
+		c.fragmentSize = c.version.minFragmentSize()
+	}
+	c.fragmentSize = size
+}
+
 func (c *Conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr uint32) [][]byte {
 	len := len(data)
 

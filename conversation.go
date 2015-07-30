@@ -275,13 +275,6 @@ func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
 }
 
-func (c *Conversation) setFragmentSize(size uint16) {
-	if size < c.version.minFragmentSize() {
-		c.fragmentSize = c.version.minFragmentSize()
-	}
-	c.fragmentSize = size
-}
-
 func (c *Conversation) encode(msg []byte) [][]byte {
 	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgPrefix)+1)
 	base64.StdEncoding.Encode(b64[len(msgPrefix):], msg)
