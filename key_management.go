@@ -180,18 +180,13 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int) session
 }
 
 func (c *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *big.Int, err error) {
-	//FIXME: there should not be an if here
-	if c.ourKeyID == 0 {
+	switch ourKeyID {
+	case c.ourKeyID:
 		privKey, pubKey = c.ourCurrentDHKeys.priv, c.ourCurrentDHKeys.pub
-	} else {
-		switch ourKeyID {
-		case c.ourKeyID:
-			privKey, pubKey = c.ourCurrentDHKeys.priv, c.ourCurrentDHKeys.pub
-		case c.ourKeyID - 1:
-			privKey, pubKey = c.ourPreviousDHKeys.priv, c.ourPreviousDHKeys.pub
-		default:
-			err = newOtrErrorf("unexpected ourKeyID %d", ourKeyID)
-		}
+	case c.ourKeyID - 1:
+		privKey, pubKey = c.ourPreviousDHKeys.priv, c.ourPreviousDHKeys.pub
+	default:
+		err = newOtrErrorf("unexpected ourKeyID %d", ourKeyID)
 	}
 
 	return privKey, pubKey, err
