@@ -97,6 +97,7 @@ func (h *macKeyHistory) forgetMACKeysForTheirKey(theirKeyID uint32) []macKey {
 
 func (c *keyManagementContext) checkMessageCounter(message dataMsg) error {
 	theirNextCounter := binary.BigEndian.Uint64(message.topHalfCtr[:])
+
 	if theirNextCounter <= c.theirCounter {
 		return errInvalidOTRMessage
 	}

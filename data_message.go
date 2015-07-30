@@ -46,7 +46,9 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 		return
 	}
 
-	//TODO: Check that the counter in the Data message is strictly larger than the last counter you saw using this pair of keys. If not, reject the message.
+	if err = c.keys.checkMessageCounter(dataMessage); err != nil {
+		return
+	}
 
 	sessionKeys, err := c.keys.calculateDHSessionKeys(dataMessage.recipientKeyID, dataMessage.senderKeyID)
 	if err != nil {
