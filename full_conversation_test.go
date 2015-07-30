@@ -31,21 +31,21 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 	}
 }
 
-func Test_AKEHappyPath(t *testing.T) {
-	alice := newConversation(otrV3{}, rand.Reader)
-	bob := newConversation(otrV3{}, rand.Reader)
-	alice.policies.add(allowV2)
-	bob.policies.add(allowV2)
-	alice.policies.add(allowV3)
-	bob.policies.add(allowV3)
+func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
+	alice := newConversation(nil, rand.Reader)
 	alice.ourKey = alicePrivateKey
-	bob.ourKey = bobPrivateKey
+	alice.policies = policies(allowV2 | allowV3)
 	alice.theirKey = &bobPrivateKey.PublicKey
+
+	bob := newConversation(nil, rand.Reader)
+	bob.ourKey = bobPrivateKey
+	bob.policies = policies(allowV2 | allowV3)
 	bob.theirKey = &alicePrivateKey.PublicKey
 
-	msg := []byte("?OTRv3?")
 	var toSend []byte
 	var err error
+	msg := alice.queryMessage()
+
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(msg)
 	assertEquals(t, err, nil)
@@ -86,20 +86,22 @@ func Test_AKEHappyPath(t *testing.T) {
 	assertEquals(t, bob.keys.ourPreviousDHKeys.pub.BitLen() > 0, true)
 }
 
-func Test_AKENotAllowV2(t *testing.T) {
-	alice := newConversation(otrV3{}, rand.Reader)
-	bob := newConversation(otrV3{}, rand.Reader)
-	alice.policies.add(allowV3)
-	bob.policies.add(allowV3)
+func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
+	alice := newConversation(nil, rand.Reader)
 	alice.ourKey = alicePrivateKey
-	bob.ourKey = bobPrivateKey
+	alice.policies = policies(allowV3)
 	alice.theirKey = &bobPrivateKey.PublicKey
+
+	bob := newConversation(nil, rand.Reader)
+	bob.ourKey = bobPrivateKey
+	bob.policies = policies(allowV3)
 	bob.theirKey = &alicePrivateKey.PublicKey
 
-	msg := []byte("?OTRv3?")
-	var toSend []byte
 	var nilB []byte
+	var toSend []byte
 	var err error
+	msg := alice.queryMessage()
+
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(msg)
 	assertEquals(t, err, nil)
@@ -120,6 +122,22 @@ func Test_AKENotAllowV2(t *testing.T) {
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
 	assertDeepEquals(t, toSend, nilB)
+
+	//FIXME: They will never be at authStateNone{} again.
+
+	// "When starting a private Conversation [...],
+	// generate two DH key pairs for yourself, and set our_keyid = 2"
+	assertEquals(t, alice.keys.ourKeyID, uint32(2))
+	assertEquals(t, alice.keys.ourCurrentDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, alice.keys.ourCurrentDHKeys.pub.BitLen() > 0, true)
+	assertEquals(t, alice.keys.ourPreviousDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, alice.keys.ourPreviousDHKeys.pub.BitLen() > 0, true)
+
+	assertEquals(t, bob.keys.ourKeyID, uint32(2))
+	assertEquals(t, bob.keys.ourCurrentDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, bob.keys.ourCurrentDHKeys.pub.BitLen() > 0, true)
+	assertEquals(t, bob.keys.ourPreviousDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, bob.keys.ourPreviousDHKeys.pub.BitLen() > 0, true)
 }
 
 func Test_processDataMessageShouldExtractData(t *testing.T) {

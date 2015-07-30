@@ -32,6 +32,15 @@ func (c *Conversation) resolveVersionFromDHCommitMessage(message []byte) otrVers
 	return newOtrVersion(msgProtocolVersion)
 }
 
+func (c *Conversation) akeHasFinished() error {
+	c.msgState = encrypted
+	if err := c.generateNewDHKeyPair(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 	if len(msg) < minimumMessageLength {
 		return nil, errInvalidOTRMessage
@@ -49,21 +58,23 @@ func (c *Conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
 		c.ake.state, toSend, err = c.ake.state.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
 		c.ake.state, toSend, err = c.ake.state.receiveDHKeyMessage(c, msg)
+
+		//TODO: Verify.
+		if !c.policies.has(allowV2) {
+			//Accodring to the spec, Signature and Reveal Signature messages will be
+			//ignored if V2 is not allowed, so the user will never finish the AKE
+			//So I'm finishing the AKE
+			err = c.akeHasFinished()
+		}
 	case msgTypeRevealSig:
 		c.ake.state, toSend, err = c.ake.state.receiveRevealSigMessage(c, msg)
 		if err == nil {
-			c.msgState = encrypted
-			if err = c.generateNewDHKeyPair(); err != nil {
-				return
-			}
+			err = c.akeHasFinished()
 		}
 	case msgTypeSig:
 		c.ake.state, toSend, err = c.ake.state.receiveSigMessage(c, msg)
 		if err == nil {
-			c.msgState = encrypted
-			if err = c.generateNewDHKeyPair(); err != nil {
-				return
-			}
+			err = c.akeHasFinished()
 		}
 	default:
 		err = newOtrErrorf("unknown message type 0x%X", msg[2])
@@ -193,8 +204,13 @@ func (s authStateNone) receiveRevealSigMessage(c *Conversation, msg []byte) (aut
 }
 
 func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+	//TODO: Verify
 	if !c.policies.has(allowV2) {
-		return s, nil, nil
+		//Accodring to the spec, Signature and Reveal Signature messages will be
+		//ignored if V2 is not allowed, so the user will never finish the AKE
+		//So I'm finishing the AKE
+		err := c.akeHasFinished()
+		return s, nil, err
 	}
 
 	err := c.processRevealSig(msg)
