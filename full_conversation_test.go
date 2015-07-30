@@ -74,16 +74,16 @@ func Test_AKEHappyPath(t *testing.T) {
 	// "When starting a private Conversation [...],
 	// generate two DH key pairs for yourself, and set our_keyid = 2"
 	assertEquals(t, alice.keys.ourKeyID, uint32(2))
-	assertEquals(t, len(alice.keys.ourCurrentDHKeys.priv.Bytes()), 40)
-	assertEquals(t, len(alice.keys.ourCurrentDHKeys.pub.Bytes()), 192)
-	assertEquals(t, len(alice.keys.ourPreviousDHKeys.priv.Bytes()), 40)
-	assertEquals(t, len(alice.keys.ourPreviousDHKeys.pub.Bytes()), 192)
+	assertEquals(t, alice.keys.ourCurrentDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, alice.keys.ourCurrentDHKeys.pub.BitLen() > 0, true)
+	assertEquals(t, alice.keys.ourPreviousDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, alice.keys.ourPreviousDHKeys.pub.BitLen() > 0, true)
 
 	assertEquals(t, bob.keys.ourKeyID, uint32(2))
-	assertEquals(t, len(bob.keys.ourCurrentDHKeys.priv.Bytes()), 40)
-	assertEquals(t, len(bob.keys.ourCurrentDHKeys.pub.Bytes()), 192)
-	assertEquals(t, len(bob.keys.ourPreviousDHKeys.priv.Bytes()), 40)
-	assertEquals(t, len(bob.keys.ourPreviousDHKeys.pub.Bytes()), 192)
+	assertEquals(t, bob.keys.ourCurrentDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, bob.keys.ourCurrentDHKeys.pub.BitLen() > 0, true)
+	assertEquals(t, bob.keys.ourPreviousDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, bob.keys.ourPreviousDHKeys.pub.BitLen() > 0, true)
 }
 
 func Test_AKENotAllowV2(t *testing.T) {
