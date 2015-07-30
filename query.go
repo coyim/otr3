@@ -70,13 +70,16 @@ func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
 	return c.sendDHCommit()
 }
 
-func (c Conversation) queryMessage() string {
-	queryMessage := "?OTRv"
+func (c Conversation) queryMessage() []byte {
+	queryMessage := []byte("?OTRv")
+
 	if c.policies.has(allowV2) {
-		queryMessage += "2"
+		queryMessage = append(queryMessage, '2')
 	}
+
 	if c.policies.has(allowV3) {
-		queryMessage += "3"
+		queryMessage = append(queryMessage, '3')
 	}
-	return queryMessage + "?"
+
+	return append(queryMessage, '?')
 }

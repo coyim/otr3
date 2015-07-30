@@ -46,7 +46,7 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 	switch c.msgState {
 	case plainText:
 		if c.policies.has(requireEncryption) {
-			return [][]byte{[]byte(c.queryMessage())}, nil
+			return [][]byte{c.queryMessage()}, nil
 		}
 		if c.policies.has(sendWhitespaceTag) {
 			msg = c.appendWhitespaceTag(msg)
