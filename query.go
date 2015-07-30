@@ -51,14 +51,12 @@ func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
 	c.ourInstanceTag = generateInstanceTag()
 
 	toSend, err = c.dhCommitMessage()
-
-	if err == nil {
-		c.ensureAKE()
-		c.ake.state = authStateAwaitingDHKey{}
-		c.keys.ourKeyID = 0
-		c.keys.ourCurrentDHKeys = dhKeyPair{}
+	if err != nil {
+		return
 	}
 
+	c.ake.state = authStateAwaitingDHKey{}
+	c.keys.ourCurrentDHKeys = dhKeyPair{}
 	return
 }
 
@@ -67,8 +65,6 @@ func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
 	if !ok {
 		return nil, errInvalidVersion
 	}
-
-	//TODO set the version for every existing otrContext
 	c.version = v
 
 	return c.sendDHCommit()
