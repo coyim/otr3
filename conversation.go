@@ -263,11 +263,6 @@ func (c *Conversation) encode(msg []byte) [][]byte {
 	copy(b64, msgPrefix)
 	b64[len(b64)-1] = '.'
 
-	if c.FragmentSize < minFragmentSize {
-		// We can encode this in a single fragment.
-		return [][]byte{b64}
-	}
-
 	bytesPerFragment := c.FragmentSize - minFragmentSize
 	//TODO: need implementation of InstanceTag ready
 	return c.fragment(b64, uint16(bytesPerFragment), uint32(0), uint32(0))

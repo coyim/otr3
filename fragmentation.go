@@ -35,7 +35,7 @@ func fragmentData(data []byte, i int, fraglen, l uint16) []byte {
 func (c *Conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr uint32) [][]byte {
 	len := len(data)
 
-	if len <= int(fraglen) {
+	if len <= int(fraglen) || fraglen == 0 {
 		return [][]byte{data}
 	}
 

@@ -431,6 +431,19 @@ func Test_encodeWithoutFragment(t *testing.T) {
 	assertDeepEquals(t, msg, expectedFragments)
 }
 
+func Test_encodeWithoutFragmentTooSmall(t *testing.T) {
+	c := newConversation(otrV2{}, fixtureRand())
+	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
+	c.FragmentSize = 18
+
+	msg := c.encode([]byte("one two three"))
+
+	expectedFragments := [][]byte{
+		[]byte("?OTR:b25lIHR3byB0aHJlZQ==."),
+	}
+	assertDeepEquals(t, msg, expectedFragments)
+}
+
 func Test_encodeWithFragment(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
