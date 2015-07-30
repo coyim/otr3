@@ -1,9 +1,7 @@
 package otr3
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/binary"
 	"errors"
 	"io"
 )
@@ -37,45 +35,9 @@ const (
 	finished
 )
 
-//TODO: is these const necessary?
 var (
-	msgPrefix       = []byte("?OTR:")
-	queryMarker     = []byte("?OTR")
-	minFragmentSize = 18
+	queryMarker = []byte("?OTR")
 )
-
-func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
-	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
-	if err != nil {
-		//TODO errors
-		return dataMsg{}
-	}
-
-	topHalfCtr := [8]byte{}
-	binary.BigEndian.PutUint64(topHalfCtr[:], c.keys.ourCounter)
-	c.keys.ourCounter++
-
-	plain := plainDataMsg{
-		message: message,
-		tlvs:    tlvs,
-	}
-
-	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
-	dataMessage := dataMsg{
-		//TODO: implement IGNORE_UNREADABLE
-		flag: 0x00,
-
-		senderKeyID:    c.keys.ourKeyID - 1,
-		recipientKeyID: c.keys.theirKeyID,
-		y:              c.keys.ourCurrentDHKeys.pub,
-		topHalfCtr:     topHalfCtr,
-		encryptedMsg:   encrypted,
-		oldMACKeys:     c.keys.revealMACKeys(),
-	}
-	dataMessage.sign(keys.sendingMACKey)
-
-	return dataMessage
-}
 
 func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 	if !c.policies.isOTREnabled() {
@@ -97,21 +59,6 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 	}
 
 	return nil, errors.New("otr: cannot send message in current state")
-}
-
-func (c Conversation) queryMessage() string {
-	queryMessage := "?OTRv"
-	if c.policies.has(allowV2) {
-		queryMessage += "2"
-	}
-	if c.policies.has(allowV3) {
-		queryMessage += "3"
-	}
-	return queryMessage + "?"
-}
-
-func isQueryMessage(msg []byte) bool {
-	return bytes.HasPrefix(msg, []byte(queryMarker))
 }
 
 // This should be used by the xmpp-client to received OTR messages in plain
@@ -169,100 +116,6 @@ func (c *Conversation) Receive(message []byte) (plain, toSend []byte, err error)
 	return
 }
 
-func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
-	var retTLVs []tlv
-	var err error
-
-	for _, tlv := range tlvs {
-		if tlv.tlvType == 0x00 {
-			continue
-		}
-
-		//FIXME: dont need to serialize again
-		//Change parseTLV to convert tlv objects to smpMessages
-		smpMessage, ok := parseTLV(tlv.serialize())
-		if !ok {
-			return nil, newOtrError("corrupt data message")
-		}
-
-		//FIXME: What if it receives multiple SMP messages in the same data message?
-		//FIXME: toSend should be a DATA message. It is a TLV serialized
-		tlv, err = c.receiveSMP(smpMessage)
-		if err != nil {
-			return nil, err
-		}
-
-		retTLVs = append(retTLVs, tlv)
-	}
-
-	return retTLVs, err
-}
-
-func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
-	c.keys.rotateTheirKey(dataMessage.senderKeyID, dataMessage.y)
-
-	x, ok := c.randMPI(make([]byte, 40))
-	if !ok {
-		//NOTE: what should we do?
-		//This is one kind of error that breaks the encrypted channel. I believe we
-		//should change the msgState to != encrypted
-		return errShortRandomRead
-	}
-
-	c.keys.rotateOurKeys(dataMessage.recipientKeyID, x)
-
-	return nil
-}
-
-func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err error) {
-	// FIXME: deal with errors in this function
-	msg, _ = c.parseMessageHeader(msg)
-
-	dataMessage := dataMsg{}
-
-	err = dataMessage.deserialize(msg)
-	if err != nil {
-		return
-	}
-
-	//TODO: Check that the counter in the Data message is strictly larger than the last counter you saw using this pair of keys. If not, reject the message.
-
-	sessionKeys, err := c.keys.calculateDHSessionKeys(dataMessage.recipientKeyID, dataMessage.senderKeyID)
-	if err != nil {
-		return
-	}
-
-	if err = dataMessage.checkSign(sessionKeys.receivingMACKey); err != nil {
-		return
-	}
-
-	p := plainDataMsg{}
-	err = p.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
-	if err != nil {
-		return
-	}
-
-	plain = p.message
-	err = c.rotateKeys(dataMessage)
-	if err != nil {
-		return
-	}
-
-	//TODO: TEST. Should not process TLVs if it fails to rotate keys. This is how
-	//libotr does
-	var tlvs []tlv
-	tlvs, err = c.processTLVs(p.tlvs)
-	if err != nil {
-		return
-	}
-
-	if len(tlvs) > 0 {
-		toSend = c.genDataMsg(nil, tlvs...).serialize(c)
-	}
-
-	return
-}
-
 func (c *Conversation) messageHeader(msgType byte) []byte {
 	return c.version.messageHeader(c, msgType)
 }
@@ -273,16 +126,6 @@ func (c *Conversation) parseMessageHeader(msg []byte) ([]byte, error) {
 
 func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
-}
-
-func (c *Conversation) encode(msg []byte) [][]byte {
-	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgPrefix)+1)
-	base64.StdEncoding.Encode(b64[len(msgPrefix):], msg)
-	copy(b64, msgPrefix)
-	b64[len(b64)-1] = '.'
-
-	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
-	return c.fragment(b64, bytesPerFragment, uint32(0), uint32(0))
 }
 
 func (c *Conversation) End() (toSend [][]byte, ok bool) {
@@ -297,6 +140,17 @@ func (c *Conversation) End() (toSend [][]byte, ok bool) {
 	}
 	ok = false
 	return
+}
+
+func (c *Conversation) encode(msg []byte) [][]byte {
+	msgPrefix := []byte("?OTR:")
+	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgPrefix)+1)
+	base64.StdEncoding.Encode(b64[len(msgPrefix):], msg)
+	copy(b64, msgPrefix)
+	b64[len(b64)-1] = '.'
+
+	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
+	return c.fragment(b64, bytesPerFragment, uint32(0), uint32(0))
 }
 
 /*TODO: Authenticate

@@ -5,6 +5,10 @@ import (
 	"strconv"
 )
 
+func isQueryMessage(msg []byte) bool {
+	return bytes.HasPrefix(msg, queryMarker)
+}
+
 func parseOTRQueryMessage(msg []byte) []int {
 	ret := []int{}
 
@@ -68,4 +72,15 @@ func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
 	c.version = v
 
 	return c.sendDHCommit()
+}
+
+func (c Conversation) queryMessage() string {
+	queryMessage := "?OTRv"
+	if c.policies.has(allowV2) {
+		queryMessage += "2"
+	}
+	if c.policies.has(allowV3) {
+		queryMessage += "3"
+	}
+	return queryMessage + "?"
 }
