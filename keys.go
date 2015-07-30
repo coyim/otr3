@@ -6,6 +6,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/dsa"
+	"crypto/sha1"
 	"encoding/hex"
 	"hash"
 	"io"
@@ -232,7 +233,7 @@ func (priv *PrivateKey) Parse(in []byte) (index []byte, ok bool) {
 var dsaKeyType = []byte{0x00, 0x00}
 var dsaKeyTypeValue = uint16(0x0000)
 
-func (priv *PrivateKey) Serialize() []byte {
+func (priv *PrivateKey) serialize() []byte {
 	result := priv.PublicKey.serialize()
 	return appendMPI(result, priv.PrivateKey.X)
 }
@@ -247,10 +248,14 @@ func (pub *PublicKey) serialize() []byte {
 }
 
 //TODO: Do we need to keep Fingerprint for API
-func (pub *PublicKey) Fingerprint(h hash.Hash) []byte {
+func (pub *PublicKey) fingerprint(h hash.Hash) []byte {
 	b := pub.serialize()
 	h.Write(b[2:]) // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
 	return h.Sum(nil)
+}
+
+func (pub *PublicKey) Fingerprint() []byte {
+	return pub.fingerprint(sha1.New())
 }
 
 func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
