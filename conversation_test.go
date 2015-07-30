@@ -1,6 +1,9 @@
 package otr3
 
-import "testing"
+import (
+	"io"
+	"testing"
+)
 
 //Alice generates a encrypted message to Bob
 //Fixture data msg never rotates the receiver keys when the returned context is
@@ -58,6 +61,28 @@ func fixtureDecryptDataMsg(encryptedDataMsg []byte) plainDataMsg {
 	exp.decrypt(keys.receivingAESKey, m.topHalfCtr, m.encryptedMsg)
 
 	return exp
+}
+
+func newConversation(v otrVersion, rand io.Reader) *Conversation {
+	var p policy
+	switch v {
+	case otrV3{}:
+		p = allowV3
+	case otrV2{}:
+		p = allowV2
+	}
+	akeNotStarted := new(ake)
+	akeNotStarted.state = authStateNone{}
+
+	return &Conversation{
+		version: v,
+		Rand:    rand,
+		smp: smp{
+			state: smpStateExpect1{},
+		},
+		ake:      akeNotStarted,
+		policies: policies(p),
+	}
 }
 
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {

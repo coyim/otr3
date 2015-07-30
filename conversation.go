@@ -44,29 +44,6 @@ var (
 	minFragmentSize = 18
 )
 
-//NOTE: this should be only used in tests
-func newConversation(v otrVersion, rand io.Reader) *Conversation {
-	var p policy
-	switch v {
-	case otrV3{}:
-		p = allowV3
-	case otrV2{}:
-		p = allowV2
-	}
-	akeNotStarted := new(ake)
-	akeNotStarted.state = authStateNone{}
-
-	return &Conversation{
-		version: v,
-		Rand:    rand,
-		smp: smp{
-			state: smpStateExpect1{},
-		},
-		ake:      akeNotStarted,
-		policies: policies(p),
-	}
-}
-
 func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	if err != nil {
