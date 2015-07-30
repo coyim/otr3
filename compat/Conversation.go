@@ -9,3 +9,11 @@ type Conversation struct {
 	SSID           [8]byte
 	FragmentSize   int
 }
+
+func (c *Conversation) End() (toSend [][]byte) {
+	toSend, ok := c.Conversation.End()
+	if !ok {
+		panic("unreachable")
+	}
+	return
+}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
 	"io"
 )
 
@@ -99,17 +100,37 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	return dataMessage
 }
 
-func (c *Conversation) Send(message []byte) []byte {
-	// FIXME Dummy for now
-	var ret []byte
-
+func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 	if !c.policies.isOTREnabled() {
-		return message
+		return [][]byte{msg}, nil
+	}
+	switch c.msgState {
+	case plainText:
+		if c.policies.has(requireEncryption) {
+			return [][]byte{[]byte(c.queryMessage())}, nil
+		}
+		if c.policies.has(sendWhitespaceTag) {
+			msg = c.appendWhitespaceTag(msg)
+		}
+		return [][]byte{msg}, nil
+	case encrypted:
+		return c.encode(c.genDataMsg(msg).serialize(c)), nil
+	case finished:
+		return nil, errors.New("otr: cannot send message because secure conversation has finished")
 	}
 
-	ret = c.appendWhitespaceTag(message)
+	return nil, errors.New("otr: cannot send message in current state")
+}
 
-	return ret
+func (c Conversation) queryMessage() string {
+	queryMessage := "?OTRv"
+	if c.policies.has(allowV2) {
+		queryMessage += "2"
+	}
+	if c.policies.has(allowV3) {
+		queryMessage += "3"
+	}
+	return queryMessage + "?"
 }
 
 func isQueryMessage(msg []byte) bool {
@@ -294,19 +315,18 @@ func (c *Conversation) encode(msg []byte) [][]byte {
 	return c.fragment(b64, bytesPerFragment, uint32(0), uint32(0))
 }
 
-func (c *Conversation) End() (toSend [][]byte) {
+func (c *Conversation) End() (toSend [][]byte, ok bool) {
+	ok = true
 	switch c.msgState {
 	case plainText:
-		return nil
 	case encrypted:
 		c.msgState = plainText
-		return c.encode(c.genDataMsg(nil, tlv{tlvType: tlvTypeDisconnected}).serialize(c))
+		toSend = c.encode(c.genDataMsg(nil, tlv{tlvType: tlvTypeDisconnected}).serialize(c))
 	case finished:
 		c.msgState = plainText
-		return nil
 	}
-	//FIXME: old implementation has panic("unreachable")
-	return nil
+	ok = false
+	return
 }
 
 /*TODO: Authenticate

@@ -31,6 +31,7 @@ func (v otrV2) fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte {
 func (v otrV2) minFragmentSize() uint16 {
 	return 18
 }
+
 func (v otrV2) protocolVersion() uint16 {
 	return 2
 }

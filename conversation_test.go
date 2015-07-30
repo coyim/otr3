@@ -350,8 +350,8 @@ func Test_OTRisDisabledIfNoVersionIsAllowedInThePolicy(t *testing.T) {
 
 	c := newConversation(nil, fixtureRand())
 
-	s := c.Send(msg)
-	assertDeepEquals(t, s, msg)
+	s, _ := c.Send(msg)
+	assertDeepEquals(t, s, [][]byte{msg})
 
 	_, r, err := c.Receive(msg)
 	assertEquals(t, err, nil)
@@ -368,19 +368,32 @@ func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {
 	c := newConversation(nil, nil)
 	c.policies = policies(allowV3 | sendWhitespaceTag)
 
-	m := c.Send([]byte("hello"))
-	wsPos := len(m) - len(expectedWhitespaceTag)
-	assertDeepEquals(t, m[wsPos:], expectedWhitespaceTag)
-
+	m, _ := c.Send([]byte("hello"))
+	wsPos := len(m[0]) - len(expectedWhitespaceTag)
+	assertDeepEquals(t, m[0][wsPos:], expectedWhitespaceTag)
 }
 
 func Test_send_doesNotAppendWhitespaceTagsWhenItsNotAllowedbyThePolicy(t *testing.T) {
 	m := []byte("hello")
 	c := newConversation(nil, nil)
-	c.policies = policies(allowV3 | ^sendWhitespaceTag)
+	c.policies = policies(allowV3)
 
-	toSend := c.Send(m)
-	assertDeepEquals(t, toSend, m)
+	toSend, _ := c.Send(m)
+	assertDeepEquals(t, toSend, [][]byte{m})
+}
+
+func Test_send_dataMessageWhenItsMsgStateEncrypted(t *testing.T) {
+	m := []byte("hello")
+	c := bobContextAfterAKE()
+	c.msgState = encrypted
+	c.policies = policies(allowV3)
+	toSend, _ := c.Send(m)
+
+	stub := bobContextAfterAKE()
+	stub.msgState = encrypted
+	expected := stub.encode(stub.genDataMsg(m).serialize(stub))
+
+	assertDeepEquals(t, toSend, expected)
 }
 
 func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
@@ -515,14 +528,14 @@ func Test_encodeWithFragment(t *testing.T) {
 func Test_End_whenStateIsPlainText(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.msgState = plainText
-	msg := c.End()
+	msg, _ := c.End()
 	assertDeepEquals(t, msg, [][]uint8(nil))
 }
 
 func Test_End_whenStateIsFinished(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.msgState = finished
-	msg := c.End()
+	msg, _ := c.End()
 	assertDeepEquals(t, c.msgState, plainText)
 	assertDeepEquals(t, msg, [][]uint8(nil))
 }
@@ -530,7 +543,7 @@ func Test_End_whenStateIsFinished(t *testing.T) {
 func Test_End_whenStateIsEncrypted(t *testing.T) {
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted
-	msg := bob.End()
+	msg, _ := bob.End()
 	stub := bobContextAfterAKE()
 	expected := stub.encode(stub.genDataMsg(nil, tlv{tlvType: tlvTypeDisconnected}).serialize(stub))
 
