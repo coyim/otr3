@@ -32,6 +32,8 @@ func init() {
 
 	pMinusTwo = sub(p, big.NewInt(2))
 	g1 = big.NewInt(2)
+
+	initTLVHandlers()
 }
 
 func isGroupElement(n *big.Int) bool {

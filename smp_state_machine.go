@@ -32,18 +32,20 @@ func abortStateMachineWith(e error) (smpState, smpMessage, error) {
 	return smpStateExpect1{}, smpMessageAbort{}, e
 }
 
-func (c *Conversation) receiveSMP(m smpMessage) (tlv, error) {
+func (c *Conversation) receiveSMP(m smpMessage) (*tlv, error) {
 	toSend, err := m.receivedMessage(c)
 
 	if err != nil {
-		return tlv{}, err
+		return nil, err
 	}
 
 	if toSend == nil {
-		return tlv{}, nil
+		return nil, nil
 	}
 
-	return toSend.tlv(), nil
+	result := toSend.tlv()
+
+	return &result, nil
 }
 
 func (smpStateBase) receiveMessage1(c *Conversation, m smp1Message) (smpState, smpMessage, error) {

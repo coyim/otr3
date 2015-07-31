@@ -39,8 +39,7 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 	// FIXME: deal with errors in this function
 	dataMessage := dataMsg{}
 
-	err = dataMessage.deserialize(msg)
-	if err != nil {
+	if err = dataMessage.deserialize(msg); err != nil {
 		return
 	}
 
@@ -100,10 +99,10 @@ func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
 	return nil
 }
 
-func (c *Conversation) processSMPTLV(t tlv) (toSend tlv, err error) {
+func (c *Conversation) processSMPTLV(t tlv) (toSend *tlv, err error) {
 	smpMessage, ok := t.smpMessage()
 	if !ok {
-		return tlv{}, newOtrError("corrupt data message")
+		return nil, newOtrError("corrupt data message")
 	}
 
 	return c.receiveSMP(smpMessage)
@@ -114,18 +113,22 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
 	var err error
 
 	for _, t := range tlvs {
-		if !t.isSMPMessage() {
+		mh, e := messageHandlerForTLV(t)
+		if e != nil {
 			continue
 		}
 
-		toSend, err := c.processSMPTLV(t)
+		toSend, err := mh(c, t)
 		if err != nil {
 			//TODO: Double check how libotr handles this. Should we realy stop
 			//processing at first error?
+			// Nope, we should not.
 			return retTLVs, err
 		}
 
-		retTLVs = append(retTLVs, toSend)
+		if toSend != nil {
+			retTLVs = append(retTLVs, *toSend)
+		}
 	}
 
 	return retTLVs, err

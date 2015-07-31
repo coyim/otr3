@@ -11,8 +11,32 @@ const (
 	tlvTypeSMP4         = 5
 	tlvTypeSMPAbort     = 6
 	//TODO: Question is not done
-	tlvTypeSMP1WithQuestion = 7
+	tlvTypeSMP1WithQuestion  = 7
+	tlvTypeExtraSymmetricKey = 8
 )
+
+type tlvHandler func(*Conversation, tlv) (*tlv, error)
+
+var tlvHandlers = make([]tlvHandler, 9)
+
+func initTLVHandlers() {
+	tlvHandlers[tlvTypePadding] = func(c *Conversation, t tlv) (*tlv, error) { return c.processPaddingTLV(t) }
+	tlvHandlers[tlvTypeDisconnected] = func(c *Conversation, t tlv) (*tlv, error) { return c.processDisconnectedTLV(t) }
+	tlvHandlers[tlvTypeSMP1] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
+	tlvHandlers[tlvTypeSMP2] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
+	tlvHandlers[tlvTypeSMP3] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
+	tlvHandlers[tlvTypeSMP4] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
+	tlvHandlers[tlvTypeSMPAbort] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
+	tlvHandlers[tlvTypeSMP1WithQuestion] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
+	tlvHandlers[tlvTypeExtraSymmetricKey] = func(c *Conversation, t tlv) (*tlv, error) { return c.processExtraSymmetricKeyTLV(t) }
+}
+
+func messageHandlerForTLV(t tlv) (tlvHandler, error) {
+	if t.tlvType >= uint16(len(tlvHandlers)) {
+		return nil, newOtrError("unexpected TLV type")
+	}
+	return tlvHandlers[t.tlvType], nil
+}
 
 type tlv struct {
 	tlvType   uint16
