@@ -196,7 +196,6 @@ func Test_encodeWithFragment(t *testing.T) {
 
 	msg := c.encode([]byte("one two three"))
 
-	//FIXME: old implementation is not having leading zero in fragment index, who is correct?
 	expectedFragments := [][]byte{
 		[]byte("?OTR,00001,00007,?OTR,"),
 		[]byte("?OTR,00002,00007,:b25,"),
