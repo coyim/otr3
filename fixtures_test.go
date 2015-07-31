@@ -176,7 +176,7 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	}
 
 	m.encryptedMsg = plain.encrypt(keys.sendingAESKey, m.topHalfCtr)
-	m.sign(keys.sendingMACKey)
+	m.keysToSignWith = keys.sendingMACKey
 
 	return m.serialize(newConversation(otrV3{}, nil)), receiverContext
 }

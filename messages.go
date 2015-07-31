@@ -134,6 +134,7 @@ type dataMsg struct {
 	authenticator               [20]byte
 	oldMACKeys                  []macKey
 	serializeUnsignedCache      []byte
+	keysToSignWith              macKey
 }
 
 func (c *dataMsg) sign(key macKey) {
@@ -222,6 +223,7 @@ func (c dataMsg) serialize(conv *Conversation) []byte {
 	}
 
 	out = append(out, c.serializeUnsignedCache...)
+	c.sign(c.keysToSignWith)
 	out = append(out, c.authenticator[:]...)
 
 	keyLen := len(macKey{})

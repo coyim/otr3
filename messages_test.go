@@ -480,7 +480,7 @@ func Test_dataMsg_serializeWithAuthenticator(t *testing.T) {
 		y:            big.NewInt(0x01),
 		encryptedMsg: []byte{0x01},
 	}
-	m.sign(sendingMACKey)
+	m.keysToSignWith = sendingMACKey
 
 	msg := m.serialize(conv)
 

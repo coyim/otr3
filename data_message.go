@@ -29,8 +29,8 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		topHalfCtr:     topHalfCtr,
 		encryptedMsg:   encrypted,
 		oldMACKeys:     c.keys.revealMACKeys(),
+		keysToSignWith: keys.sendingMACKey,
 	}
-	dataMessage.sign(keys.sendingMACKey)
 
 	return dataMessage
 }
