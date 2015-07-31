@@ -2,6 +2,7 @@ package otr3
 
 func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, err error) {
 	var unencodedReturn []byte
+	c.stopSendingWhitespaceTags = c.policies.has(sendWhitespaceTag)
 
 	switch {
 	case !c.policies.isOTREnabled():
@@ -19,8 +20,6 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 	case isQueryMessage(message):
 		unencodedReturn, err = c.receiveQueryMessage(message)
 	default:
-		c.whitespaceTagIgnored = c.policies.has(sendWhitespaceTag)
-
 		plain, unencodedReturn, err = c.processWhitespaceTag(message)
 		if unencodedReturn == nil {
 			return

@@ -27,7 +27,7 @@ type Conversation struct {
 	smp          smp
 	fragmentSize uint16
 
-	whitespaceTagIgnored bool
+	stopSendingWhitespaceTags bool
 }
 
 type msgState int

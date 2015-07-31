@@ -26,7 +26,7 @@ func genWhitespaceTag(p policies) []byte {
 }
 
 func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
-	if !c.policies.has(sendWhitespaceTag) || c.whitespaceTagIgnored {
+	if !c.policies.has(sendWhitespaceTag) || c.stopSendingWhitespaceTags {
 		return message
 	}
 
