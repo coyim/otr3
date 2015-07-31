@@ -43,20 +43,20 @@ func (c *tlv) deserialize(tlvsBytes []byte) error {
 	return nil
 }
 
-func (t tlv) isSMPMessage() bool {
-	return t.tlvType >= tlvTypeSMP1 && t.tlvType <= tlvTypeSMP1WithQuestion
+func (c tlv) isSMPMessage() bool {
+	return c.tlvType >= tlvTypeSMP1 && c.tlvType <= tlvTypeSMP1WithQuestion
 }
 
-func (t tlv) smpMessage() (smpMessage, bool) {
-	switch t.tlvType {
+func (c tlv) smpMessage() (smpMessage, bool) {
+	switch c.tlvType {
 	case 0x02:
-		return toSmpMessage1(t)
+		return toSmpMessage1(c)
 	case 0x03:
-		return toSmpMessage2(t)
+		return toSmpMessage2(c)
 	case 0x04:
-		return toSmpMessage3(t)
+		return toSmpMessage3(c)
 	case 0x05:
-		return toSmpMessage4(t)
+		return toSmpMessage4(c)
 	}
 
 	return nil, false
