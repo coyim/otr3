@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"crypto/rand"
-	"io"
 	"testing"
 )
 
@@ -64,31 +63,6 @@ func fixtureDecryptDataMsg(encryptedDataMsg []byte) plainDataMsg {
 	exp.decrypt(keys.receivingAESKey, m.topHalfCtr, m.encryptedMsg)
 
 	return exp
-}
-
-func newConversation(v otrVersion, rand io.Reader) *Conversation {
-	var p policy
-	switch v {
-	case otrV3{}:
-		p = allowV3
-	case otrV2{}:
-		p = allowV2
-	}
-	akeNotStarted := new(ake)
-	akeNotStarted.state = authStateNone{}
-
-	return &Conversation{
-		version: v,
-		Rand:    rand,
-		smp: smp{
-			state: smpStateExpect1{},
-		},
-		ake:              akeNotStarted,
-		policies:         policies(p),
-		fragmentSize:     65535, //we are not testing fragmentation by default
-		ourInstanceTag:   0x101, //every conversation should be able to talk to each other
-		theirInstanceTag: 0x101,
-	}
 }
 
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
