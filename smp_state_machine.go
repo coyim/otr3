@@ -77,8 +77,6 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 }
 
 func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState, smpMessage, error) {
-	//TODO: make sure c.s1 is stored when it is generated
-
 	err := c.verifySMP2(c.smp.s1, m)
 	if err != nil {
 		return abortStateMachineWith(err)
@@ -93,8 +91,6 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 }
 
 func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState, smpMessage, error) {
-	//TODO: make sure c.s2 is stored when it is generated
-
 	err := c.verifySMP3(c.smp.s2, m)
 	if err != nil {
 		return abortStateMachineWith(err)
@@ -114,8 +110,6 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 }
 
 func (smpStateExpect4) receiveMessage4(c *Conversation, m smp4Message) (smpState, smpMessage, error) {
-	//TODO: make sure c.s3 is stored when it is generated
-
 	err := c.verifySMP4(c.smp.s3, m)
 	if err != nil {
 		return abortStateMachineWith(err)

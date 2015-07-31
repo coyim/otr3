@@ -251,7 +251,6 @@ func (pub *PublicKey) serialize() []byte {
 	return result
 }
 
-//TODO: Do we need to keep Fingerprint for API
 func (pub *PublicKey) Fingerprint(h hash.Hash) []byte {
 	b := pub.serialize()
 	h.Write(b[2:]) // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)

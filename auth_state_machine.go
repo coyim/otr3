@@ -54,7 +54,7 @@ func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend []byte, err 
 			err = c.akeHasFinished()
 		}
 	default:
-		err = newOtrErrorf("unknown message type 0x%X", msg[2])
+		err = newOtrErrorf("unknown message type 0x%X", msgType)
 	}
 
 	return

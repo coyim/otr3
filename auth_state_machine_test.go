@@ -562,22 +562,21 @@ func Test_receiveAKE_ignoresSignatureIfDoesNotAllowV2(t *testing.T) {
 	assertDeepEquals(t, toSend, nilB)
 }
 
-// TODO: is this still valid?
-// func Test_receiveAKE_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
-// 	cV3 := newConversation(otrV3{}, fixtureRand())
-// 	cV3.ensureAKE()
-// 	cV3.ake.state = authStateAwaitingSig{}
-// 	cV3.policies.add(allowV3)
+func Test_receiveAKE_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
+	cV3 := newConversation(otrV3{}, fixtureRand())
+	cV3.ensureAKE()
+	cV3.ake.state = authStateAwaitingSig{}
+	cV3.policies.add(allowV3)
 
-// 	_, err := cV3.receiveAKE([]byte{})
-// 	assertEquals(t, err, errInvalidOTRMessage)
+	_, _, err := cV3.receiveDecoded([]byte{})
+	assertEquals(t, err, errInvalidOTRMessage)
 
-// 	_, err = cV3.receiveAKE([]byte{0x00, 0x00})
-// 	assertEquals(t, err, errInvalidOTRMessage)
+	_, _, err = cV3.receiveDecoded([]byte{0x00, 0x00})
+	assertEquals(t, err, errWrongProtocolVersion)
 
-// 	_, err = cV3.receiveAKE([]byte{0x00, 0x03, 0x56})
-// 	assertDeepEquals(t, err, newOtrError("unknown message type 0x56"))
-// }
+	_, _, err = cV3.receiveDecoded([]byte{0x00, 0x03, 0x56, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x01})
+	assertDeepEquals(t, err, newOtrError("unknown message type 0x56"))
+}
 
 func Test_receiveAKE_receiveRevealSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
 	c := aliceContextAtAwaitingRevealSig()
