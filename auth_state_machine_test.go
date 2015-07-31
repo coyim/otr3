@@ -633,103 +633,103 @@ func Test_receiveAKE_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey
 }
 
 //TODO: fix
-//func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
-//	ourDHCommitAKE := fixtureConversation()
-//	ourDHCommitAKE.dhCommitMessage()
-//
-//	c := newConversation(otrV3{}, fixtureRand())
-//	c.startAKE()
-//	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-//	c.ourKey = bobPrivateKey
-//
-//	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, []byte{0x01, 0x02})
-//
-//	assertEquals(t, err, errInvalidOTRMessage)
-//}
-//
-//func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMessageReturnsError(t *testing.T) {
-//	ourDHCommitAKE := fixtureConversation()
-//	ourDHCommitAKE.dhCommitMessage()
-//
-//	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
-//	c.startAKE()
-//	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-//	c.ourKey = bobPrivateKey
-//
-//	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})
-//	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, sameDHKeyMsg)
-//
-//	assertEquals(t, err, errShortRandomRead)
-//}
-//
-//func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
-//	ourDHCommitAKE := fixtureConversation()
-//	ourDHCommitAKE.dhCommitMessage()
-//
-//	c := newConversation(otrV3{}, fixtureRand())
-//	c.startAKE()
-//	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-//	c.ourKey = bobPrivateKey
-//
-//	_, _, err := authStateAwaitingSig{}.receiveDHKeyMessage(c, []byte{0x01, 0x02})
-//
-//	assertEquals(t, err, errInvalidOTRMessage)
-//}
-//
-//func Test_authStateAwaitingSig_receiveSigMessage_returnsErrorIfProcessSigFails(t *testing.T) {
-//	c := newConversation(otrV2{}, fixtureRand())
-//	c.policies.add(allowV2)
-//	_, _, err := authStateAwaitingSig{}.receiveSigMessage(c, []byte{0x00, 0x00})
-//	assertEquals(t, err, errInvalidOTRMessage)
-//}
-//
-//func Test_authStateAwaitingRevealSig_receiveDHCommitMessage_returnsErrorIfProcessDHCommitOrGenerateCommitInstanceTagsFailsFails(t *testing.T) {
-//	ourDHCommitAKE := fixtureConversation()
-//	ourDHCommitAKE.dhCommitMessage()
-//
-//	c := newConversation(otrV3{}, fixtureRand())
-//	c.startAKE()
-//	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
-//
-//	_, _, err := authStateAwaitingRevealSig{}.receiveDHCommitMessage(c, []byte{0x00, 0x00})
-//	assertEquals(t, err, errInvalidOTRMessage)
-//}
-//
-//func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfgenerateCommitMsgInstanceTagsFails(t *testing.T) {
-//	ourDHCommitAKE := fixtureConversation()
-//	ourDHCommitAKE.dhCommitMessage()
-//
-//	c := newConversation(otrV3{}, fixtureRand())
-//	c.startAKE()
-//	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
-//
-//	_, _, err := authStateNone{}.receiveDHCommitMessage(c, []byte{0x00, 0x00})
-//	assertEquals(t, err, errInvalidOTRMessage)
-//}
-//
-//func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfdhKeyMessageFails(t *testing.T) {
-//	ourDHCommitAKE := fixtureConversation()
-//	ourDHCommitAKE.dhCommitMessage()
-//
-//	c := newConversation(otrV2{}, fixedRand([]string{"ABCD"}))
-//	c.startAKE()
-//	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
-//
-//	_, _, err := authStateNone{}.receiveDHCommitMessage(c, []byte{0x00, 0x00, 0x00})
-//	assertEquals(t, err, errShortRandomRead)
-//}
-//
-//func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfProcessDHCommitFails(t *testing.T) {
-//	ourDHCommitAKE := fixtureConversation()
-//	ourDHCommitAKE.dhCommitMessage()
-//
-//	c := newConversation(otrV2{}, fixtureRand())
-//	c.startAKE()
-//	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
-//
-//	_, _, err := authStateNone{}.receiveDHCommitMessage(c, []byte{0x00, 0x00})
-//	assertEquals(t, err, errInvalidOTRMessage)
-//}
+func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
+	ourDHCommitAKE := fixtureConversation()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newConversation(otrV3{}, fixtureRand())
+	c.startAKE()
+	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
+	c.ourKey = bobPrivateKey
+
+	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, []byte{0x00, 0x02})
+
+	assertDeepEquals(t, err, newOtrError("corrupt DH key message"))
+}
+
+func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMessageReturnsError(t *testing.T) {
+	ourDHCommitAKE := fixtureConversation()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
+	c.startAKE()
+	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
+	c.ourKey = bobPrivateKey
+
+	sameDHKeyMsg := fixtureDHKeyMsgBody(otrV3{})
+	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, sameDHKeyMsg)
+
+	assertEquals(t, err, errShortRandomRead)
+}
+
+func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
+	ourDHCommitAKE := fixtureConversation()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newConversation(otrV3{}, fixtureRand())
+	c.startAKE()
+	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
+	c.ourKey = bobPrivateKey
+
+	_, _, err := authStateAwaitingSig{}.receiveDHKeyMessage(c, []byte{0x01, 0x02})
+
+	assertEquals(t, err, newOtrError("corrupt DH key message"))
+}
+
+func Test_authStateAwaitingSig_receiveSigMessage_returnsErrorIfProcessSigFails(t *testing.T) {
+	c := newConversation(otrV2{}, fixtureRand())
+	c.policies.add(allowV2)
+	_, _, err := authStateAwaitingSig{}.receiveSigMessage(c, []byte{0x00, 0x00})
+	assertEquals(t, err, newOtrError("corrupt signature message"))
+}
+
+func Test_authStateAwaitingRevealSig_receiveDHCommitMessage_returnsErrorIfProcessDHCommitOrGenerateCommitInstanceTagsFailsFails(t *testing.T) {
+	ourDHCommitAKE := fixtureConversation()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newConversation(otrV3{}, fixtureRand())
+	c.startAKE()
+	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
+
+	_, _, err := authStateAwaitingRevealSig{}.receiveDHCommitMessage(c, []byte{0x00, 0x00})
+	assertEquals(t, err, newOtrError("corrupt DH commit message"))
+}
+
+func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfgenerateCommitMsgInstanceTagsFails(t *testing.T) {
+	ourDHCommitAKE := fixtureConversation()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newConversation(otrV3{}, fixtureRand())
+	c.startAKE()
+	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
+
+	_, _, err := authStateNone{}.receiveDHCommitMessage(c, []byte{0x00, 0x00})
+	assertEquals(t, err, newOtrError("corrupt DH commit message"))
+}
+
+func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfdhKeyMessageFails(t *testing.T) {
+	ourDHCommitAKE := fixtureConversation()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newConversation(otrV2{}, fixedRand([]string{"ABCD"}))
+	c.startAKE()
+	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
+
+	_, _, err := authStateNone{}.receiveDHCommitMessage(c, []byte{0x00, 0x00, 0x00})
+	assertEquals(t, err, errShortRandomRead)
+}
+
+func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfProcessDHCommitFails(t *testing.T) {
+	ourDHCommitAKE := fixtureConversation()
+	ourDHCommitAKE.dhCommitMessage()
+
+	c := newConversation(otrV2{}, fixtureRand())
+	c.startAKE()
+	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
+
+	_, _, err := authStateNone{}.receiveDHCommitMessage(c, []byte{0x00, 0x00})
+	assertEquals(t, err, newOtrError("corrupt DH commit message"))
+}
 
 func Test_authStateNone_receiveQueryMessage_returnsNoErrorForValidMessage(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())

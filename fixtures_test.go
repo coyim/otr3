@@ -35,6 +35,15 @@ func fixtureDHKeyMsg(v otrVersion) []byte {
 	return msg
 }
 
+func fixtureDHKeyMsgBody(v otrVersion) []byte {
+	val := otrV2{}
+	if val == v {
+		return fixtureDHKeyMsg(v)[otrv2HeaderLen:]
+	} else {
+		return fixtureDHKeyMsg(v)[otrv3HeaderLen:]
+	}
+}
+
 func fixtureRevealSigMsg(v otrVersion) []byte {
 	c := bobContextAtReceiveDHKey()
 	c.version = v
