@@ -54,7 +54,7 @@ func (h *macKeyHistory) deleteKeysAt(del ...int) {
 	}
 }
 
-func (h *macKeyHistory) addKeys(ourKeyID uint32, theirKeyID uint32, sendingMACKey macKey, receivingMACKey macKey) {
+func (h *macKeyHistory) addKeys(ourKeyID uint32, theirKeyID uint32, receivingMACKey macKey) {
 	macKeys := macKeyUsage{
 		ourKeyID:     ourKeyID,
 		theirKeyID:   theirKeyID,
@@ -162,7 +162,7 @@ func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	}
 
 	ret = calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey)
-	c.macKeyHistory.addKeys(ourKeyID, theirKeyID, ret.sendingMACKey, ret.receivingMACKey)
+	c.macKeyHistory.addKeys(ourKeyID, theirKeyID, ret.receivingMACKey)
 
 	return ret, nil
 }
