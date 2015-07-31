@@ -26,8 +26,7 @@ func genWhitespaceTag(p policies) []byte {
 }
 
 func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
-	//TODO: stop sending after receiving a plaintext (nonDH-Commit) message
-	if !c.policies.has(sendWhitespaceTag) {
+	if !c.policies.has(sendWhitespaceTag) || c.whitespaceTagIgnored {
 		return message
 	}
 

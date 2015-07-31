@@ -1,6 +1,9 @@
 package otr3
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 func Test_genWhitespace_forV2(t *testing.T) {
 	hLen := len(whitespaceTagHeader)
@@ -105,9 +108,32 @@ func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testin
 	c.policies = policies(allowV2 | whitespaceStartAKE)
 
 	msg := genWhitespaceTag(policies(allowV3))
-
 	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, errInvalidVersion)
 	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_stopAppendingWhitespaceTagsAfterReceivingAPlainMessage(t *testing.T) {
+	c := newConversation(nil, nil)
+	c.policies = policies(allowV3 | sendWhitespaceTag)
+
+	toSend, err := c.Send([]byte("hi"))
+	assertEquals(t, err, nil)
+	assertEquals(t, bytes.Contains(toSend[0], whitespaceTagHeader), true)
+
+	toSend, err = c.Send([]byte("are you having fun?"))
+	assertEquals(t, err, nil)
+	assertEquals(t, bytes.Contains(toSend[0], whitespaceTagHeader), true)
+
+	_, _, err = c.Receive([]byte("no"))
+	assertEquals(t, err, nil)
+
+	toSend, err = c.Send([]byte("ok, gotcha"))
+	assertEquals(t, err, nil)
+	assertEquals(t, bytes.Contains(toSend[0], whitespaceTagHeader), false)
+
+	toSend, err = c.Send([]byte("see ya"))
+	assertEquals(t, err, nil)
+	assertEquals(t, bytes.Contains(toSend[0], whitespaceTagHeader), false)
 }

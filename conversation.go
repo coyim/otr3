@@ -26,6 +26,8 @@ type Conversation struct {
 	ake          *ake
 	smp          smp
 	fragmentSize uint16
+
+	whitespaceTagIgnored bool
 }
 
 type msgState int
@@ -101,9 +103,6 @@ func (c *Conversation) decode(encoded []byte) ([]byte, error) {
 func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, err error) {
 	var unencodedReturn []byte
 
-	//TODO: warn the user for REQUIRE_ENCRYPTION
-	//See: Receiving plaintext with/without the whitespace tag
-
 	switch {
 	case !c.policies.isOTREnabled():
 		plain = message
@@ -120,6 +119,8 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 	case isQueryMessage(message):
 		unencodedReturn, err = c.receiveQueryMessage(message)
 	default:
+		c.whitespaceTagIgnored = c.policies.has(sendWhitespaceTag)
+
 		plain, unencodedReturn, err = c.processWhitespaceTag(message)
 		if unencodedReturn == nil {
 			return
