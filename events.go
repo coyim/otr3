@@ -86,7 +86,7 @@ type MessageEvent int
  * - OTRL_MSGEVENT_RCVDMSG_FOR_OTHER_INSTANCE
  *      Received and discarded a message intended for another instance. */
 const (
-	MessageEventNone = iota
+	MessageEventNone MessageEvent = iota
 	MessageEventEncryptionRequired
 	MessageEventEncryptionError
 	MessageEventConnectionEnded

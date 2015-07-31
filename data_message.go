@@ -36,7 +36,6 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 }
 
 func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err error) {
-	// FIXME: deal with errors in this function
 	dataMessage := dataMsg{}
 
 	if err = dataMessage.deserialize(msg); err != nil {
@@ -68,8 +67,8 @@ func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err
 		return
 	}
 
-	//TODO: TEST. Should not process TLVs if it fails to rotate keys. This is how
-	//libotr does
+	//TODO: TEST. Should not process TLVs if it fails to rotate keys.
+	//This is how libotr does
 	var tlvs []tlv
 	tlvs, err = c.processTLVs(p.tlvs)
 	if err != nil {
@@ -120,7 +119,7 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
 
 		toSend, err := mh(c, t)
 		if err != nil {
-			//TODO: Double check how libotr handles this. Should we realy stop
+			//TODO: Double check how libotr handles this. Should we really stop
 			//processing at first error?
 			// Nope, we should not.
 			return retTLVs, err
