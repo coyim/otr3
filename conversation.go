@@ -63,12 +63,8 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 	return nil, errors.New("otr: cannot send message in current state")
 }
 
-func parseOTRMessage(msg []byte) ([]byte, bool) {
-	if bytes.HasPrefix(msg, msgMarker) && msg[len(msg)-1] == '.' {
-		return msg[len(msgMarker) : len(msg)-1], true
-	}
-
-	return msg, false
+func isEncoded(msg []byte) bool {
+	return bytes.HasPrefix(msg, msgMarker) && msg[len(msg)-1] == '.'
 }
 
 func (c *Conversation) decode(encoded []byte) ([]byte, error) {
@@ -85,31 +81,33 @@ func (c *Conversation) decode(encoded []byte) ([]byte, error) {
 // This should be used by the xmpp-client to received OTR messages in plain
 //TODO For the exported Receive, toSend needs fragmentation
 func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, err error) {
-	if !c.policies.isOTREnabled() {
-		plain = message
-		return
-	}
+	var unencodedReturn []byte
 
 	//TODO: warn the user for REQUIRE_ENCRYPTION
 	//See: Receiving plaintext with/without the whitespace tag
 
-	var unencodedMsg []byte
-	if m, ok := parseOTRMessage(message); ok {
-		message, err = c.decode(m)
+	switch {
+	case !c.policies.isOTREnabled():
+		plain = message
+		return
+	case isEncoded(message):
+		message, err = c.decode(message[len(msgMarker) : len(message)-1])
 		if err != nil {
 			return
 		}
-	} else {
-		//queryMSG or plain
+		plain, unencodedReturn, err = c.receiveDecoded(message)
+	case isQueryMessage(message):
+		unencodedReturn, err = c.receiveQueryMessage(message)
+	default:
+		plain = message
+		return
 	}
 
-	plain, unencodedMsg, err = c.receiveDecoded(message)
 	if err != nil {
 		return
 	}
 
-	toSend = c.encode(unencodedMsg)
-
+	toSend = c.encode(unencodedReturn)
 	return
 }
 
