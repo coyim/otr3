@@ -120,10 +120,13 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 
 	//Bob send Alice RevealSig
 	_, toSend, err = alice.Receive(toSend[0])
-	m, _ = bob.decode(toSend[0])
 	assertEquals(t, err, nil)
-	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, m, []byte{})
+	assertEquals(t, alice.ake.state, authStateNone{})
+
+	//Alice send Bob Sig
+	_, toSend, err = bob.Receive(toSend[0])
+	assertEquals(t, err, nil)
+	assertEquals(t, bob.ake.state, authStateNone{})
 
 	//FIXME: They will never be at authStateNone{} again.
 

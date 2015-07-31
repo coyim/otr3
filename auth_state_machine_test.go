@@ -538,30 +538,6 @@ func Test_receiveAKE_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
 	assertDeepEquals(t, toSend, nilB)
 }
 
-func Test_receiveAKE_ignoresSignatureIfDoesNotAllowV2(t *testing.T) {
-	var nilB []byte
-	cV2 := newConversation(otrV2{}, fixtureRand())
-	cV2.ensureAKE()
-	cV2.ake.state = authStateAwaitingSig{}
-	cV2.policies = policies(allowV3)
-
-	cV3 := newConversation(otrV3{}, fixtureRand())
-	cV3.ensureAKE()
-	cV3.ake.state = authStateAwaitingSig{}
-	cV3.policies = policies(allowV3)
-
-	msgV2 := fixtureSigMsg(otrV2{})
-	msgV3 := fixtureSigMsg(otrV3{})
-
-	_, toSend, _ := cV3.receiveDecoded(msgV3)
-
-	assertDeepEquals(t, cV3.ake.state, authStateAwaitingSig{})
-	assertDeepEquals(t, toSend, nilB)
-	_, toSend, _ = cV2.receiveDecoded(msgV2)
-	assertDeepEquals(t, cV2.ake.state, authStateAwaitingSig{})
-	assertDeepEquals(t, toSend, nilB)
-}
-
 func Test_receiveAKE_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 	cV3 := newConversation(otrV3{}, fixtureRand())
 	cV3.ensureAKE()

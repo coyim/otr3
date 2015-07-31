@@ -35,14 +35,6 @@ func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend []byte, err 
 		c.ake.state, toSend, err = c.ake.state.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
 		c.ake.state, toSend, err = c.ake.state.receiveDHKeyMessage(c, msg)
-
-		//TODO: Verify.
-		if !c.policies.has(allowV2) {
-			//Accodring to the spec, Signature and Reveal Signature messages will be
-			//ignored if V2 is not allowed, so the user will never finish the AKE
-			//So I'm finishing the AKE
-			err = c.akeHasFinished()
-		}
 	case msgTypeRevealSig:
 		c.ake.state, toSend, err = c.ake.state.receiveRevealSigMessage(c, msg)
 		if err == nil {
@@ -168,15 +160,6 @@ func (s authStateNone) receiveRevealSigMessage(c *Conversation, msg []byte) (aut
 }
 
 func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
-	//TODO: Verify
-	if !c.policies.has(allowV2) {
-		//Accodring to the spec, Signature and Reveal Signature messages will be
-		//ignored if V2 is not allowed, so the user will never finish the AKE
-		//So I'm finishing the AKE
-		err := c.akeHasFinished()
-		return s, nil, err
-	}
-
 	err := c.processRevealSig(msg)
 
 	if err != nil {
@@ -219,10 +202,6 @@ func (s authStateAwaitingDHKey) receiveSigMessage(c *Conversation, msg []byte) (
 }
 
 func (s authStateAwaitingSig) receiveSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
-	if !c.policies.has(allowV2) {
-		return s, nil, nil
-	}
-
 	err := c.processSig(msg)
 
 	if err != nil {
