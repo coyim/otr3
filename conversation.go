@@ -103,7 +103,7 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 		//queryMSG or plain
 	}
 
-	plain, unencodedMsg, err = c.receive(message)
+	plain, unencodedMsg, err = c.receiveDecoded(message)
 	if err != nil {
 		return
 	}
@@ -113,7 +113,7 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 	return
 }
 
-func (c *Conversation) receive(message []byte) (plain, toSend []byte, err error) {
+func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err error) {
 	if isQueryMessage(message) {
 		toSend, err = c.receiveQueryMessage(message)
 		return
