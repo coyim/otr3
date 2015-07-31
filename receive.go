@@ -42,7 +42,7 @@ func (c *Conversation) receiveEncoded(message []byte) ([]byte, []byte, error) {
 }
 
 func (c *Conversation) receiveOther(message []byte) ([]byte, []byte, error) {
-	c.whitespaceTagIgnored = c.policies.has(sendWhitespaceTag)
+	c.stopSendingWhitespaceTags = c.policies.has(sendWhitespaceTag)
 
 	//TODO:	warn that the message was received unencrypted
 	if c.msgState != plainText || c.policies.has(requireEncryption) {
