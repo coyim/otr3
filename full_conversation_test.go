@@ -187,7 +187,7 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	// Alice sends a message to bob
 	m = []byte("hello")
 	datamsg := alice.genDataMsg(m).serialize(alice)
-	plain, ret, err := bob.processDataMessage(datamsg)
+	plain, ret, err := bob.receiveDecoded(datamsg)
 
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, plain, m)

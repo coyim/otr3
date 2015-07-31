@@ -37,8 +37,6 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 
 func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err error) {
 	// FIXME: deal with errors in this function
-	msg, _ = c.parseMessageHeader(msg)
-
 	dataMessage := dataMsg{}
 
 	err = dataMessage.deserialize(msg)

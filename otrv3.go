@@ -62,8 +62,6 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 		return nil, errInvalidOTRMessage
 	}
 
-	msgType := msg[2]
-
 	msg, senderInstanceTag, _ := extractWord(msg[messageHeaderPrefix:])
 	msg, receiverInstanceTag, _ := extractWord(msg)
 
@@ -81,11 +79,17 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 		c.theirInstanceTag = senderInstanceTag
 	}
 
-	if msgType != msgTypeDHCommit && (receiverInstanceTag < 0x100 || c.ourInstanceTag != receiverInstanceTag) {
+	// TODO:
+	// if receiverInstanceTag > 0 && < 0x100
+	//     ||
+	//    senderInstanceTag < 0x100
+	//   this is actually an invalid OTR message and should be discarded
+
+	if receiverInstanceTag != 0 && c.ourInstanceTag != receiverInstanceTag {
 		return nil, errReceivedMessageForOtherInstance
 	}
 
-	if senderInstanceTag < 0x100 || c.theirInstanceTag != senderInstanceTag {
+	if senderInstanceTag >= 0x100 && c.theirInstanceTag != senderInstanceTag {
 		return nil, errReceivedMessageForOtherInstance
 	}
 

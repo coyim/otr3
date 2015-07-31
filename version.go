@@ -14,13 +14,39 @@ type otrVersion interface {
 	parseMessageHeader(c *Conversation, msg []byte) ([]byte, error)
 }
 
-func newOtrVersion(v uint16) otrVersion {
+func newOtrVersion(v uint16, p policies) (version otrVersion, err error) {
+	toCheck := policy(0)
 	switch v {
 	case 2:
-		return otrV2{}
+		version = otrV2{}
+		toCheck = allowV2
 	case 3:
-		return otrV3{}
+		version = otrV3{}
+		toCheck = allowV3
 	default:
-		return nil
+		return nil, errUnsupportedOTRVersion
 	}
+	if !p.has(toCheck) {
+		return nil, errInvalidVersion
+	}
+	return
+}
+
+func (c *Conversation) checkVersion(message []byte) (err error) {
+	_, messageVersion, ok := extractShort(message)
+	if !ok {
+		return errInvalidOTRMessage
+	}
+
+	if c.version == nil {
+		if c.version, err = newOtrVersion(messageVersion, c.policies); err != nil {
+			return err
+		}
+	}
+
+	if c.version.protocolVersion() != messageVersion {
+		return errWrongProtocolVersion
+	}
+
+	return nil
 }

@@ -120,9 +120,7 @@ func Test_processDHKey(t *testing.T) {
 	c.startAKE()
 	c.ake.theirPublicValue = fixedgy
 
-	msg := appendShort([]byte{}, c.version.protocolVersion())
-	msg = append(msg, msgTypeDHKey)
-	msg = appendMPI(msg, c.ake.theirPublicValue)
+	msg := appendMPI(nil, c.ake.theirPublicValue)
 
 	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err, nil)
@@ -134,9 +132,7 @@ func Test_processDHKeyNotSame(t *testing.T) {
 	c.startAKE()
 	c.ake.theirPublicValue = fixedgy
 
-	msg := appendShort([]byte{}, c.version.protocolVersion())
-	msg = append(msg, msgTypeDHKey)
-	msg = appendMPI(msg, fixedgx)
+	msg := appendMPI(nil, fixedgx)
 
 	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err, nil)
@@ -150,9 +146,7 @@ func Test_processDHKeyHavingError(t *testing.T) {
 	c.startAKE()
 	c.ake.theirPublicValue = fixedgy
 
-	msg := appendShort([]byte{}, c.version.protocolVersion())
-	msg = append(msg, msgTypeDHKey)
-	msg = appendMPI(msg, invalidGy)
+	msg := appendMPI(nil, invalidGy)
 
 	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err.Error(), "otr: DH value out of range")
@@ -221,7 +215,7 @@ func Test_processRevealSig(t *testing.T) {
 	alice.setSecretExponent(fixedy)
 	alice.ake.encryptedGx = bytesFromHex("5dd6a5999be73a99b80bdb78194a125f3067bd79e69c648b76a068117a8c4d0f36f275305423a933541937145d85ab4618094cbafbe4db0c0081614c1ff0f516c3dc4f352e9c92f88e4883166f12324d82240a8f32874c3d6bc35acedb8d501aa0111937a4859f33aa9b43ec342d78c3a45a5939c1e58e6b4f02725c1922f3df8754d1e1ab7648f558e9043ad118e63603b3ba2d8cbfea99a481835e42e73e6cd6019840f4470b606e168b1cd4a1f401c3dc52525d79fa6b959a80d4e11f1ec3a7984cf9")
 	copy(alice.ake.hashedGx[:], bytesFromHex("a3f2c4b9e3a7d1f565157ae7b0e71c721d59d3c79d39e5e4e8d08cb8464ff857"))
-	err = alice.processRevealSig(msg)
+	err = alice.processRevealSig(msg[otrv3HeaderLen:])
 
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.keys.theirKeyID, uint32(1))
@@ -244,40 +238,27 @@ func Test_processSig(t *testing.T) {
 	bob.setSecretExponent(fixedx)
 	bob.ake.theirPublicValue = fixedgy
 
-	err := bob.processSig(msg)
+	err := bob.processSig(msg[otrv3HeaderLen:])
 
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.keys.ourKeyID, uint32(1))
 	assertEquals(t, bob.keys.theirKeyID, uint32(1))
 }
 
-func Test_processSig_returnsErrorIfDataIsNotLongEnoughForHeader(t *testing.T) {
-	c := newConversation(otrV2{}, fixtureRand())
-	err := c.processSig([]byte{0x01, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
-}
-
 func Test_processSig_returnsErrorIfTheSignatureDataIsInvalid(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	err := c.processSig([]byte{0x01, 0x00, 0x01, 0x01, 0x01, 0x00})
+	err := c.processSig([]byte{0x01, 0x01, 0x00})
 	assertDeepEquals(t, err, newOtrError("corrupt signature message"))
 }
-
-func Test_processRevealSig_returnsErrorIfDataIsNotLongEnoughForHeader(t *testing.T) {
-	c := newConversation(otrV2{}, fixtureRand())
-	err := c.processRevealSig([]byte{0x01, 0x00})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
-}
-
 func Test_processRevealSig_returnsErrorIfTheRDataIsInvalid(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	err := c.processRevealSig([]byte{0x01, 0x00, 0x01, 0x01, 0x01, 0x00})
+	err := c.processRevealSig([]byte{0x01, 0x01, 0x00})
 	assertDeepEquals(t, err, newOtrError("corrupt reveal signature message"))
 }
 
 func Test_processRevealSig_returnsErrorIfTheSignatureDataIsInvalid(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	err := c.processRevealSig([]byte{0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
+	err := c.processRevealSig([]byte{0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
 	assertDeepEquals(t, err, newOtrError("corrupt reveal signature message"))
 }
 
@@ -464,21 +445,15 @@ func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 	assertDeepEquals(t, macSig, expedctedMACSignature)
 }
 
-func Test_processDHCommit_returnsErrorIfTheMessageIsNotLongEnoughForMessageHeader(t *testing.T) {
-	c := newConversation(otrV2{}, fixtureRand())
-	err := c.processDHCommit([]byte{0x01, 0x02})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
-}
-
 func Test_processDHCommit_returnsErrorIfTheEncryptedGXPartIsNotCorrect(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	err := c.processDHCommit([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x02, 0x01})
+	err := c.processDHCommit([]byte{0x00, 0x00, 0x00, 0x02, 0x01})
 	assertDeepEquals(t, err, newOtrError("corrupt DH commit message"))
 }
 
 func Test_processDHCommit_returnsErrorIfTheHashedGXPartIsNotCorrect(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	err := c.processDHCommit([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
+	err := c.processDHCommit([]byte{0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01})
 	assertDeepEquals(t, err, newOtrError("corrupt DH commit message"))
 }
 
@@ -547,20 +522,14 @@ func Test_sigMessage_returnsErrorFromgenerateEncryptedSignature(t *testing.T) {
 	assertEquals(t, err, errShortRandomRead)
 }
 
-func Test_processDHKey_returnsErrorIfTheMessageIsNotLongEnoughForMessageHeader(t *testing.T) {
-	c := newConversation(otrV2{}, fixedRand([]string{}))
-	_, err := c.processDHKey([]byte{0x01, 0x02})
-	assertDeepEquals(t, err, errInvalidOTRMessage)
-}
-
 func Test_processDHKey_returnsErrorIfTheMessageHasAnIncorrectGyParameter(t *testing.T) {
 	c := newConversation(otrV2{}, fixedRand([]string{}))
-	_, err := c.processDHKey([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x02, 0x01})
+	_, err := c.processDHKey([]byte{0x00, 0x00, 0x00, 0x02, 0x01})
 	assertDeepEquals(t, err, newOtrError("corrupt DH key message"))
 }
 
 func Test_processDHKey_returnsErrorIfGyIsNotAValidDHParameter(t *testing.T) {
 	c := newConversation(otrV2{}, fixedRand([]string{}))
-	_, err := c.processDHKey([]byte{0x01, 0x02, 0x03, 0x00, 0x00, 0x00, 0x01, 0x01})
+	_, err := c.processDHKey([]byte{0x00, 0x00, 0x00, 0x01, 0x01})
 	assertDeepEquals(t, err, newOtrError("DH value out of range"))
 }

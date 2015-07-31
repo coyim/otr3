@@ -18,6 +18,10 @@ func fixtureDHCommitMsg() []byte {
 	return msg
 }
 
+func fixtureDHCommitMsgBody() []byte {
+	return fixtureDHCommitMsg()[otrv3HeaderLen:]
+}
+
 func fixtureDHCommitMsgV2() []byte {
 	c := fixtureConversationV2()
 	msg, _ := c.dhCommitMessage()

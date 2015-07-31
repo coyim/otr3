@@ -216,7 +216,7 @@ func (c *Conversation) sigMessage() ([]byte, error) {
 // Bob ---- DH Commit -----------> Alice
 func (c *Conversation) processDHCommit(msg []byte) error {
 	dhCommitMsg := dhCommit{}
-	err := chainErrors(c.ensureValidMessage, dhCommitMsg.deserialize, msg)
+	err := dhCommitMsg.deserialize(msg)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func (c *Conversation) processDHCommit(msg []byte) error {
 // Alice -- DH Key --------------> Bob
 func (c *Conversation) processDHKey(msg []byte) (isSame bool, err error) {
 	dhKeyMsg := dhKey{}
-	err = chainErrors(c.ensureValidMessage, dhKeyMsg.deserialize, msg)
+	err = dhKeyMsg.deserialize(msg)
 	if err != nil {
 		return false, err
 	}
@@ -252,7 +252,7 @@ func (c *Conversation) processDHKey(msg []byte) (isSame bool, err error) {
 // Bob ---- Reveal Signature ----> Alice
 func (c *Conversation) processRevealSig(msg []byte) (err error) {
 	revealSigMsg := revealSig{}
-	err = chainErrors(c.ensureValidMessage, revealSigMsg.deserialize, msg)
+	err = revealSigMsg.deserialize(msg)
 	if err != nil {
 		return
 	}
@@ -283,23 +283,11 @@ func (c *Conversation) processRevealSig(msg []byte) (err error) {
 	return nil
 }
 
-func chainErrors(f1 func([]byte) ([]byte, error), f2 func([]byte) error, msg []byte) error {
-	res, e1 := f1(msg)
-	if e1 != nil {
-		return e1
-	}
-	return f2(res)
-}
-
-func (c *Conversation) ensureValidMessage(msg []byte) ([]byte, error) {
-	return c.parseMessageHeader(msg)
-}
-
 // processSig = bob = x
 // Alice -- Signature -----------> Bob
 func (c *Conversation) processSig(msg []byte) (err error) {
 	sigMsg := sig{}
-	err = chainErrors(c.ensureValidMessage, sigMsg.deserialize, msg)
+	err = sigMsg.deserialize(msg)
 	if err != nil {
 		return
 	}

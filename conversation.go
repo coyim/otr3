@@ -130,42 +130,13 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 	return
 }
 
-func (c *Conversation) messageSentToAnotherConversation(msg []byte) bool {
-	//The version is only resolved after the DH commit so we ignore the instance tag
-	//until that point
-	if c.version == nil {
-		return false
-	}
-
-	_, err := c.parseMessageHeader(msg)
-	return err == errReceivedMessageForOtherInstance
-}
-
-func (c *Conversation) checkProtocolVersion(msg []byte) error {
-	msg, msgProtocolVersion, ok := extractShort(msg)
-	if !ok {
-		return errInvalidOTRMessage
-	}
-
-	msgType := msg[0]
-	if msgType != msgTypeDHCommit && c.version.protocolVersion() != msgProtocolVersion {
-		return errWrongProtocolVersion
-	}
-
-	return nil
-}
-
 func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err error) {
-
-	//NOTE: parseMessageHeader() mentions that instance tags verification should be
-	//handled there, but it should happen before checking the version
-	//(I should not check a version for a conversation that is nor addressed to this client)
-	if c.messageSentToAnotherConversation(message) {
-		//NOTE: we are not returning this error, because this should be silently ignored
+	if err = c.checkVersion(message); err != nil {
 		return
 	}
 
-	if err = c.checkProtocolVersion(message); err != nil {
+	var messageBody []byte
+	if messageBody, err = c.parseMessageHeader(message); err != nil {
 		return
 	}
 
@@ -178,13 +149,13 @@ func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err
 			return
 		}
 
-		plain, toSend, err = c.processDataMessage(message)
+		plain, toSend, err = c.processDataMessage(messageBody)
 		if err != nil {
 			return
 		}
 
 	default:
-		toSend, err = c.receiveAKE(message)
+		toSend, err = c.receiveAKE(msgType, messageBody)
 	}
 
 	return

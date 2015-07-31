@@ -43,19 +43,6 @@ func Test_parseMessageHeader_returnsErrorWhenOurInstanceDoesNotMatchReceiverInst
 	assertEquals(t, err, errReceivedMessageForOtherInstance)
 }
 
-func Test_parseMessageHeader_returnsErrorWhenSenderInstanceTagIsLesserThan0x100(t *testing.T) {
-	v := otrV3{}
-	c := &Conversation{version: v}
-
-	sender := fixtureConversation()
-	sender.ourInstanceTag = 0x99
-	m, _ := sender.dhCommitMessage()
-
-	_, err := v.parseMessageHeader(c, m)
-
-	assertEquals(t, err, errReceivedMessageForOtherInstance)
-}
-
 func Test_parseMessageHeader_returnsErrorWhenTheirInstanceTagDoesNotMatchSenderInstanceTag(t *testing.T) {
 	v := otrV3{}
 	c := &Conversation{version: v}

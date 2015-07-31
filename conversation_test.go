@@ -56,6 +56,8 @@ func Test_receive_returnsAnErrorForADataMessageWhenNoEncryptionIsActive(t *testi
 	m := []byte{
 		0x00, 0x03, // protocol version
 		msgTypeData,
+		0x00, 0x00, 0x01, 0x01,
+		0x00, 0x00, 0x01, 0x01,
 	}
 	c := newConversation(otrV3{}, fixtureRand())
 
@@ -256,14 +258,6 @@ func Test_receive_ignoresMesagesWithWrongInstanceTags(t *testing.T) {
 
 	bob.ourInstanceTag = 0x1000 // different than the fixture
 	bob.keys.ourKeyID = 1       //this would force key rotation
-	bobCurrentDHKeys := bob.keys.ourCurrentDHKeys
-	bobPreviousDHKeys := bob.keys.ourPreviousDHKeys
-
-	_, enc, err := bob.Receive(bob.encode(msg)[0])
-	toSend, _ := bob.decode(enc[0])
-
-	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, toSend, []byte{})
-	assertDeepEquals(t, bobPreviousDHKeys, bob.keys.ourPreviousDHKeys)
-	assertDeepEquals(t, bobCurrentDHKeys, bob.keys.ourCurrentDHKeys)
+	_, _, err := bob.Receive(bob.encode(msg)[0])
+	assertDeepEquals(t, err, errReceivedMessageForOtherInstance)
 }

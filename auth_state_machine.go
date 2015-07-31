@@ -5,15 +5,6 @@ import (
 	"crypto/sha256"
 )
 
-// ignoreMessage should never be called with a too small message buffer, it is assumed the caller will have checked this before calling it
-func (c *Conversation) ignoreMessage(msg []byte) bool {
-	_, protocolVersion, _ := extractShort(msg)
-	unexpectedV2Msg := protocolVersion == 2 && !c.policies.has(allowV2)
-	unexpectedV3Msg := protocolVersion == 3 && !c.policies.has(allowV3)
-
-	return unexpectedV2Msg || unexpectedV3Msg
-}
-
 const minimumMessageLength = 3 // length of protocol version (SHORT) and message type (BYTE)
 
 func (c *Conversation) generateNewDHKeyPair() error {
@@ -27,11 +18,6 @@ func (c *Conversation) generateNewDHKeyPair() error {
 	return nil
 }
 
-func (c *Conversation) resolveVersionFromDHCommitMessage(message []byte) otrVersion {
-	_, msgProtocolVersion, _ := extractShort(message)
-	return newOtrVersion(msgProtocolVersion)
-}
-
 func (c *Conversation) akeHasFinished() error {
 	c.msgState = encrypted
 	if err := c.generateNewDHKeyPair(); err != nil {
@@ -41,20 +27,11 @@ func (c *Conversation) akeHasFinished() error {
 	return nil
 }
 
-func (c *Conversation) receiveAKE(msg []byte) (toSend []byte, err error) {
-	if len(msg) < minimumMessageLength {
-		return nil, errInvalidOTRMessage
-	}
-
+func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend []byte, err error) {
 	c.ensureAKE()
 
-	if c.ignoreMessage(msg) {
-		return
-	}
-
-	switch msg[2] {
+	switch msgType {
 	case msgTypeDHCommit:
-		c.version = c.resolveVersionFromDHCommitMessage(msg)
 		c.ake.state, toSend, err = c.ake.state.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
 		c.ake.state, toSend, err = c.ake.state.receiveDHKeyMessage(c, msg)
@@ -106,10 +83,6 @@ func (authStateBase) receiveDHCommitMessage(c *Conversation, msg []byte) (authSt
 }
 
 func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
-	if _, err := c.parseMessageHeader(msg); err != nil {
-		return s, nil, err
-	}
-
 	ret, err := c.dhKeyMessage()
 	if err != nil {
 		return s, nil, err
@@ -129,20 +102,11 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg 
 		return s, nil, err
 	}
 
-	//TODO: this should not change my instanceTag, since this is supposed to be a retransmit
-	// We can ignore errors from this function, since processDHCommit checks for the same conditions
-	c.parseMessageHeader(msg)
-
 	return authStateAwaitingRevealSig{}, c.serializeDHKey(), nil
 }
 
 func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
-	newMsg, err := c.parseMessageHeader(msg)
-	if err != nil {
-		return s, nil, err
-	}
-
-	newMsg, _, ok1 := extractData(newMsg)
+	newMsg, _, ok1 := extractData(msg)
 	_, theirHashedGx, ok2 := extractData(newMsg)
 
 	if !ok1 || !ok2 {
