@@ -131,11 +131,6 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 }
 
 func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err error) {
-	if isQueryMessage(message) {
-		toSend, err = c.receiveQueryMessage(message)
-		return
-	}
-
 	// TODO check the message instanceTag for V3
 	// I should ignore the message if it is not for my Conversation
 

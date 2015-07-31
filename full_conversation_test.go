@@ -42,32 +42,33 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	bob.policies = policies(allowV2 | allowV3)
 	bob.theirKey = &alicePrivateKey.PublicKey
 
-	var toSend []byte
+	var toSend [][]byte
 	var err error
 	msg := alice.queryMessage()
 
 	//Alice send Bob queryMsg
-	_, toSend, err = bob.receiveDecoded(msg)
+	_, toSend, err = bob.Receive(msg)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
 
 	//Bob send Alice DHCommit
-	_, toSend, err = alice.receiveDecoded(toSend)
+	_, toSend, err = alice.Receive(toSend[0])
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
 	assertEquals(t, err, nil)
 
 	//Alice send Bob DHKey
-	_, toSend, err = bob.receiveDecoded(toSend)
+	_, toSend, err = bob.Receive(toSend[0])
+	m, _ := bob.decode(toSend[0])
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: toSend})
+	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: m})
 
 	//Bob send Alice RevealSig
-	_, toSend, err = alice.receiveDecoded(toSend)
+	_, toSend, err = alice.Receive(toSend[0])
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.ake.state, authStateNone{})
 
 	//Alice send Bob Sig
-	_, toSend, err = bob.receiveDecoded(toSend)
+	_, toSend, err = bob.Receive(toSend[0])
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateNone{})
 
@@ -97,31 +98,32 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	bob.policies = policies(allowV3)
 	bob.theirKey = &alicePrivateKey.PublicKey
 
-	var nilB []byte
-	var toSend []byte
+	var toSend [][]byte
 	var err error
 	msg := alice.queryMessage()
 
 	//Alice send Bob queryMsg
-	_, toSend, err = bob.receiveDecoded(msg)
+	_, toSend, err = bob.Receive(msg)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
 
 	//Bob send Alice DHCommit
-	_, toSend, err = alice.receiveDecoded(toSend)
+	_, toSend, err = alice.Receive(toSend[0])
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
 	assertEquals(t, err, nil)
 
 	//Alice send Bob DHKey
-	_, toSend, err = bob.receiveDecoded(toSend)
+	_, toSend, err = bob.Receive(toSend[0])
+	m, _ := bob.decode(toSend[0])
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: toSend})
+	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: m})
 
 	//Bob send Alice RevealSig
-	_, toSend, err = alice.receiveDecoded(toSend)
+	_, toSend, err = alice.Receive(toSend[0])
+	m, _ = bob.decode(toSend[0])
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, toSend, nilB)
+	assertDeepEquals(t, m, []byte{})
 
 	//FIXME: They will never be at authStateNone{} again.
 
@@ -141,7 +143,7 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 }
 
 func Test_processDataMessageShouldExtractData(t *testing.T) {
-	var toSend []byte
+	var toSend [][]byte
 	var err error
 	var nilB []byte
 
@@ -156,37 +158,38 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	msg := []byte("?OTRv3?")
 
 	//Alice send Bob queryMsg
-	_, toSend, err = bob.receiveDecoded(msg)
+	_, toSend, err = bob.Receive(msg)
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
 	assertEquals(t, bob.version, otrV3{})
 
 	//Bob send Alice DHCommit
-	_, toSend, err = alice.receiveDecoded(toSend)
+	_, toSend, err = alice.Receive(toSend[0])
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
 	assertEquals(t, err, nil)
 
 	//Alice send Bob DHKey
-	_, toSend, err = bob.receiveDecoded(toSend)
+	_, toSend, err = bob.Receive(toSend[0])
+	m, _ := bob.decode(toSend[0])
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: toSend})
+	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: m})
 
 	//Bob send Alice RevealSig
-	_, toSend, err = alice.receiveDecoded(toSend)
+	_, toSend, err = alice.Receive(toSend[0])
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.ake.state, authStateNone{})
 
 	//Alice send Bob Sig
-	_, toSend, err = bob.receiveDecoded(toSend)
+	_, toSend, err = bob.Receive(toSend[0])
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateNone{})
 
 	// Alice sends a message to bob
-	m := []byte("hello")
+	m = []byte("hello")
 	datamsg := alice.genDataMsg(m).serialize(alice)
-	plain, toSend, err := bob.processDataMessage(datamsg)
+	plain, ret, err := bob.processDataMessage(datamsg)
 
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, plain, m)
-	assertDeepEquals(t, toSend, nilB)
+	assertDeepEquals(t, ret, nilB)
 }

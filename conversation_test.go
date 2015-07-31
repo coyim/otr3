@@ -99,7 +99,8 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 		msgTypeDHCommit,
 	}
 
-	_, toSend, err := c.receiveDecoded(msg)
+	_, enc, err := c.Receive(msg)
+	toSend, _ := c.decode(enc[0])
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, toSend[:3], exp)
@@ -107,12 +108,13 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 
 func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 	msg := []byte("?OTRv3?")
-	cxt := newConversation(nil, fixtureRand())
-	cxt.policies.add(allowV3)
+	c := newConversation(nil, fixtureRand())
+	c.policies.add(allowV3)
 
-	cxt.receiveDecoded(msg)
+	_, _, err := c.Receive(msg)
 
-	assertDeepEquals(t, cxt.version, otrV3{})
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, c.version, otrV3{})
 }
 
 func Test_receive_verifiesMessageProtocolVersion(t *testing.T) {
