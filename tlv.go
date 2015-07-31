@@ -1,18 +1,19 @@
 package otr3
 
+import "bytes"
+
 const tlvHeaderLength = 4
 
 const (
-	tlvTypePadding      = 0
-	tlvTypeDisconnected = 1
-	tlvTypeSMP1         = 2
-	tlvTypeSMP2         = 3
-	tlvTypeSMP3         = 4
-	tlvTypeSMP4         = 5
-	tlvTypeSMPAbort     = 6
-	//TODO: Question is not done
-	tlvTypeSMP1WithQuestion  = 7
-	tlvTypeExtraSymmetricKey = 8
+	tlvTypePadding           = 0x00
+	tlvTypeDisconnected      = 0x01
+	tlvTypeSMP1              = 0x02
+	tlvTypeSMP2              = 0x03
+	tlvTypeSMP3              = 0x04
+	tlvTypeSMP4              = 0x05
+	tlvTypeSMPAbort          = 0x06
+	tlvTypeSMP1WithQuestion  = 0x07
+	tlvTypeExtraSymmetricKey = 0x08
 )
 
 type tlvHandler func(*Conversation, tlv) (*tlv, error)
@@ -73,13 +74,15 @@ func (c tlv) isSMPMessage() bool {
 
 func (c tlv) smpMessage() (smpMessage, bool) {
 	switch c.tlvType {
-	case 0x02:
+	case tlvTypeSMP1:
 		return toSmpMessage1(c)
-	case 0x03:
+	case tlvTypeSMP1WithQuestion:
+		return toSmpMessage1Q(c)
+	case tlvTypeSMP2:
 		return toSmpMessage2(c)
-	case 0x04:
+	case tlvTypeSMP3:
 		return toSmpMessage3(c)
-	case 0x05:
+	case tlvTypeSMP4:
 		return toSmpMessage4(c)
 	}
 
@@ -98,6 +101,16 @@ func toSmpMessage1(t tlv) (msg smp1Message, ok bool) {
 	msg.c3 = mpis[4]
 	msg.d3 = mpis[5]
 	return msg, true
+}
+
+func toSmpMessage1Q(t tlv) (msg smp1Message, ok bool) {
+	// TODO: fix errors here
+	nulPos := bytes.IndexByte(t.tlvValue, 0)
+	question := string(t.tlvValue[:nulPos])
+	t.tlvValue = t.tlvValue[(nulPos + 1):]
+	msg, ok = toSmpMessage1(t)
+	msg.question = question
+	return msg, ok
 }
 
 func toSmpMessage2(t tlv) (msg smp2Message, ok bool) {

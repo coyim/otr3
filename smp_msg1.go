@@ -12,10 +12,16 @@ type smp1Message struct {
 	g2a, g3a *big.Int
 	c2, c3   *big.Int
 	d2, d3   *big.Int
+	question string
 }
 
 func (m smp1Message) tlv() tlv {
-	return genSMPTLV(uint16(tlvTypeSMP1), m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
+	t := genSMPTLV(uint16(tlvTypeSMP1), m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
+	if m.question != "" {
+		t.tlvType = tlvTypeSMP1WithQuestion
+		t.tlvValue = append(append([]byte(m.question), 0), t.tlvValue...)
+	}
+	return t
 }
 
 func (c *Conversation) generateSMP1Parameters() (s smp1State, ok bool) {

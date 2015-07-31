@@ -112,6 +112,17 @@ func Test_readSmpMessage1TLV(t *testing.T) {
 	assertDeepEquals(t, val, msg)
 }
 
+func Test_readSmpMessage1TLVWithAQuestion(t *testing.T) {
+	msg := fixtureMessage1Q()
+	tlv := msg.tlv()
+
+	parsedValue, parsedOk := tlv.smpMessage()
+	assertEquals(t, parsedOk, true)
+	val, ok := parsedValue.(smp1Message)
+	assertEquals(t, ok, true)
+	assertDeepEquals(t, val, msg)
+}
+
 func Test_readSmpMessage1TLV_ReturnsNotOKForInvalidMessage1(t *testing.T) {
 	msg := fixtureMessage1()
 	tlv := msg.tlv()
