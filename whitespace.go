@@ -10,9 +10,7 @@ var (
 )
 
 func genWhitespaceTag(p policies) []byte {
-	ret := make([]byte, 16)
-
-	copy(ret[:], whitespaceTagHeader)
+	ret := whitespaceTagHeader
 
 	if p.has(allowV2) {
 		ret = append(ret, otrV2{}.whitespaceTag()...)
@@ -33,14 +31,14 @@ func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
 	return append(message, genWhitespaceTag(c.policies)...)
 }
 
-func (c *Conversation) processWhitespaceTag(message []byte) (ret, toSend []byte, err error) {
+func (c *Conversation) processWhitespaceTag(message []byte) (plain, toSend []byte, err error) {
 	wsPos := bytes.Index(message, whitespaceTagHeader)
 	if wsPos == -1 {
-		ret = message
+		plain = message
 		return
 	}
 
-	ret = message[:wsPos]
+	plain = message[:wsPos]
 
 	if !c.policies.has(whitespaceStartAKE) {
 		return

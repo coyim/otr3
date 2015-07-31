@@ -1,11 +1,6 @@
 package otr3
 
-import (
-	"bytes"
-	"encoding/base64"
-	"errors"
-	"io"
-)
+import "io"
 
 type Conversation struct {
 	version otrVersion
@@ -44,88 +39,6 @@ var (
 	msgMarker   = []byte("?OTR:")
 )
 
-func (c *Conversation) Send(msg []byte) ([][]byte, error) {
-	if !c.policies.isOTREnabled() {
-		return [][]byte{msg}, nil
-	}
-	switch c.msgState {
-	case plainText:
-		if c.policies.has(requireEncryption) {
-			return [][]byte{c.queryMessage()}, nil
-		}
-		if c.policies.has(sendWhitespaceTag) {
-			msg = c.appendWhitespaceTag(msg)
-		}
-		return [][]byte{msg}, nil
-	case encrypted:
-		return c.encode(c.genDataMsg(msg).serialize(c)), nil
-	case finished:
-		return nil, errors.New("otr: cannot send message because secure conversation has finished")
-	}
-
-	return nil, errors.New("otr: cannot send message in current state")
-}
-
-func isEncoded(msg []byte) bool {
-	return bytes.HasPrefix(msg, msgMarker) && msg[len(msg)-1] == '.'
-}
-
-func isErrorMessage(msg []byte) bool {
-	return bytes.HasPrefix(msg, errorMarker)
-}
-
-func (c *Conversation) receiveErrorMessage(message []byte) (plain []byte, toSend [][]byte) {
-	plain = message[len(errorMarker):]
-
-	if c.policies.has(errorStartAKE) {
-		toSend = [][]byte{c.queryMessage()}
-	}
-
-	return
-}
-
-func removeOTRMsgEnvelope(msg []byte) []byte {
-	return msg[len(msgMarker) : len(msg)-1]
-}
-
-func (c *Conversation) decode(encoded []byte) ([]byte, error) {
-	encoded = removeOTRMsgEnvelope(encoded)
-	msg := make([]byte, base64.StdEncoding.DecodedLen(len(encoded)))
-	msgLen, err := base64.StdEncoding.Decode(msg, encoded)
-
-	if err != nil {
-		return nil, errInvalidOTRMessage
-	}
-
-	return msg[:msgLen], nil
-}
-
-func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err error) {
-	if err = c.checkVersion(message); err != nil {
-		return
-	}
-
-	var messageBody []byte
-	if messageBody, err = c.parseMessageHeader(message); err != nil {
-		return
-	}
-
-	msgType := message[2]
-	if msgType == msgTypeData {
-		if c.msgState != encrypted {
-			toSend = c.restart()
-			err = errEncryptedMessageWithNoSecureChannel
-			return
-		}
-
-		plain, toSend, err = c.processDataMessage(messageBody)
-	} else {
-		toSend, err = c.receiveAKE(msgType, messageBody)
-	}
-
-	return
-}
-
 func (c *Conversation) messageHeader(msgType byte) []byte {
 	return c.version.messageHeader(c, msgType)
 }
@@ -138,8 +51,7 @@ func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
 }
 
-func (c *Conversation) End() (toSend [][]byte, ok bool) {
-	ok = true
+func (c *Conversation) End() (toSend [][]byte) {
 	switch c.msgState {
 	case plainText:
 	case encrypted:
@@ -148,27 +60,5 @@ func (c *Conversation) End() (toSend [][]byte, ok bool) {
 	case finished:
 		c.msgState = plainText
 	}
-	ok = false
 	return
 }
-
-func (c *Conversation) encode(msg []byte) [][]byte {
-	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgMarker)+1)
-	base64.StdEncoding.Encode(b64[len(msgMarker):], msg)
-	copy(b64, msgMarker)
-	b64[len(b64)-1] = '.'
-
-	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
-	return c.fragment(b64, bytesPerFragment, uint32(0), uint32(0))
-}
-
-/*TODO: Authenticate
-func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend [][]byte, err error) {
-	return [][]byte{}, nil
-}
-*/
-/*TODO: SMPQuestion
-func (c *Conversation) SMPQuestion() string {
-	return c.smp.question
-}
-*/

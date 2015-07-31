@@ -50,16 +50,14 @@ func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
 }
 
 func Test_receive_ignoresV2WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {
-	var nilB [][]byte
 	c := newConversation(nil, fixtureRand())
 	c.policies = policies(allowV2)
 
 	msg := genWhitespaceTag(policies(allowV2))
-
 	_, enc, err := c.Receive(msg)
 
-	assertEquals(t, err, nil)
-	assertDeepEquals(t, enc, nilB)
+	assertNil(t, err)
+	assertNil(t, enc)
 }
 
 func Test_receive_failsWhenReceivesV2WhitespaceTagIfV2IsNotInThePolicy(t *testing.T) {

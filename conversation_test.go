@@ -212,14 +212,14 @@ func Test_encodeWithFragment(t *testing.T) {
 func Test_End_whenStateIsPlainText(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.msgState = plainText
-	msg, _ := c.End()
+	msg := c.End()
 	assertDeepEquals(t, msg, [][]uint8(nil))
 }
 
 func Test_End_whenStateIsFinished(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.msgState = finished
-	msg, _ := c.End()
+	msg := c.End()
 	assertDeepEquals(t, c.msgState, plainText)
 	assertDeepEquals(t, msg, [][]uint8(nil))
 }
@@ -227,7 +227,7 @@ func Test_End_whenStateIsFinished(t *testing.T) {
 func Test_End_whenStateIsEncrypted(t *testing.T) {
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted
-	msg, _ := bob.End()
+	msg := bob.End()
 	stub := bobContextAfterAKE()
 	expected := stub.encode(stub.genDataMsg(nil, tlv{tlvType: tlvTypeDisconnected}).serialize(stub))
 
