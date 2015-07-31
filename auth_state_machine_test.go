@@ -302,7 +302,7 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 func Test_receiveDHKey_AtAuthAwaitingSigIgnoresMsgIfIsNotSameDHKeyMsg(t *testing.T) {
 	var nilB []byte
 
-	newDHKeyMsg := fixtureDHKeyMsg(otrV3{})[otrv3HeaderLen:]
+	newDHKeyMsg := fixtureDHKeyMsgBody(otrV3{})
 	c := newConversation(otrV3{}, fixtureRand())
 	c.startAKE()
 
@@ -314,7 +314,7 @@ func Test_receiveDHKey_AtAuthAwaitingSigIgnoresMsgIfIsNotSameDHKeyMsg(t *testing
 }
 
 func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *testing.T) {
-	revealSignMsg := fixtureRevealSigMsg(otrV2{})[otrv2HeaderLen:]
+	revealSignMsg := fixtureRevealSigMsgBody(otrV2{})
 
 	c := aliceContextAtAwaitingRevealSig()
 
@@ -326,20 +326,19 @@ func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *te
 }
 
 func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeysAndIncreaseCounter(t *testing.T) {
-	var nilBigInt *big.Int
-	revealSignMsg := fixtureRevealSigMsg(otrV2{})[otrv2HeaderLen:]
+	revealSignMsg := fixtureRevealSigMsgBody(otrV2{})
 
 	c := aliceContextAtAwaitingRevealSig()
 
 	_, _, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(c, revealSignMsg)
 
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgx)
-	assertDeepEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
-	assertDeepEquals(t, c.keys.ourCurrentDHKeys.pub, fixedgy)
-	assertDeepEquals(t, c.keys.ourCurrentDHKeys.priv, fixedy)
+	assertNil(t, c.keys.theirPreviousDHPubKey)
+	assertDeepEquals(t, c.keys.ourPreviousDHKeys.pub, fixedgy)
+	assertDeepEquals(t, c.keys.ourPreviousDHKeys.priv, fixedy)
 	assertEquals(t, c.keys.ourCounter, uint64(1))
-	assertEquals(t, c.keys.ourKeyID, uint32(1))
+	assertEquals(t, c.keys.ourKeyID, uint32(2))
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
 }
 

@@ -35,13 +35,17 @@ func fixtureDHKeyMsg(v otrVersion) []byte {
 	return msg
 }
 
-func fixtureDHKeyMsgBody(v otrVersion) []byte {
+func headLen(v otrVersion) int {
 	val := otrV2{}
 	if val == v {
-		return fixtureDHKeyMsg(v)[otrv2HeaderLen:]
+		return otrv2HeaderLen
 	} else {
-		return fixtureDHKeyMsg(v)[otrv3HeaderLen:]
+		return otrv3HeaderLen
 	}
+}
+
+func fixtureDHKeyMsgBody(v otrVersion) []byte {
+	return fixtureDHKeyMsg(v)[headLen(v):]
 }
 
 func fixtureRevealSigMsg(v otrVersion) []byte {
@@ -51,6 +55,10 @@ func fixtureRevealSigMsg(v otrVersion) []byte {
 	msg, _ := c.revealSigMessage()
 
 	return msg
+}
+
+func fixtureRevealSigMsgBody(v otrVersion) []byte {
+	return fixtureRevealSigMsg(v)[headLen(v):]
 }
 
 func fixtureSigMsg(v otrVersion) []byte {

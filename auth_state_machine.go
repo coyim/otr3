@@ -20,11 +20,7 @@ func (c *Conversation) generateNewDHKeyPair() error {
 
 func (c *Conversation) akeHasFinished() error {
 	c.msgState = encrypted
-	if err := c.generateNewDHKeyPair(); err != nil {
-		return err
-	}
-
-	return nil
+	return c.generateNewDHKeyPair()
 }
 
 func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend []byte, err error) {
@@ -37,14 +33,8 @@ func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend []byte, err 
 		c.ake.state, toSend, err = c.ake.state.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
 		c.ake.state, toSend, err = c.ake.state.receiveRevealSigMessage(c, msg)
-		if err == nil {
-			err = c.akeHasFinished()
-		}
 	case msgTypeSig:
 		c.ake.state, toSend, err = c.ake.state.receiveSigMessage(c, msg)
-		if err == nil {
-			err = c.akeHasFinished()
-		}
 	default:
 		err = newOtrErrorf("unknown message type 0x%X", msgType)
 	}
@@ -178,7 +168,7 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg
 	c.keys.ourCurrentDHKeys.pub = c.ake.ourPublicValue
 	c.keys.ourCounter++
 
-	return authStateNone{}, ret, nil
+	return authStateNone{}, ret, c.akeHasFinished()
 }
 
 func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
@@ -212,7 +202,7 @@ func (s authStateAwaitingSig) receiveSigMessage(c *Conversation, msg []byte) (au
 	c.keys.theirCurrentDHPubKey = c.ake.theirPublicValue
 	c.keys.theirPreviousDHPubKey = nil
 
-	return authStateNone{}, nil, nil
+	return authStateNone{}, nil, c.akeHasFinished()
 }
 
 func (authStateNone) String() string              { return "AUTHSTATE_NONE" }
