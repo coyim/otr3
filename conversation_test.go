@@ -5,66 +5,6 @@ import (
 	"testing"
 )
 
-//Alice generates a encrypted message to Bob
-//Fixture data msg never rotates the receiver keys when the returned context is
-//used before receiving the message
-func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
-	var senderKeyID uint32 = 1
-	var recipientKeyID uint32 = 1
-
-	//We use a combination of ourKeyId, theirKeyID, senderKeyID and recipientKeyID
-	//to make sure both sender and receiver will use the same DH session keys
-	receiverContext := keyManagementContext{
-		ourCounter:   1,
-		theirCounter: 1,
-
-		ourKeyID:   senderKeyID + 1,
-		theirKeyID: recipientKeyID + 1,
-		ourCurrentDHKeys: dhKeyPair{
-			priv: fixedy,
-			pub:  fixedgy,
-		},
-		ourPreviousDHKeys: dhKeyPair{
-			priv: fixedy,
-			pub:  fixedgy,
-		},
-		theirCurrentDHPubKey:  fixedgx,
-		theirPreviousDHPubKey: fixedgx,
-	}
-
-	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)
-
-	m := dataMsg{
-		senderKeyID:    senderKeyID,
-		recipientKeyID: recipientKeyID,
-
-		y:          fixedgy, //this is alices current Pub
-		topHalfCtr: [8]byte{0, 0, 0, 0, 0, 0, 0, 2},
-	}
-
-	m.encryptedMsg = plain.encrypt(keys.sendingAESKey, m.topHalfCtr)
-	m.sign(keys.sendingMACKey)
-
-	return m.serialize(newConversation(otrV3{}, nil)), receiverContext
-}
-
-//Alice decrypts a encrypted message from Bob, generated after receiving
-//an encrypted message from Alice generated with fixtureDataMsg()
-func fixtureDecryptDataMsg(encryptedDataMsg []byte) plainDataMsg {
-	c := newConversation(otrV3{}, nil)
-	withoutHeader, _ := c.parseMessageHeader(encryptedDataMsg)
-
-	m := dataMsg{}
-	m.deserialize(withoutHeader)
-
-	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)
-
-	exp := plainDataMsg{}
-	exp.decrypt(keys.receivingAESKey, m.topHalfCtr, m.encryptedMsg)
-
-	return exp
-}
-
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	c := newConversation(nil, fixtureRand())
