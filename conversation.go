@@ -67,6 +67,11 @@ func isEncoded(msg []byte) bool {
 	return bytes.HasPrefix(msg, msgMarker) && msg[len(msg)-1] == '.'
 }
 
+//TODO: implement
+func isErrorMessage(msg []byte) bool {
+	return false
+}
+
 func removeOTRMsgEnvelope(msg []byte) []byte {
 	return msg[len(msgMarker) : len(msg)-1]
 }
@@ -101,6 +106,8 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 		plain, unencodedReturn, err = c.receiveDecoded(message)
 	case isQueryMessage(message):
 		unencodedReturn, err = c.receiveQueryMessage(message)
+	case isErrorMessage(message):
+		//TODO: Display the message to the user. If ERROR_START_AKE is set, reply with a Query Message.
 	default:
 		plain, unencodedReturn, err = c.processWhitespaceTag(message)
 		if unencodedReturn == nil {
