@@ -260,3 +260,28 @@ func Test_receive_ignoresMesagesWithWrongInstanceTags(t *testing.T) {
 	_, _, err := bob.Receive(bob.encode(msg)[0])
 	assertDeepEquals(t, err, errReceivedMessageForOtherInstance)
 }
+
+func Test_receive_displayErrorMessageToTheUser(t *testing.T) {
+	var nilB [][]byte
+
+	msg := []byte("?OTR Error:You are wrong")
+	c := newConversation(nil, nil)
+	c.policies.add(allowV3)
+	plain, toSend, err := c.Receive(msg)
+
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, plain, []byte("You are wrong"))
+	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receive_displayErrorMessageToTheUserAndStartAKE(t *testing.T) {
+	msg := []byte("?OTR Error:You are wrong")
+	c := newConversation(nil, nil)
+	c.policies.add(allowV3)
+	c.policies.add(errorStartAKE)
+	plain, toSend, err := c.Receive(msg)
+
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, plain, []byte("You are wrong"))
+	assertDeepEquals(t, toSend[0], []byte("?OTRv3?"))
+}

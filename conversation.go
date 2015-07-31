@@ -38,6 +38,7 @@ const (
 
 var (
 	queryMarker = []byte("?OTR")
+	errorMarker = []byte("?OTR Error:")
 	msgMarker   = []byte("?OTR:")
 )
 
@@ -67,9 +68,18 @@ func isEncoded(msg []byte) bool {
 	return bytes.HasPrefix(msg, msgMarker) && msg[len(msg)-1] == '.'
 }
 
-//TODO: implement
 func isErrorMessage(msg []byte) bool {
-	return false
+	return bytes.HasPrefix(msg, errorMarker)
+}
+
+func (c *Conversation) receiveErrorMessage(message []byte) (plain []byte, toSend [][]byte) {
+	plain = message[len(errorMarker):]
+
+	if c.policies.has(errorStartAKE) {
+		toSend = [][]byte{c.queryMessage()}
+	}
+
+	return
 }
 
 func removeOTRMsgEnvelope(msg []byte) []byte {
@@ -98,6 +108,9 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 	case !c.policies.isOTREnabled():
 		plain = message
 		return
+	case isErrorMessage(message):
+		plain, toSend = c.receiveErrorMessage(message)
+		return
 	case isEncoded(message):
 		message, err = c.decode(message)
 		if err != nil {
@@ -106,8 +119,6 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 		plain, unencodedReturn, err = c.receiveDecoded(message)
 	case isQueryMessage(message):
 		unencodedReturn, err = c.receiveQueryMessage(message)
-	case isErrorMessage(message):
-		//TODO: Display the message to the user. If ERROR_START_AKE is set, reply with a Query Message.
 	default:
 		plain, unencodedReturn, err = c.processWhitespaceTag(message)
 		if unencodedReturn == nil {
