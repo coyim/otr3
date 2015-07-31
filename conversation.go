@@ -1,6 +1,7 @@
 package otr3
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"io"
@@ -37,6 +38,7 @@ const (
 
 var (
 	queryMarker = []byte("?OTR")
+	msgMarker   = []byte("?OTR:")
 )
 
 func (c *Conversation) Send(msg []byte) ([][]byte, error) {
@@ -61,21 +63,63 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 	return nil, errors.New("otr: cannot send message in current state")
 }
 
+func parseOTRMessage(msg []byte) ([]byte, bool) {
+	if bytes.HasPrefix(msg, msgMarker) && msg[len(msg)-1] == '.' {
+		return msg[len(msgMarker) : len(msg)-1], true
+	}
+
+	return msg, false
+}
+
+func (c *Conversation) decode(encoded []byte) ([]byte, error) {
+	msg := make([]byte, base64.StdEncoding.DecodedLen(len(encoded)))
+	msgLen, err := base64.StdEncoding.Decode(msg, encoded)
+
+	if err != nil {
+		return nil, errInvalidOTRMessage
+	}
+
+	return msg[:msgLen], nil
+}
+
 // This should be used by the xmpp-client to received OTR messages in plain
-//TODO For the exported Receive, toSend needs fragmentation, base64 encoding
-func (c *Conversation) Receive(message []byte) (plain, toSend []byte, err error) {
+//TODO For the exported Receive, toSend needs fragmentation
+func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, err error) {
 	if !c.policies.isOTREnabled() {
+		plain = message
 		return
 	}
 
 	//TODO: warn the user for REQUIRE_ENCRYPTION
 	//See: Receiving plaintext with/without the whitespace tag
 
+	var unencodedMsg []byte
+	if m, ok := parseOTRMessage(message); ok {
+		message, err = c.decode(m)
+		if err != nil {
+			return
+		}
+	} else {
+		//queryMSG or plain
+	}
+
+	plain, unencodedMsg, err = c.receive(message)
+	if err != nil {
+		return
+	}
+
+	toSend = c.encode(unencodedMsg)
+
+	return
+}
+
+func (c *Conversation) receive(message []byte) (plain, toSend []byte, err error) {
 	if isQueryMessage(message) {
 		toSend, err = c.receiveQueryMessage(message)
 		return
 	}
 
+	//FIXME: Where should this be? Before of after the base64 decoding?
 	message, toSend, err = c.processWhitespaceTag(message)
 	if err != nil || toSend != nil {
 		return
