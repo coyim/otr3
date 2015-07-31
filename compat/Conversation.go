@@ -47,11 +47,7 @@ type Conversation struct {
 }
 
 func (c *Conversation) End() (toSend [][]byte) {
-	toSend, ok := c.Conversation.End()
-	if !ok {
-		panic("unreachable")
-	}
-	return
+	return c.Conversation.End()
 }
 
 type PublicKey struct {
