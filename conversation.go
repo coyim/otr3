@@ -195,9 +195,8 @@ func (c *Conversation) End() (toSend [][]byte, ok bool) {
 }
 
 func (c *Conversation) encode(msg []byte) [][]byte {
-	msgPrefix := []byte("?OTR:")
-	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgPrefix)+1)
-	base64.StdEncoding.Encode(b64[len(msgPrefix):], msg)
+	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgMarker)+1)
+	base64.StdEncoding.Encode(b64[len(msgMarker):], msg)
 	copy(b64, msgPrefix)
 	b64[len(b64)-1] = '.'
 
