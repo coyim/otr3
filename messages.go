@@ -13,11 +13,11 @@ import (
 const messageHeaderPrefix = 3
 
 const (
-	msgTypeData      = byte(3)
-	msgTypeDHCommit  = byte(2)
-	msgTypeDHKey     = byte(10)
-	msgTypeRevealSig = byte(17)
-	msgTypeSig       = byte(18)
+	msgTypeDHCommit  = byte(0x02)
+	msgTypeData      = byte(0x03)
+	msgTypeDHKey     = byte(0x0A)
+	msgTypeRevealSig = byte(0x11)
+	msgTypeSig       = byte(0x12)
 )
 
 type message interface {

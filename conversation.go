@@ -152,8 +152,7 @@ func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err
 	}
 
 	msgType := message[2]
-	switch msgType {
-	case msgTypeData:
+	if msgType == msgTypeData {
 		if c.msgState != encrypted {
 			toSend = c.restart()
 			err = errEncryptedMessageWithNoSecureChannel
@@ -161,11 +160,7 @@ func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err
 		}
 
 		plain, toSend, err = c.processDataMessage(messageBody)
-		if err != nil {
-			return
-		}
-
-	default:
+	} else {
 		toSend, err = c.receiveAKE(msgType, messageBody)
 	}
 
