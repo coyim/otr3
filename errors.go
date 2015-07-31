@@ -21,6 +21,7 @@ var (
 
 var errCorruptEncryptedSignature = newOtrError("corrupt encrypted signature")
 var errEncryptedMessageWithNoSecureChannel = newOtrError("encrypted message received without encrypted session established")
+var errUnexpectedPlainMessage = newOtrError("plain message received when encryption was required")
 var errInvalidOTRMessage = newOtrError("invalid OTR message")
 var errInvalidVersion = newOtrError("no valid version agreement could be found")                //libotr ignores this situation
 var errReceivedMessageForOtherInstance = newOtrError("received message for other OTR instance") //not exactly an error - we should ignore these messages by default

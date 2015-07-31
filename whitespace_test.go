@@ -31,3 +31,83 @@ func Test_genWhitespace_forV2AndV3(t *testing.T) {
 	assertDeepEquals(t, tag[hLen:hLen+tLen], otrV2{}.whitespaceTag())
 	assertDeepEquals(t, tag[hLen+tLen:], otrV3{}.whitespaceTag())
 }
+
+func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV2 | whitespaceStartAKE)
+
+	msg := genWhitespaceTag(policies(allowV2))
+
+	_, enc, err := c.Receive(msg)
+	toSend, _ := c.decode(enc[0])
+
+	assertEquals(t, err, nil)
+	assertEquals(t, dhMsgType(toSend), msgTypeDHCommit)
+	assertEquals(t, dhMsgVersion(toSend), uint16(2))
+}
+
+func Test_receive_ignoresV2WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {
+	var nilB [][]byte
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV2)
+
+	msg := genWhitespaceTag(policies(allowV2))
+
+	_, enc, err := c.Receive(msg)
+
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, enc, nilB)
+}
+
+func Test_receive_failsWhenReceivesV2WhitespaceTagIfV2IsNotInThePolicy(t *testing.T) {
+	var nilB [][]byte
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV3 | whitespaceStartAKE)
+
+	msg := genWhitespaceTag(policies(allowV2))
+
+	_, toSend, err := c.Receive(msg)
+
+	assertEquals(t, err, errInvalidVersion)
+	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
+
+	msg := genWhitespaceTag(policies(allowV2 | allowV3))
+
+	_, enc, err := c.Receive(msg)
+	toSend, _ := c.decode(enc[0])
+
+	assertEquals(t, err, nil)
+	assertEquals(t, dhMsgType(toSend), msgTypeDHCommit)
+	assertEquals(t, dhMsgVersion(toSend), uint16(3))
+}
+
+func Test_receive_ignoresV3WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {
+	var nilB [][]byte
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV2 | allowV3)
+
+	msg := genWhitespaceTag(policies(allowV3))
+
+	_, toSend, err := c.Receive(msg)
+
+	assertEquals(t, err, nil)
+	assertDeepEquals(t, toSend, nilB)
+}
+
+func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testing.T) {
+	var nilB [][]byte
+	c := newConversation(nil, fixtureRand())
+	c.policies = policies(allowV2 | whitespaceStartAKE)
+
+	msg := genWhitespaceTag(policies(allowV3))
+
+	_, toSend, err := c.Receive(msg)
+
+	assertEquals(t, err, errInvalidVersion)
+	assertDeepEquals(t, toSend, nilB)
+}

@@ -67,7 +67,12 @@ func isEncoded(msg []byte) bool {
 	return bytes.HasPrefix(msg, msgMarker) && msg[len(msg)-1] == '.'
 }
 
+func removeOTRMsgEnvelope(msg []byte) []byte {
+	return msg[len(msgMarker) : len(msg)-1]
+}
+
 func (c *Conversation) decode(encoded []byte) ([]byte, error) {
+	encoded = removeOTRMsgEnvelope(encoded)
 	msg := make([]byte, base64.StdEncoding.DecodedLen(len(encoded)))
 	msgLen, err := base64.StdEncoding.Decode(msg, encoded)
 
@@ -78,8 +83,6 @@ func (c *Conversation) decode(encoded []byte) ([]byte, error) {
 	return msg[:msgLen], nil
 }
 
-// This should be used by the xmpp-client to received OTR messages in plain
-//TODO For the exported Receive, toSend needs fragmentation
 func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, err error) {
 	var unencodedReturn []byte
 
@@ -91,7 +94,7 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 		plain = message
 		return
 	case isEncoded(message):
-		message, err = c.decode(message[len(msgMarker) : len(message)-1])
+		message, err = c.decode(message)
 		if err != nil {
 			return
 		}
@@ -99,8 +102,17 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 	case isQueryMessage(message):
 		unencodedReturn, err = c.receiveQueryMessage(message)
 	default:
-		plain = message
-		return
+		plain, unencodedReturn, err = c.processWhitespaceTag(message)
+		if unencodedReturn == nil {
+			return
+		}
+
+		//TODO:	warn that the message was received unencrypted
+		if c.msgState != plainText || c.policies.has(requireEncryption) {
+			//FIXME: returning an error might not be the best semantic to "it worked,
+			//but we have to notify you that something unexpected happened"
+			//err = errUnexpectedPlainMessage
+		}
 	}
 
 	if err != nil {
@@ -114,12 +126,6 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err error) {
 	if isQueryMessage(message) {
 		toSend, err = c.receiveQueryMessage(message)
-		return
-	}
-
-	//FIXME: Where should this be? Before of after the base64 decoding?
-	message, toSend, err = c.processWhitespaceTag(message)
-	if err != nil || toSend != nil {
 		return
 	}
 
