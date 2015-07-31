@@ -130,22 +130,46 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 	return
 }
 
-func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err error) {
-	// TODO check the message instanceTag for V3
-	// I should ignore the message if it is not for my Conversation
+func (c *Conversation) messageSentToAnotherConversation(msg []byte) bool {
+	//The version is only resolved after the DH commit so we ignore the instance tag
+	//until that point
+	if c.version == nil {
+		return false
+	}
 
-	_, msgProtocolVersion, ok := extractShort(message)
+	_, err := c.parseMessageHeader(msg)
+	return err == errReceivedMessageForOtherInstance
+}
+
+func (c *Conversation) checkProtocolVersion(msg []byte) error {
+	msg, msgProtocolVersion, ok := extractShort(msg)
 	if !ok {
-		err = errInvalidOTRMessage
+		return errInvalidOTRMessage
+	}
+
+	msgType := msg[0]
+	if msgType != msgTypeDHCommit && c.version.protocolVersion() != msgProtocolVersion {
+		return errWrongProtocolVersion
+	}
+
+	return nil
+}
+
+func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err error) {
+
+	//NOTE: parseMessageHeader() mentions that instance tags verification should be
+	//handled there, but it should happen before checking the version
+	//(I should not check a version for a conversation that is nor addressed to this client)
+	if c.messageSentToAnotherConversation(message) {
+		//NOTE: we are not returning this error, because this should be silently ignored
+		return
+	}
+
+	if err = c.checkProtocolVersion(message); err != nil {
 		return
 	}
 
 	msgType := message[2]
-	if msgType != msgTypeDHCommit && c.version.protocolVersion() != msgProtocolVersion {
-		err = errWrongProtocolVersion
-		return
-	}
-
 	switch msgType {
 	case msgTypeData:
 		if c.msgState != encrypted {

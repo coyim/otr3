@@ -56,15 +56,23 @@ func generateInstanceTag() uint32 {
 	return 0x00000100 + 0x01
 }
 
+//TODO: unit test
 func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 	if len(msg) < otrv3HeaderLen {
 		return nil, errInvalidOTRMessage
 	}
 
-	// FIXME: here we should actually make sure these are correct against the saved information
-	msg, senderInstanceTag, _ := extractWord(msg[messageHeaderPrefix:])
-	msg, _ /*receiverInstanceTag*/, _ = extractWord(msg)
+	msgType := msg[2]
 
+	msg, senderInstanceTag, _ := extractWord(msg[messageHeaderPrefix:])
+	msg, receiverInstanceTag, _ := extractWord(msg)
+
+	//NOTE: I'm afraid of doing this as part of this method. Instance tags
+	//initialization should be done at specific places (and this method is called
+	//both on the ake state machine and when receiving data messages)
+	//ourInstanceTag should be initialized before generating the DHCommit/DHKey msg
+	//theirInstanceTag should be initialized when the DHCommit/DHKey msg is received
+	//TODO: double check if instance tags are initialized in all the places
 	if c.ourInstanceTag == 0 {
 		c.ourInstanceTag = generateInstanceTag()
 	}
@@ -73,13 +81,13 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 		c.theirInstanceTag = senderInstanceTag
 	}
 
-	// if receiverInstanceTag != 0 && c.ourInstanceTag != receiverInstanceTag {
-	// 	return nil, nil
-	// }
+	if msgType != msgTypeDHCommit && (receiverInstanceTag < 0x100 || c.ourInstanceTag != receiverInstanceTag) {
+		return nil, errReceivedMessageForOtherInstance
+	}
 
-	// if senderInstanceTag != 0 && c.theirInstanceTag != senderInstanceTag {
-	// 	return nil, nil
-	// }
+	if senderInstanceTag < 0x100 || c.theirInstanceTag != senderInstanceTag {
+		return nil, errReceivedMessageForOtherInstance
+	}
 
 	return msg, nil
 }

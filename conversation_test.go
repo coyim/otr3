@@ -83,9 +83,11 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 		smp: smp{
 			state: smpStateExpect1{},
 		},
-		ake:          akeNotStarted,
-		policies:     policies(p),
-		fragmentSize: 65535, //we are not testing fragmentation by default
+		ake:              akeNotStarted,
+		policies:         policies(p),
+		fragmentSize:     65535, //we are not testing fragmentation by default
+		ourInstanceTag:   0x101, //every conversation should be able to talk to each other
+		theirInstanceTag: 0x101,
 	}
 }
 
@@ -319,7 +321,7 @@ func Test_End_whenStateIsEncrypted(t *testing.T) {
 }
 
 func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {
-	c := newConversation(nil, rand.Reader)
+	c := newConversation(otrV2{}, rand.Reader)
 	c.policies.add(allowV2)
 
 	dhCommitMsg := []byte("?OTR:AAICAAAAxPWaCOvRNycg72w2shQjcSEiYjcTh+w7rq+48UM9mpZIkpN08jtTAPcc8/9fcx9mmlVy/We+n6/G65RvobYWPoY+KD9Si41TFKku34gU4HaBbwwa7XpB/4u1gPCxY6EGe0IjthTUGK2e3qLf9YCkwJ1lm+X9kPOS/Jqu06V0qKysmbUmuynXG8T5Q8rAIRPtA/RYMqSGIvfNcZfrlJRIw6M784YtWlF3i2B6dmtjMrjH/8x5myN++Q2bxh69g6z/WX1rAFoAAAAg7Vwgf3JoiH5MdRznnS3aL66tjxQzN5qiwLtImE+KFnM=.")
@@ -328,4 +330,26 @@ func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {
 	assertEquals(t, err, nil)
 	assertEquals(t, c.ake.state, authStateAwaitingRevealSig{})
 	assertEquals(t, c.version, otrV2{})
+}
+
+func Test_receive_ignoresMesagesWithWrongInstanceTags(t *testing.T) {
+	bob := newConversation(otrV3{}, nil)
+	bob.policies.add(allowV3)
+	bob.ourKey = bobPrivateKey
+
+	var msg []byte
+	msg, bob.keys = fixtureDataMsg(plainDataMsg{})
+
+	bob.ourInstanceTag = 0x1000 // different than the fixture
+	bob.keys.ourKeyID = 1       //this would force key rotation
+	bobCurrentDHKeys := bob.keys.ourCurrentDHKeys
+	bobPreviousDHKeys := bob.keys.ourPreviousDHKeys
+
+	_, enc, err := bob.Receive(bob.encode(msg)[0])
+	toSend, _ := bob.decode(enc[0])
+
+	assertDeepEquals(t, err, nil)
+	assertDeepEquals(t, toSend, []byte{})
+	assertDeepEquals(t, bobPreviousDHKeys, bob.keys.ourPreviousDHKeys)
+	assertDeepEquals(t, bobCurrentDHKeys, bob.keys.ourCurrentDHKeys)
 }

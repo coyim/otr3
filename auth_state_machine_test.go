@@ -28,40 +28,38 @@ func fixtureConversationWithVersion(v otrVersion) *Conversation {
 }
 
 func fixtureDHCommitMsg() []byte {
-	ake := fixtureConversation()
-	ake.ourInstanceTag = generateInstanceTag()
-	msg, _ := ake.dhCommitMessage()
+	c := fixtureConversation()
+	msg, _ := c.dhCommitMessage()
 	return msg
 }
 
 func fixtureDHCommitMsgV2() []byte {
-	ake := fixtureConversationV2()
-	ake.ourInstanceTag = generateInstanceTag()
-	msg, _ := ake.dhCommitMessage()
+	c := fixtureConversationV2()
+	msg, _ := c.dhCommitMessage()
 	return msg
 }
 
 func fixtureDHKeyMsg(v otrVersion) []byte {
-	ake := fixtureConversationWithVersion(v)
-	ake.ourKey = alicePrivateKey
-	msg, _ := ake.dhKeyMessage()
+	c := fixtureConversationWithVersion(v)
+	c.ourKey = alicePrivateKey
+	msg, _ := c.dhKeyMessage()
 	return msg
 }
 
 func fixtureRevealSigMsg(v otrVersion) []byte {
-	ake := bobContextAtReceiveDHKey()
-	ake.version = v
+	c := bobContextAtReceiveDHKey()
+	c.version = v
 
-	msg, _ := ake.revealSigMessage()
+	msg, _ := c.revealSigMessage()
 
 	return msg
 }
 
 func fixtureSigMsg(v otrVersion) []byte {
-	ake := aliceContextAtReceiveRevealSig()
-	ake.version = v
+	c := aliceContextAtReceiveRevealSig()
+	c.version = v
 
-	msg, _ := ake.sigMessage()
+	msg, _ := c.sigMessage()
 
 	return msg
 }
@@ -135,7 +133,7 @@ func aliceContextAtAwaitingRevealSig() *Conversation {
 }
 
 func Test_conversationInitialState(t *testing.T) {
-    c := newConversation(nil, fixtureRand())
+	c := newConversation(nil, fixtureRand())
 	assertEquals(t, c.ake.state, authStateNone{})
 }
 
@@ -154,7 +152,7 @@ func Test_receiveQueryMessageV2_SendDHCommitv2(t *testing.T) {
 	queryMsg := []byte("?OTRv2?")
 
 	c := newConversation(nil, fixtureRand())
-    c.policies.add(allowV2)
+	c.policies.add(allowV2)
 	msg, _ := c.receiveQueryMessage(queryMsg)
 
 	assertDeepEquals(t, fixtureDHCommitMsgV2(), msg)

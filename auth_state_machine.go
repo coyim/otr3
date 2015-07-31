@@ -130,7 +130,7 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg 
 	}
 
 	//TODO: this should not change my instanceTag, since this is supposed to be a retransmit
-	// We can ignore errors from this function, since processDHCommit checks for the sameconditions
+	// We can ignore errors from this function, since processDHCommit checks for the same conditions
 	c.parseMessageHeader(msg)
 
 	return authStateAwaitingRevealSig{}, c.serializeDHKey(), nil
