@@ -79,6 +79,17 @@ func ImportKeysFromFile(fname string) ([]*Account, error) {
 	return ImportKeys(f)
 }
 
+// ExportKeysToFile will create the named file (or truncate it) and write all the accounts to that file in libotr format.
+func ExportKeysToFile(acs []*Account, fname string) error {
+	f, err := os.Create(fname)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	exportAccounts(acs, f)
+	return nil
+}
+
 // ImportKeys will read the libotr formatted data given and return all accounts defined in it
 func ImportKeys(r io.Reader) ([]*Account, error) {
 	res, ok := readAccounts(bufio.NewReader(r))
@@ -160,6 +171,7 @@ func readPrivateKey(r *bufio.Reader) (*PrivateKey, bool) {
 	res, ok2 := readDSAPrivateKey(r)
 	if ok2 {
 		k.PrivateKey = *res
+		k.PublicKey.PublicKey = k.PrivateKey.PublicKey
 	}
 	ok3 := sexp.ReadListEnd(r)
 	return k, ok1 && ok2 && ok3
@@ -412,7 +424,7 @@ func exportParameter(name string, val *big.Int, w *bufio.Writer) {
 	w.WriteString(fmt.Sprintf("(%s #%X#)\n", name, val))
 }
 
-func exportAccount(a Account, w *bufio.Writer) {
+func exportAccount(a *Account, w *bufio.Writer) {
 	indent := "  "
 	w.WriteString(indent)
 	w.WriteString("(account\n")
@@ -423,7 +435,7 @@ func exportAccount(a Account, w *bufio.Writer) {
 	w.WriteString(")\n")
 }
 
-func exportAccounts(as []Account, w io.Writer) {
+func exportAccounts(as []*Account, w io.Writer) {
 	bw := bufio.NewWriter(w)
 	bw.WriteString("(privkeys\n")
 	for _, a := range as {

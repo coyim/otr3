@@ -1014,12 +1014,10 @@ func Test_notHex(t *testing.T) {
 
 func Test_exportAccounts_exportsAccounts(t *testing.T) {
 	var priv PrivateKey
-	var pk PublicKey
 	priv.Parse(serializedPrivateKey)
-	pk.Parse(serializedPublicKey)
 	acc := Account{name: "hello", protocol: "go-xmpp", key: &priv}
 	bt := bytes.NewBuffer(make([]byte, 0, 200))
-	exportAccounts([]Account{acc}, bt)
+	exportAccounts([]*Account{&acc}, bt)
 	assertDeepEquals(t, bt.String(),
 		`(privkeys
   (account
@@ -1037,4 +1035,29 @@ func Test_exportAccounts_exportsAccounts(t *testing.T) {
   )
 )
 `)
+}
+
+func Test_ExportKeysToFile_exportsKeysToAFile(t *testing.T) {
+	var priv PrivateKey
+	priv.Parse(serializedPrivateKey)
+	acc := &Account{name: "hello", protocol: "go-xmpp", key: &priv}
+
+	err := ExportKeysToFile([]*Account{acc}, "test_resources/test_export_of_keys.blah")
+	assertNil(t, err)
+
+	res, err2 := ImportKeysFromFile("test_resources/test_export_of_keys.blah")
+
+	defer os.Remove("test_resources/test_export_of_keys.blah")
+
+	assertNil(t, err2)
+	assertDeepEquals(t, res[0].key, acc.key)
+}
+
+func Test_ExportKeysToFile_returnsAnErrorIfSomethingGoesWrong(t *testing.T) {
+	var priv PrivateKey
+	priv.Parse(serializedPrivateKey)
+	acc := &Account{name: "hello", protocol: "go-xmpp", key: &priv}
+
+	err := ExportKeysToFile([]*Account{acc}, "non_existing_directory/test_export_of_keys.blah")
+	assertDeepEquals(t, err.Error(), "open non_existing_directory/test_export_of_keys.blah: no such file or directory")
 }
