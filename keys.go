@@ -7,6 +7,7 @@ import (
 	"crypto/cipher"
 	"crypto/dsa"
 	"encoding/hex"
+	"fmt"
 	"hash"
 	"io"
 	"math/big"
@@ -365,4 +366,69 @@ func notHex(r rune) bool {
 	}
 
 	return true
+}
+
+func exportName(n string, w *bufio.Writer) {
+	indent := "    "
+	w.WriteString(indent)
+	w.WriteString("(name \"")
+	w.WriteString(n)
+	w.WriteString("\")\n")
+}
+
+func exportProtocol(n string, w *bufio.Writer) {
+	indent := "    "
+	w.WriteString(indent)
+	w.WriteString("(protocol ")
+	w.WriteString(n)
+	w.WriteString(")\n")
+}
+
+func exportPrivateKey(key *PrivateKey, w *bufio.Writer) {
+	indent := "    "
+	w.WriteString(indent)
+	w.WriteString("(private-key\n")
+	exportDSAPrivateKey(key, w)
+	w.WriteString(indent)
+	w.WriteString(")\n")
+}
+
+func exportDSAPrivateKey(key *PrivateKey, w *bufio.Writer) {
+	indent := "      "
+	w.WriteString(indent)
+	w.WriteString("(dsa\n")
+	exportParameter("p", key.PrivateKey.P, w)
+	exportParameter("q", key.PrivateKey.Q, w)
+	exportParameter("g", key.PrivateKey.G, w)
+	exportParameter("y", key.PrivateKey.Y, w)
+	exportParameter("x", key.PrivateKey.X, w)
+	w.WriteString(indent)
+	w.WriteString(")\n")
+}
+
+func exportParameter(name string, val *big.Int, w *bufio.Writer) {
+	indent := "        "
+	w.WriteString(indent)
+	w.WriteString(fmt.Sprintf("(%s #%X#)\n", name, val))
+}
+
+func exportAccount(a Account, w *bufio.Writer) {
+	indent := "  "
+	w.WriteString(indent)
+	w.WriteString("(account\n")
+	exportName(a.name, w)
+	exportProtocol(a.protocol, w)
+	exportPrivateKey(a.key, w)
+	w.WriteString(indent)
+	w.WriteString(")\n")
+}
+
+func exportAccounts(as []Account, w io.Writer) {
+	bw := bufio.NewWriter(w)
+	bw.WriteString("(privkeys\n")
+	for _, a := range as {
+		exportAccount(a, bw)
+	}
+	bw.WriteString(")\n")
+	bw.Flush()
 }
