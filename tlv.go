@@ -109,6 +109,7 @@ func toSmpMessage1Q(t tlv) (msg smp1Message, ok bool) {
 	question := string(t.tlvValue[:nulPos])
 	t.tlvValue = t.tlvValue[(nulPos + 1):]
 	msg, ok = toSmpMessage1(t)
+	msg.hasQuestion = true
 	msg.question = question
 	return msg, ok
 }

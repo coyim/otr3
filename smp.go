@@ -6,14 +6,23 @@ import (
 )
 
 type smp struct {
-	state  smpState
-	secret *big.Int
-	s1     smp1State
-	s2     smp2State
-	s3     smp3State
+	state    smpState
+	question *string
+	secret   *big.Int
+	s1       smp1State
+	s2       smp2State
+	s3       smp3State
 }
 
 const smpVersion = 1
+
+func (c *Conversation) SMPQuestion() (string, bool) {
+	if c.smp.question != nil {
+		return *c.smp.question, true
+	} else {
+		return "", false
+	}
+}
 
 func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) []byte {
 	h := sha256.New()

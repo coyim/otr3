@@ -70,6 +70,10 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 		return abortStateMachineWith(err)
 	}
 
+	if m.hasQuestion {
+		c.smp.question = &m.question
+	}
+
 	ret, ok := c.generateSMP2(c.smp.secret, m)
 	if !ok {
 		return abortStateMachineWith(errShortRandomRead)

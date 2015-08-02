@@ -9,15 +9,16 @@ type smp1State struct {
 }
 
 type smp1Message struct {
-	g2a, g3a *big.Int
-	c2, c3   *big.Int
-	d2, d3   *big.Int
-	question string
+	g2a, g3a    *big.Int
+	c2, c3      *big.Int
+	d2, d3      *big.Int
+	hasQuestion bool
+	question    string
 }
 
 func (m smp1Message) tlv() tlv {
 	t := genSMPTLV(uint16(tlvTypeSMP1), m.g2a, m.c2, m.d2, m.g3a, m.c3, m.d3)
-	if m.question != "" {
+	if m.hasQuestion {
 		t.tlvType = tlvTypeSMP1WithQuestion
 		t.tlvValue = append(append([]byte(m.question), 0), t.tlvValue...)
 	}

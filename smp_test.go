@@ -10,3 +10,18 @@ func Test_generateSMPSecretGeneratesASecret(t *testing.T) {
 	result := generateSMPSecret(aliceFingerprint, bobFingerprint, ssid, secret)
 	assertDeepEquals(t, result, bytesFromHex("D9B2E56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3"))
 }
+
+func Test_SMPQuestion_returnsTheCurrentSMPQuestion(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	q := "Are all greeks liars?"
+	c.smp.question = &q
+	res, ok := c.SMPQuestion()
+	assertEquals(t, ok, true)
+	assertDeepEquals(t, res, "Are all greeks liars?")
+}
+
+func Test_SMPQuestion_returnsNotOKIfThereIsNoQuestion(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	_, ok := c.SMPQuestion()
+	assertEquals(t, ok, false)
+}

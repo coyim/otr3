@@ -15,6 +15,18 @@ func Test_smpStateExpect1_goToExpectState3WhenReceivesSmpMessage1(t *testing.T) 
 	assertEquals(t, nextState, smpStateExpect3{})
 }
 
+func Test_smpStateExpect1_receiveMessage1_setsTheSMPQuestionIfThereWasOneInTheMessage(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+	msg := fixtureMessage1Q()
+
+	smpStateExpect1{}.receiveMessage1(c, msg)
+	v, ok := c.SMPQuestion()
+
+	assertDeepEquals(t, ok, true)
+	assertDeepEquals(t, v, "What's the clue?")
+}
+
 func Test_smpStateExpect1_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect1{}
 	c := newConversation(otrV3{}, fixtureRand())
