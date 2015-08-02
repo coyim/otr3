@@ -16,12 +16,12 @@ type smp struct {
 
 const smpVersion = 1
 
+// SMPQuestion returns the current SMP question and ok if there is one, and not ok if there isn't one.
 func (c *Conversation) SMPQuestion() (string, bool) {
-	if c.smp.question != nil {
-		return *c.smp.question, true
-	} else {
+	if c.smp.question == nil {
 		return "", false
 	}
+	return *c.smp.question, true
 }
 
 func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) []byte {
