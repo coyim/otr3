@@ -39,9 +39,8 @@ func headLen(v otrVersion) int {
 	val := otrV2{}
 	if val == v {
 		return otrv2HeaderLen
-	} else {
-		return otrv3HeaderLen
 	}
+	return otrv3HeaderLen
 }
 
 func fixtureDHKeyMsgBody(v otrVersion) []byte {
