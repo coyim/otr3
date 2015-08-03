@@ -1,5 +1,26 @@
 package otr3
 
+import "io"
+
+type fixedRandReader struct {
+	data []string
+	at   int
+}
+
+func fixedRand(data []string) io.Reader {
+	return &fixedRandReader{data, 0}
+}
+
+func (frr *fixedRandReader) Read(p []byte) (n int, err error) {
+	if frr.at < len(frr.data) {
+		plainBytes := bytesFromHex(frr.data[frr.at])
+		frr.at++
+		n = copy(p, plainBytes)
+		return
+	}
+	return 0, io.EOF
+}
+
 func fixtureConversation() *Conversation {
 	return fixtureConversationWithVersion(otrV3{})
 }
@@ -14,6 +35,7 @@ func fixtureConversationWithVersion(v otrVersion) *Conversation {
 
 func fixtureDHCommitMsg() []byte {
 	c := fixtureConversation()
+	c.theirInstanceTag = 0
 	msg, _ := c.dhCommitMessage()
 	return msg
 }
