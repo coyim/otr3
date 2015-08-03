@@ -95,22 +95,6 @@ func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
 	assertDeepEquals(t, dhMsgType(toSend), msgTypeRevealSig)
 }
 
-func Test_randMPI_returnsNotOKForAShortRead(t *testing.T) {
-	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
-	var buf [3]byte
-
-	_, ok := c.randMPI(buf[:])
-	assertEquals(t, ok, false)
-}
-
-func Test_randMPI_returnsOKForARealRead(t *testing.T) {
-	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
-	var buf [2]byte
-
-	_, ok := c.randMPI(buf[:])
-	assertEquals(t, ok, true)
-}
-
 func Test_OTRisDisabledIfNoVersionIsAllowedInThePolicy(t *testing.T) {
 	var nilB [][]byte
 	msg := []byte("?OTRv3?")

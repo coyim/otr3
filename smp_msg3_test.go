@@ -7,9 +7,9 @@ import (
 
 func Test_generateSMP3_generatesLongerValuesForR4WithProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	smp, ok := otr.generateSMP3(fixtureSecret(), *fixtureSmp1(), fixtureMessage2())
+	smp, err := otr.generateSMP3(fixtureSecret(), *fixtureSmp1(), fixtureMessage2())
 	assertDeepEquals(t, smp.r4, fixtureLong1)
-	assertDeepEquals(t, ok, true)
+	assertDeepEquals(t, err, nil)
 }
 
 func Test_generateSMP3_generatesLongerValuesForR5WithProtocolV3(t *testing.T) {
@@ -102,58 +102,58 @@ func Test_generateSMP3_computesD7Correctly(t *testing.T) {
 	assertDeepEquals(t, smp.msg.d7, fixtureMessage3().d7)
 }
 
-func Test_generateSMP3Parameters_returnsNotOKIfThereIsntRandomnessToGenerate_r4(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+func Test_generateSMP3Parameters_returnsAnErrorIfThereIsntRandomnessToGenerate_r4(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP3Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP3Parameters_returnsNotOKIfThereIsntRandomnessToGenerate_r5(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+func Test_generateSMP3Parameters_returnsAnErrorIfThereIsntRandomnessToGenerate_r5(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP3Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP3Parameters_returnsNotOKIfThereIsntRandomnessToGenerate_r6(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+func Test_generateSMP3Parameters_returnsAnErrorIfThereIsntRandomnessToGenerate_r6(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP3Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP3Parameters_returnsNotOKIfThereIsntRandomnessToGenerate_r7(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+func Test_generateSMP3Parameters_returnsAnErrorIfThereIsntRandomnessToGenerate_r7(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP3Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_generateSMP3Parameters_returnsOKIfThereIsEnoughRandomnessToGenerateBlindingFactors(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 	})).generateSMP3Parameters()
-	assertDeepEquals(t, ok, true)
+	assertDeepEquals(t, err, nil)
 }
 
-func Test_generateSMP3_returnsNotOKIfThereIsNotEnoughRandomnessForBlinding(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+func Test_generateSMP3_returnsAnErrorIfThereIsNotEnoughRandomnessForBlinding(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP3(fixtureSecret(), *fixtureSmp1(), fixtureMessage2())
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_verifySMP3_failsIfPaIsNotInTheGroupForProtocolV3(t *testing.T) {

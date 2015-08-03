@@ -7,49 +7,49 @@ import (
 
 func Test_generatesLongerAandRValuesForOtrV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	smp, ok := otr.generateSMP1()
+	smp, err := otr.generateSMP1()
 	assertDeepEquals(t, smp.a2, fixtureLong1)
 	assertDeepEquals(t, smp.a3, fixtureLong2)
 	assertDeepEquals(t, smp.r2, fixtureLong3)
 	assertDeepEquals(t, smp.r3, fixtureLong4)
-	assertDeepEquals(t, ok, true)
+	assertDeepEquals(t, err, nil)
 }
 
-func Test_generateSMP1Parameters_ReturnsNotOKIfThereIsntEnoughRandomnessForA2(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSMP1Parameters()
-	assertDeepEquals(t, ok, false)
+func Test_generateSMP1Parameters_ReturnsErrorIfThereIsntEnoughRandomnessForA2(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSMP1Parameters()
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP1_ReturnsNotOKIfGenerateInitialParametersDoesntWork(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSMP1()
-	assertDeepEquals(t, ok, false)
+func Test_generateSMP1_ReturnsErrorIfGenerateInitialParametersDoesntWork(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSMP1()
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP1Parameters_ReturnsNotOKIfThereIsntEnoughRandomnessForA3(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+func Test_generateSMP1Parameters_ReturnsErrorIfThereIsntEnoughRandomnessForA3(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP1Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP1Parameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR2(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateSMP1Parameters()
-	assertDeepEquals(t, ok, false)
-}
-
-func Test_generateSMP1Parameters_ReturnsNotOKIfThereIsntEnoughRandomnessForR3(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+func Test_generateSMP1Parameters_ReturnsErrorIfThereIsntEnoughRandomnessForR2(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP1Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
+}
+
+func Test_generateSMP1Parameters_ReturnsErrorIfThereIsntEnoughRandomnessForR3(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
+	})).generateSMP1Parameters()
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_generatesShorterAandRValuesForOtrV2(t *testing.T) {

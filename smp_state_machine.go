@@ -75,9 +75,9 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 		c.smp.question = &m.question
 	}
 
-	ret, ok := c.generateSMP2(c.smp.secret, m)
-	if !ok {
-		return abortStateMachineWith(errShortRandomRead)
+	ret, err := c.generateSMP2(c.smp.secret, m)
+	if err != nil {
+		return abortStateMachineWith(err)
 	}
 
 	return smpStateExpect3{}, ret.msg, nil
@@ -89,9 +89,9 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 		return abortStateMachineWith(err)
 	}
 
-	ret, ok := c.generateSMP3(c.smp.secret, *c.smp.s1, m)
-	if !ok {
-		return abortStateMachineWith(errShortRandomRead)
+	ret, err := c.generateSMP3(c.smp.secret, *c.smp.s1, m)
+	if err != nil {
+		return abortStateMachineWith(err)
 	}
 
 	return smpStateExpect4{}, ret.msg, nil
@@ -108,8 +108,8 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 		return abortStateMachineWith(err)
 	}
 
-	ret, ok := c.generateSMP4(c.smp.secret, *c.smp.s2, m)
-	if !ok {
+	ret, err := c.generateSMP4(c.smp.secret, *c.smp.s2, m)
+	if err != nil {
 		return abortStateMachineWith(errShortRandomRead)
 	}
 
@@ -174,9 +174,9 @@ func (smpStateExpect1) startAuthenticate(c *Conversation, question string, mutua
 	// Using ssid here should always be safe - we can't be in an encrypted state without having gone through the AKE
 	c.smp.secret = generateSMPSecret(c.OurKey.PublicKey.DefaultFingerprint(), c.TheirKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
 
-	s1, ok := c.generateSMP1()
+	s1, err := c.generateSMP1()
 
-	if !ok {
+	if err != nil {
 		return nil, errShortRandomRead
 	}
 

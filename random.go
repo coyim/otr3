@@ -13,14 +13,12 @@ func (c *Conversation) rand() io.Reader {
 	return rand.Reader
 }
 
-func (c *Conversation) randMPI(buf []byte) (*big.Int, bool) {
-	_, err := io.ReadFull(c.rand(), buf)
-
-	if err != nil {
-		return nil, false
+func (c *Conversation) randMPI(buf []byte) (*big.Int, error) {
+	if _, err := io.ReadFull(c.rand(), buf); err != nil {
+		return nil, errShortRandomRead
 	}
 
-	return new(big.Int).SetBytes(buf), true
+	return new(big.Int).SetBytes(buf), nil
 }
 
 func (c *Conversation) randomInto(b []byte) error {

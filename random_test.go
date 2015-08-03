@@ -15,3 +15,19 @@ func Test_conversation_rand_returnsRandReaderIfNoRandomnessIsSet(t *testing.T) {
 	c := newConversation(otrV3{}, nil)
 	assertEquals(t, c.rand(), rand.Reader)
 }
+
+func Test_randMPI_returnsNilForARealRead(t *testing.T) {
+	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
+	var buf [2]byte
+
+	_, err := c.randMPI(buf[:])
+	assertEquals(t, err, nil)
+}
+
+func Test_randMPI_returnsShortRandomReadErrorIfFails(t *testing.T) {
+	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
+	var buf [3]byte
+	_, err := c.randMPI(buf[:])
+
+	assertEquals(t, err, errShortRandomRead)
+}

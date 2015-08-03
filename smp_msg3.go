@@ -25,14 +25,29 @@ func (m smp3Message) tlv() tlv {
 	return genSMPTLV(uint16(tlvTypeSMP3), m.pa, m.qa, m.cp, m.d5, m.d6, m.ra, m.cr, m.d7)
 }
 
-func (c *Conversation) generateSMP3Parameters() (s smp3State, ok bool) {
+func (c *Conversation) generateSMP3Parameters() (s smp3State, err error) {
 	b := make([]byte, c.version.parameterLength())
-	var ok1, ok2, ok3, ok4 bool
-	s.r4, ok1 = c.randMPI(b)
-	s.r5, ok2 = c.randMPI(b)
-	s.r6, ok3 = c.randMPI(b)
-	s.r7, ok4 = c.randMPI(b)
-	return s, ok1 && ok2 && ok3 && ok4
+	errList := []error{}
+
+	s.r4, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r5, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r6, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r7, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	for _, err = range errList {
+		if err != nil {
+			return s, err
+		}
+	}
+
+	return s, err
 }
 
 func generateSMP3Message(s *smp3State, s1 smp1State, m2 smp2Message) smp3Message {
@@ -60,13 +75,13 @@ func generateSMP3Message(s *smp3State, s1 smp1State, m2 smp2Message) smp3Message
 	return m
 }
 
-func (c *Conversation) generateSMP3(secret *big.Int, s1 smp1State, m2 smp2Message) (s smp3State, ok bool) {
-	if s, ok = c.generateSMP3Parameters(); !ok {
-		return s, false
+func (c *Conversation) generateSMP3(secret *big.Int, s1 smp1State, m2 smp2Message) (s smp3State, err error) {
+	if s, err = c.generateSMP3Parameters(); err != nil {
+		return s, err
 	}
 	s.x = secret
 	s.msg = generateSMP3Message(&s, s1, m2)
-	return s, true
+	return
 }
 
 func (c *Conversation) verifySMP3(s2 *smp2State, msg smp3Message) error {

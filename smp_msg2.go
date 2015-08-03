@@ -28,17 +28,38 @@ func (m smp2Message) tlv() tlv {
 	return genSMPTLV(uint16(tlvTypeSMP2), m.g2b, m.c2, m.d2, m.g3b, m.c3, m.d3, m.pb, m.qb, m.cp, m.d5, m.d6)
 }
 
-func (c *Conversation) generateSMP2Parameters() (s smp2State, ok bool) {
+func (c *Conversation) generateSMP2Parameters() (s smp2State, err error) {
 	b := make([]byte, c.version.parameterLength())
-	var ok1, ok2, ok3, ok4, ok5, ok6, ok7 bool
-	s.b2, ok1 = c.randMPI(b)
-	s.b3, ok2 = c.randMPI(b)
-	s.r2, ok3 = c.randMPI(b)
-	s.r3, ok4 = c.randMPI(b)
-	s.r4, ok5 = c.randMPI(b)
-	s.r5, ok6 = c.randMPI(b)
-	s.r6, ok7 = c.randMPI(b)
-	return s, ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7
+	errList := []error{}
+
+	s.b2, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.b3, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r2, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r3, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r4, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r5, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r6, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	for _, err = range errList {
+		if err != nil {
+			return s, err
+		}
+	}
+
+	return s, nil
 }
 
 func generateSMP2Message(s *smp2State, s1 smp1Message) smp2Message {
@@ -67,9 +88,9 @@ func generateSMP2Message(s *smp2State, s1 smp1Message) smp2Message {
 	return m
 }
 
-func (c *Conversation) generateSMP2(secret *big.Int, s1 smp1Message) (s smp2State, ok bool) {
-	if s, ok = c.generateSMP2Parameters(); !ok {
-		return s, false
+func (c *Conversation) generateSMP2(secret *big.Int, s1 smp1Message) (s smp2State, err error) {
+	if s, err = c.generateSMP2Parameters(); err != nil {
+		return s, err
 	}
 	s.y = secret
 	s.msg = generateSMP2Message(&s, s1)

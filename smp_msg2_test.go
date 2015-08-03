@@ -8,7 +8,7 @@ import (
 func Test_generateSMP2_generatesLongerValuesForBAndRWithProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
 	smp1 := fixtureMessage1()
-	smp, ok := otr.generateSMP2(fixtureSecret(), smp1)
+	smp, err := otr.generateSMP2(fixtureSecret(), smp1)
 	assertDeepEquals(t, smp.b2, fixtureLong1)
 	assertDeepEquals(t, smp.b3, fixtureLong2)
 	assertDeepEquals(t, smp.r2, fixtureLong3)
@@ -16,76 +16,63 @@ func Test_generateSMP2_generatesLongerValuesForBAndRWithProtocolV3(t *testing.T)
 	assertDeepEquals(t, smp.r4, fixtureLong5)
 	assertDeepEquals(t, smp.r5, fixtureLong6)
 	assertDeepEquals(t, smp.r6, fixtureLong7)
-	assertDeepEquals(t, ok, true)
+	assertDeepEquals(t, err, nil)
 }
 
-func Test_generateSMP2_willReturnNotOKIfThereIsntEnoughRandomnessForBlindingParameters(t *testing.T) {
+func Test_generateSMP2_willReturnAnErrorIfThereIsntEnoughRandomnessForBlindingParameters(t *testing.T) {
 	otr := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	}))
-	_, ok := otr.generateSMP2(fixtureSecret(), fixtureMessage1())
-	assertDeepEquals(t, ok, false)
+	_, err := otr.generateSMP2(fixtureSecret(), fixtureMessage1())
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP2Parameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_b2(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSMP2Parameters()
-	assertDeepEquals(t, ok, false)
+func Test_generateSMP2Parameters_willReturnAnErrorIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_b2(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b"})).generateSMP2Parameters()
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP2Parameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_b3(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+func Test_generateSMP2Parameters_willReturnAnErrorIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_b3(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP2Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP2Parameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r2(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
-	})).generateSMP2Parameters()
-	assertDeepEquals(t, ok, false)
-}
-
-func Test_generateSMP2Parameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r3(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+func Test_generateSMP2Parameters_willReturnAnErrorIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r2(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP2Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP2Parameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r4(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+func Test_generateSMP2Parameters_willReturnAnErrorIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r3(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP2Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP2Parameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r5(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+func Test_generateSMP2Parameters_willReturnAnErrorIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r4(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP2Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP2Parameters_willReturnNotOKIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r6(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
-		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+func Test_generateSMP2Parameters_willReturnAnErrorIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r5(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
@@ -93,11 +80,25 @@ func Test_generateSMP2Parameters_willReturnNotOKIfThereIsNotEnoughRandomnessForE
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP2Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
+
 }
 
-func Test_generateSMP2Parameters_willReturnOKIfThereIsEnoughRandomnessForAllParameters(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+func Test_generateSMP2Parameters_willReturnAnErrorIfThereIsNotEnoughRandomnessForEachOfTheBlindingParameters_for_r6(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
+		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
+	})).generateSMP2Parameters()
+	assertDeepEquals(t, err, errShortRandomRead)
+}
+
+func Test_generateSMP2Parameters_willReturnNilIfThereIsEnoughRandomnessForAllParameters(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
@@ -106,7 +107,7 @@ func Test_generateSMP2Parameters_willReturnOKIfThereIsEnoughRandomnessForAllPara
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b8b",
 	})).generateSMP2Parameters()
-	assertDeepEquals(t, ok, true)
+	assertDeepEquals(t, err, nil)
 }
 
 func Test_generateSMP2_generatesShorterValuesForBAndRWithProtocolV2(t *testing.T) {

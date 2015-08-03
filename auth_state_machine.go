@@ -8,9 +8,9 @@ import (
 const minimumMessageLength = 3 // length of protocol version (SHORT) and message type (BYTE)
 
 func (c *Conversation) generateNewDHKeyPair() error {
-	x, ok := c.randMPI(make([]byte, 40))
-	if !ok {
-		return errShortRandomRead
+	x, err := c.randMPI(make([]byte, 40))
+	if err != nil {
+		return err
 	}
 
 	c.keys.generateNewDHKeyPair(x)

@@ -18,14 +18,13 @@ func (m smp4Message) tlv() tlv {
 	return genSMPTLV(uint16(tlvTypeSMP4), m.rb, m.cr, m.d7)
 }
 
-func (c *Conversation) generateSMP4(secret *big.Int, s2 smp2State, msg3 smp3Message) (smp4State, bool) {
-	s, ok := c.generateSMP4Parameters()
-	if !ok {
-		return s, false
+func (c *Conversation) generateSMP4(secret *big.Int, s2 smp2State, msg3 smp3Message) (s smp4State, err error) {
+	if s, err = c.generateSMP4Parameters(); err != nil {
+		return s, err
 	}
 	s.y = secret
 	s.msg = generateSMP4Message(s, s2, msg3)
-	return s, true
+	return
 }
 
 func (c *Conversation) verifySMP4(s3 *smp3State, msg smp4Message) error {
@@ -40,9 +39,9 @@ func (c *Conversation) verifySMP4(s3 *smp3State, msg smp4Message) error {
 	return nil
 }
 
-func (c *Conversation) generateSMP4Parameters() (s smp4State, ok bool) {
+func (c *Conversation) generateSMP4Parameters() (s smp4State, err error) {
 	b := make([]byte, c.version.parameterLength())
-	s.r7, ok = c.randMPI(b)
+	s.r7, err = c.randMPI(b)
 	return
 }
 

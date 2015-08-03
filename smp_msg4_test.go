@@ -7,24 +7,24 @@ import (
 
 func Test_generateSMP4_generatesLongerValuesForR7WithProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	smp, ok := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
+	smp, err := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.r7, fixtureLong1)
-	assertDeepEquals(t, ok, true)
+	assertDeepEquals(t, err, nil)
 }
 
-func Test_generateSMP4Parameters_returnsNotOKIfThereIsntEnoughRandomnessToGenerateBlindingFactor(t *testing.T) {
-	_, ok := newConversation(otrV2{}, fixedRand([]string{
+func Test_generateSMP4Parameters_returnsAnErrorIfThereIsntEnoughRandomnessToGenerateBlindingFactor(t *testing.T) {
+	_, err := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	})).generateSMP4Parameters()
-	assertDeepEquals(t, ok, false)
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
-func Test_generateSMP4_returnsNotOKIfGenerationOfFourthParametersFails(t *testing.T) {
+func Test_generateSMP4_returnsAnErrorIfGenerationOfFourthParametersFails(t *testing.T) {
 	otr := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	}))
-	_, ok := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
-	assertDeepEquals(t, ok, false)
+	_, err := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
+	assertDeepEquals(t, err, errShortRandomRead)
 }
 
 func Test_generateSMP4_generatesShorterValuesForR7WithProtocolV3(t *testing.T) {

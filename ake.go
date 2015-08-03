@@ -92,9 +92,9 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 	c.initAKE()
 	c.keys.ourKeyID = 0
 
-	x, ok := c.randMPI(make([]byte, 40))
-	if !ok {
-		return nil, errShortRandomRead
+	x, err := c.randMPI(make([]byte, 40))
+	if err != nil {
+		return nil, err
 	}
 
 	c.setSecretExponent(x)
@@ -121,10 +121,10 @@ func (c *Conversation) serializeDHCommit(public *big.Int) []byte {
 func (c *Conversation) dhKeyMessage() ([]byte, error) {
 	c.initAKE()
 
-	y, ok := c.randMPI(make([]byte, 40)[:])
+	y, err := c.randMPI(make([]byte, 40)[:])
 
-	if !ok {
-		return nil, errShortRandomRead
+	if err != nil {
+		return nil, err
 	}
 
 	c.setSecretExponent(y)

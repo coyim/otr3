@@ -92,12 +92,12 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
 	c.keys.rotateTheirKey(dataMessage.senderKeyID, dataMessage.y)
 
-	x, ok := c.randMPI(make([]byte, 40))
-	if !ok {
+	x, err := c.randMPI(make([]byte, 40))
+	if err != nil {
 		//NOTE: what should we do?
 		//This is one kind of error that breaks the encrypted channel. I believe we
 		//should change the msgState to != encrypted
-		return errShortRandomRead
+		return err
 	}
 
 	c.keys.rotateOurKeys(dataMessage.recipientKeyID, x)

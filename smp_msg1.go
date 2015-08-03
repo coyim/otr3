@@ -25,14 +25,29 @@ func (m smp1Message) tlv() tlv {
 	return t
 }
 
-func (c *Conversation) generateSMP1Parameters() (s smp1State, ok bool) {
+func (c *Conversation) generateSMP1Parameters() (s smp1State, err error) {
 	b := make([]byte, c.version.parameterLength())
-	var ok1, ok2, ok3, ok4 bool
-	s.a2, ok1 = c.randMPI(b)
-	s.a3, ok2 = c.randMPI(b)
-	s.r2, ok3 = c.randMPI(b)
-	s.r3, ok4 = c.randMPI(b)
-	return s, ok1 && ok2 && ok3 && ok4
+	errList := []error{}
+
+	s.a2, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.a3, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r2, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	s.r3, err = c.randMPI(b)
+	errList = append(errList, err)
+
+	for _, err = range errList {
+		if err != nil {
+			return s, err
+		}
+	}
+
+	return s, nil
 }
 
 func generateSMP1Message(s smp1State) (m smp1Message) {
@@ -43,12 +58,12 @@ func generateSMP1Message(s smp1State) (m smp1Message) {
 	return
 }
 
-func (c *Conversation) generateSMP1() (s smp1State, ok bool) {
-	if s, ok = c.generateSMP1Parameters(); !ok {
-		return s, false
+func (c *Conversation) generateSMP1() (s smp1State, err error) {
+	if s, err = c.generateSMP1Parameters(); err != nil {
+		return s, err
 	}
 	s.msg = generateSMP1Message(s)
-	return s, true
+	return
 }
 
 func (c *Conversation) verifySMP1(msg smp1Message) error {
