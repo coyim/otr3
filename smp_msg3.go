@@ -27,27 +27,14 @@ func (m smp3Message) tlv() tlv {
 
 func (c *Conversation) generateSMP3Parameters() (s smp3State, err error) {
 	b := make([]byte, c.version.parameterLength())
-	errList := []error{}
+	var err1, err2, err3, err4 error
 
-	s.r4, err = c.randMPI(b)
-	errList = append(errList, err)
+	s.r4, err1 = c.randMPI(b)
+	s.r5, err2 = c.randMPI(b)
+	s.r6, err3 = c.randMPI(b)
+	s.r7, err4 = c.randMPI(b)
 
-	s.r5, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.r6, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.r7, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	for _, err = range errList {
-		if err != nil {
-			return s, err
-		}
-	}
-
-	return s, err
+	return s, firstError(err1, err2, err3, err4)
 }
 
 func generateSMP3Message(s *smp3State, s1 smp1State, m2 smp2Message) smp3Message {

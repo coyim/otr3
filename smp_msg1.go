@@ -27,27 +27,12 @@ func (m smp1Message) tlv() tlv {
 
 func (c *Conversation) generateSMP1Parameters() (s smp1State, err error) {
 	b := make([]byte, c.version.parameterLength())
-	errList := []error{}
-
-	s.a2, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.a3, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.r2, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.r3, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	for _, err = range errList {
-		if err != nil {
-			return s, err
-		}
-	}
-
-	return s, nil
+	var err1, err2, err3, err4 error
+	s.a2, err1 = c.randMPI(b)
+	s.a3, err2 = c.randMPI(b)
+	s.r2, err3 = c.randMPI(b)
+	s.r3, err4 = c.randMPI(b)
+	return s, firstError(err1, err2, err3, err4)
 }
 
 func generateSMP1Message(s smp1State) (m smp1Message) {

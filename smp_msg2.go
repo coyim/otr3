@@ -30,36 +30,16 @@ func (m smp2Message) tlv() tlv {
 
 func (c *Conversation) generateSMP2Parameters() (s smp2State, err error) {
 	b := make([]byte, c.version.parameterLength())
-	errList := []error{}
+	var err1, err2, err3, err4, err5, err6, err7 error
+	s.b2, err1 = c.randMPI(b)
+	s.b3, err2 = c.randMPI(b)
+	s.r2, err3 = c.randMPI(b)
+	s.r3, err4 = c.randMPI(b)
+	s.r4, err5 = c.randMPI(b)
+	s.r5, err6 = c.randMPI(b)
+	s.r6, err7 = c.randMPI(b)
 
-	s.b2, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.b3, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.r2, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.r3, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.r4, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.r5, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	s.r6, err = c.randMPI(b)
-	errList = append(errList, err)
-
-	for _, err = range errList {
-		if err != nil {
-			return s, err
-		}
-	}
-
-	return s, nil
+	return s, firstError(err1, err2, err3, err4, err5, err6, err7)
 }
 
 func generateSMP2Message(s *smp2State, s1 smp1Message) smp2Message {
