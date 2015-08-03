@@ -19,7 +19,7 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 	msg, _ := c.receiveQueryMessage(queryMsg)
 
 	assertEquals(t, c.ake.state, authStateAwaitingDHKey{})
-	assertDeepEquals(t, fixtureDHCommitMsg(), msg)
+	assertDeepEquals(t, dhMsgType(msg), msgTypeDHCommit)
 }
 
 func Test_receiveQueryMessageV2_SendDHCommitv2(t *testing.T) {

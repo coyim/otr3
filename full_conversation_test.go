@@ -32,12 +32,12 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 }
 
 func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
-	alice := newConversation(nil, rand.Reader)
+	alice := &Conversation{Rand: rand.Reader}
 	alice.OurKey = alicePrivateKey
 	alice.Policies = policies(allowV2 | allowV3)
 	alice.TheirKey = &bobPrivateKey.PublicKey
 
-	bob := newConversation(nil, rand.Reader)
+	bob := &Conversation{Rand: rand.Reader}
 	bob.OurKey = bobPrivateKey
 	bob.Policies = policies(allowV2 | allowV3)
 	bob.TheirKey = &alicePrivateKey.PublicKey
@@ -45,6 +45,9 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	var toSend [][]byte
 	var err error
 	msg := alice.queryMessage()
+
+	//FIXME: Why is it needed?
+	bob.startAKE()
 
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(msg)
@@ -88,12 +91,12 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 }
 
 func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
-	alice := newConversation(nil, rand.Reader)
+	alice := &Conversation{Rand: rand.Reader}
 	alice.OurKey = alicePrivateKey
 	alice.Policies = policies(allowV3)
 	alice.TheirKey = &bobPrivateKey.PublicKey
 
-	bob := newConversation(nil, rand.Reader)
+	bob := &Conversation{Rand: rand.Reader}
 	bob.OurKey = bobPrivateKey
 	bob.Policies = policies(allowV3)
 	bob.TheirKey = &alicePrivateKey.PublicKey
@@ -101,6 +104,9 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	var toSend [][]byte
 	var err error
 	msg := alice.queryMessage()
+
+	//FIXME: Why is it needed?
+	bob.startAKE()
 
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(msg)
@@ -150,15 +156,18 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	var err error
 	var nilB []byte
 
-	alice := newConversation(nil, rand.Reader)
+	alice := &Conversation{Rand: rand.Reader}
 	alice.Policies = policies(allowV2 | allowV3)
 	alice.OurKey = alicePrivateKey
 
-	bob := newConversation(nil, rand.Reader)
+	bob := &Conversation{Rand: rand.Reader}
 	bob.Policies = policies(allowV2 | allowV3)
 	bob.OurKey = bobPrivateKey
 
 	msg := []byte("?OTRv3?")
+
+	//FIXME: Why is it needed?
+	bob.startAKE()
 
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(msg)
