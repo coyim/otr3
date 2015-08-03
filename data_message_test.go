@@ -116,9 +116,7 @@ func Test_processDataMessage_processSMPMessage(t *testing.T) {
 	exp := fixtureDecryptDataMsg(toSend)
 
 	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, len(exp.tlvs), 2)
-	assertDeepEquals(t, exp.tlvs[0].tlvType, uint16(3))
-	assertDeepEquals(t, exp.tlvs[1].tlvType, uint16(0))
+	assertDeepEquals(t, len(exp.tlvs), 0)
 }
 
 func Test_processDataMessage_returnsErrorIfSomethingGoesWrongWithDeserialize(t *testing.T) {

@@ -5,12 +5,20 @@ import (
 	"testing"
 )
 
-func Test_smpStateExpect1_goToExpectState3WhenReceivesSmpMessage1(t *testing.T) {
+func Test_smpStateExpect1_goToWaitingForSecretWhenReceivesSmpMessage1(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	msg := fixtureMessage1()
+	nextState, _, _ := smpStateExpect1{}.receiveMessage1(c, msg)
+
+	assertDeepEquals(t, nextState, smpStateWaitingForSecret{msg: msg})
+}
+
+func Test_smpStateWaitingForSecret_goToExpectState3WhenReceivesContinueSmpMessage1(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	msg := fixtureMessage1()
-	nextState, _, _ := smpStateExpect1{}.receiveMessage1(c, msg)
+	nextState, _, _ := smpStateWaitingForSecret{msg: msg}.continueMessage1(c)
 
 	assertEquals(t, nextState, smpStateExpect3{})
 }
@@ -112,13 +120,13 @@ func Test_smpStateExpect4_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *t
 	assertDeepEquals(t, msg, smpMessageAbort{})
 }
 
-func Test_contextTransitionsFromSmpExpect1ToSmpExpect3(t *testing.T) {
+func Test_contextTransitionsFromSmpExpect1ToSmpWaitingForSecret(t *testing.T) {
 	m := fixtureMessage1()
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	c.receiveSMP(m)
-	assertEquals(t, c.smp.state, smpStateExpect3{})
+	assertDeepEquals(t, c.smp.state, smpStateWaitingForSecret{msg: m})
 }
 
 func Test_contextTransitionsFromSmpExpect2ToSmpExpect4(t *testing.T) {
@@ -182,9 +190,9 @@ func Test_smp1Message_receivedMessage_returnsErrorIfreceiveMessage1ReturnsError(
 	assertDeepEquals(t, err, newOtrError("g2a is an invalid group element"))
 }
 
-func Test_smpStateExpect1_receiveMessage1_returnsErrorIfgenerateSMP2Fails(t *testing.T) {
+func Test_smpStateWaitingForSecret_continueMessage1_returnsErrorIfgenerateSMP2Fails(t *testing.T) {
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
-	_, _, err := smpStateExpect1{}.receiveMessage1(c, fixtureMessage1())
+	_, _, err := smpStateWaitingForSecret{msg: fixtureMessage1()}.continueMessage1(c)
 
 	assertDeepEquals(t, err, errShortRandomRead)
 }

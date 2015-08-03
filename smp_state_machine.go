@@ -5,6 +5,10 @@ type smpStateExpect1 struct{ smpStateBase }
 type smpStateExpect2 struct{ smpStateBase }
 type smpStateExpect3 struct{ smpStateBase }
 type smpStateExpect4 struct{ smpStateBase }
+type smpStateWaitingForSecret struct {
+	smpStateBase
+	msg smp1Message
+}
 
 type smpMessage interface {
 	receivedMessage(*Conversation) (smpMessage, error)
@@ -14,6 +18,7 @@ type smpMessage interface {
 type smpState interface {
 	startAuthenticate(*Conversation, string, []byte) ([]tlv, error)
 	receiveMessage1(*Conversation, smp1Message) (smpState, smpMessage, error)
+	continueMessage1(*Conversation) (smpState, smpMessage, error)
 	receiveMessage2(*Conversation, smp2Message) (smpState, smpMessage, error)
 	receiveMessage3(*Conversation, smp3Message) (smpState, smpMessage, error)
 	receiveMessage4(*Conversation, smp4Message) (smpState, smpMessage, error)
@@ -49,7 +54,23 @@ func (c *Conversation) receiveSMP(m smpMessage) (*tlv, error) {
 	return &result, nil
 }
 
+func (c *Conversation) continueSMP() (*tlv, error) {
+	toSend, err := c.continueMessage()
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := toSend.tlv()
+
+	return &result, nil
+}
+
 func (smpStateBase) receiveMessage1(c *Conversation, m smp1Message) (smpState, smpMessage, error) {
+	return abortStateMachine()
+}
+
+func (smpStateBase) continueMessage1(c *Conversation) (smpState, smpMessage, error) {
 	return abortStateMachine()
 }
 
@@ -75,7 +96,13 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 		c.smp.question = &m.question
 	}
 
-	ret, err := c.generateSMP2(c.smp.secret, m)
+	// TODO: NOTIFY USER HERE
+
+	return smpStateWaitingForSecret{msg: m}, nil, nil
+}
+
+func (s smpStateWaitingForSecret) continueMessage1(c *Conversation) (smpState, smpMessage, error) {
+	ret, err := c.generateSMP2(c.smp.secret, s.msg)
 	if err != nil {
 		return abortStateMachineWith(err)
 	}
@@ -152,6 +179,11 @@ func (m smp4Message) receivedMessage(c *Conversation) (ret smpMessage, err error
 
 func (m smpMessageAbort) receivedMessage(c *Conversation) (ret smpMessage, err error) {
 	c.smp.state = smpStateExpect1{}
+	return
+}
+
+func (c *Conversation) continueMessage() (ret smpMessage, err error) {
+	c.smp.state, ret, err = c.smp.state.continueMessage1(c)
 	return
 }
 
