@@ -19,7 +19,8 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 		}
 		return [][]byte{msg}, nil
 	case encrypted:
-		return c.encode(c.genDataMsg(msg).serialize(c)), nil
+		toSend := c.genDataMsg(msg).serialize(c)
+		return c.encode(toSend), nil
 	case finished:
 		return nil, errors.New("otr: cannot send message because secure conversation has finished")
 	}
@@ -43,6 +44,10 @@ func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
 	toSend, err = c.dhCommitMessage()
 	if err != nil {
 		return
+	}
+	toSend, err = c.wrapMessageHeader(msgTypeDHCommit, toSend)
+	if err != nil {
+		return nil, err
 	}
 
 	c.ake.state = authStateAwaitingDHKey{}

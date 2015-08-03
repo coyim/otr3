@@ -46,6 +46,14 @@ func (c *Conversation) parseMessageHeader(msg []byte) ([]byte, []byte, error) {
 	return c.version.parseMessageHeader(c, msg)
 }
 
+func (c *Conversation) wrapMessageHeader(msgType byte, msg []byte) ([]byte, error) {
+	messageHeader, err := c.messageHeader(msgType)
+	if err != nil {
+		return nil, err
+	}
+	return append(messageHeader, msg...), nil
+}
+
 func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
 }

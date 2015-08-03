@@ -9,7 +9,7 @@ func Test_parseMessageHeader_ignoresBadReceiverInstanceTagInDHCommitMessages(t *
 
 	sender := fixtureConversation()
 	sender.theirInstanceTag = 0
-	m, _ := sender.dhCommitMessage()
+	m, _ := sender.messageHeader(msgTypeDHCommit)
 
 	_, _, err := v.parseMessageHeader(c, m)
 
@@ -22,7 +22,7 @@ func Test_parseMessageHeader_returnsErrorWhenReceiverInstanceTagIsLesserThan0x10
 
 	sender := fixtureConversation()
 	sender.theirInstanceTag = 0x99
-	m, _ := sender.dhKeyMessage()
+	m, _ := sender.messageHeader(msgTypeDHCommit)
 
 	_, _, err := v.parseMessageHeader(c, m)
 
@@ -35,13 +35,14 @@ func Test_parseMessageHeader_returnsErrorWhenSenderInstanceTagIsLesserThan0x100(
 
 	sender := fixtureConversation()
 	sender.ourInstanceTag = 0x99
-	m, _ := sender.dhKeyMessage()
+	m, _ := sender.messageHeader(msgTypeDHCommit)
 
 	_, _, err := v.parseMessageHeader(c, m)
 
 	assertEquals(t, err, errInvalidOTRMessage)
 
-	m, _ = sender.dhKeyMessage()
+	sender.ourInstanceTag = 0
+	m, _ = sender.messageHeader(msgTypeDHCommit)
 	copy(m[3:6], []byte{0, 0, 0, 0}) //Forces receiving a msg with senderInstanceTag = 0
 	_, _, err = v.parseMessageHeader(c, m)
 
@@ -54,7 +55,7 @@ func Test_parseMessageHeader_acceptsReceiverInstanceTagEqualsZero(t *testing.T) 
 
 	sender := fixtureConversation()
 	sender.theirInstanceTag = 0
-	m, _ := sender.dhKeyMessage()
+	m, _ := sender.messageHeader(msgTypeDHCommit)
 
 	_, _, err := v.parseMessageHeader(c, m)
 
@@ -67,7 +68,7 @@ func Test_parseMessageHeader_returnsErrorWhenOurInstanceDoesNotMatchReceiverInst
 
 	sender := fixtureConversation()
 	sender.theirInstanceTag = 0x111
-	m, _ := sender.dhKeyMessage()
+	m, _ := sender.messageHeader(msgTypeDHCommit)
 
 	_, _, err := v.parseMessageHeader(c, m)
 
@@ -81,7 +82,7 @@ func Test_parseMessageHeader_returnsErrorWhenTheirInstanceTagDoesNotMatchSenderI
 
 	sender := fixtureConversation()
 	sender.ourInstanceTag = 0x111
-	m, _ := sender.dhCommitMessage()
+	m, _ := sender.messageHeader(msgTypeDHCommit)
 
 	_, _, err := v.parseMessageHeader(c, m)
 

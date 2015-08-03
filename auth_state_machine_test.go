@@ -15,9 +15,9 @@ func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHKeyMsg(
 	c := newConversation(otrV3{}, fixtureRand())
 	nextState, nextMsg, e := authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsgBody())
 
+	assertEquals(t, e, nil)
 	assertEquals(t, nextState, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(nextMsg), msgTypeDHKey)
-	assertEquals(t, e, nil)
 }
 
 func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
@@ -81,6 +81,7 @@ func Test_receiveDHCommit_AtAuthAwaitingSigTransitionsToAwaitingRevSigAndSendsNe
 func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMsgIfOurHashIsHigher(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
 	ourDHMsg, _ := ourDHCommitAKE.dhCommitMessage()
+	ourDHMsg, _ = ourDHCommitAKE.wrapMessageHeader(msgTypeDHCommit, ourDHMsg)
 
 	//make sure we store the same values when creating the DH commit
 	c := newConversation(otrV3{}, fixtureRand())
@@ -96,7 +97,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 	state, newMsg, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(c, msg)
 	assertDeepEquals(t, err, nil)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, newMsg[otrv3HeaderLen:], ourDHMsg[otrv3HeaderLen:])
+	assertDeepEquals(t, newMsg, ourDHMsg)
 }
 
 func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaitingRevealSig(t *testing.T) {

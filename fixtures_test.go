@@ -37,6 +37,7 @@ func fixtureDHCommitMsg() []byte {
 	c := fixtureConversation()
 	c.theirInstanceTag = 0
 	msg, _ := c.dhCommitMessage()
+	msg, _ = c.wrapMessageHeader(msgTypeDHCommit, msg)
 	return msg
 }
 
@@ -47,6 +48,7 @@ func fixtureDHCommitMsgBody() []byte {
 func fixtureDHCommitMsgV2() []byte {
 	c := fixtureConversationV2()
 	msg, _ := c.dhCommitMessage()
+	msg, _ = c.wrapMessageHeader(msgTypeDHCommit, msg)
 	return msg
 }
 
@@ -54,6 +56,7 @@ func fixtureDHKeyMsg(v otrVersion) []byte {
 	c := fixtureConversationWithVersion(v)
 	c.OurKey = alicePrivateKey
 	msg, _ := c.dhKeyMessage()
+	msg, _ = c.wrapMessageHeader(msgTypeDHKey, msg)
 	return msg
 }
 
@@ -74,6 +77,7 @@ func fixtureRevealSigMsg(v otrVersion) []byte {
 	c.version = v
 
 	msg, _ := c.revealSigMessage()
+	msg, _ = c.wrapMessageHeader(msgTypeRevealSig, msg)
 
 	return msg
 }
@@ -87,6 +91,7 @@ func fixtureSigMsg(v otrVersion) []byte {
 	c.version = v
 
 	msg, _ := c.sigMessage()
+	msg, _ = c.wrapMessageHeader(msgTypeSig, msg)
 
 	return msg
 }

@@ -73,6 +73,7 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 
 	dhCommitAKE := fixtureConversation()
 	dhCommitMsg, _ := dhCommitAKE.dhCommitMessage()
+	dhCommitMsg, _ = dhCommitAKE.wrapMessageHeader(msgTypeDHCommit, dhCommitMsg)
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.Policies.add(allowV3)

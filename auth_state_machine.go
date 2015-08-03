@@ -65,7 +65,11 @@ func (authStateBase) receiveDHCommitMessage(c *Conversation, msg []byte) (authSt
 }
 
 func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
-	ret, err := c.dhKeyMessage()
+	dhKeyMsg, err := c.dhKeyMessage()
+	if err != nil {
+		return s, nil, err
+	}
+	dhKeyMsg, err = c.wrapMessageHeader(msgTypeDHKey, dhKeyMsg)
 	if err != nil {
 		return s, nil, err
 	}
@@ -74,7 +78,7 @@ func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (auth
 		return s, nil, err
 	}
 
-	return authStateAwaitingRevealSig{}, ret, nil
+	return authStateAwaitingRevealSig{}, dhKeyMsg, nil
 }
 
 func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
@@ -84,7 +88,13 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg 
 		return s, nil, err
 	}
 
-	return authStateAwaitingRevealSig{}, c.serializeDHKey(), nil
+	dhKeyMsg := c.serializeDHKey()
+	dhKeyMsg, err := c.wrapMessageHeader(msgTypeDHKey, dhKeyMsg)
+	if err != nil {
+		return s, nil, err
+	}
+
+	return authStateAwaitingRevealSig{}, dhKeyMsg, nil
 }
 
 func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
@@ -98,8 +108,12 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []by
 	gxMPI := appendMPI(nil, c.ake.theirPublicValue)
 	hashedGx := sha256.Sum256(gxMPI)
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
-		//NOTE what about the sender and receiver instance tags?
-		return authStateAwaitingRevealSig{}, c.serializeDHCommit(c.ake.theirPublicValue), nil
+		dhCommitMsg := c.serializeDHCommit(c.ake.theirPublicValue)
+		dhCommitMsg, err := c.wrapMessageHeader(msgTypeDHCommit, dhCommitMsg)
+		if err != nil {
+			return s, nil, err
+		}
+		return authStateAwaitingRevealSig{}, dhCommitMsg, nil
 	}
 
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
@@ -121,6 +135,10 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *Conversation, msg []byte)
 
 	var revealSigMsg []byte
 	if revealSigMsg, err = c.revealSigMessage(); err != nil {
+		return s, nil, err
+	}
+	revealSigMsg, err = c.wrapMessageHeader(msgTypeRevealSig, revealSigMsg)
+	if err != nil {
 		return s, nil, err
 	}
 
@@ -155,8 +173,11 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg
 	if err != nil {
 		return nil, nil, err
 	}
-
-	ret, err := c.sigMessage()
+	sigMsg, err := c.sigMessage()
+	if err != nil {
+		return s, nil, err
+	}
+	sigMsg, err = c.wrapMessageHeader(msgTypeSig, sigMsg)
 	if err != nil {
 		return s, nil, err
 	}
@@ -168,7 +189,7 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg
 	c.keys.ourCurrentDHKeys.pub = c.ake.ourPublicValue
 	c.keys.ourCounter++
 
-	return authStateNone{}, ret, c.akeHasFinished()
+	return authStateNone{}, sigMsg, c.akeHasFinished()
 }
 
 func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {

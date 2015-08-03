@@ -32,7 +32,7 @@ type dhCommit struct {
 }
 
 func (c dhCommit) serialize(conv *Conversation) []byte {
-	out, _ := conv.messageHeader(msgTypeDHCommit)
+	var out []byte
 	out = appendData(out, c.encryptedGx)
 	if c.hashedGx == [sha256.Size]byte{} {
 		c.hashedGx = sha256.Sum256(appendMPI(nil, c.gx))
@@ -58,7 +58,7 @@ type dhKey struct {
 }
 
 func (c dhKey) serialize(conv *Conversation) []byte {
-	out, _ := conv.messageHeader(msgTypeDHKey)
+	var out []byte
 	return appendMPI(out, c.gy)
 }
 
@@ -84,7 +84,7 @@ type revealSig struct {
 }
 
 func (c revealSig) serialize(conv *Conversation) []byte {
-	out, _ := conv.messageHeader(msgTypeRevealSig)
+	var out []byte
 	out = appendData(out, c.r[:])
 	out = append(out, c.encryptedSig...)
 	return append(out, c.macSig[:20]...)
@@ -109,7 +109,7 @@ type sig struct {
 }
 
 func (c sig) serialize(conv *Conversation) []byte {
-	out, _ := conv.messageHeader(msgTypeSig)
+	var out []byte
 	out = append(out, c.encryptedSig...)
 	return append(out, c.macSig[:20]...)
 }

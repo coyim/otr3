@@ -29,14 +29,8 @@ func Test_dhCommitMessage(t *testing.T) {
 	c := newConversation(otrV3{}, rnd)
 
 	c.OurKey = bobPrivateKey
-	c.ourInstanceTag = 0x00000001
-	c.theirInstanceTag = 0x00000001
 
 	var out []byte
-	out = appendShort(out, c.version.protocolVersion())
-	out = append(out, msgTypeDHCommit)
-	out = appendWord(out, c.ourInstanceTag)
-	out = appendWord(out, c.theirInstanceTag)
 	out = appendData(out, expectedEncryptedGxValue)
 	out = appendData(out, expectedHashedGxValue)
 
@@ -50,15 +44,9 @@ func Test_dhKeyMessage(t *testing.T) {
 	c := newConversation(otrV3{}, rnd)
 
 	c.OurKey = alicePrivateKey
-	c.ourInstanceTag = 0x00000001
-	c.theirInstanceTag = 0x00000001
 	expectedGyValue := bnFromHex("075dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 
 	var out []byte
-	out = appendShort(out, c.version.protocolVersion())
-	out = append(out, msgTypeDHKey)
-	out = appendWord(out, c.ourInstanceTag)
-	out = appendWord(out, c.theirInstanceTag)
 	out = appendMPI(out, expectedGyValue)
 
 	result, err := c.dhKeyMessage()
@@ -77,8 +65,6 @@ func Test_revealSigMessage(t *testing.T) {
 	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	c := newConversation(otrV3{}, rnd)
 
-	c.ourInstanceTag = 0x000000010
-	c.theirInstanceTag = 0x00000001
 	c.OurKey = bobPrivateKey
 	c.initAKE()
 	copy(c.ake.r[:], fixedr)
@@ -88,10 +74,6 @@ func Test_revealSigMessage(t *testing.T) {
 	expedctedMACSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 
 	var out []byte
-	out = appendShort(out, c.version.protocolVersion())
-	out = append(out, msgTypeRevealSig)
-	out = appendWord(out, c.ourInstanceTag)
-	out = appendWord(out, c.theirInstanceTag)
 	out = appendData(out, c.ake.r[:])
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
@@ -215,7 +197,7 @@ func Test_processRevealSig(t *testing.T) {
 	alice.setSecretExponent(fixedy)
 	alice.ake.encryptedGx = bytesFromHex("5dd6a5999be73a99b80bdb78194a125f3067bd79e69c648b76a068117a8c4d0f36f275305423a933541937145d85ab4618094cbafbe4db0c0081614c1ff0f516c3dc4f352e9c92f88e4883166f12324d82240a8f32874c3d6bc35acedb8d501aa0111937a4859f33aa9b43ec342d78c3a45a5939c1e58e6b4f02725c1922f3df8754d1e1ab7648f558e9043ad118e63603b3ba2d8cbfea99a481835e42e73e6cd6019840f4470b606e168b1cd4a1f401c3dc52525d79fa6b959a80d4e11f1ec3a7984cf9")
 	copy(alice.ake.hashedGx[:], bytesFromHex("a3f2c4b9e3a7d1f565157ae7b0e71c721d59d3c79d39e5e4e8d08cb8464ff857"))
-	err = alice.processRevealSig(msg[otrv3HeaderLen:])
+	err = alice.processRevealSig(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.keys.theirKeyID, uint32(1))
@@ -238,7 +220,7 @@ func Test_processSig(t *testing.T) {
 	bob.setSecretExponent(fixedx)
 	bob.ake.theirPublicValue = fixedgy
 
-	err := bob.processSig(msg[otrv3HeaderLen:])
+	err := bob.processSig(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, alice.keys.ourKeyID, uint32(1))
@@ -268,8 +250,6 @@ func Test_sigMessage(t *testing.T) {
 	c.initAKE()
 
 	c.OurKey = alicePrivateKey
-	c.ourInstanceTag = 0x000000010
-	c.theirInstanceTag = 0x00000001
 	c.setSecretExponent(fixedy)
 	c.ake.theirPublicValue = fixedgx
 
@@ -277,10 +257,6 @@ func Test_sigMessage(t *testing.T) {
 	expedctedMACSignature, _ := hex.DecodeString("66b47e29be91a7cf4803d731921482fd514b4a53a9dd1639b17705c90185f91d")
 
 	var out []byte
-	out = appendShort(out, c.version.protocolVersion())
-	out = append(out, msgTypeSig)
-	out = appendWord(out, c.ourInstanceTag)
-	out = appendWord(out, c.theirInstanceTag)
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 
