@@ -56,8 +56,6 @@ func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing
 
 func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedGx(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	c.initAKE()
-	//TODO needs to stores encryptedGx and hashedGx when it is generated
 	c.ake.encryptedGx = []byte{0x02}         //some encryptedGx
 	c.ake.hashedGx = [sha256.Size]byte{0x05} //some hashedGx
 
@@ -150,10 +148,10 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 
 	state, msg, _ := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, fixtureDHKeyMsg(otrV3{})[otrv3HeaderLen:])
 
-	//TODO before generate rev si need to extract their gy from DH commit
 	_, ok := state.(authStateAwaitingSig)
 	assertEquals(t, ok, true)
 	assertEquals(t, dhMsgType(msg), msgTypeRevealSig)
+	assertEquals(t, dhMsgVersion(msg), uint16(3))
 }
 
 func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
@@ -515,7 +513,6 @@ func Test_receiveAKE_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey
 	assertEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
 }
 
-//TODO: fix
 func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
 	ourDHCommitAKE.dhCommitMessage()
