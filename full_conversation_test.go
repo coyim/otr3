@@ -46,9 +46,6 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	var err error
 	msg := alice.queryMessage()
 
-	//FIXME: Why is it needed?
-	bob.initAKE()
-
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(msg)
 	assertEquals(t, err, nil)
@@ -104,9 +101,6 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	var toSend [][]byte
 	var err error
 	msg := alice.queryMessage()
-
-	//FIXME: Why is it needed?
-	bob.initAKE()
 
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(msg)
@@ -165,9 +159,6 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	bob.OurKey = bobPrivateKey
 
 	msg := []byte("?OTRv3?")
-
-	//FIXME: Why is it needed?
-	bob.initAKE()
 
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(msg)
