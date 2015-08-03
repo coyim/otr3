@@ -152,6 +152,8 @@ func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 	msg[len(msg)-8] = 0   //force check sign failure
 	bobCurrentDHKeys := bob.keys.ourCurrentDHKeys
 	bobPreviousDHKeys := bob.keys.ourPreviousDHKeys
+	aliceCurrentKey := bob.keys.theirCurrentDHPubKey
+	alicePreviousKey := bob.keys.theirPreviousDHPubKey
 
 	bob.msgState = encrypted
 	_, _, err := bob.receiveDecoded(msg)
@@ -159,6 +161,9 @@ func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 	assertDeepEquals(t, err, newOtrError("bad authenticator MAC in data message"))
 	assertDeepEquals(t, bobCurrentDHKeys, bob.keys.ourCurrentDHKeys)
 	assertDeepEquals(t, bobPreviousDHKeys, bob.keys.ourPreviousDHKeys)
+
+	assertDeepEquals(t, aliceCurrentKey, bob.keys.theirCurrentDHPubKey)
+	assertDeepEquals(t, alicePreviousKey, bob.keys.theirPreviousDHPubKey)
 }
 
 func Test_processDataMessage_rotateOurKeysAfterDecryptingTheMessage(t *testing.T) {

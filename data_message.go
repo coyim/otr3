@@ -90,22 +90,6 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 	return
 }
 
-func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
-	c.keys.rotateTheirKey(dataMessage.senderKeyID, dataMessage.y)
-
-	x, err := c.randMPI(make([]byte, 40))
-	if err != nil {
-		//NOTE: what should we do?
-		//This is one kind of error that breaks the encrypted channel. I believe we
-		//should change the msgState to != encrypted
-		return err
-	}
-
-	c.keys.rotateOurKeys(dataMessage.recipientKeyID, x)
-
-	return nil
-}
-
 func (c *Conversation) processSMPTLV(t tlv) (toSend *tlv, err error) {
 	smpMessage, ok := t.smpMessage()
 	if !ok {
