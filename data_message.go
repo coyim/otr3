@@ -110,10 +110,9 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
 
 		toSend, err := mh(c, t)
 		if err != nil {
-			//TODO: Double check how libotr handles this. Should we really stop
-			//processing at first error?
-			// Nope, we should not.
-			return retTLVs, err
+			//TODO: should it generate a notification here?
+			//Or should every message handler notify accordingly?
+			continue
 		}
 
 		if toSend != nil {
