@@ -4,40 +4,36 @@ package otr3
 type ErrorCode int
 
 const (
-	// ErrorCodeNone means that no error occurred
-	ErrorCodeNone ErrorCode = iota
-	// ErrorCodeEncryptionError means an error occured while encrypting a message
-	ErrorCodeEncryptionError
-	// ErrorCodeMessageNotInPrivate means we sent encrypted message to somebody who is not in a mutual OTR session
-	ErrorCodeMessageNotInPrivate
-	// ErrorCodeMessageUnreadable means we sent an unreadable encrypted message
-	ErrorCodeMessageUnreadable
-	// ErrorCodeMessageMalformed means the message sent is malformed
-	ErrorCodeMessageMalformed
+// // ErrorCodeEncryptionError means an error occured while encrypting a message
+// ErrorCodeEncryptionError ErrorCode = iota
+// // ErrorCodeMessageNotInPrivate means we sent encrypted message to somebody who is not in a mutual OTR session
+// ErrorCodeMessageNotInPrivate
+// // ErrorCodeMessageUnreadable means we sent an unreadable encrypted message
+// ErrorCodeMessageUnreadable
+// // ErrorCodeMessageMalformed means the message sent is malformed
+// ErrorCodeMessageMalformed
 )
 
 // SMPEvent define the events used to indicate status of SMP to the UI
 type SMPEvent int
 
 const (
-	// SMPEventNone means there is no current SMP event
-	SMPEventNone SMPEvent = iota
-	// SMPEventError means abort the current auth and update the auth progress dialog with progress_percent
-	SMPEventError
-	// SMPEventAbort means update the auth progress dialog with progress_percent
-	SMPEventAbort
-	// SMPEventCheated means abort the current auth and update the auth progress dialog with progress_percent
-	SMPEventCheated
-	// SMPEventAskForAnswer means ask the user to answer the secret question
-	SMPEventAskForAnswer
-	// SMPEventAskForSecret means prompt the user to enter a shared secret
-	SMPEventAskForSecret
-	// SMPEventInProgress means update the auth progress dialog with progress_percent
-	SMPEventInProgress
-	// SMPEventSuccess means update the auth progress dialog with progress_percent
-	SMPEventSuccess
-	// SMPEventFailure means update the auth progress dialog with progress_percent
-	SMPEventFailure
+// // SMPEventError means abort the current auth and update the auth progress dialog with progress_percent
+// SMPEventError SMPEvent = iota
+// // SMPEventAbort means update the auth progress dialog with progress_percent
+// SMPEventAbort
+// // SMPEventCheated means abort the current auth and update the auth progress dialog with progress_percent
+// SMPEventCheated
+// // SMPEventAskForAnswer means ask the user to answer the secret question
+// SMPEventAskForAnswer
+// // SMPEventAskForSecret means prompt the user to enter a shared secret
+// SMPEventAskForSecret
+// // SMPEventInProgress means update the auth progress dialog with progress_percent
+// SMPEventInProgress
+// // SMPEventSuccess means update the auth progress dialog with progress_percent
+// SMPEventSuccess
+// // SMPEventFailure means update the auth progress dialog with progress_percent
+// SMPEventFailure
 )
 
 // MessageEvent define the events used to indicate the messages that need to be sent
@@ -86,22 +82,21 @@ type MessageEvent int
  * - OTRL_MSGEVENT_RCVDMSG_FOR_OTHER_INSTANCE
  *      Received and discarded a message intended for another instance. */
 const (
-	MessageEventNone MessageEvent = iota
-	MessageEventEncryptionRequired
-	MessageEventEncryptionError
-	MessageEventConnectionEnded
-	MessageEventSetupError
-	MessageEventMessageReflected
-	MessageEventMessageResent
-	MessageEventReceivedMessageNotInPrivate
-	MessageEventReceivedMessageUnreadable
-	MessageEventReceivedMessageMalformed
-	MessageEventLogHeartbeatReceived
-	MessageEventLogHeartbeatSent
-	MessageEventReceivedMessageGeneralError
-	MessageEventReceivedMessageUnencrypted
-	MessageEventReceivedMessageUnrecognized
-	MessageEventReceivedMessageForOtherInstance
+// MessageEventEncryptionRequired MessageEvent = iota
+// MessageEventEncryptionError
+// MessageEventConnectionEnded
+// MessageEventSetupError
+// MessageEventMessageReflected
+// MessageEventMessageResent
+// MessageEventReceivedMessageNotInPrivate
+// MessageEventReceivedMessageUnreadable
+// MessageEventReceivedMessageMalformed
+// MessageEventLogHeartbeatReceived
+// MessageEventLogHeartbeatSent
+// MessageEventReceivedMessageGeneralError
+// MessageEventReceivedMessageUnencrypted
+// MessageEventReceivedMessageUnrecognized
+// MessageEventReceivedMessageForOtherInstance
 )
 
 // EventHandler contains the configuration necessary to be able to communicate events to the client
@@ -114,14 +109,6 @@ type EventHandler struct {
 	handleMessageEvent func(event MessageEvent, message string, err error)
 }
 
-func emptyEventHandler() EventHandler {
-	return EventHandler{
-		emptyErrorMessageHandler,
-		emptySMPEventHandler,
-		emptyMessageEventHandler,
-	}
-}
-
 func emptyErrorMessageHandler(_ ErrorCode) string {
 	return ""
 }
@@ -130,4 +117,15 @@ func emptySMPEventHandler(_ SMPEvent, _ int, _ string) {
 }
 
 func emptyMessageEventHandler(_ MessageEvent, _ string, _ error) {
+}
+
+func (c *Conversation) getEventHandler() *EventHandler {
+	if c.eventHandler == nil {
+		c.eventHandler = &EventHandler{
+			emptyErrorMessageHandler,
+			emptySMPEventHandler,
+			emptyMessageEventHandler,
+		}
+	}
+	return c.eventHandler
 }
