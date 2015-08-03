@@ -8,7 +8,10 @@ import (
 
 var otrv3FragmentationPrefix = []byte("?OTR|")
 
-const otrv3HeaderLen = 11
+const (
+	otrv3HeaderLen      = 11
+	minValidInstanceTag = uint32(0x100)
+)
 
 type otrV3 struct{}
 
@@ -56,7 +59,6 @@ func generateInstanceTag() uint32 {
 	return 0x00000100 + 0x01
 }
 
-//TODO: unit test
 func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 	if len(msg) < otrv3HeaderLen {
 		return nil, errInvalidOTRMessage
@@ -73,11 +75,11 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 		c.theirInstanceTag = senderInstanceTag
 	}
 
-	if receiverInstanceTag > 0 && receiverInstanceTag < 0x100 {
+	if receiverInstanceTag > 0 && receiverInstanceTag < minValidInstanceTag {
 		return nil, errInvalidOTRMessage
 	}
 
-	if senderInstanceTag < 0x100 {
+	if senderInstanceTag < minValidInstanceTag {
 		return nil, errInvalidOTRMessage
 	}
 
@@ -85,7 +87,7 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 		return nil, errReceivedMessageForOtherInstance
 	}
 
-	if senderInstanceTag >= 0x100 && c.theirInstanceTag != senderInstanceTag {
+	if senderInstanceTag >= minValidInstanceTag && c.theirInstanceTag != senderInstanceTag {
 		return nil, errReceivedMessageForOtherInstance
 	}
 
