@@ -12,7 +12,7 @@ type smpMessage interface {
 }
 
 type smpState interface {
-	//	startAuthenticate(*Conversation, smp1Message) (smpState, smpMessage, error)
+	startAuthenticate(*Conversation, string, []byte) ([]tlv, error)
 	receiveMessage1(*Conversation, smp1Message) (smpState, smpMessage, error)
 	receiveMessage2(*Conversation, smp2Message) (smpState, smpMessage, error)
 	receiveMessage3(*Conversation, smp3Message) (smpState, smpMessage, error)
@@ -158,3 +158,34 @@ func (m smpMessageAbort) receivedMessage(c *Conversation) (ret smpMessage, err e
 func (smpStateExpect1) String() string { return "SMPSTATE_EXPECT1" }
 func (smpStateExpect2) String() string { return "SMPSTATE_EXPECT2" }
 func (smpStateExpect3) String() string { return "SMPSTATE_EXPECT3" }
+func (smpStateExpect4) String() string { return "SMPSTATE_EXPECT4" }
+
+func (smpStateBase) startAuthenticate(c *Conversation, question string, mutualSecret []byte) (tlvs []tlv, err error) {
+	tlvs, err = smpStateExpect1{}.startAuthenticate(c, question, mutualSecret)
+	tlvs = append([]tlv{smpMessageAbort{}.tlv()}, tlvs...)
+	return
+}
+
+func (smpStateExpect1) startAuthenticate(c *Conversation, question string, mutualSecret []byte) (tlvs []tlv, err error) {
+	if !c.IsEncrypted() {
+		return nil, errCantAuthenticateWithoutEncryption
+	}
+
+	// Using ssid here should always be safe - we can't be in an encrypted state without having gone through the AKE
+	c.smp.secret = generateSMPSecret(c.OurKey.PublicKey.DefaultFingerprint(), c.TheirKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
+
+	s1, ok := c.generateSMP1()
+
+	if !ok {
+		return nil, errShortRandomRead
+	}
+
+	if question != "" {
+		s1.msg.hasQuestion = true
+		s1.msg.question = question
+	}
+
+	c.smp.s1 = &s1
+
+	return []tlv{s1.msg.tlv()}, nil
+}
