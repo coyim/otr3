@@ -21,22 +21,22 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
 	dataMessage := dataMsg{
 		//TODO: implement IGNORE_UNREADABLE
-		flag: 0x00,
-
+		flag:           0x00,
+		messageHeader:  c.messageHeader(msgTypeData),
 		senderKeyID:    c.keys.ourKeyID - 1,
 		recipientKeyID: c.keys.theirKeyID,
 		y:              c.keys.ourCurrentDHKeys.pub,
 		topHalfCtr:     topHalfCtr,
 		encryptedMsg:   encrypted,
 		oldMACKeys:     c.keys.revealMACKeys(),
-		keysToSignWith: keys.sendingMACKey,
 	}
+	dataMessage.sign(keys.sendingMACKey)
 
 	return dataMessage
 }
 
-func (c *Conversation) processDataMessage(msg []byte) (plain, toSend []byte, err error) {
-	dataMessage := dataMsg{}
+func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []byte, err error) {
+	dataMessage := dataMsg{messageHeader: header}
 
 	if err = dataMessage.deserialize(msg); err != nil {
 		return

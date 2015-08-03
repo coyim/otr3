@@ -70,10 +70,11 @@ func generateInstanceTag(c *Conversation) (uint32, error) {
 	return ret, nil
 }
 
-func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
+func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error) {
 	if len(msg) < otrv3HeaderLen {
-		return nil, errInvalidOTRMessage
+		return nil, nil, errInvalidOTRMessage
 	}
+	header := msg[:otrv3HeaderLen]
 
 	msg, senderInstanceTag, _ := extractWord(msg[messageHeaderPrefix:])
 	msg, receiverInstanceTag, _ := extractWord(msg)
@@ -82,7 +83,7 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 		var err error
 		c.ourInstanceTag, err = generateInstanceTag(c)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
@@ -91,20 +92,20 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 	}
 
 	if receiverInstanceTag > 0 && receiverInstanceTag < minValidInstanceTag {
-		return nil, errInvalidOTRMessage
+		return nil, nil, errInvalidOTRMessage
 	}
 
 	if senderInstanceTag < minValidInstanceTag {
-		return nil, errInvalidOTRMessage
+		return nil, nil, errInvalidOTRMessage
 	}
 
 	if receiverInstanceTag != 0 && c.ourInstanceTag != receiverInstanceTag {
-		return nil, errReceivedMessageForOtherInstance
+		return nil, nil, errReceivedMessageForOtherInstance
 	}
 
 	if senderInstanceTag >= minValidInstanceTag && c.theirInstanceTag != senderInstanceTag {
-		return nil, errReceivedMessageForOtherInstance
+		return nil, nil, errReceivedMessageForOtherInstance
 	}
 
-	return msg, nil
+	return header, msg, nil
 }

@@ -126,6 +126,7 @@ func (c *sig) deserialize(msg []byte) error {
 }
 
 type dataMsg struct {
+	messageHeader               []byte
 	flag                        byte
 	senderKeyID, recipientKeyID uint32
 	y                           *big.Int
@@ -134,7 +135,6 @@ type dataMsg struct {
 	authenticator               [20]byte
 	oldMACKeys                  []macKey
 	serializeUnsignedCache      []byte
-	keysToSignWith              macKey
 }
 
 func (c *dataMsg) sign(key macKey) {
@@ -161,6 +161,7 @@ func (c dataMsg) serializeUnsigned() []byte {
 	var out []byte
 
 	//TODO: implement IGNORE_UNREADABLE
+	out = append(out, c.messageHeader...)
 	out = append(out, c.flag)
 	out = appendWord(out, c.senderKeyID)
 	out = appendWord(out, c.recipientKeyID)
@@ -211,19 +212,16 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 		return newOtrError("dataMsg.deserialize corrupted encryptedMsg")
 	}
 
-	c.serializeUnsignedCache = msg[:len(msg)-len(in)]
+	c.serializeUnsignedCache = append(c.messageHeader, msg[:len(msg)-len(in)]...)
 	return nil
 }
 
 func (c dataMsg) serialize(conv *Conversation) []byte {
-	out := conv.messageHeader(msgTypeData)
-
 	if c.serializeUnsignedCache == nil {
 		c.serializeUnsignedCache = c.serializeUnsigned()
 	}
 
-	out = append(out, c.serializeUnsignedCache...)
-	c.sign(c.keysToSignWith)
+	out := append([]byte{}, c.serializeUnsignedCache...)
 	out = append(out, c.authenticator[:]...)
 
 	keyLen := len(macKey{})
@@ -241,7 +239,7 @@ func (c *dataMsg) deserialize(msg []byte) error {
 		return err
 	}
 
-	msg = msg[len(c.serializeUnsignedCache):]
+	msg = msg[len(c.serializeUnsignedCache)-len(c.messageHeader):]
 	copy(c.authenticator[:], msg)
 	msg = msg[len(c.authenticator):]
 

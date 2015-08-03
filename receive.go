@@ -75,8 +75,8 @@ func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err
 		return
 	}
 
-	var messageBody []byte
-	if messageBody, err = c.parseMessageHeader(message); err != nil {
+	var messageHeader, messageBody []byte
+	if messageHeader, messageBody, err = c.parseMessageHeader(message); err != nil {
 		return
 	}
 
@@ -88,7 +88,7 @@ func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err
 			return
 		}
 
-		plain, toSend, err = c.processDataMessage(messageBody)
+		plain, toSend, err = c.processDataMessage(messageHeader, messageBody)
 	} else {
 		toSend, err = c.receiveAKE(msgType, messageBody)
 	}

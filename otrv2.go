@@ -48,9 +48,9 @@ func (v otrV2) messageHeader(c *Conversation, msgType byte) []byte {
 	return out
 }
 
-func (v otrV2) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
+func (v otrV2) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error) {
 	if len(msg) < otrv2HeaderLen {
-		return nil, errInvalidOTRMessage
+		return nil, nil, errInvalidOTRMessage
 	}
-	return msg[otrv2HeaderLen:], nil
+	return msg[:otrv2HeaderLen], msg[otrv2HeaderLen:], nil
 }

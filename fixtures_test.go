@@ -165,7 +165,7 @@ func aliceContextAtAwaitingRevealSig() *Conversation {
 func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	var senderKeyID uint32 = 1
 	var recipientKeyID uint32 = 1
-
+	conv := newConversation(otrV3{}, nil)
 	//We use a combination of ourKeyId, theirKeyID, senderKeyID and recipientKeyID
 	//to make sure both sender and receiver will use the same DH session keys
 	receiverContext := keyManagementContext{
@@ -189,26 +189,29 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)
 
 	m := dataMsg{
+		messageHeader:  conv.messageHeader(msgTypeData),
 		senderKeyID:    senderKeyID,
 		recipientKeyID: recipientKeyID,
 
 		y:          fixedgy, //this is alices current Pub
 		topHalfCtr: [8]byte{0, 0, 0, 0, 0, 0, 0, 2},
 	}
-
 	m.encryptedMsg = plain.encrypt(keys.sendingAESKey, m.topHalfCtr)
-	m.keysToSignWith = keys.sendingMACKey
+	m.sign(keys.sendingMACKey)
 
-	return m.serialize(newConversation(otrV3{}, nil)), receiverContext
+	return m.serialize(conv), receiverContext
 }
 
 //Alice decrypts a encrypted message from Bob, generated after receiving
 //an encrypted message from Alice generated with fixtureDataMsg()
 func fixtureDecryptDataMsg(encryptedDataMsg []byte) plainDataMsg {
 	c := newConversation(otrV3{}, nil)
-	withoutHeader, _ := c.parseMessageHeader(encryptedDataMsg)
+	c.ourInstanceTag = 0x00000100 + 0x01
+	c.theirInstanceTag = 0x00000100 + 0x01
+	header, withoutHeader, _ := c.parseMessageHeader(encryptedDataMsg)
 
 	m := dataMsg{}
+	m.messageHeader = header
 	m.deserialize(withoutHeader)
 
 	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)

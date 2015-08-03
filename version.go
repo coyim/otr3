@@ -11,7 +11,7 @@ type otrVersion interface {
 	minFragmentSize() uint16
 	whitespaceTag() []byte
 	messageHeader(c *Conversation, msgType byte) []byte
-	parseMessageHeader(c *Conversation, msg []byte) ([]byte, error)
+	parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error)
 }
 
 func newOtrVersion(v uint16, p policies) (version otrVersion, err error) {

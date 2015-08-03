@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"crypto/aes"
-	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha1"
 	"math/big"
@@ -468,27 +467,6 @@ func Test_pad_PlainMessageUsingTLV0(t *testing.T) {
 
 	assertEquals(t, len(paddedMessage.tlvs), 2)
 	assertEquals(t, paddedMessage.tlvs[1].tlvLength, uint16(245))
-}
-
-func Test_dataMsg_serializeWithAuthenticator(t *testing.T) {
-	var sendingMACKey macKey
-	copy(sendingMACKey[:], bytesFromHex("a45e2b122f58bbe2042f73f092329ad9b5dfe23e"))
-
-	conv := newConversation(otrV2{}, rand.Reader)
-	bodyLen := 30
-	m := dataMsg{
-		y:            big.NewInt(0x01),
-		encryptedMsg: []byte{0x01},
-	}
-	m.keysToSignWith = sendingMACKey
-
-	msg := m.serialize(conv)
-
-	mac := hmac.New(sha1.New, sendingMACKey[:])
-	mac.Write(msg[otrv2HeaderLen:bodyLen])
-	auth := mac.Sum(nil)
-
-	assertDeepEquals(t, msg[bodyLen:bodyLen+len(auth)], auth[:])
 }
 
 func Test_dataMsg_serializeExposesOldMACKeys(t *testing.T) {
