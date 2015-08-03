@@ -46,6 +46,7 @@ func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
 		return
 	}
 
+	c.ensureAKE()
 	toSend, err = c.dhCommitMessage()
 	if err != nil {
 		return
