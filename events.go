@@ -35,8 +35,8 @@ const (
 	// SMPEventSuccess means update the auth progress dialog with progress_percent
 	SMPEventSuccess
 
-// SMPEventFailure means update the auth progress dialog with progress_percent
-// SMPEventFailure
+	// SMPEventFailure means update the auth progress dialog with progress_percent
+	SMPEventFailure
 )
 
 // MessageEvent define the events used to indicate the messages that need to be sent

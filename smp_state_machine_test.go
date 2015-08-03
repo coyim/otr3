@@ -92,18 +92,9 @@ func Test_smpStateExpect3_willSendAnSMPNotificationOnProtocolSuccess(t *testing.
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	c.smp.s2 = fixtureSmp2()
 
-	called := false
-
-	c.getEventHandler().handleSMPEvent = func(event SMPEvent, progressPercent int, question string) {
-		assertEquals(t, event, SMPEventSuccess)
-		assertEquals(t, progressPercent, 100)
-		assertEquals(t, question, "")
-		called = true
-	}
-
-	smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
-
-	assertEquals(t, called, true)
+	c.expectSMPEvent(t, func() {
+		smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
+	}, SMPEventSuccess, 100, "")
 }
 
 func Test_smpStateExpect3_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
@@ -130,23 +121,29 @@ func Test_smpStateExpect4_goToExpectState1WhenReceivesSmpMessage4(t *testing.T) 
 	assertEquals(t, nextState, smpStateExpect1{})
 }
 
+func (c *Conversation) expectSMPEvent(t *testing.T, f func(), expectedEvent SMPEvent, expectedProgress int, expectedQuestion string) {
+	called := false
+
+	c.getEventHandler().handleSMPEvent = func(event SMPEvent, progressPercent int, question string) {
+		assertEquals(t, event, expectedEvent)
+		assertEquals(t, progressPercent, expectedProgress)
+		assertEquals(t, question, expectedQuestion)
+		called = true
+	}
+
+	f()
+
+	assertEquals(t, called, true)
+}
+
 func Test_smpStateExpect4_willSendAnSMPNotificationOnProtocolSuccess(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.s1 = fixtureSmp1()
 	c.smp.s3 = fixtureSmp3()
 
-	called := false
-
-	c.getEventHandler().handleSMPEvent = func(event SMPEvent, progressPercent int, question string) {
-		assertEquals(t, event, SMPEventSuccess)
-		assertEquals(t, progressPercent, 100)
-		assertEquals(t, question, "")
-		called = true
-	}
-
-	smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
-
-	assertEquals(t, called, true)
+	c.expectSMPEvent(t, func() {
+		smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
+	}, SMPEventSuccess, 100, "")
 }
 
 func Test_smpStateExpect4_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
@@ -303,6 +300,18 @@ func Test_smpStateExpect3_receiveMessage3_returnsErrorIfProtocolFails(t *testing
 	assertDeepEquals(t, err, newOtrError("protocol failed: x != y"))
 }
 
+func Test_smpStateExpect3_receiveMessage3_willSendAnSMPNotificationOnProtocolFailure(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+	c.smp.s2 = fixtureSmp2()
+	c.smp.s2.b3 = sub(c.smp.s2.b3, big.NewInt(1))
+
+	c.expectSMPEvent(t, func() {
+		smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
+	}, SMPEventFailure, 100, "")
+
+}
+
 func Test_smpStateExpect3_receiveMessage3_returnsErrorIfCantGenerateFinalParameters(t *testing.T) {
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
@@ -329,6 +338,17 @@ func Test_smpStateExpect4_receiveMessage4_returnsErrorIfProtocolFails(t *testing
 	_, _, err := smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
 
 	assertDeepEquals(t, err, newOtrError("protocol failed: x != y"))
+}
+
+func Test_smpStateExpect4_receiveMessage4_willSendAnSMPNotificationOnProtocolFailure(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.smp.s1 = fixtureSmp1()
+	c.smp.s3 = fixtureSmp3()
+	c.smp.s3.papb = sub(c.smp.s3.papb, big.NewInt(1))
+
+	c.expectSMPEvent(t, func() {
+		smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
+	}, SMPEventFailure, 100, "")
 }
 
 func Test_smp4Message_receivedMessage_returnsErrorIfTheUnderlyingPrimitiveDoes(t *testing.T) {

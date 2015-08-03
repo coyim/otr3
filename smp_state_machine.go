@@ -137,8 +137,8 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 	}
 
 	err = c.verifySMP3ProtocolSuccess(c.smp.s2, m)
-	// TODO: add SMP notifications here
 	if err != nil {
+		c.getEventHandler().handleSMPEvent(SMPEventFailure, 100, "")
 		return abortStateMachineWith(err)
 	}
 	c.getEventHandler().handleSMPEvent(SMPEventSuccess, 100, "")
@@ -158,8 +158,8 @@ func (smpStateExpect4) receiveMessage4(c *Conversation, m smp4Message) (smpState
 	}
 
 	err = c.verifySMP4ProtocolSuccess(c.smp.s1, c.smp.s3, m)
-	// TODO: add SMP notifications here
 	if err != nil {
+		c.getEventHandler().handleSMPEvent(SMPEventFailure, 100, "")
 		return abortStateMachineWith(err)
 	}
 	c.getEventHandler().handleSMPEvent(SMPEventSuccess, 100, "")
