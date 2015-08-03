@@ -180,8 +180,7 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 
 	in = in[1:]
 	var ok bool
-	//TODO
-	//Extracts sender and receiver depends on OTR version
+
 	in, c.senderKeyID, ok = extractWord(in)
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted senderKeyID")
