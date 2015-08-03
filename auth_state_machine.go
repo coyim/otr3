@@ -88,8 +88,7 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg 
 		return s, nil, err
 	}
 
-	dhKeyMsg := c.serializeDHKey()
-	dhKeyMsg, err := c.wrapMessageHeader(msgTypeDHKey, dhKeyMsg)
+	dhKeyMsg, err := c.wrapMessageHeader(msgTypeDHKey, c.serializeDHKey())
 	if err != nil {
 		return s, nil, err
 	}
@@ -108,8 +107,7 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []by
 	gxMPI := appendMPI(nil, c.ake.theirPublicValue)
 	hashedGx := sha256.Sum256(gxMPI)
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
-		dhCommitMsg := c.serializeDHCommit(c.ake.theirPublicValue)
-		dhCommitMsg, err := c.wrapMessageHeader(msgTypeDHCommit, dhCommitMsg)
+		dhCommitMsg, err := c.wrapMessageHeader(msgTypeDHCommit, c.serializeDHCommit(c.ake.theirPublicValue))
 		if err != nil {
 			return s, nil, err
 		}
