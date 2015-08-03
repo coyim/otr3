@@ -49,6 +49,9 @@ func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
 	}
 
 	c.ake.state = authStateAwaitingDHKey{}
-	c.keys.ourCurrentDHKeys = dhKeyPair{}
+	//TODO: wipe keys from the memory
+	c.keys = keyManagementContext{
+		oldMACKeys: c.keys.oldMACKeys,
+	}
 	return
 }
