@@ -126,7 +126,7 @@ func bobContextAtReceiveDHKey() *Conversation {
 
 func bobContextAtAwaitingDHKey() *Conversation {
 	c := newConversation(otrV3{}, fixtureRand())
-	c.startAKE()
+	c.initAKE()
 	c.Policies.add(allowV3)
 	c.ake.state = authStateAwaitingDHKey{}
 	c.OurKey = bobPrivateKey
@@ -146,7 +146,7 @@ func aliceContextAtReceiveRevealSig() *Conversation {
 
 func aliceContextAtAwaitingRevealSig() *Conversation {
 	c := newConversation(otrV2{}, fixtureRand())
-	c.startAKE()
+	c.initAKE()
 	c.Policies.add(allowV2)
 	c.ake.state = authStateAwaitingRevealSig{}
 	c.OurKey = alicePrivateKey

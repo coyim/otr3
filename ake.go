@@ -29,16 +29,12 @@ func (c *Conversation) ensureAKE() {
 		return
 	}
 
-	c.startAKE()
+	c.initAKE()
 }
 
-func (c *Conversation) startAKE() {
+func (c *Conversation) initAKE() {
 	c.ake = new(ake)
 	c.ake.state = authStateNone{}
-}
-
-func (c *Conversation) finishAKE() {
-	c.ake = nil
 }
 
 func (c *Conversation) calcAKEKeys(s *big.Int) {
@@ -120,7 +116,7 @@ func (c *Conversation) serializeDHCommit(public *big.Int) []byte {
 // dhKeyMessage = alice = y
 // Alice -- DH Key --------------> Bob
 func (c *Conversation) dhKeyMessage() ([]byte, error) {
-	c.startAKE()
+	c.initAKE()
 
 	y, ok := c.randMPI(make([]byte, 40)[:])
 
