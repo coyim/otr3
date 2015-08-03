@@ -39,8 +39,6 @@ func (c *Conversation) encode(msg []byte) [][]byte {
 }
 
 func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
-	c.ensureAKE()
-
 	toSend, err = c.dhCommitMessage()
 	if err != nil {
 		return
