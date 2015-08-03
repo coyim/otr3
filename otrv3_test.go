@@ -26,9 +26,40 @@ func Test_parseMessageHeader_returnsErrorWhenReceiverInstanceTagIsLesserThan0x10
 
 	_, err := v.parseMessageHeader(c, m)
 
-	assertEquals(t, err, errReceivedMessageForOtherInstance)
+	assertEquals(t, err, errInvalidOTRMessage)
 }
 
+func Test_parseMessageHeader_returnsErrorWhenSenderInstanceTagIsLesserThan0x100(t *testing.T) {
+	v := otrV3{}
+	c := &Conversation{version: v}
+
+	sender := fixtureConversation()
+	sender.ourInstanceTag = 0x99
+	m, _ := sender.dhKeyMessage()
+
+	_, err := v.parseMessageHeader(c, m)
+
+	assertEquals(t, err, errInvalidOTRMessage)
+
+	sender.ourInstanceTag = 0
+	m, _ = sender.dhKeyMessage()
+	_, err = v.parseMessageHeader(c, m)
+
+	assertEquals(t, err, errInvalidOTRMessage)
+}
+
+func Test_parseMessageHeader_acceptsReceiverInstanceTagEqualsZero(t *testing.T) {
+	v := otrV3{}
+	c := &Conversation{version: v}
+
+	sender := fixtureConversation()
+	sender.theirInstanceTag = 0
+	m, _ := sender.dhKeyMessage()
+
+	_, err := v.parseMessageHeader(c, m)
+
+	assertEquals(t, err, nil)
+}
 func Test_parseMessageHeader_returnsErrorWhenOurInstanceDoesNotMatchReceiverInstanceTag(t *testing.T) {
 	v := otrV3{}
 	c := &Conversation{version: v}

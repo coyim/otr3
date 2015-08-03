@@ -6,6 +6,10 @@ import (
 	"math/big"
 )
 
+var otrv2FragmentationPrefix = []byte("?OTR,")
+
+const otrv2HeaderLen = 3
+
 type otrV2 struct{}
 
 func (v otrV2) parameterLength() int {
@@ -15,10 +19,6 @@ func (v otrV2) parameterLength() int {
 func (v otrV2) isGroupElement(n *big.Int) bool {
 	return true
 }
-
-var otrv2FragmentationPrefix = []byte("?OTR,")
-
-const otrv2HeaderLen = 3
 
 func (v otrV2) isFragmented(data []byte) bool {
 	return bytes.HasPrefix(data, otrv2FragmentationPrefix)

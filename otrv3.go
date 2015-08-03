@@ -6,6 +6,10 @@ import (
 	"math/big"
 )
 
+var otrv3FragmentationPrefix = []byte("?OTR|")
+
+const otrv3HeaderLen = 11
+
 type otrV3 struct{}
 
 func (v otrV3) parameterLength() int {
@@ -15,10 +19,6 @@ func (v otrV3) parameterLength() int {
 func (v otrV3) isGroupElement(n *big.Int) bool {
 	return isGroupElement(n)
 }
-
-var otrv3FragmentationPrefix = []byte("?OTR|")
-
-const otrv3HeaderLen = 11
 
 func (v otrV3) isFragmented(data []byte) bool {
 	return bytes.HasPrefix(data, otrv3FragmentationPrefix) || otrV2{}.isFragmented(data)
@@ -65,12 +65,6 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 	msg, senderInstanceTag, _ := extractWord(msg[messageHeaderPrefix:])
 	msg, receiverInstanceTag, _ := extractWord(msg)
 
-	//NOTE: I'm afraid of doing this as part of this method. Instance tags
-	//initialization should be done at specific places (and this method is called
-	//both on the ake state machine and when receiving data messages)
-	//ourInstanceTag should be initialized before generating the DHCommit/DHKey msg
-	//theirInstanceTag should be initialized when the DHCommit/DHKey msg is received
-	//TODO: double check if instance tags are initialized in all the places
 	if c.ourInstanceTag == 0 {
 		c.ourInstanceTag = generateInstanceTag()
 	}
@@ -79,11 +73,13 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 		c.theirInstanceTag = senderInstanceTag
 	}
 
-	// TODO:
-	// if receiverInstanceTag > 0 && < 0x100
-	//     ||
-	//    senderInstanceTag < 0x100
-	//   this is actually an invalid OTR message and should be discarded
+	if receiverInstanceTag > 0 && receiverInstanceTag < 0x100 {
+		return nil, errInvalidOTRMessage
+	}
+
+	if senderInstanceTag < 0x100 {
+		return nil, errInvalidOTRMessage
+	}
 
 	if receiverInstanceTag != 0 && c.ourInstanceTag != receiverInstanceTag {
 		return nil, errReceivedMessageForOtherInstance
