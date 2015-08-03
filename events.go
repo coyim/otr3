@@ -113,3 +113,21 @@ type EventHandler struct {
 	// Handle and send the appropriate message(s) to the sender/recipient depending on the message events
 	handleMessageEvent func(event MessageEvent, message string, err error)
 }
+
+func emptyEventHandler() EventHandler {
+	return EventHandler{
+		emptyErrorMessageHandler,
+		emptySMPEventHandler,
+		emptyMessageEventHandler,
+	}
+}
+
+func emptyErrorMessageHandler(_ ErrorCode) string {
+	return ""
+}
+
+func emptySMPEventHandler(_ SMPEvent, _ int, _ string) {
+}
+
+func emptyMessageEventHandler(_ MessageEvent, _ string, _ error) {
+}
