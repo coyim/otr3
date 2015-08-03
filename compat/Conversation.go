@@ -73,6 +73,17 @@ func (c *Conversation) End() (toSend [][]byte) {
 	return
 }
 
+func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend [][]byte, err error) {
+	c.compatInit()
+	return [][]byte{}, nil
+}
+
+func (c *Conversation) SMPQuestion() string {
+	c.compatInit()
+	question, _ := c.Conversation.SMPQuestion()
+	return question
+}
+
 func (c *Conversation) encode(msg []byte) [][]byte {
 	msgPrefix := []byte("?OTR:")
 	minFragmentSize := 18
