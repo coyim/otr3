@@ -65,7 +65,7 @@ func (c *Conversation) End() (toSend [][]byte) {
 	case plainText:
 	case encrypted:
 		c.msgState = plainText
-		toSend = c.encode(c.genDataMsg(nil, tlv{tlvType: tlvTypeDisconnected}).serialize(c))
+		toSend = c.encode(c.genDataMsg(nil, tlv{tlvType: tlvTypeDisconnected}).serialize())
 	case finished:
 		c.msgState = plainText
 	}

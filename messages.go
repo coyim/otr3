@@ -21,7 +21,7 @@ const (
 )
 
 type message interface {
-	serialize(conv *Conversation) []byte
+	serialize() []byte
 	deserialize(msg []byte) error
 }
 
@@ -31,7 +31,7 @@ type dhCommit struct {
 	hashedGx    [sha256.Size]byte
 }
 
-func (c dhCommit) serialize(conv *Conversation) []byte {
+func (c dhCommit) serialize() []byte {
 	var out []byte
 	out = appendData(out, c.encryptedGx)
 	if c.hashedGx == [sha256.Size]byte{} {
@@ -57,7 +57,7 @@ type dhKey struct {
 	gy *big.Int
 }
 
-func (c dhKey) serialize(conv *Conversation) []byte {
+func (c dhKey) serialize() []byte {
 	var out []byte
 	return appendMPI(out, c.gy)
 }
@@ -83,7 +83,7 @@ type revealSig struct {
 	macSig       []byte
 }
 
-func (c revealSig) serialize(conv *Conversation) []byte {
+func (c revealSig) serialize() []byte {
 	var out []byte
 	out = appendData(out, c.r[:])
 	out = append(out, c.encryptedSig...)
@@ -108,7 +108,7 @@ type sig struct {
 	macSig       []byte
 }
 
-func (c sig) serialize(conv *Conversation) []byte {
+func (c sig) serialize() []byte {
 	var out []byte
 	out = append(out, c.encryptedSig...)
 	return append(out, c.macSig[:20]...)
@@ -215,7 +215,7 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	return nil
 }
 
-func (c dataMsg) serialize(conv *Conversation) []byte {
+func (c dataMsg) serialize() []byte {
 	if c.serializeUnsignedCache == nil {
 		c.serializeUnsignedCache = c.serializeUnsigned()
 	}

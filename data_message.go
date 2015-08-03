@@ -83,7 +83,7 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 	}
 
 	if len(tlvs) > 0 {
-		toSend = c.genDataMsg(nil, tlvs...).serialize(c)
+		toSend = c.genDataMsg(nil, tlvs...).serialize()
 	}
 
 	return

@@ -203,7 +203,7 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	}
 	m.encryptedMsg = plain.encrypt(keys.sendingAESKey, m.topHalfCtr)
 	m.sign(keys.sendingMACKey, h)
-	msg := append(h, m.serialize(conv)...)
+	msg := append(h, m.serialize()...)
 
 	return msg, receiverContext
 }

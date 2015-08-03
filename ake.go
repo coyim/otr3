@@ -113,7 +113,7 @@ func (c *Conversation) serializeDHCommit(public *big.Int) []byte {
 		gx:          public,
 		encryptedGx: c.ake.encryptedGx,
 	}
-	return dhCommitMsg.serialize(c)
+	return dhCommitMsg.serialize()
 }
 
 // dhKeyMessage = alice = y
@@ -136,7 +136,7 @@ func (c *Conversation) serializeDHKey() []byte {
 		gy: c.ake.ourPublicValue,
 	}
 
-	return dhKeyMsg.serialize(c)
+	return dhKeyMsg.serialize()
 }
 
 // revealSigMessage = bob = x
@@ -157,7 +157,7 @@ func (c *Conversation) revealSigMessage() ([]byte, error) {
 		macSig:       macSig,
 	}
 
-	return revealSigMsg.serialize(c), nil
+	return revealSigMsg.serialize(), nil
 }
 
 // sigMessage = alice = y
@@ -177,7 +177,7 @@ func (c *Conversation) sigMessage() ([]byte, error) {
 		macSig:       macSig,
 	}
 
-	return sigMsg.serialize(c), nil
+	return sigMsg.serialize(), nil
 }
 
 // processDHCommit = alice = y
