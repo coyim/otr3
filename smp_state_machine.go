@@ -12,6 +12,7 @@ type smpMessage interface {
 }
 
 type smpState interface {
+	//	startAuthenticate(*Conversation, smp1Message) (smpState, smpMessage, error)
 	receiveMessage1(*Conversation, smp1Message) (smpState, smpMessage, error)
 	receiveMessage2(*Conversation, smp2Message) (smpState, smpMessage, error)
 	receiveMessage3(*Conversation, smp3Message) (smpState, smpMessage, error)

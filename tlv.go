@@ -5,15 +5,15 @@ import "bytes"
 const tlvHeaderLength = 4
 
 const (
-	tlvTypePadding           = 0x00
-	tlvTypeDisconnected      = 0x01
-	tlvTypeSMP1              = 0x02
-	tlvTypeSMP2              = 0x03
-	tlvTypeSMP3              = 0x04
-	tlvTypeSMP4              = 0x05
-	tlvTypeSMPAbort          = 0x06
-	tlvTypeSMP1WithQuestion  = 0x07
-	tlvTypeExtraSymmetricKey = 0x08
+	tlvTypePadding           = uint16(0x00)
+	tlvTypeDisconnected      = uint16(0x01)
+	tlvTypeSMP1              = uint16(0x02)
+	tlvTypeSMP2              = uint16(0x03)
+	tlvTypeSMP3              = uint16(0x04)
+	tlvTypeSMP4              = uint16(0x05)
+	tlvTypeSMPAbort          = uint16(0x06)
+	tlvTypeSMP1WithQuestion  = uint16(0x07)
+	tlvTypeExtraSymmetricKey = uint16(0x08)
 )
 
 type tlvHandler func(*Conversation, tlv) (*tlv, error)
