@@ -41,8 +41,8 @@ func Test_parseMessageHeader_returnsErrorWhenSenderInstanceTagIsLesserThan0x100(
 
 	assertEquals(t, err, errInvalidOTRMessage)
 
-	sender.ourInstanceTag = 0
 	m, _ = sender.dhKeyMessage()
+	copy(m[3:6], []byte{0, 0, 0, 0}) //Forces receiving a msg with senderInstanceTag = 0
 	_, _, err = v.parseMessageHeader(c, m)
 
 	assertEquals(t, err, errInvalidOTRMessage)
@@ -88,18 +88,39 @@ func Test_parseMessageHeader_returnsErrorWhenTheirInstanceTagDoesNotMatchSenderI
 	assertEquals(t, err, errReceivedMessageForOtherInstance)
 }
 
-func Test_parseMessageHeader_generatesOurInstanceTag(t *testing.T) {
-	z := uint32(0)
-	v := otrV3{}
-	c := &Conversation{}
-	m := fixtureDHCommitMsg()
+func Test_generateInstanceTag_generatesOurInstanceTag(t *testing.T) {
+	rand := fixedRand([]string{"00000099", "00001234"})
+	c := &Conversation{Rand: rand}
 
-	assertEquals(t, c.ourInstanceTag, z)
-
-	_, _, err := v.parseMessageHeader(c, m)
+	err := generateInstanceTag(c)
 
 	assertEquals(t, err, nil)
-	assertEquals(t, c.ourInstanceTag != z, true)
+	assertEquals(t, c.ourInstanceTag, uint32(0x1234))
+}
+
+func Test_generateInstanceTag_returnsAnErrorIfFailsToReadFromRand(t *testing.T) {
+	rand := fixedRand([]string{"00000099", "00000080"})
+	c := &Conversation{Rand: rand}
+
+	err := generateInstanceTag(c)
+
+	assertEquals(t, err, errShortRandomRead)
+	assertEquals(t, c.ourInstanceTag, uint32(0))
+}
+
+func Test_messageHeader_generatesOurInstanceTagLazily(t *testing.T) {
+	c := &Conversation{}
+
+	_, err := otrV3{}.messageHeader(c, msgTypeDHCommit)
+
+	assertEquals(t, err, nil)
+	assertEquals(t, c.ourInstanceTag < minValidInstanceTag, false)
+
+	previousInstanceTag := c.ourInstanceTag
+
+	_, err = otrV3{}.messageHeader(c, msgTypeDHCommit)
+	assertEquals(t, err, nil)
+	assertEquals(t, c.ourInstanceTag, previousInstanceTag)
 }
 
 func Test_parseMessageHeader_savesTheirInstanceTag(t *testing.T) {

@@ -38,7 +38,7 @@ var (
 	msgMarker   = []byte("?OTR:")
 )
 
-func (c *Conversation) messageHeader(msgType byte) []byte {
+func (c *Conversation) messageHeader(msgType byte) ([]byte, error) {
 	return c.version.messageHeader(c, msgType)
 }
 

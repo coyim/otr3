@@ -188,8 +188,9 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 
 	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)
 
+	h, _ := conv.messageHeader(msgTypeData)
 	m := dataMsg{
-		messageHeader:  conv.messageHeader(msgTypeData),
+		messageHeader:  h,
 		senderKeyID:    senderKeyID,
 		recipientKeyID: recipientKeyID,
 

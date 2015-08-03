@@ -19,10 +19,17 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	}
 
 	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
+
+	header, err := c.messageHeader(msgTypeData)
+	if err != nil {
+		//TODO: errors
+		return dataMsg{}
+	}
+
 	dataMessage := dataMsg{
 		//TODO: implement IGNORE_UNREADABLE
 		flag:           0x00,
-		messageHeader:  c.messageHeader(msgTypeData),
+		messageHeader:  header,
 		senderKeyID:    c.keys.ourKeyID - 1,
 		recipientKeyID: c.keys.theirKeyID,
 		y:              c.keys.ourCurrentDHKeys.pub,

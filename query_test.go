@@ -25,12 +25,11 @@ func Test_receiveQueryMessageV2_SendDHCommitv2(t *testing.T) {
 }
 
 func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
-	randWithInstanceTag := fixedRand(append([]string{"00001001"}, randData...))
 	fixture := fixtureConversation()
 	fixture.dhCommitMessage()
 
 	msg := []byte("?OTRv3?")
-	cxt := newConversation(nil, randWithInstanceTag)
+	cxt := newConversation(nil, fixtureRand())
 	cxt.Policies.add(allowV3)
 
 	cxt.receiveQueryMessage(msg)

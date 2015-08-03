@@ -38,15 +38,8 @@ func (c *Conversation) encode(msg []byte) [][]byte {
 }
 
 func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
-	//TODO: Should it generate a new instance tag every time?
-	//That would change my instance tag if I receive a new QueryMsg after the AKE
-	//had happened
-	c.ourInstanceTag, err = generateInstanceTag(c)
-	if err != nil {
-		return
-	}
-
 	c.ensureAKE()
+
 	toSend, err = c.dhCommitMessage()
 	if err != nil {
 		return

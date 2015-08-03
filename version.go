@@ -10,7 +10,7 @@ type otrVersion interface {
 	fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte
 	minFragmentSize() uint16
 	whitespaceTag() []byte
-	messageHeader(c *Conversation, msgType byte) []byte
+	messageHeader(c *Conversation, msgType byte) ([]byte, error)
 	parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error)
 }
 

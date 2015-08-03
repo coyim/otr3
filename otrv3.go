@@ -47,27 +47,37 @@ func (v otrV3) whitespaceTag() []byte {
 	}
 }
 
-func (v otrV3) messageHeader(c *Conversation, msgType byte) []byte {
+func (v otrV3) messageHeader(c *Conversation, msgType byte) ([]byte, error) {
+	if err := generateInstanceTag(c); err != nil {
+		return nil, err
+	}
+
 	out := appendShort(nil, v.protocolVersion())
 	out = append(out, msgType)
 	out = appendWord(out, c.ourInstanceTag)
 	out = appendWord(out, c.theirInstanceTag)
-	return out
+	return out, nil
 }
 
-func generateInstanceTag(c *Conversation) (uint32, error) {
+func generateInstanceTag(c *Conversation) error {
+	if c.ourInstanceTag != 0 {
+		return nil
+	}
+
 	var ret uint32
 	var dst [4]byte
 
 	for ret < minValidInstanceTag {
 		if err := c.randomInto(dst[:]); err != nil {
-			return 0, err
+			return err
 		}
 
 		ret = binary.BigEndian.Uint32(dst[:])
 	}
 
-	return ret, nil
+	c.ourInstanceTag = ret
+
+	return nil
 }
 
 func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error) {
@@ -78,14 +88,6 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, 
 
 	msg, senderInstanceTag, _ := extractWord(msg[messageHeaderPrefix:])
 	msg, receiverInstanceTag, _ := extractWord(msg)
-
-	if c.ourInstanceTag == 0 {
-		var err error
-		c.ourInstanceTag, err = generateInstanceTag(c)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
 
 	if c.theirInstanceTag == 0 {
 		c.theirInstanceTag = senderInstanceTag
