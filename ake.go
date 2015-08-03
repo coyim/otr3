@@ -72,10 +72,11 @@ func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	xb = appendWord(xb, c.keys.ourKeyID)
 
 	sigb, err := c.OurKey.sign(c.rand(), mb)
+	if err == io.ErrUnexpectedEOF {
+		return nil, errShortRandomRead
+	}
+
 	if err != nil {
-		if err == io.ErrUnexpectedEOF {
-			return nil, errShortRandomRead
-		}
 		return nil, err
 	}
 
