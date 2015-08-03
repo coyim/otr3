@@ -143,7 +143,9 @@ func Test_send_dataMessageWhenItsMsgStateEncrypted(t *testing.T) {
 
 	stub := bobContextAfterAKE()
 	stub.msgState = encrypted
-	expected := stub.encode(stub.genDataMsg(m).serialize(stub))
+	dataMsg := stub.genDataMsg(m).serialize(stub)
+	dataMsg, _ = stub.wrapMessageHeader(msgTypeData, dataMsg)
+	expected := stub.encode(dataMsg)
 
 	assertDeepEquals(t, toSend, expected)
 }

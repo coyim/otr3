@@ -195,7 +195,6 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 
 	h, _ := conv.messageHeader(msgTypeData)
 	m := dataMsg{
-		messageHeader:  h,
 		senderKeyID:    senderKeyID,
 		recipientKeyID: recipientKeyID,
 
@@ -203,9 +202,10 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 		topHalfCtr: [8]byte{0, 0, 0, 0, 0, 0, 0, 2},
 	}
 	m.encryptedMsg = plain.encrypt(keys.sendingAESKey, m.topHalfCtr)
-	m.sign(keys.sendingMACKey)
+	m.sign(keys.sendingMACKey, h)
+	msg := append(h, m.serialize(conv)...)
 
-	return m.serialize(conv), receiverContext
+	return msg, receiverContext
 }
 
 //Alice decrypts a encrypted message from Bob, generated after receiving
@@ -214,10 +214,9 @@ func fixtureDecryptDataMsg(encryptedDataMsg []byte) plainDataMsg {
 	c := newConversation(otrV3{}, nil)
 	c.ourInstanceTag = 0x00000100 + 0x01
 	c.theirInstanceTag = 0x00000100 + 0x01
-	header, withoutHeader, _ := c.parseMessageHeader(encryptedDataMsg)
+	_, withoutHeader, _ := c.parseMessageHeader(encryptedDataMsg)
 
 	m := dataMsg{}
-	m.messageHeader = header
 	m.deserialize(withoutHeader)
 
 	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)

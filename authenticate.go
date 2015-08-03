@@ -24,5 +24,10 @@ func (c *Conversation) ProvideAuthenticationSecret(mutualSecret []byte) ([][]byt
 }
 
 func (c *Conversation) createSerializedDataMessage(tlvs []tlv) ([][]byte, error) {
-	return c.encode(c.genDataMsg(nil, tlvs...).serialize(c)), nil
+	dataMsg := c.genDataMsg(nil, tlvs...).serialize(c)
+	dataMsg, err := c.wrapMessageHeader(msgTypeData, dataMsg)
+	if err != nil {
+		return nil, err
+	}
+	return c.encode(dataMsg), nil
 }

@@ -29,7 +29,6 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	dataMessage := dataMsg{
 		//TODO: implement IGNORE_UNREADABLE
 		flag:           0x00,
-		messageHeader:  header,
 		senderKeyID:    c.keys.ourKeyID - 1,
 		recipientKeyID: c.keys.theirKeyID,
 		y:              c.keys.ourCurrentDHKeys.pub,
@@ -37,13 +36,13 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 		encryptedMsg:   encrypted,
 		oldMACKeys:     c.keys.revealMACKeys(),
 	}
-	dataMessage.sign(keys.sendingMACKey)
+	dataMessage.sign(keys.sendingMACKey, header)
 
 	return dataMessage
 }
 
 func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []byte, err error) {
-	dataMessage := dataMsg{messageHeader: header}
+	dataMessage := dataMsg{}
 
 	if err = dataMessage.deserialize(msg); err != nil {
 		return
@@ -58,7 +57,7 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 		return
 	}
 
-	if err = dataMessage.checkSign(sessionKeys.receivingMACKey); err != nil {
+	if err = dataMessage.checkSign(sessionKeys.receivingMACKey, header); err != nil {
 		return
 	}
 

@@ -20,6 +20,10 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 		return [][]byte{msg}, nil
 	case encrypted:
 		toSend := c.genDataMsg(msg).serialize(c)
+		toSend, err := c.wrapMessageHeader(msgTypeData, toSend)
+		if err != nil {
+			return nil, err
+		}
 		return c.encode(toSend), nil
 	case finished:
 		return nil, errors.New("otr: cannot send message because secure conversation has finished")
