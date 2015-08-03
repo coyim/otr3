@@ -77,7 +77,7 @@ func (c *Conversation) generateSMP2(secret *big.Int, s1 smp1Message) (s smp2Stat
 	return
 }
 
-func (c *Conversation) verifySMP2(s1 smp1State, msg smp2Message) error {
+func (c *Conversation) verifySMP2(s1 *smp1State, msg smp2Message) error {
 	if !c.version.isGroupElement(msg.g2b) {
 		return newOtrError("g2b is an invalid group element")
 	}

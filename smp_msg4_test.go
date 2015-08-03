@@ -7,7 +7,7 @@ import (
 
 func Test_generateSMP4_generatesLongerValuesForR7WithProtocolV3(t *testing.T) {
 	otr := newConversation(otrV3{}, fixtureRand())
-	smp, ok := otr.generateSMP4(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, ok := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.r7, fixtureLong1)
 	assertDeepEquals(t, ok, true)
 }
@@ -23,31 +23,31 @@ func Test_generateSMP4_returnsNotOKIfGenerationOfFourthParametersFails(t *testin
 	otr := newConversation(otrV2{}, fixedRand([]string{
 		"1a2a3a4a5a6a7a8a1b2b3b4b5b6b7b",
 	}))
-	_, ok := otr.generateSMP4(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	_, ok := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_generateSMP4_generatesShorterValuesForR7WithProtocolV3(t *testing.T) {
 	otr := newConversation(otrV2{}, fixtureRand())
-	smp, _ := otr.generateSMP4(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, _ := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.r7, fixtureShort1)
 }
 
 func Test_generateSMP4_computesRbCorrectly(t *testing.T) {
 	otr := newConversation(otrV2{}, fixtureRand())
-	smp, _ := otr.generateSMP4(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, _ := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.msg.rb, fixtureMessage4().rb)
 }
 
 func Test_generateSMP4_computesCrCorrectly(t *testing.T) {
 	otr := newConversation(otrV2{}, fixtureRand())
-	smp, _ := otr.generateSMP4(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, _ := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.msg.cr, fixtureMessage4().cr)
 }
 
 func Test_generateSMP4_computesD7Correctly(t *testing.T) {
 	otr := newConversation(otrV2{}, fixtureRand())
-	smp, _ := otr.generateSMP4(fixtureSecret(), fixtureSmp2(), fixtureMessage3())
+	smp, _ := otr.generateSMP4(fixtureSecret(), *fixtureSmp2(), fixtureMessage3())
 	assertDeepEquals(t, smp.msg.d7, fixtureMessage4().d7)
 }
 

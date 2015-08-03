@@ -25,7 +25,7 @@ func TestFullSMPHandshake(t *testing.T) {
 	s2, _ := bob.generateSMP2(secret, s1.msg)
 
 	// Alice
-	err = alice.verifySMP2(s1, s2.msg)
+	err = alice.verifySMP2(&s1, s2.msg)
 	assertDeepEquals(t, err, nil)
 
 	// Alice -> Bob
@@ -34,10 +34,10 @@ func TestFullSMPHandshake(t *testing.T) {
 	s3, _ := alice.generateSMP3(secret, s1, s2.msg)
 
 	// Bob
-	err = bob.verifySMP3(s2, s3.msg)
+	err = bob.verifySMP3(&s2, s3.msg)
 	assertDeepEquals(t, err, nil)
 
-	err = bob.verifySMP3ProtocolSuccess(s2, s3.msg)
+	err = bob.verifySMP3ProtocolSuccess(&s2, s3.msg)
 	assertDeepEquals(t, err, nil)
 
 	// Bob -> Alice
@@ -46,9 +46,9 @@ func TestFullSMPHandshake(t *testing.T) {
 	s4, _ := bob.generateSMP4(secret, s2, s3.msg)
 
 	// Alice
-	err = alice.verifySMP4(s3, s4.msg)
+	err = alice.verifySMP4(&s3, s4.msg)
 	assertDeepEquals(t, err, nil)
 
-	err = alice.verifySMP4ProtocolSuccess(s1, s3, s4.msg)
+	err = alice.verifySMP4ProtocolSuccess(&s1, &s3, s4.msg)
 	assertDeepEquals(t, err, nil)
 }

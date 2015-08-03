@@ -69,7 +69,7 @@ func (c *Conversation) generateSMP3(secret *big.Int, s1 smp1State, m2 smp2Messag
 	return s, true
 }
 
-func (c *Conversation) verifySMP3(s2 smp2State, msg smp3Message) error {
+func (c *Conversation) verifySMP3(s2 *smp2State, msg smp3Message) error {
 	if !c.version.isGroupElement(msg.pa) {
 		return newOtrError("Pa is an invalid group element")
 	}
@@ -96,7 +96,7 @@ func (c *Conversation) verifySMP3(s2 smp2State, msg smp3Message) error {
 	return nil
 }
 
-func (c *Conversation) verifySMP3ProtocolSuccess(s2 smp2State, msg smp3Message) error {
+func (c *Conversation) verifySMP3ProtocolSuccess(s2 *smp2State, msg smp3Message) error {
 	papb := divMod(msg.pa, s2.msg.pb, p)
 
 	rab := modExp(msg.ra, s2.b3)

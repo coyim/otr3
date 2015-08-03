@@ -9,9 +9,9 @@ type smp struct {
 	state    smpState
 	question *string
 	secret   *big.Int
-	s1       smp1State
-	s2       smp2State
-	s3       smp3State
+	s1       *smp1State
+	s2       *smp2State
+	s3       *smp3State
 }
 
 const smpVersion = 1
@@ -24,14 +24,14 @@ func (c *Conversation) SMPQuestion() (string, bool) {
 	return *c.smp.question, true
 }
 
-func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) []byte {
+func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte) *big.Int {
 	h := sha256.New()
 	h.Write([]byte{smpVersion})
 	h.Write(initiatorFingerprint)
 	h.Write(recipientFingerprint)
 	h.Write(ssid)
 	h.Write(secret)
-	return h.Sum(nil)
+	return new(big.Int).SetBytes(h.Sum(nil))
 }
 
 func generateDZKP(r, a, c *big.Int) *big.Int {

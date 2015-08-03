@@ -88,7 +88,7 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 		return abortStateMachineWith(err)
 	}
 
-	ret, ok := c.generateSMP3(c.smp.secret, c.smp.s1, m)
+	ret, ok := c.generateSMP3(c.smp.secret, *c.smp.s1, m)
 	if !ok {
 		return abortStateMachineWith(errShortRandomRead)
 	}
@@ -107,7 +107,7 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 		return abortStateMachineWith(err)
 	}
 
-	ret, ok := c.generateSMP4(c.smp.secret, c.smp.s2, m)
+	ret, ok := c.generateSMP4(c.smp.secret, *c.smp.s2, m)
 	if !ok {
 		return abortStateMachineWith(errShortRandomRead)
 	}

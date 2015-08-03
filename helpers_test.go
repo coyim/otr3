@@ -20,6 +20,12 @@ func assertNil(t *testing.T, actual interface{}) {
 	}
 }
 
+func assertNotNil(t *testing.T, actual interface{}) {
+	if actual == nil || reflect.ValueOf(actual).IsNil() {
+		t.Errorf("Expected:\n%#v \nto not be nil\n", actual)
+	}
+}
+
 func assertDeepEquals(t *testing.T, actual, expected interface{}) {
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("Expected:\n%#v \nto equal:\n%#v\n", actual, expected)

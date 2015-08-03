@@ -45,15 +45,15 @@ func fixtureSecret() *big.Int {
 	return bnFromHex("D9B2E56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 }
 
-func fixtureSmp1() smp1State {
+func fixtureSmp1() *smp1State {
 	var s smp1State
 	s.a2 = fixtureShort1
 	s.a3 = fixtureShort2
 	s.msg = fixtureMessage1()
-	return s
+	return &s
 }
 
-func fixtureSmp2() smp2State {
+func fixtureSmp2() *smp2State {
 	var s smp2State
 	s.b2 = fixtureShort1
 	s.b3 = fixtureShort2
@@ -67,10 +67,10 @@ func fixtureSmp2() smp2State {
 	s.qb = bnFromHex("69902e8e3f11e631b24343b0788eef58a2cd13afa8f5550749309ace728f2d5a8a4cb9df5916281053d6faaec73c10b66e1cd4cc3c88184e0c524a7ccf693b2a9776227ba27487966695a44053501aab6683fbf4ffe043cab35dae5c077a109b00865b99f7fb9ad7b049dca1dac9f7787d16d35b72f5f4530425def6272b85348f813af1ae64847f01a9bce288e9c47ffcf50cca049f527c4d4593836bd43d22ac71d83b638e0f181e285cc7d54ae0c3e2d7783a4baa03b9fd79950128fada7f")
 	s.g3a = bnFromHex("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a")
 	s.msg = fixtureMessage2()
-	return s
+	return &s
 }
 
-func fixtureSmp3() smp3State {
+func fixtureSmp3() *smp3State {
 	var s smp3State
 	s.x = fixtureShort1
 	s.r4 = fixtureShort2
@@ -80,7 +80,7 @@ func fixtureSmp3() smp3State {
 	s.papb = bnFromHex("46fdd1e34adb153dcdd734cfcf83db7b9f92aa99e099515acc0e0176ee156d5d4b714fa546de0cdd277313664029b99e5826e9a780e231218f6d3b2e0d6cf45461f34541e23a029f68703e22500e0713c77aeb450c89c760f594309c79b53eb39b87c0c43b6ef542dd65fb935adde4598bf7575e8bec5bdba1636bdc8664feaa9150903ddc819422107171b368d67be6faaafc1bf42946a0b5bd1a7b0511d48affc4f3873c50eca1f75940d5aabcfbd1efc617f7d0d6e1bb360df290d500e4b5")
 	s.g3b = bnFromHex("d275468351fd48246e406ee74a8dc3db6ee335067bfa63300ce6a23867a1b2beddbdae9a8a36555fd4837f3ef8bad4f7fd5d7b4f346d7c7b7cb64bd7707eeb515902c66aa0c9323931364471ab93dd315f65c6624c956d74680863a9388cd5d89f1b5033b1cf232b8b6dcffaaea195de4e17cc1ba4c99497be18c011b2ad7742b43fa9ee3f95f7b6da02c8e894d054eb178a7822273655dc286ad15874687fe6671908d83662e7a529744ce4ea8dad49290d19dbe6caba202a825a20a27ee98a")
 	s.msg = fixtureMessage3()
-	return s
+	return &s
 }
 
 func fixtureMessage1() smp1Message {

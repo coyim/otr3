@@ -19,6 +19,7 @@ var (
 	ErrGPGEntityExist = errors.New("GPG Error: Entity exist (32803)")
 )
 
+var errCantAuthenticateWithoutEncryption = newOtrError("can't authenticate a peer without a secure conversation established")
 var errCorruptEncryptedSignature = newOtrError("corrupt encrypted signature")
 var errEncryptedMessageWithNoSecureChannel = newOtrError("encrypted message received without encrypted session established")
 var errUnexpectedPlainMessage = newOtrError("plain message received when encryption was required")

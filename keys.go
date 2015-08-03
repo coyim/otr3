@@ -6,6 +6,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/dsa"
+	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"hash"
@@ -268,6 +269,10 @@ func (pub *PublicKey) Fingerprint(h hash.Hash) []byte {
 	b := pub.serialize()
 	h.Write(b[2:]) // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
 	return h.Sum(nil)
+}
+
+func (pub *PublicKey) DefaultFingerprint() []byte {
+	return pub.Fingerprint(sha1.New())
 }
 
 func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {

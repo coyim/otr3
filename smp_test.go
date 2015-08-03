@@ -8,7 +8,7 @@ func Test_generateSMPSecretGeneratesASecret(t *testing.T) {
 	ssid := bytesFromHex("FFF1D1E412345668")
 	secret := []byte("this is something secret")
 	result := generateSMPSecret(aliceFingerprint, bobFingerprint, ssid, secret)
-	assertDeepEquals(t, result, bytesFromHex("D9B2E56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3"))
+	assertDeepEquals(t, result, bnFromHex("D9B2E56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3"))
 }
 
 func Test_SMPQuestion_returnsTheCurrentSMPQuestion(t *testing.T) {
