@@ -14,11 +14,15 @@ func Test_smpStateExpect1_goToWaitingForSecretWhenReceivesSmpMessage1(t *testing
 }
 
 func Test_smpStateWaitingForSecret_goToExpectState3WhenReceivesContinueSmpMessage1(t *testing.T) {
-	c := newConversation(otrV3{}, fixtureRand())
-	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+	c := bobContextAfterAKE()
+	c.msgState = encrypted
+	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
+	c.OurKey = bobPrivateKey
+	c.TheirKey = &alicePrivateKey.PublicKey
+	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	msg := fixtureMessage1()
-	nextState, _, _ := smpStateWaitingForSecret{msg: msg}.continueMessage1(c)
+	nextState, _, _ := smpStateWaitingForSecret{msg: msg}.continueMessage1(c, []byte{})
 
 	assertEquals(t, nextState, smpStateExpect3{})
 }
@@ -191,8 +195,15 @@ func Test_smp1Message_receivedMessage_returnsErrorIfreceiveMessage1ReturnsError(
 }
 
 func Test_smpStateWaitingForSecret_continueMessage1_returnsErrorIfgenerateSMP2Fails(t *testing.T) {
-	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
-	_, _, err := smpStateWaitingForSecret{msg: fixtureMessage1()}.continueMessage1(c)
+	c := bobContextAfterAKE()
+	c.Rand = fixedRand([]string{"ABCD"})
+	c.msgState = encrypted
+	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
+	c.OurKey = bobPrivateKey
+	c.TheirKey = &alicePrivateKey.PublicKey
+	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
+
+	_, _, err := smpStateWaitingForSecret{msg: fixtureMessage1()}.continueMessage1(c, []byte("hello world"))
 
 	assertDeepEquals(t, err, errShortRandomRead)
 }

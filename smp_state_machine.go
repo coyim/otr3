@@ -18,7 +18,7 @@ type smpMessage interface {
 type smpState interface {
 	startAuthenticate(*Conversation, string, []byte) ([]tlv, error)
 	receiveMessage1(*Conversation, smp1Message) (smpState, smpMessage, error)
-	continueMessage1(*Conversation) (smpState, smpMessage, error)
+	continueMessage1(*Conversation, []byte) (smpState, smpMessage, error)
 	receiveMessage2(*Conversation, smp2Message) (smpState, smpMessage, error)
 	receiveMessage3(*Conversation, smp3Message) (smpState, smpMessage, error)
 	receiveMessage4(*Conversation, smp4Message) (smpState, smpMessage, error)
@@ -54,8 +54,8 @@ func (c *Conversation) receiveSMP(m smpMessage) (*tlv, error) {
 	return &result, nil
 }
 
-func (c *Conversation) continueSMP() (*tlv, error) {
-	toSend, err := c.continueMessage()
+func (c *Conversation) continueSMP(mutualSecret []byte) (*tlv, error) {
+	toSend, err := c.continueMessage(mutualSecret)
 
 	if err != nil {
 		return nil, err
@@ -70,8 +70,8 @@ func (smpStateBase) receiveMessage1(c *Conversation, m smp1Message) (smpState, s
 	return abortStateMachine()
 }
 
-func (smpStateBase) continueMessage1(c *Conversation) (smpState, smpMessage, error) {
-	return abortStateMachine()
+func (smpStateBase) continueMessage1(c *Conversation, mutualSecret []byte) (smpState, smpMessage, error) {
+	return abortStateMachineWith(errNotWaitingForSMPSecret)
 }
 
 func (smpStateBase) receiveMessage2(c *Conversation, m smp2Message) (smpState, smpMessage, error) {
@@ -101,7 +101,13 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 	return smpStateWaitingForSecret{msg: m}, nil, nil
 }
 
-func (s smpStateWaitingForSecret) continueMessage1(c *Conversation) (smpState, smpMessage, error) {
+func (s smpStateWaitingForSecret) continueMessage1(c *Conversation, mutualSecret []byte) (smpState, smpMessage, error) {
+	if !c.IsEncrypted() {
+		return abortStateMachineWith(errCantAuthenticateWithoutEncryption)
+	}
+
+	// Using ssid here should always be safe - we can't be in an encrypted state without having gone through the AKE
+	c.smp.secret = generateSMPSecret(c.TheirKey.DefaultFingerprint(), c.OurKey.PublicKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
 	ret, err := c.generateSMP2(c.smp.secret, s.msg)
 	if err != nil {
 		return abortStateMachineWith(err)
@@ -182,8 +188,8 @@ func (m smpMessageAbort) receivedMessage(c *Conversation) (ret smpMessage, err e
 	return
 }
 
-func (c *Conversation) continueMessage() (ret smpMessage, err error) {
-	c.smp.state, ret, err = c.smp.state.continueMessage1(c)
+func (c *Conversation) continueMessage(mutualSecret []byte) (ret smpMessage, err error) {
+	c.smp.state, ret, err = c.smp.state.continueMessage1(c, mutualSecret)
 	return
 }
 

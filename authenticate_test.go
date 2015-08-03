@@ -95,8 +95,12 @@ func Test_StartAuthenticate_generatesAnAbortMessageTLVIfWeAreInAnSMPStateAlready
 }
 
 func Test_ProvideAuthenticationSecret_failsIfWeAreNotCurrentlyEncrypted(t *testing.T) {
-	c := newConversation(otrV3{}, fixtureRand())
+	c := bobContextAfterAKE()
 	c.msgState = plainText
+	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
+	c.OurKey = bobPrivateKey
+	c.TheirKey = &alicePrivateKey.PublicKey
+	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	_, e := c.ProvideAuthenticationSecret([]byte("hello world"))
 	assertEquals(t, e, errCantAuthenticateWithoutEncryption)
