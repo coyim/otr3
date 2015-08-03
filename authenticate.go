@@ -7,7 +7,7 @@ func (c *Conversation) Authenticate(mutualSecret []byte) ([][]byte, error) {
 	}
 
 	// Using ssid here should always be safe - we can't be in an encrypted state without having gone through the AKE
-	c.smp.secret = generateSMPSecret(c.ourKey.PublicKey.DefaultFingerprint(), c.theirKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
+	c.smp.secret = generateSMPSecret(c.OurKey.PublicKey.DefaultFingerprint(), c.TheirKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
 
 	// if we are already in SMP state we should abort first, here
 	s1, _ := c.generateSMP1()
