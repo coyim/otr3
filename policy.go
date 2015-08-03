@@ -30,7 +30,7 @@ func (p *policies) allowV1() {
 	p.add(allowV1)
 }
 
-func (p *policies) allowV2() {
+func (p *policies) AllowV2() {
 	p.add(allowV2)
 }
 

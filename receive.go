@@ -12,7 +12,7 @@ func (c *Conversation) receiveWithoutOTR(message []byte) (plain []byte, toSend [
 func (c *Conversation) receiveErrorMessage(message []byte) (plain []byte, toSend [][]byte, err error) {
 	plain = message[len(errorMarker):]
 
-	if c.policies.has(errorStartAKE) {
+	if c.Policies.has(errorStartAKE) {
 		toSend = [][]byte{c.queryMessage()}
 	}
 
@@ -42,10 +42,10 @@ func (c *Conversation) receiveEncoded(message []byte) ([]byte, []byte, error) {
 }
 
 func (c *Conversation) receiveOther(message []byte) ([]byte, []byte, error) {
-	c.stopSendingWhitespaceTags = c.policies.has(sendWhitespaceTag)
+	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
 	//TODO:	warn that the message was received unencrypted
-	if c.msgState != plainText || c.policies.has(requireEncryption) {
+	if c.msgState != plainText || c.Policies.has(requireEncryption) {
 		//FIXME: returning an error might not be the best semantic to "it worked,
 		//but we have to notify you that something unexpected happened"
 		//err = errUnexpectedPlainMessage
@@ -106,7 +106,7 @@ func isErrorMessage(msg []byte) bool {
 
 func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, err error) {
 	switch {
-	case !c.policies.isOTREnabled():
+	case !c.Policies.isOTREnabled():
 		return c.receiveWithoutOTR(message)
 	case isErrorMessage(message):
 		return c.receiveErrorMessage(message)

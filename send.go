@@ -6,15 +6,15 @@ import (
 )
 
 func (c *Conversation) Send(msg []byte) ([][]byte, error) {
-	if !c.policies.isOTREnabled() {
+	if !c.Policies.isOTREnabled() {
 		return [][]byte{msg}, nil
 	}
 	switch c.msgState {
 	case plainText:
-		if c.policies.has(requireEncryption) {
+		if c.Policies.has(requireEncryption) {
 			return [][]byte{c.queryMessage()}, nil
 		}
-		if c.policies.has(sendWhitespaceTag) {
+		if c.Policies.has(sendWhitespaceTag) {
 			msg = c.appendWhitespaceTag(msg)
 		}
 		return [][]byte{msg}, nil

@@ -33,14 +33,14 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 
 func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	alice := newConversation(nil, rand.Reader)
-	alice.ourKey = alicePrivateKey
-	alice.policies = policies(allowV2 | allowV3)
-	alice.theirKey = &bobPrivateKey.PublicKey
+	alice.OurKey = alicePrivateKey
+	alice.Policies = policies(allowV2 | allowV3)
+	alice.TheirKey = &bobPrivateKey.PublicKey
 
 	bob := newConversation(nil, rand.Reader)
-	bob.ourKey = bobPrivateKey
-	bob.policies = policies(allowV2 | allowV3)
-	bob.theirKey = &alicePrivateKey.PublicKey
+	bob.OurKey = bobPrivateKey
+	bob.Policies = policies(allowV2 | allowV3)
+	bob.TheirKey = &alicePrivateKey.PublicKey
 
 	var toSend [][]byte
 	var err error
@@ -89,14 +89,14 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 
 func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	alice := newConversation(nil, rand.Reader)
-	alice.ourKey = alicePrivateKey
-	alice.policies = policies(allowV3)
-	alice.theirKey = &bobPrivateKey.PublicKey
+	alice.OurKey = alicePrivateKey
+	alice.Policies = policies(allowV3)
+	alice.TheirKey = &bobPrivateKey.PublicKey
 
 	bob := newConversation(nil, rand.Reader)
-	bob.ourKey = bobPrivateKey
-	bob.policies = policies(allowV3)
-	bob.theirKey = &alicePrivateKey.PublicKey
+	bob.OurKey = bobPrivateKey
+	bob.Policies = policies(allowV3)
+	bob.TheirKey = &alicePrivateKey.PublicKey
 
 	var toSend [][]byte
 	var err error
@@ -151,12 +151,12 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	var nilB []byte
 
 	alice := newConversation(nil, rand.Reader)
-	alice.policies = policies(allowV2 | allowV3)
-	alice.ourKey = alicePrivateKey
+	alice.Policies = policies(allowV2 | allowV3)
+	alice.OurKey = alicePrivateKey
 
 	bob := newConversation(nil, rand.Reader)
-	bob.policies = policies(allowV2 | allowV3)
-	bob.ourKey = bobPrivateKey
+	bob.Policies = policies(allowV2 | allowV3)
+	bob.OurKey = bobPrivateKey
 
 	msg := []byte("?OTRv3?")
 

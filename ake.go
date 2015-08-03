@@ -55,7 +55,7 @@ func (c *Conversation) calcDHSharedSecret() *big.Int {
 }
 
 func (c *Conversation) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
-	verifyData := appendAll(c.ake.ourPublicValue, c.ake.theirPublicValue, &c.ourKey.PublicKey, c.keys.ourKeyID)
+	verifyData := appendAll(c.ake.ourPublicValue, c.ake.theirPublicValue, &c.OurKey.PublicKey, c.keys.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
 	xb, err := c.calcXb(key, mb)
@@ -71,10 +71,10 @@ func appendAll(one, two *big.Int, publicKey *PublicKey, keyID uint32) []byte {
 }
 
 func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
-	xb := c.ourKey.PublicKey.serialize()
+	xb := c.OurKey.PublicKey.serialize()
 	xb = appendWord(xb, c.keys.ourKeyID)
 
-	sigb, err := c.ourKey.sign(c.rand(), mb)
+	sigb, err := c.OurKey.sign(c.rand(), mb)
 	if err != nil {
 		if err == io.ErrUnexpectedEOF {
 			return nil, errShortRandomRead
@@ -274,7 +274,7 @@ func (c *Conversation) processSig(msg []byte) (err error) {
 }
 
 func (c *Conversation) checkedSignatureVerification(mb, sig []byte) error {
-	rest, ok := c.theirKey.verify(mb, sig)
+	rest, ok := c.TheirKey.verify(mb, sig)
 	if !ok {
 		return newOtrError("bad signature in encrypted signature")
 	}
@@ -298,8 +298,8 @@ func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *ake
 }
 
 func (c *Conversation) parseTheirKey(key []byte) (sig []byte, keyID uint32, err error) {
-	c.theirKey = &PublicKey{}
-	rest, ok1 := c.theirKey.Parse(key)
+	c.TheirKey = &PublicKey{}
+	rest, ok1 := c.TheirKey.Parse(key)
 	sig, keyID, ok2 := extractWord(rest)
 
 	if !ok1 || !ok2 {
@@ -310,7 +310,7 @@ func (c *Conversation) parseTheirKey(key []byte) (sig []byte, keyID uint32, err 
 }
 
 func (c *Conversation) expectedMessageHMAC(keyID uint32, keys *akeKeys) []byte {
-	verifyData := appendAll(c.ake.theirPublicValue, c.ake.ourPublicValue, c.theirKey, keyID)
+	verifyData := appendAll(c.ake.theirPublicValue, c.ake.ourPublicValue, c.TheirKey, keyID)
 	return sumHMAC(keys.m1[:], verifyData)
 }
 

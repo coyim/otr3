@@ -12,13 +12,13 @@ type Conversation struct {
 	theirInstanceTag uint32
 
 	ssid     [8]byte
-	ourKey   *PrivateKey
-	theirKey *PublicKey
+	OurKey   *PrivateKey
+	TheirKey *PublicKey
 
 	ake      *ake
 	smp      smp
 	keys     keyManagementContext
-	policies policies
+	Policies policies
 
 	fragmentSize              uint16
 	stopSendingWhitespaceTags bool

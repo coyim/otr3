@@ -37,7 +37,7 @@ func Test_genWhitespace_forV2AndV3(t *testing.T) {
 
 func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV2 | whitespaceStartAKE)
+	c.Policies = policies(allowV2 | whitespaceStartAKE)
 
 	msg := genWhitespaceTag(policies(allowV2))
 
@@ -51,7 +51,7 @@ func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
 
 func Test_receive_ignoresV2WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV2)
+	c.Policies = policies(allowV2)
 
 	msg := genWhitespaceTag(policies(allowV2))
 	_, enc, err := c.Receive(msg)
@@ -63,7 +63,7 @@ func Test_receive_ignoresV2WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE
 func Test_receive_failsWhenReceivesV2WhitespaceTagIfV2IsNotInThePolicy(t *testing.T) {
 	var nilB [][]byte
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV3 | whitespaceStartAKE)
+	c.Policies = policies(allowV3 | whitespaceStartAKE)
 
 	msg := genWhitespaceTag(policies(allowV2))
 
@@ -75,7 +75,7 @@ func Test_receive_failsWhenReceivesV2WhitespaceTagIfV2IsNotInThePolicy(t *testin
 
 func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
+	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
 
 	msg := genWhitespaceTag(policies(allowV2 | allowV3))
 
@@ -90,7 +90,7 @@ func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
 func Test_receive_ignoresV3WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {
 	var nilB [][]byte
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV2 | allowV3)
+	c.Policies = policies(allowV2 | allowV3)
 
 	msg := genWhitespaceTag(policies(allowV3))
 
@@ -103,7 +103,7 @@ func Test_receive_ignoresV3WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE
 func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testing.T) {
 	var nilB [][]byte
 	c := newConversation(nil, fixtureRand())
-	c.policies = policies(allowV2 | whitespaceStartAKE)
+	c.Policies = policies(allowV2 | whitespaceStartAKE)
 
 	msg := genWhitespaceTag(policies(allowV3))
 	_, toSend, err := c.Receive(msg)
@@ -114,7 +114,7 @@ func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testin
 
 func Test_stopAppendingWhitespaceTagsAfterReceivingAPlainMessage(t *testing.T) {
 	c := newConversation(nil, nil)
-	c.policies = policies(allowV3 | sendWhitespaceTag)
+	c.Policies = policies(allowV3 | sendWhitespaceTag)
 
 	toSend, err := c.Send([]byte("hi"))
 	assertEquals(t, err, nil)

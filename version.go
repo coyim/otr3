@@ -39,7 +39,7 @@ func (c *Conversation) checkVersion(message []byte) (err error) {
 	}
 
 	if c.version == nil {
-		if c.version, err = newOtrVersion(messageVersion, c.policies); err != nil {
+		if c.version, err = newOtrVersion(messageVersion, c.Policies); err != nil {
 			return err
 		}
 	}

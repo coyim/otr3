@@ -8,7 +8,7 @@ import (
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	c := newConversation(nil, fixtureRand())
-	c.policies.add(allowV3)
+	c.Policies.add(allowV3)
 
 	exp := []byte{
 		0x00, 0x03, // protocol version
@@ -25,7 +25,7 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	c := newConversation(nil, fixtureRand())
-	c.policies.add(allowV3)
+	c.Policies.add(allowV3)
 
 	_, _, err := c.Receive(msg)
 
@@ -75,7 +75,7 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	dhCommitMsg, _ := dhCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
-	c.policies.add(allowV3)
+	c.Policies.add(allowV3)
 
 	_, dhKeyMsg, err := c.receiveDecoded(dhCommitMsg)
 
@@ -133,7 +133,7 @@ func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {
 	}
 
 	c := newConversation(nil, nil)
-	c.policies = policies(allowV3 | sendWhitespaceTag)
+	c.Policies = policies(allowV3 | sendWhitespaceTag)
 
 	m, _ := c.Send([]byte("hello"))
 	wsPos := len(m[0]) - len(expectedWhitespaceTag)
@@ -143,7 +143,7 @@ func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {
 func Test_send_doesNotAppendWhitespaceTagsWhenItsNotAllowedbyThePolicy(t *testing.T) {
 	m := []byte("hello")
 	c := newConversation(nil, nil)
-	c.policies = policies(allowV3)
+	c.Policies = policies(allowV3)
 
 	toSend, _ := c.Send(m)
 	assertDeepEquals(t, toSend, [][]byte{m})
@@ -153,7 +153,7 @@ func Test_send_dataMessageWhenItsMsgStateEncrypted(t *testing.T) {
 	m := []byte("hello")
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
-	c.policies = policies(allowV3)
+	c.Policies = policies(allowV3)
 	toSend, _ := c.Send(m)
 
 	stub := bobContextAfterAKE()
@@ -165,7 +165,7 @@ func Test_send_dataMessageWhenItsMsgStateEncrypted(t *testing.T) {
 
 func Test_encodeWithoutFragment(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
+	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
 	c.setFragmentSize(64)
 
 	msg := c.encode([]byte("one two three"))
@@ -178,7 +178,7 @@ func Test_encodeWithoutFragment(t *testing.T) {
 
 func Test_encodeWithoutFragmentTooSmall(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
+	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
 	c.setFragmentSize(18)
 
 	msg := c.encode([]byte("one two three"))
@@ -191,7 +191,7 @@ func Test_encodeWithoutFragmentTooSmall(t *testing.T) {
 
 func Test_encodeWithFragment(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
-	c.policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
+	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
 	c.setFragmentSize(22)
 
 	msg := c.encode([]byte("one two three"))
@@ -237,7 +237,7 @@ func Test_End_whenStateIsEncrypted(t *testing.T) {
 
 func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {
 	c := newConversation(otrV2{}, rand.Reader)
-	c.policies.add(allowV2)
+	c.Policies.add(allowV2)
 
 	dhCommitMsg := []byte("?OTR:AAICAAAAxPWaCOvRNycg72w2shQjcSEiYjcTh+w7rq+48UM9mpZIkpN08jtTAPcc8/9fcx9mmlVy/We+n6/G65RvobYWPoY+KD9Si41TFKku34gU4HaBbwwa7XpB/4u1gPCxY6EGe0IjthTUGK2e3qLf9YCkwJ1lm+X9kPOS/Jqu06V0qKysmbUmuynXG8T5Q8rAIRPtA/RYMqSGIvfNcZfrlJRIw6M784YtWlF3i2B6dmtjMrjH/8x5myN++Q2bxh69g6z/WX1rAFoAAAAg7Vwgf3JoiH5MdRznnS3aL66tjxQzN5qiwLtImE+KFnM=.")
 	_, _, err := c.Receive(dhCommitMsg)
@@ -249,8 +249,8 @@ func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {
 
 func Test_receive_ignoresMesagesWithWrongInstanceTags(t *testing.T) {
 	bob := newConversation(otrV3{}, nil)
-	bob.policies.add(allowV3)
-	bob.ourKey = bobPrivateKey
+	bob.Policies.add(allowV3)
+	bob.OurKey = bobPrivateKey
 
 	var msg []byte
 	msg, bob.keys = fixtureDataMsg(plainDataMsg{})
@@ -266,7 +266,7 @@ func Test_receive_displayErrorMessageToTheUser(t *testing.T) {
 
 	msg := []byte("?OTR Error:You are wrong")
 	c := newConversation(nil, nil)
-	c.policies.add(allowV3)
+	c.Policies.add(allowV3)
 	plain, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
@@ -277,8 +277,8 @@ func Test_receive_displayErrorMessageToTheUser(t *testing.T) {
 func Test_receive_displayErrorMessageToTheUserAndStartAKE(t *testing.T) {
 	msg := []byte("?OTR Error:You are wrong")
 	c := newConversation(nil, nil)
-	c.policies.add(allowV3)
-	c.policies.add(errorStartAKE)
+	c.Policies.add(allowV3)
+	c.Policies.add(errorStartAKE)
 	plain, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)

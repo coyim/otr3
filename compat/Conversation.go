@@ -2,7 +2,9 @@ package compat
 
 import (
 	"crypto/sha1"
+	"encoding/base64"
 	"io"
+	"strconv"
 
 	"github.com/twstrike/otr3"
 )
@@ -46,20 +48,74 @@ type Conversation struct {
 	FragmentSize   int
 }
 
+func (c *Conversation) compatInit() {
+	c.Conversation.Policies.AllowV2()
+	c.OurKey = &c.PrivateKey.PrivateKey
+	c.TheirKey = &c.TheirPublicKey.PublicKey
+}
+
+func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change SecurityChange, toSend [][]byte, err error) {
+	c.compatInit()
+	encrypted = c.IsEncrypted()
+	out, toSend, err = c.Conversation.Receive(in)
+	return
+}
+
+func (c *Conversation) Send(in []byte) (toSend [][]byte, err error) {
+	c.compatInit()
+	toSend, err = c.Conversation.Send(in)
+	return
+}
+
 func (c *Conversation) End() (toSend [][]byte) {
-	return c.Conversation.End()
+	c.compatInit()
+	toSend = c.Conversation.End()
+	return
+}
+
+func (c *Conversation) encode(msg []byte) [][]byte {
+	msgPrefix := []byte("?OTR:")
+	minFragmentSize := 18
+	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgPrefix)+1)
+	base64.StdEncoding.Encode(b64[len(msgPrefix):], msg)
+	copy(b64, msgPrefix)
+	b64[len(b64)-1] = '.'
+
+	if c.FragmentSize < minFragmentSize || len(b64) <= c.FragmentSize {
+		// We can encode this in a single fragment.
+		return [][]byte{b64}
+	}
+
+	// We have to fragment this message.
+	var ret [][]byte
+	bytesPerFragment := c.FragmentSize - minFragmentSize
+	numFragments := (len(b64) + bytesPerFragment) / bytesPerFragment
+
+	for i := 0; i < numFragments; i++ {
+		frag := []byte("?OTR," + strconv.Itoa(i+1) + "," + strconv.Itoa(numFragments) + ",")
+		todo := bytesPerFragment
+		if todo > len(b64) {
+			todo = len(b64)
+		}
+		frag = append(frag, b64[:todo]...)
+		b64 = b64[todo:]
+		frag = append(frag, ',')
+		ret = append(ret, frag)
+	}
+
+	return ret
 }
 
 type PublicKey struct {
 	otr3.PublicKey
 }
+
 type PrivateKey struct {
 	otr3.PrivateKey
 }
 
 func (priv *PrivateKey) Generate(rand io.Reader) {
 	if err := priv.PrivateKey.Generate(rand); err != nil {
-		//TODO: this is not handled in xmpp, and is treated as panic in old version
 		panic(err.Error())
 	}
 }

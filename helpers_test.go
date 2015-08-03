@@ -82,7 +82,7 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 			state: smpStateExpect1{},
 		},
 		ake:              akeNotStarted,
-		policies:         policies(p),
+		Policies:         policies(p),
 		fragmentSize:     65535, //we are not testing fragmentation by default
 		ourInstanceTag:   0x101, //every conversation should be able to talk to each other
 		theirInstanceTag: 0x101,

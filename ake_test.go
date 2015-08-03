@@ -28,7 +28,7 @@ func Test_dhCommitMessage(t *testing.T) {
 	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
 	c := newConversation(otrV3{}, rnd)
 
-	c.ourKey = bobPrivateKey
+	c.OurKey = bobPrivateKey
 	c.ourInstanceTag = 0x00000001
 	c.theirInstanceTag = 0x00000001
 
@@ -49,7 +49,7 @@ func Test_dhKeyMessage(t *testing.T) {
 	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
 	c := newConversation(otrV3{}, rnd)
 
-	c.ourKey = alicePrivateKey
+	c.OurKey = alicePrivateKey
 	c.ourInstanceTag = 0x00000001
 	c.theirInstanceTag = 0x00000001
 	expectedGyValue := bnFromHex("075dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
@@ -79,7 +79,7 @@ func Test_revealSigMessage(t *testing.T) {
 
 	c.ourInstanceTag = 0x000000010
 	c.theirInstanceTag = 0x00000001
-	c.ourKey = bobPrivateKey
+	c.OurKey = bobPrivateKey
 	c.startAKE()
 	copy(c.ake.r[:], fixedr)
 	c.setSecretExponent(fixedx)
@@ -104,7 +104,7 @@ func Test_revealSigMessage(t *testing.T) {
 func Test_revealSigMessage_increasesOurKeyId(t *testing.T) {
 	var ourKeyID uint32 = 1
 	c := newConversation(otrV3{}, fixtureRand())
-	c.ourKey = bobPrivateKey
+	c.OurKey = bobPrivateKey
 	c.startAKE()
 	c.setSecretExponent(fixedx)
 	c.ake.theirPublicValue = fixedgy
@@ -184,8 +184,8 @@ func Test_processEncryptedSigWithBadSignatureError(t *testing.T) {
 	rnd := fixedRand([]string{})
 	c := newConversation(otrV3{}, rnd)
 	c.startAKE()
-	c.ourKey = bobPrivateKey
-	c.theirKey = &bobPrivateKey.PublicKey
+	c.OurKey = bobPrivateKey
+	c.TheirKey = &bobPrivateKey.PublicKey
 	c.setSecretExponent(fixedx)
 	c.ake.theirPublicValue = fixedgy
 	c.keys.ourKeyID = 1
@@ -206,7 +206,7 @@ func Test_processRevealSig(t *testing.T) {
 	alice := newConversation(otrV3{}, rnd)
 	alice.startAKE()
 
-	bob.ourKey = bobPrivateKey
+	bob.OurKey = bobPrivateKey
 	copy(bob.ake.r[:], fixedr)
 	bob.setSecretExponent(fixedx)
 	bob.ake.theirPublicValue = fixedgy
@@ -226,7 +226,7 @@ func Test_processSig(t *testing.T) {
 	rnd := fixedRand([]string{"cbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
 	alice := newConversation(otrV3{}, rnd)
 	alice.startAKE()
-	alice.ourKey = bobPrivateKey
+	alice.OurKey = bobPrivateKey
 	alice.setSecretExponent(fixedy)
 	alice.ake.theirPublicValue = fixedgx
 	msg, _ := alice.sigMessage()
@@ -234,7 +234,7 @@ func Test_processSig(t *testing.T) {
 	bob := newConversation(otrV3{}, rnd)
 	bob.startAKE()
 	bob.ake.sigKey = alice.ake.sigKey
-	bob.ourKey = alicePrivateKey
+	bob.OurKey = alicePrivateKey
 	bob.setSecretExponent(fixedx)
 	bob.ake.theirPublicValue = fixedgy
 
@@ -267,7 +267,7 @@ func Test_sigMessage(t *testing.T) {
 	c := newConversation(otrV3{}, rnd)
 	c.startAKE()
 
-	c.ourKey = alicePrivateKey
+	c.OurKey = alicePrivateKey
 	c.ourInstanceTag = 0x000000010
 	c.theirInstanceTag = 0x00000001
 	c.setSecretExponent(fixedy)
@@ -294,7 +294,7 @@ func Test_sigMessage_increasesOurKeyId(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.startAKE()
 
-	c.ourKey = alicePrivateKey
+	c.OurKey = alicePrivateKey
 	c.setSecretExponent(fixedy)
 	c.ake.theirPublicValue = fixedgx
 	c.keys.ourKeyID = ourKeyID
@@ -406,7 +406,7 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 	c := newConversation(otrV3{}, rnd)
 	c.startAKE()
 
-	c.ourKey = bobPrivateKey
+	c.OurKey = bobPrivateKey
 	c.setSecretExponent(fixedx)
 	c.ake.theirPublicValue = fixedgy
 	c.keys.ourKeyID = 1
@@ -428,7 +428,7 @@ func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 	c := newConversation(otrV3{}, rnd)
 	c.startAKE()
 
-	c.ourKey = alicePrivateKey
+	c.OurKey = alicePrivateKey
 	c.setSecretExponent(fixedy)
 	c.ake.theirPublicValue = fixedgx
 	c.keys.ourKeyID = 1
@@ -459,7 +459,7 @@ func Test_processDHCommit_returnsErrorIfTheHashedGXPartIsNotCorrect(t *testing.T
 
 func Test_calcXBb_returnsErrorIfTheSigningDoesntWork(t *testing.T) {
 	c := newConversation(otrV2{}, fixedRand([]string{"AB"}))
-	c.ourKey = bobPrivateKey
+	c.OurKey = bobPrivateKey
 	c.keys.ourKeyID = 1
 
 	_, err := c.calcXb(nil, []byte{0x00})
@@ -488,7 +488,7 @@ func Test_generateEncryptedSignature_returnsErrorIfCalcXbFails(t *testing.T) {
 	c := newConversation(otrV3{}, rnd)
 	c.startAKE()
 
-	c.ourKey = bobPrivateKey
+	c.OurKey = bobPrivateKey
 	c.ake.theirPublicValue = fixedgx
 	c.ake.ourPublicValue = fixedgy
 
@@ -501,7 +501,7 @@ func Test_revealSigMessage_returnsErrorFromGenerateEncryptedSignature(t *testing
 	c := newConversation(otrV3{}, rnd)
 	c.startAKE()
 
-	c.ourKey = bobPrivateKey
+	c.OurKey = bobPrivateKey
 	c.setSecretExponent(fixedy)
 	c.ake.theirPublicValue = fixedgx
 
@@ -514,7 +514,7 @@ func Test_sigMessage_returnsErrorFromgenerateEncryptedSignature(t *testing.T) {
 	c := newConversation(otrV3{}, rnd)
 	c.startAKE()
 
-	c.ourKey = bobPrivateKey
+	c.OurKey = bobPrivateKey
 	c.setSecretExponent(fixedy)
 	c.ake.theirPublicValue = fixedgx
 	c.keys.ourKeyID = 1

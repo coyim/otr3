@@ -61,7 +61,7 @@ func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
 }
 
 func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
-	v, ok := acceptOTRRequest(c.policies, msg)
+	v, ok := acceptOTRRequest(c.Policies, msg)
 	if !ok {
 		return nil, errInvalidVersion
 	}
@@ -73,11 +73,11 @@ func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
 func (c Conversation) queryMessage() []byte {
 	queryMessage := []byte("?OTRv")
 
-	if c.policies.has(allowV2) {
+	if c.Policies.has(allowV2) {
 		queryMessage = append(queryMessage, '2')
 	}
 
-	if c.policies.has(allowV3) {
+	if c.Policies.has(allowV3) {
 		queryMessage = append(queryMessage, '3')
 	}
 

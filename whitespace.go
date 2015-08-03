@@ -24,11 +24,11 @@ func genWhitespaceTag(p policies) []byte {
 }
 
 func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
-	if !c.policies.has(sendWhitespaceTag) || c.stopSendingWhitespaceTags {
+	if !c.Policies.has(sendWhitespaceTag) || c.stopSendingWhitespaceTags {
 		return message
 	}
 
-	return append(message, genWhitespaceTag(c.policies)...)
+	return append(message, genWhitespaceTag(c.Policies)...)
 }
 
 func (c *Conversation) processWhitespaceTag(message []byte) (plain, toSend []byte, err error) {
@@ -40,7 +40,7 @@ func (c *Conversation) processWhitespaceTag(message []byte) (plain, toSend []byt
 
 	plain = message[:wsPos]
 
-	if !c.policies.has(whitespaceStartAKE) {
+	if !c.Policies.has(whitespaceStartAKE) {
 		return
 	}
 
@@ -51,9 +51,9 @@ func (c *Conversation) processWhitespaceTag(message []byte) (plain, toSend []byt
 
 func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (toSend []byte, err error) {
 	switch {
-	case c.policies.has(allowV3) && bytes.Contains(tag, otrV3{}.whitespaceTag()):
+	case c.Policies.has(allowV3) && bytes.Contains(tag, otrV3{}.whitespaceTag()):
 		c.version = otrV3{}
-	case c.policies.has(allowV2) && bytes.Contains(tag, otrV2{}.whitespaceTag()):
+	case c.Policies.has(allowV2) && bytes.Contains(tag, otrV2{}.whitespaceTag()):
 		c.version = otrV2{}
 	default:
 		err = errInvalidVersion
