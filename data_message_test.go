@@ -142,7 +142,28 @@ func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing
 	assertEquals(t, err, errInvalidOTRMessage)
 }
 
-func Test_processDataMessage_rotateOurKeys(t *testing.T) {
+func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
+	bob := newConversation(otrV3{}, nil)
+	bob.Policies.add(allowV3)
+	bob.OurKey = bobPrivateKey
+
+	var msg []byte
+	msg, bob.keys = fixtureDataMsg(plainDataMsg{})
+
+	bob.keys.ourKeyID = 1 //force key rotation
+	msg[len(msg)-8] = 0   //force check sign failure
+	bobCurrentDHKeys := bob.keys.ourCurrentDHKeys
+	bobPreviousDHKeys := bob.keys.ourPreviousDHKeys
+
+	bob.msgState = encrypted
+	_, _, err := bob.receiveDecoded(msg)
+
+	assertDeepEquals(t, err, newOtrError("bad authenticator MAC in data message"))
+	assertDeepEquals(t, bobCurrentDHKeys, bob.keys.ourCurrentDHKeys)
+	assertDeepEquals(t, bobPreviousDHKeys, bob.keys.ourPreviousDHKeys)
+}
+
+func Test_processDataMessage_rotateOurKeysAfterDecryptingTheMessage(t *testing.T) {
 	var nilB []byte
 	bob := newConversation(otrV3{}, nil)
 	bob.Policies.add(allowV3)
@@ -164,7 +185,7 @@ func Test_processDataMessage_rotateOurKeys(t *testing.T) {
 	assertEquals(t, eq(bobCurrentDHKeys.priv, bob.keys.ourCurrentDHKeys.priv), false)
 }
 
-func Test_processDataMessage_rotateTheirKeys(t *testing.T) {
+func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing.T) {
 	var nilB []byte
 	bob := newConversation(otrV3{}, nil)
 	bob.Policies.add(allowV3)

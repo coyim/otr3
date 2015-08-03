@@ -63,6 +63,7 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 	}
 
 	p := plainDataMsg{}
+	//Never fails because receivingAESKey is a AES-128 key
 	err = p.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
 	if err != nil {
 		return
