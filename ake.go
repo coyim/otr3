@@ -91,8 +91,6 @@ func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 // dhCommitMessage = bob = x
 // Bob ---- DH Commit -----------> Alice
 func (c *Conversation) dhCommitMessage() ([]byte, error) {
-	c.startAKE()
-
 	c.keys.ourKeyID = 0
 
 	x, ok := c.randMPI(make([]byte, 40))
