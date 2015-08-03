@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"math/big"
 )
@@ -54,9 +55,19 @@ func (v otrV3) messageHeader(c *Conversation, msgType byte) []byte {
 	return out
 }
 
-func generateInstanceTag() uint32 {
-	//TODO generate this
-	return 0x00000100 + 0x01
+func generateInstanceTag(c *Conversation) (uint32, error) {
+	var ret uint32
+	var dst [4]byte
+
+	for ret < minValidInstanceTag {
+		if err := c.randomInto(dst[:]); err != nil {
+			return 0, err
+		}
+
+		ret = binary.BigEndian.Uint32(dst[:])
+	}
+
+	return ret, nil
 }
 
 func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
@@ -68,7 +79,11 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, error) {
 	msg, receiverInstanceTag, _ := extractWord(msg)
 
 	if c.ourInstanceTag == 0 {
-		c.ourInstanceTag = generateInstanceTag()
+		var err error
+		c.ourInstanceTag, err = generateInstanceTag(c)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if c.theirInstanceTag == 0 {

@@ -47,19 +47,6 @@ func acceptOTRRequest(p policies, msg []byte) (otrVersion, bool) {
 	return nil, false
 }
 
-func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
-	c.ourInstanceTag = generateInstanceTag()
-
-	toSend, err = c.dhCommitMessage()
-	if err != nil {
-		return
-	}
-
-	c.ake.state = authStateAwaitingDHKey{}
-	c.keys.ourCurrentDHKeys = dhKeyPair{}
-	return
-}
-
 func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
 	v, ok := acceptOTRRequest(c.Policies, msg)
 	if !ok {
