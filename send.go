@@ -12,6 +12,7 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 	switch c.msgState {
 	case plainText:
 		if c.Policies.has(requireEncryption) {
+			// TODO: add lastSent
 			return [][]byte{c.queryMessage()}, nil
 		}
 		if c.Policies.has(sendWhitespaceTag) {
@@ -19,16 +20,7 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 		}
 		return [][]byte{msg}, nil
 	case encrypted:
-		dataMsg, err := c.genDataMsg(msg)
-		if err != nil {
-			return nil, err
-		}
-
-		toSend, err := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
-		if err != nil {
-			return nil, err
-		}
-		return c.encode(toSend), nil
+		return c.createSerializedDataMessage(msg, []tlv{})
 	case finished:
 		return nil, errors.New("otr: cannot send message because secure conversation has finished")
 	}
