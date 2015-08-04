@@ -81,6 +81,16 @@ func Test_smpStateExpect2_goToExpectState4WhenReceivesSmpMessage2(t *testing.T) 
 	assertEquals(t, nextState, smpStateExpect4{})
 }
 
+func Test_smpStateExpect2_sendsAnSMPEventAboutSMPProgressHere(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+	c.smp.s1 = fixtureSmp1()
+
+	c.expectSMPEvent(t, func() {
+		smpStateExpect2{}.receiveMessage2(c, fixtureMessage2())
+	}, SMPEventInProgress, 60, "")
+}
+
 func Test_smpStateExpect2_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect2{}
 	c := newConversation(otrV3{}, fixtureRand())

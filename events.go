@@ -32,8 +32,8 @@ const (
 	// SMPEventAskForSecret means prompt the user to enter a shared secret
 	SMPEventAskForSecret
 
-	// // SMPEventInProgress means update the auth progress dialog with progress_percent
-	// SMPEventInProgress
+	// SMPEventInProgress means update the auth progress dialog with progress_percent
+	SMPEventInProgress
 
 	// SMPEventSuccess means update the auth progress dialog with progress_percent
 	SMPEventSuccess

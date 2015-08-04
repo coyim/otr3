@@ -128,6 +128,8 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 		return abortStateMachineWith(err)
 	}
 
+	c.getEventHandler().handleSMPEvent(SMPEventInProgress, 60, "")
+
 	return smpStateExpect4{}, ret.msg, nil
 }
 
