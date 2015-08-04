@@ -67,7 +67,7 @@ func (c *Conversation) End() (toSend [][]byte, err error) {
 	case encrypted:
 		c.msgState = plainText
 		dataMsg, err := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable, tlv{tlvType: tlvTypeDisconnected})
-		//NOTE:Error can only happen when
+		//NOTE:Error can only happen when Rand reader is broken
 		if err != nil {
 			return nil, err
 		}

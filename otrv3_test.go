@@ -93,7 +93,7 @@ func Test_generateInstanceTag_generatesOurInstanceTag(t *testing.T) {
 	rand := fixedRand([]string{"00000099", "00001234"})
 	c := &Conversation{Rand: rand}
 
-	err := generateInstanceTag(c)
+	err := c.generateInstanceTag()
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.ourInstanceTag, uint32(0x1234))
@@ -103,7 +103,7 @@ func Test_generateInstanceTag_returnsAnErrorIfFailsToReadFromRand(t *testing.T) 
 	rand := fixedRand([]string{"00000099", "00000080"})
 	c := &Conversation{Rand: rand}
 
-	err := generateInstanceTag(c)
+	err := c.generateInstanceTag()
 
 	assertEquals(t, err, errShortRandomRead)
 	assertEquals(t, c.ourInstanceTag, uint32(0))

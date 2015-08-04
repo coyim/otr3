@@ -48,7 +48,7 @@ func (v otrV3) whitespaceTag() []byte {
 }
 
 func (v otrV3) messageHeader(c *Conversation, msgType byte) ([]byte, error) {
-	if err := generateInstanceTag(c); err != nil {
+	if err := c.generateInstanceTag(); err != nil {
 		return nil, err
 	}
 
@@ -59,7 +59,7 @@ func (v otrV3) messageHeader(c *Conversation, msgType byte) ([]byte, error) {
 	return out, nil
 }
 
-func generateInstanceTag(c *Conversation) error {
+func (c *Conversation) generateInstanceTag() error {
 	if c.ourInstanceTag != 0 {
 		return nil
 	}
