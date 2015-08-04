@@ -30,12 +30,17 @@ func (c *Conversation) restart() []byte {
 	return ret.tlv().serialize()
 }
 
-func abortStateMachine() (smpState, smpMessage, error) {
-	return abortStateMachineWith(nil)
+func abortState(e error) (smpState, smpMessage, error) {
+	return smpStateExpect1{}, smpMessageAbort{}, e
 }
 
-func abortStateMachineWith(e error) (smpState, smpMessage, error) {
-	return smpStateExpect1{}, smpMessageAbort{}, e
+func abortStateMachine() (smpState, smpMessage, error) {
+	return abortState(nil)
+}
+
+func (c *Conversation) abortStateMachineWith(e error) (smpState, smpMessage, error) {
+	c.getEventHandler().handleSMPEvent(SMPEventCheated, 0, "")
+	return abortState(e)
 }
 
 func (c *Conversation) receiveSMP(m smpMessage) (*tlv, error) {
@@ -71,7 +76,7 @@ func (smpStateBase) receiveMessage1(c *Conversation, m smp1Message) (smpState, s
 }
 
 func (smpStateBase) continueMessage1(c *Conversation, mutualSecret []byte) (smpState, smpMessage, error) {
-	return abortStateMachineWith(errNotWaitingForSMPSecret)
+	return abortState(errNotWaitingForSMPSecret)
 }
 
 func (smpStateBase) receiveMessage2(c *Conversation, m smp2Message) (smpState, smpMessage, error) {
@@ -89,7 +94,7 @@ func (smpStateBase) receiveMessage4(c *Conversation, m smp4Message) (smpState, s
 func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState, smpMessage, error) {
 	err := c.verifySMP1(m)
 	if err != nil {
-		return abortStateMachineWith(err)
+		return c.abortStateMachineWith(err)
 	}
 
 	if m.hasQuestion {
@@ -104,14 +109,14 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 
 func (s smpStateWaitingForSecret) continueMessage1(c *Conversation, mutualSecret []byte) (smpState, smpMessage, error) {
 	if !c.IsEncrypted() {
-		return abortStateMachineWith(errCantAuthenticateWithoutEncryption)
+		return abortState(errCantAuthenticateWithoutEncryption)
 	}
 
 	// Using ssid here should always be safe - we can't be in an encrypted state without having gone through the AKE
 	c.smp.secret = generateSMPSecret(c.TheirKey.DefaultFingerprint(), c.OurKey.PublicKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
 	ret, err := c.generateSMP2(c.smp.secret, s.msg)
 	if err != nil {
-		return abortStateMachineWith(err)
+		return c.abortStateMachineWith(err)
 	}
 
 	return smpStateExpect3{}, ret.msg, nil
@@ -120,12 +125,12 @@ func (s smpStateWaitingForSecret) continueMessage1(c *Conversation, mutualSecret
 func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState, smpMessage, error) {
 	err := c.verifySMP2(c.smp.s1, m)
 	if err != nil {
-		return abortStateMachineWith(err)
+		return c.abortStateMachineWith(err)
 	}
 
 	ret, err := c.generateSMP3(c.smp.secret, *c.smp.s1, m)
 	if err != nil {
-		return abortStateMachineWith(err)
+		return c.abortStateMachineWith(err)
 	}
 
 	c.getEventHandler().handleSMPEvent(SMPEventInProgress, 60, "")
@@ -136,19 +141,19 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState, smpMessage, error) {
 	err := c.verifySMP3(c.smp.s2, m)
 	if err != nil {
-		return abortStateMachineWith(err)
+		return c.abortStateMachineWith(err)
 	}
 
 	err = c.verifySMP3ProtocolSuccess(c.smp.s2, m)
 	if err != nil {
 		c.getEventHandler().handleSMPEvent(SMPEventFailure, 100, "")
-		return abortStateMachineWith(err)
+		return smpStateExpect1{}, smpMessageAbort{}, err
 	}
 	c.getEventHandler().handleSMPEvent(SMPEventSuccess, 100, "")
 
 	ret, err := c.generateSMP4(c.smp.secret, *c.smp.s2, m)
 	if err != nil {
-		return abortStateMachineWith(errShortRandomRead)
+		return abortState(errShortRandomRead)
 	}
 
 	return smpStateExpect1{}, ret.msg, nil
@@ -157,13 +162,13 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 func (smpStateExpect4) receiveMessage4(c *Conversation, m smp4Message) (smpState, smpMessage, error) {
 	err := c.verifySMP4(c.smp.s3, m)
 	if err != nil {
-		return abortStateMachineWith(err)
+		return c.abortStateMachineWith(err)
 	}
 
 	err = c.verifySMP4ProtocolSuccess(c.smp.s1, c.smp.s3, m)
 	if err != nil {
 		c.getEventHandler().handleSMPEvent(SMPEventFailure, 100, "")
-		return abortStateMachineWith(err)
+		return smpStateExpect1{}, smpMessageAbort{}, err
 	}
 	c.getEventHandler().handleSMPEvent(SMPEventSuccess, 100, "")
 

@@ -248,6 +248,14 @@ func Test_smpStateExpect1_receiveMessage1_returnsErrorIfVerifySMP1ReturnsError(t
 	assertDeepEquals(t, err, newOtrError("g2a is an invalid group element"))
 }
 
+func Test_smpStateExpect1_receiveMessage1_signalsCheatingIfVerifySMP1Fails(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+
+	c.expectSMPEvent(t, func() {
+		smpStateExpect1{}.receiveMessage1(c, smp1Message{g2a: big.NewInt(1)})
+	}, SMPEventCheated, 0, "")
+}
+
 func Test_smp1Message_receivedMessage_returnsErrorIfreceiveMessage1ReturnsError(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.state = smpStateExpect1{}
