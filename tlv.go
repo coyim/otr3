@@ -84,6 +84,8 @@ func (c tlv) smpMessage() (smpMessage, bool) {
 		return toSmpMessage3(c)
 	case tlvTypeSMP4:
 		return toSmpMessage4(c)
+	case tlvTypeSMPAbort:
+		return toSmpMessageAbort(c)
 	}
 
 	return nil, false
@@ -157,5 +159,9 @@ func toSmpMessage4(t tlv) (msg smp4Message, ok bool) {
 	msg.rb = mpis[0]
 	msg.cr = mpis[1]
 	msg.d7 = mpis[2]
+	return msg, true
+}
+
+func toSmpMessageAbort(t tlv) (msg smpMessageAbort, ok bool) {
 	return msg, true
 }

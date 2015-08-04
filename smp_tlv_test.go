@@ -196,7 +196,7 @@ func Test_readSmpMessage4TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.
 }
 
 func Test_toSMPMessage_ReturnsNotOKForIncorrectTLVType(t *testing.T) {
-	tlv := tlv{tlvType: 0x06}
+	tlv := tlv{tlvType: 0x0A}
 
 	_, parsedOk := tlv.smpMessage()
 	assertEquals(t, parsedOk, false)
@@ -238,6 +238,17 @@ func Test_readSmpMessage4TLV(t *testing.T) {
 	parsedValue, parsedOk := tlv.smpMessage()
 	assertEquals(t, parsedOk, true)
 	val, ok := parsedValue.(smp4Message)
+	assertEquals(t, ok, true)
+	assertDeepEquals(t, val, msg)
+}
+
+func Test_readSmpMessageAbortTLV(t *testing.T) {
+	msg := fixtureMessageAbort()
+	tlv := msg.tlv()
+
+	parsedValue, parsedOk := tlv.smpMessage()
+	assertEquals(t, parsedOk, true)
+	val, ok := parsedValue.(smpMessageAbort)
 	assertEquals(t, ok, true)
 	assertDeepEquals(t, val, msg)
 }

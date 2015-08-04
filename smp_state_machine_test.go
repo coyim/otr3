@@ -425,3 +425,12 @@ func Test_smpMessageAbort_receivedMessage_setsTheNewState(t *testing.T) {
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, c.smp.state, smpStateExpect1{})
 }
+
+func Test_smpMessageAbort_receivedMessage_sendsAnSMPEventAboutTheAbort(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.smp.state = smpStateExpect2{}
+
+	c.expectSMPEvent(t, func() {
+		smpMessageAbort{}.receivedMessage(c)
+	}, SMPEventAbort, 0, "")
+}

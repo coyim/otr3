@@ -154,3 +154,7 @@ func fixtureMessage4() smp4Message {
 
 	return s
 }
+
+func fixtureMessageAbort() smpMessageAbort {
+	return smpMessageAbort{}
+}

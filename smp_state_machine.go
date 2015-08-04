@@ -197,6 +197,7 @@ func (m smp4Message) receivedMessage(c *Conversation) (ret smpMessage, err error
 
 func (m smpMessageAbort) receivedMessage(c *Conversation) (ret smpMessage, err error) {
 	c.smp.state = smpStateExpect1{}
+	c.getEventHandler().handleSMPEvent(SMPEventAbort, 0, "")
 	return
 }
 
