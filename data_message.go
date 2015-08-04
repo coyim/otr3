@@ -104,7 +104,6 @@ func (c *Conversation) processSMPTLV(t tlv) (toSend *tlv, err error) {
 
 func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
 	var retTLVs []tlv
-	var err error
 
 	for _, t := range tlvs {
 		mh, e := messageHandlerForTLV(t)
@@ -114,9 +113,12 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
 
 		toSend, err := mh(c, t)
 		if err != nil {
-			//TODO: should it generate a notification here?
-			//Or should every message handler notify accordingly?
-			continue
+			//We assume this will only happen if the message was sent by a
+			//malicious/broken client and it's reasonable to stop processing the
+			//remaining TLVs and consider the entire TLVs block as corrupted.
+			//Any valid SMP TLV processed before the error can potentially cause a side
+			//effect on the SMP state machine and we wont reply (take the bait).
+			return nil, err
 		}
 
 		if toSend != nil {
@@ -124,5 +126,5 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
 		}
 	}
 
-	return retTLVs, err
+	return retTLVs, nil
 }

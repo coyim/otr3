@@ -4,16 +4,19 @@ import "testing"
 
 func Test_processTLVs_ignoresInvalidTLVMessageTypes(t *testing.T) {
 	var nilT []tlv
-	aTLV := tlv{
-		tlvType:   9,
-		tlvLength: 1,
-		tlvValue:  []byte{0x01},
+	tlvs := []tlv{
+		fixtureMessage1().tlv(),
+		tlv{
+			tlvType:   9,
+			tlvLength: 1,
+			tlvValue:  []byte{0x01},
+		},
 	}
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.msgState = encrypted
 
-	toSend, err := c.processTLVs([]tlv{aTLV})
+	toSend, err := c.processTLVs(tlvs)
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, toSend, nilT)
 }
