@@ -36,3 +36,10 @@ func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs [
 	c.updateLastSent()
 	return c.encode(res), nil
 }
+
+func (c *Conversation) potentialAuthError(toSend []byte, err error) ([]byte, error) {
+	if err != nil {
+		messageEventSetupError(c, err)
+	}
+	return toSend, err
+}

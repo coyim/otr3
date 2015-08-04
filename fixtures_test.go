@@ -156,6 +156,15 @@ func aliceContextAtReceiveRevealSig() *Conversation {
 	return c
 }
 
+func aliceContextAtAwaitingDHCommit() *Conversation {
+	c := newConversation(otrV2{}, fixtureRand())
+	c.initAKE()
+	c.Policies.add(allowV2)
+	c.ake.state = authStateNone{}
+	c.OurKey = alicePrivateKey
+	return c
+}
+
 func aliceContextAtAwaitingRevealSig() *Conversation {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.initAKE()

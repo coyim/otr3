@@ -482,7 +482,47 @@ func Test_receiveAKE_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurrentDH
 	assertEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
 }
 
+func Test_receiveAKE_receiveDHCommitMessageAndFailsWillSignalSetupError(t *testing.T) {
+	c := aliceContextAtAwaitingDHCommit()
+	c.Rand = fixedRand([]string{"ABCD"})
+	msg := fixtureDHCommitMsgV2()
+
+	c.expectMessageEvent(t, func() {
+		c.receiveDecoded(msg)
+	}, MessageEventSetupError, "", errShortRandomRead)
+}
+
+func Test_receiveAKE_receiveDHKeyMessageAndFailsWillSignalSetupError(t *testing.T) {
+	c := bobContextAtAwaitingDHKey()
+	c.Rand = fixedRand([]string{"ABCD"})
+	msg := fixtureDHKeyMsg(otrV3{})
+
+	c.expectMessageEvent(t, func() {
+		c.receiveDecoded(msg)
+	}, MessageEventSetupError, "", errShortRandomRead)
+}
+
+func Test_receiveAKE_receiveRevealSigMessageAndFailsWillSignalSetupError(t *testing.T) {
+	c := aliceContextAtAwaitingRevealSig()
+	c.Rand = fixedRand([]string{"ABCD"})
+	msg := fixtureRevealSigMsg(otrV2{})
+
+	c.expectMessageEvent(t, func() {
+		c.receiveDecoded(msg)
+	}, MessageEventSetupError, "", errShortRandomRead)
+}
+
 func Test_receiveAKE_receiveSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
+	c := bobContextAtAwaitingSig()
+	c.Rand = fixedRand([]string{"ABCD"})
+	msg := fixtureSigMsg(otrV2{})
+
+	c.expectMessageEvent(t, func() {
+		c.receiveDecoded(msg)
+	}, MessageEventSetupError, "", errShortRandomRead)
+}
+
+func Test_receiveAKE_receiveSigMessageAndFailsWillSignalSetupError(t *testing.T) {
 	c := bobContextAtAwaitingSig()
 	msg := fixtureSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)

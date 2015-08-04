@@ -254,7 +254,7 @@ func Test_processDataMessage_willReturnAHeartbeatMessageAfterAPlainTextMessage(t
 	_, _, toSendExtra, err := bob.receiveDecoded(msg)
 
 	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, len(toSendExtra), 497)
+	assertDeepEquals(t, len(toSendExtra) > 450, true)
 }
 
 func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing.T) {

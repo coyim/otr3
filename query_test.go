@@ -13,6 +13,16 @@ func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *test
 	assertDeepEquals(t, dhMsgType(msg), msgTypeDHCommit)
 }
 
+func Test_receiveQueryMessage_signalsMessageEventOnFailure(t *testing.T) {
+	queryMsg := []byte("?OTRv3?")
+
+	c := newConversation(nil, fixedRand([]string{"ABCD"}))
+	c.Policies.add(allowV3)
+	c.expectMessageEvent(t, func() {
+		c.receiveQueryMessage(queryMsg)
+	}, MessageEventSetupError, "", errShortRandomRead)
+}
+
 func Test_receiveQueryMessageV2_SendDHCommitv2(t *testing.T) {
 	queryMsg := []byte("?OTRv2?")
 

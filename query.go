@@ -54,7 +54,7 @@ func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
 	}
 	c.version = v
 
-	return c.sendDHCommit()
+	return c.potentialAuthError(c.sendDHCommit())
 }
 
 func (c Conversation) queryMessage() []byte {

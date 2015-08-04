@@ -87,6 +87,16 @@ func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
 	assertEquals(t, dhMsgVersion(toSend), uint16(3))
 }
 
+func Test_receive_whiteSpaceTagWillSignalSetupErrorIfSomethingFails(t *testing.T) {
+	c := newConversation(nil, fixedRand([]string{"ABCD"}))
+	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
+	msg := genWhitespaceTag(policies(allowV2 | allowV3))
+
+	c.expectMessageEvent(t, func() {
+		c.Receive(msg)
+	}, MessageEventSetupError, "", errShortRandomRead)
+}
+
 func Test_receive_ignoresV3WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {
 	var nilB [][]byte
 	c := newConversation(nil, fixtureRand())

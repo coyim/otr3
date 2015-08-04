@@ -60,7 +60,5 @@ func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (toSend []byte, err
 		return
 	}
 
-	toSend, err = c.sendDHCommit()
-
-	return
+	return c.potentialAuthError(c.sendDHCommit())
 }

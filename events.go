@@ -53,9 +53,6 @@ type MessageEvent int
  *      Message has not been sent because our buddy has ended the
  *      private Conversation. We should either close the connection,
  *      or refresh it.
- * - OTRL_MSGEVENT_SETUP_ERROR
- *      A private Conversation could not be set up. A gcry_error_t
- *      will be passed.
  * - OTRL_MSGEVENT_MSG_REFLECTED
  *      Received our own OTR messages.
  * - OTRL_MSGEVENT_MSG_RESENT
@@ -82,7 +79,10 @@ const (
 	// MessageEventEncryptionRequired MessageEvent = iota
 	// MessageEventEncryptionError
 	// MessageEventConnectionEnded
-	// MessageEventSetupError
+
+	// MessageEventSetupError will be signaled when a private conversation could not be established. The reason for this will be communicated with the attached error instance
+	MessageEventSetupError
+
 	// MessageEventMessageReflected
 	// MessageEventMessageResent
 	// MessageEventReceivedMessageNotInPrivate
@@ -170,4 +170,8 @@ func messageEventHeartbeatReceived(c *Conversation) {
 
 func messageEventHeartbeatSent(c *Conversation) {
 	c.getEventHandler().handleMessageEvent(MessageEventLogHeartbeatSent, "", nil)
+}
+
+func messageEventSetupError(c *Conversation, e error) {
+	c.getEventHandler().handleMessageEvent(MessageEventSetupError, "", e)
 }
