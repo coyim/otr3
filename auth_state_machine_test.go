@@ -188,6 +188,8 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeysAndIncreaseCounter
 }
 
 func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
+	var nilB *big.Int
+
 	ourDHCommitAKE := fixtureConversation()
 	ourDHCommitAKE.dhCommitMessage()
 
@@ -196,13 +198,17 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
 	c.OurKey = bobPrivateKey
 
+	assertDeepEquals(t, c.ake.theirPublicValue, nilB)
+
 	sameDHKeyMsg := fixtureDHKeyMsg(otrV3{})[otrv3HeaderLen:]
 	sigState, previousRevealSig, _ := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, sameDHKeyMsg)
 
+	assertDeepEquals(t, c.ake.theirPublicValue, fixedgy)
+
 	state, msg, _ := sigState.receiveDHKeyMessage(c, sameDHKeyMsg)
 
-	//TODO: What about gy and sigKey?
 	_, sameStateType := state.(authStateAwaitingSig)
+	assertDeepEquals(t, c.ake.theirPublicValue, fixedgy)
 	assertDeepEquals(t, sameStateType, true)
 	assertDeepEquals(t, msg, previousRevealSig)
 }
