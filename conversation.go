@@ -66,16 +66,8 @@ func (c *Conversation) End() (toSend [][]byte, err error) {
 	case plainText:
 	case encrypted:
 		c.msgState = plainText
-		dataMsg, err := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable, tlv{tlvType: tlvTypeDisconnected})
 		//NOTE:Error can only happen when Rand reader is broken
-		if err != nil {
-			return nil, err
-		}
-		msg, err := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
-		if err != nil {
-			return nil, err
-		}
-		toSend = c.encode(msg)
+		toSend, err = c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
 	case finished:
 		c.msgState = plainText
 	}

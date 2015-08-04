@@ -49,6 +49,20 @@ func extractDataMessageFlag(msg []byte) byte {
 	return msg[0]
 }
 
+func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs []tlv) ([][]byte, error) {
+	dataMsg, err := c.genDataMsgWithFlag(msg, flag, tlvs...)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+	if err != nil {
+		return nil, err
+	}
+	c.updateLastSent()
+	return c.encode(res), nil
+}
+
 func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []byte, err error) {
 	ignoreUnreadable := (extractDataMessageFlag(msg) & messageFlagIgnoreUnreadable) == messageFlagIgnoreUnreadable
 	plain, toSend, err = c.processDataMessageWithRawErrors(header, msg)

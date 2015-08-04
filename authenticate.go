@@ -23,20 +23,6 @@ func (c *Conversation) ProvideAuthenticationSecret(mutualSecret []byte) ([][]byt
 	return c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{*t})
 }
 
-func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs []tlv) ([][]byte, error) {
-	dataMsg, err := c.genDataMsgWithFlag(msg, flag, tlvs...)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
-	if err != nil {
-		return nil, err
-	}
-	c.updateLastSent()
-	return c.encode(res), nil
-}
-
 func (c *Conversation) potentialAuthError(toSend []byte, err error) ([]byte, error) {
 	if err != nil {
 		messageEventSetupError(c, err)
