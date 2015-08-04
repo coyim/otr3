@@ -18,11 +18,8 @@ const (
 type SMPEvent int
 
 const (
-	SMPEventNone SMPEvent = iota
-
-	// // SMPEventError means abort the current auth and update the auth progress dialog with progress_percent
-	// SMPEventError SMPEvent = iota
-
+	// SMPEventError means abort the current auth and update the auth progress dialog with progress_percent. This event is only sent when we receive a message for another message state than we are in
+	SMPEventError SMPEvent = iota
 	// SMPEventAbort means update the auth progress dialog with progress_percent
 	SMPEventAbort
 	// SMPEventCheated means abort the current auth and update the auth progress dialog with progress_percent

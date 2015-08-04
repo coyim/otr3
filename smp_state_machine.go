@@ -72,6 +72,7 @@ func (c *Conversation) continueSMP(mutualSecret []byte) (*tlv, error) {
 }
 
 func (smpStateBase) receiveMessage1(c *Conversation, m smp1Message) (smpState, smpMessage, error) {
+	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
 	return abortStateMachine()
 }
 
@@ -80,14 +81,17 @@ func (smpStateBase) continueMessage1(c *Conversation, mutualSecret []byte) (smpS
 }
 
 func (smpStateBase) receiveMessage2(c *Conversation, m smp2Message) (smpState, smpMessage, error) {
+	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
 	return abortStateMachine()
 }
 
 func (smpStateBase) receiveMessage3(c *Conversation, m smp3Message) (smpState, smpMessage, error) {
+	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
 	return abortStateMachine()
 }
 
 func (smpStateBase) receiveMessage4(c *Conversation, m smp4Message) (smpState, smpMessage, error) {
+	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
 	return abortStateMachine()
 }
 
