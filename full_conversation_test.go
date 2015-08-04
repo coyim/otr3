@@ -10,29 +10,6 @@ func Test_conversation_SMPStateMachineStartsAtSmpExpect1(t *testing.T) {
 	assertEquals(t, c.smp.state, smpStateExpect1{})
 }
 
-func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T) {
-	states := []msgState{
-		plainText, finished,
-	}
-
-	c := bobContextAfterAKE()
-
-	smpMsg := fixtureMessage1()
-	dataMsg, _ := c.genDataMsg(nil, smpMsg.tlv())
-	m := dataMsg.serialize()
-	m, _ = c.wrapMessageHeader(msgTypeData, m)
-	smpAbortMsg := smpMessageAbort{}.tlv().serialize()
-
-	for _, s := range states {
-		c.msgState = s
-
-		_, toSend, _, err := c.receiveDecoded(m)
-		assertEquals(t, err, errEncryptedMessageWithNoSecureChannel)
-		assertEquals(t, c.smp.state, smpStateExpect1{})
-		assertDeepEquals(t, toSend, smpAbortMsg)
-	}
-}
-
 func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
 	alice.OurKey = alicePrivateKey

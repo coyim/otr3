@@ -93,7 +93,6 @@ func (c *Conversation) receiveDecoded(message []byte) (plain []byte, toSend []by
 	msgType := message[2]
 	if msgType == msgTypeData {
 		if c.msgState != encrypted {
-			toSend = c.restart()
 			err = errEncryptedMessageWithNoSecureChannel
 			return
 		}
