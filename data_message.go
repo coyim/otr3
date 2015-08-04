@@ -81,8 +81,6 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 		return
 	}
 
-	//TODO: TEST. Should not process TLVs if it fails to rotate keys.
-	//This is how libotr does
 	var tlvs []tlv
 	tlvs, err = c.processTLVs(p.tlvs)
 	if err != nil {
