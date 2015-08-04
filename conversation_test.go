@@ -213,28 +213,32 @@ func Test_encodeWithFragment(t *testing.T) {
 func Test_End_whenStateIsPlainText(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.msgState = plainText
-	msg := c.End()
+	msg, err := c.End()
+	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, msg, [][]uint8(nil))
 }
 
 func Test_End_whenStateIsFinished(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.msgState = finished
-	msg := c.End()
+	msg, err := c.End()
 	assertDeepEquals(t, c.msgState, plainText)
+	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, msg, [][]uint8(nil))
 }
 
 func Test_End_whenStateIsEncrypted(t *testing.T) {
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted
-	msg := bob.End()
+	msg, _ := bob.End()
 	stub := bobContextAfterAKE()
 	dataMsg, _ := stub.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable, tlv{tlvType: tlvTypeDisconnected})
-	expected := stub.encode(dataMsg.serialize())
+	stubMsg, err := stub.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+	expectedMsg := stub.encode(stubMsg)
 
+	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, bob.msgState, plainText)
-	assertDeepEquals(t, msg, expected)
+	assertDeepEquals(t, msg, expectedMsg)
 }
 
 func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {

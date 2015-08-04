@@ -61,13 +61,21 @@ func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
 }
 
-func (c *Conversation) End() (toSend [][]byte) {
+func (c *Conversation) End() (toSend [][]byte, err error) {
 	switch c.msgState {
 	case plainText:
 	case encrypted:
 		c.msgState = plainText
-		dataMsg, _ := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable, tlv{tlvType: tlvTypeDisconnected})
-		toSend = c.encode(dataMsg.serialize())
+		dataMsg, err := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable, tlv{tlvType: tlvTypeDisconnected})
+		//NOTE:Error can only happen when
+		if err != nil {
+			return nil, err
+		}
+		msg, err := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+		if err != nil {
+			return nil, err
+		}
+		toSend = c.encode(msg)
 	case finished:
 		c.msgState = plainText
 	}

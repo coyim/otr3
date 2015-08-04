@@ -67,7 +67,7 @@ func (c *Conversation) Send(in []byte) (toSend [][]byte, err error) {
 
 func (c *Conversation) End() (toSend [][]byte) {
 	c.compatInit()
-	toSend = c.Conversation.End()
+	toSend, _ = c.Conversation.End()
 	return
 }
 
