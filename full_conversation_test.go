@@ -18,7 +18,8 @@ func Test_receive_AbortsSMPStateMachineIfDoesNotHaveASecureChannel(t *testing.T)
 	c := bobContextAfterAKE()
 
 	smpMsg := fixtureMessage1()
-	m := c.genDataMsg(nil, smpMsg.tlv()).serialize()
+	dataMsg, _ := c.genDataMsg(nil, smpMsg.tlv())
+	m := dataMsg.serialize()
 	m, _ = c.wrapMessageHeader(msgTypeData, m)
 	smpAbortMsg := smpMessageAbort{}.tlv().serialize()
 
@@ -189,11 +190,12 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	assertEquals(t, bob.ake.state, authStateNone{})
 
 	// Alice sends a message to bob
-	m = []byte("hello")
-	datamsg, _ := alice.wrapMessageHeader(msgTypeData, alice.genDataMsg(m).serialize())
-	plain, ret, err := bob.receiveDecoded(datamsg)
+	msg = []byte("hello")
+	dataMsg, _ := alice.genDataMsg(msg)
+	m, _ = alice.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+	plain, ret, err := bob.receiveDecoded(m)
 
 	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, plain, m)
+	assertDeepEquals(t, plain, msg)
 	assertDeepEquals(t, ret, nilB)
 }

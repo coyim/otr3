@@ -2,11 +2,10 @@ package otr3
 
 import "encoding/binary"
 
-func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
+func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) (dataMsg, error) {
 	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	if err != nil {
-		//TODO errors
-		return dataMsg{}
+		return dataMsg{}, err
 	}
 
 	topHalfCtr := [8]byte{}
@@ -22,8 +21,7 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 
 	header, err := c.messageHeader(msgTypeData)
 	if err != nil {
-		//TODO: errors
-		return dataMsg{}
+		return dataMsg{}, err
 	}
 
 	dataMessage := dataMsg{
@@ -38,7 +36,7 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) dataMsg {
 	}
 	dataMessage.sign(keys.sendingMACKey, header)
 
-	return dataMessage
+	return dataMessage, nil
 }
 
 func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []byte, err error) {
@@ -83,7 +81,8 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 	}
 
 	if len(tlvs) > 0 {
-		toSend = c.genDataMsg(nil, tlvs...).serialize()
+		dataMsg, _ := c.genDataMsg(nil, tlvs...)
+		toSend = dataMsg.serialize()
 	}
 
 	return
