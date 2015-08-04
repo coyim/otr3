@@ -19,7 +19,11 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 		}
 		return [][]byte{msg}, nil
 	case encrypted:
-		dataMsg, _ := c.genDataMsg(msg)
+		dataMsg, err := c.genDataMsg(msg)
+		if err != nil {
+			return nil, err
+		}
+
 		toSend, err := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
 		if err != nil {
 			return nil, err

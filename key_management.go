@@ -208,7 +208,7 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int) session
 }
 
 func (c *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *big.Int, err error) {
-	if ourKeyID == 0 {
+	if ourKeyID == 0 || c.ourKeyID == 0 {
 		return nil, nil, ErrGPGConflict
 	}
 
@@ -225,7 +225,7 @@ func (c *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *bi
 }
 
 func (c *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int, err error) {
-	if theirKeyID == 0 {
+	if theirKeyID == 0 || c.theirKeyID == 0 {
 		return nil, ErrGPGConflict
 	}
 

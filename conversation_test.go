@@ -110,6 +110,20 @@ func Test_OTRisDisabledIfNoVersionIsAllowedInThePolicy(t *testing.T) {
 	assertDeepEquals(t, r, nilB)
 }
 
+func Test_Send_returnsErrorIfFaislToGenerateDataMsg(t *testing.T) {
+	var nilB [][]byte
+	msg := []byte("hello")
+
+	c := bobContextAfterAKE()
+	c.msgState = encrypted
+	c.Policies = policies(allowV3)
+	c.keys.theirKeyID = 0
+	s, err := c.Send(msg)
+
+	assertDeepEquals(t, s, nilB)
+	assertEquals(t, err, ErrGPGConflict)
+}
+
 func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {
 	expectedWhitespaceTag := []byte{
 		0x20, 0x09, 0x20, 0x20, 0x09, 0x09, 0x09, 0x09,
