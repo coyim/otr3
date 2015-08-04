@@ -67,6 +67,11 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 	}
 
 	plain = p.message
+	if len(plain) == 0 {
+		plain = nil
+		messageEventHeartbeatReceived(c)
+	}
+
 	err = c.rotateKeys(dataMessage)
 	if err != nil {
 		return

@@ -113,6 +113,42 @@ func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 	assertDeepEquals(t, exp, []byte("hello"))
 }
 
+func (c *Conversation) expectMessageEvent(t *testing.T, f func(), expectedEvent MessageEvent, expectedMessage string, expectedError error) {
+	called := false
+
+	c.getEventHandler().handleMessageEvent = func(event MessageEvent, message string, err error) {
+		assertDeepEquals(t, event, expectedEvent)
+		assertDeepEquals(t, message, expectedMessage)
+		assertDeepEquals(t, err, expectedError)
+		called = true
+	}
+
+	f()
+
+	assertEquals(t, called, true)
+}
+
+func Test_processDataMessage_willGenerateAHeartBeatEventForAnEmptyMessage(t *testing.T) {
+	bob := newConversation(otrV3{}, nil)
+	bob.Policies.add(allowV3)
+	bob.OurKey = bobPrivateKey
+	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+
+	plain := plainDataMsg{
+		message: []byte(""),
+	}
+
+	var msg []byte
+	msg, bob.keys = fixtureDataMsg(plain)
+
+	bob.msgState = encrypted
+
+	bob.expectMessageEvent(t, func() {
+		exp, _, _ := bob.receiveDecoded(msg)
+		assertNil(t, exp)
+	}, MessageEventLogHeartbeatReceived, "", nil)
+}
+
 func Test_processDataMessage_processSMPMessage(t *testing.T) {
 	bob := newConversation(otrV3{}, nil)
 	bob.Policies.add(allowV3)

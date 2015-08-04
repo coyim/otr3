@@ -67,8 +67,6 @@ type MessageEvent int
  *      Cannot read the received message.
  * - OTRL_MSGEVENT_RCVDMSG_MALFORMED
  *      The message received contains malformed data.
- * - OTRL_MSGEVENT_LOG_HEARTBEAT_RCVD
- *      Received a heartbeat.
  * - OTRL_MSGEVENT_LOG_HEARTBEAT_SENT
  *      Sent a heartbeat.
  * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
@@ -82,21 +80,25 @@ type MessageEvent int
  * - OTRL_MSGEVENT_RCVDMSG_FOR_OTHER_INSTANCE
  *      Received and discarded a message intended for another instance. */
 const (
-// MessageEventEncryptionRequired MessageEvent = iota
-// MessageEventEncryptionError
-// MessageEventConnectionEnded
-// MessageEventSetupError
-// MessageEventMessageReflected
-// MessageEventMessageResent
-// MessageEventReceivedMessageNotInPrivate
-// MessageEventReceivedMessageUnreadable
-// MessageEventReceivedMessageMalformed
-// MessageEventLogHeartbeatReceived
-// MessageEventLogHeartbeatSent
-// MessageEventReceivedMessageGeneralError
-// MessageEventReceivedMessageUnencrypted
-// MessageEventReceivedMessageUnrecognized
-// MessageEventReceivedMessageForOtherInstance
+	MessageEventNone MessageEvent = iota
+	// MessageEventEncryptionRequired MessageEvent = iota
+	// MessageEventEncryptionError
+	// MessageEventConnectionEnded
+	// MessageEventSetupError
+	// MessageEventMessageReflected
+	// MessageEventMessageResent
+	// MessageEventReceivedMessageNotInPrivate
+	// MessageEventReceivedMessageUnreadable
+	// MessageEventReceivedMessageMalformed
+
+	// MessageEventLogHeartbeatReceived is sent when we received a heartbeat.
+	MessageEventLogHeartbeatReceived
+
+	// MessageEventLogHeartbeatSent
+	// MessageEventReceivedMessageGeneralError
+	// MessageEventReceivedMessageUnencrypted
+	// MessageEventReceivedMessageUnrecognized
+	// MessageEventReceivedMessageForOtherInstance
 )
 
 // EventHandler contains the configuration necessary to be able to communicate events to the client
@@ -160,5 +162,8 @@ func smpEventSuccess(c *Conversation) {
 
 func smpEventAbort(c *Conversation) {
 	c.getEventHandler().handleSMPEvent(SMPEventAbort, 0, "")
+}
 
+func messageEventHeartbeatReceived(c *Conversation) {
+	c.getEventHandler().handleMessageEvent(MessageEventLogHeartbeatReceived, "", nil)
 }
