@@ -39,7 +39,7 @@ func abortStateMachine() (smpState, smpMessage, error) {
 }
 
 func (c *Conversation) abortStateMachineWith(e error) (smpState, smpMessage, error) {
-	c.getEventHandler().handleSMPEvent(SMPEventCheated, 0, "")
+	smpEventCheated(c)
 	return abortState(e)
 }
 
@@ -72,7 +72,7 @@ func (c *Conversation) continueSMP(mutualSecret []byte) (*tlv, error) {
 }
 
 func (smpStateBase) receiveMessage1(c *Conversation, m smp1Message) (smpState, smpMessage, error) {
-	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
+	smpEventError(c)
 	return abortStateMachine()
 }
 
@@ -81,17 +81,17 @@ func (smpStateBase) continueMessage1(c *Conversation, mutualSecret []byte) (smpS
 }
 
 func (smpStateBase) receiveMessage2(c *Conversation, m smp2Message) (smpState, smpMessage, error) {
-	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
+	smpEventError(c)
 	return abortStateMachine()
 }
 
 func (smpStateBase) receiveMessage3(c *Conversation, m smp3Message) (smpState, smpMessage, error) {
-	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
+	smpEventError(c)
 	return abortStateMachine()
 }
 
 func (smpStateBase) receiveMessage4(c *Conversation, m smp4Message) (smpState, smpMessage, error) {
-	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
+	smpEventError(c)
 	return abortStateMachine()
 }
 
@@ -103,9 +103,9 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 
 	if m.hasQuestion {
 		c.smp.question = &m.question
-		c.getEventHandler().handleSMPEvent(SMPEventAskForAnswer, 25, m.question)
+		smpEventAskForAnswer(c, m.question)
 	} else {
-		c.getEventHandler().handleSMPEvent(SMPEventAskForSecret, 25, "")
+		smpEventAskForSecret(c)
 	}
 
 	return smpStateWaitingForSecret{msg: m}, nil, nil
@@ -137,7 +137,7 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 		return c.abortStateMachineWith(err)
 	}
 
-	c.getEventHandler().handleSMPEvent(SMPEventInProgress, 60, "")
+	smpEventInProgress(c)
 
 	return smpStateExpect4{}, ret.msg, nil
 }
@@ -150,10 +150,10 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 
 	err = c.verifySMP3ProtocolSuccess(c.smp.s2, m)
 	if err != nil {
-		c.getEventHandler().handleSMPEvent(SMPEventFailure, 100, "")
+		smpEventFailure(c)
 		return smpStateExpect1{}, smpMessageAbort{}, err
 	}
-	c.getEventHandler().handleSMPEvent(SMPEventSuccess, 100, "")
+	smpEventSuccess(c)
 
 	ret, err := c.generateSMP4(c.smp.secret, *c.smp.s2, m)
 	if err != nil {
@@ -171,10 +171,10 @@ func (smpStateExpect4) receiveMessage4(c *Conversation, m smp4Message) (smpState
 
 	err = c.verifySMP4ProtocolSuccess(c.smp.s1, c.smp.s3, m)
 	if err != nil {
-		c.getEventHandler().handleSMPEvent(SMPEventFailure, 100, "")
+		smpEventFailure(c)
 		return smpStateExpect1{}, smpMessageAbort{}, err
 	}
-	c.getEventHandler().handleSMPEvent(SMPEventSuccess, 100, "")
+	smpEventSuccess(c)
 
 	return smpStateExpect1{}, nil, nil
 }
@@ -201,7 +201,7 @@ func (m smp4Message) receivedMessage(c *Conversation) (ret smpMessage, err error
 
 func (m smpMessageAbort) receivedMessage(c *Conversation) (ret smpMessage, err error) {
 	c.smp.state = smpStateExpect1{}
-	c.getEventHandler().handleSMPEvent(SMPEventAbort, 0, "")
+	smpEventAbort(c)
 	return
 }
 

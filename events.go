@@ -129,3 +129,36 @@ func (c *Conversation) getEventHandler() *EventHandler {
 	}
 	return c.eventHandler
 }
+
+func smpEventCheated(c *Conversation) {
+	c.getEventHandler().handleSMPEvent(SMPEventCheated, 0, "")
+}
+
+func smpEventError(c *Conversation) {
+	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
+}
+
+func smpEventAskForAnswer(c *Conversation, question string) {
+	c.getEventHandler().handleSMPEvent(SMPEventAskForAnswer, 25, question)
+}
+
+func smpEventAskForSecret(c *Conversation) {
+	c.getEventHandler().handleSMPEvent(SMPEventAskForSecret, 25, "")
+}
+
+func smpEventInProgress(c *Conversation) {
+	c.getEventHandler().handleSMPEvent(SMPEventInProgress, 60, "")
+}
+
+func smpEventFailure(c *Conversation) {
+	c.getEventHandler().handleSMPEvent(SMPEventFailure, 100, "")
+}
+
+func smpEventSuccess(c *Conversation) {
+	c.getEventHandler().handleSMPEvent(SMPEventSuccess, 100, "")
+}
+
+func smpEventAbort(c *Conversation) {
+	c.getEventHandler().handleSMPEvent(SMPEventAbort, 0, "")
+
+}
