@@ -149,12 +149,13 @@ func (c *dataMsg) sign(key macKey, header []byte) {
 }
 
 func (c dataMsg) checkSign(key macKey, header []byte) error {
-	var authenticatorReceived [20]byte
+	var authenticatorCalculated [20]byte
 	mac := hmac.New(sha1.New, key[:])
 	mac.Write(header)
 	mac.Write(c.serializeUnsignedCache)
-	copy(authenticatorReceived[:], mac.Sum(nil))
-	if subtle.ConstantTimeCompare(c.authenticator[:], authenticatorReceived[:]) == 0 {
+	copy(authenticatorCalculated[:], mac.Sum(nil))
+
+	if subtle.ConstantTimeCompare(c.authenticator[:], authenticatorCalculated[:]) == 0 {
 		return newOtrError("bad authenticator MAC in data message")
 	}
 	return nil

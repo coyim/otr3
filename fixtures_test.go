@@ -219,16 +219,26 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 //an encrypted message from Alice generated with fixtureDataMsg()
 func fixtureDecryptDataMsg(encryptedDataMsg []byte) plainDataMsg {
 	c := newConversation(otrV3{}, rand.Reader)
-	c.ourInstanceTag = 0x00000100 + 0x01
-	c.theirInstanceTag = 0x00000100 + 0x01
-	_, withoutHeader, _ := c.parseMessageHeader(encryptedDataMsg)
+
+	header, withoutHeader, err := c.parseMessageHeader(encryptedDataMsg)
+	if err != nil {
+		panic(err)
+	}
 
 	m := dataMsg{}
-	m.deserialize(withoutHeader)
+	err = m.deserialize(withoutHeader)
+	if err != nil {
+		panic(err)
+	}
 
 	keys := calculateDHSessionKeys(fixedx, fixedgx, fixedgy)
 
 	exp := plainDataMsg{}
+	err = m.checkSign(keys.receivingMACKey, header)
+	if err != nil {
+		panic(err)
+	}
+
 	exp.decrypt(keys.receivingAESKey, m.topHalfCtr, m.encryptedMsg)
 
 	return exp

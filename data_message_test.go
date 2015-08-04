@@ -145,11 +145,14 @@ func Test_processDataMessage_processSMPMessage(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
+
+	bob.smp.state = smpStateExpect2{}
+	bob.smp.s1 = fixtureSmp1()
 	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{
 		tlvs: []tlv{
-			fixtureMessage1().tlv(),
+			fixtureMessage2().tlv(),
 		},
 	}
 
@@ -162,7 +165,9 @@ func Test_processDataMessage_processSMPMessage(t *testing.T) {
 	exp := fixtureDecryptDataMsg(toSend)
 
 	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, len(exp.tlvs), 0)
+	assertDeepEquals(t, len(exp.tlvs), 2)
+	assertDeepEquals(t, exp.tlvs[0].tlvType, uint16(tlvTypeSMP3))
+	assertDeepEquals(t, exp.tlvs[1].tlvType, uint16(tlvTypePadding))
 }
 
 func Test_processDataMessage_returnsErrorIfSomethingGoesWrongWithDeserialize(t *testing.T) {

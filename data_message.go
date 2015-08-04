@@ -90,8 +90,16 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 	}
 
 	if len(tlvs) > 0 {
-		dataMsg, _ := c.genDataMsg(nil, tlvs...)
-		toSend = dataMsg.serialize()
+		var reply dataMsg
+		reply, err = c.genDataMsg(nil, tlvs...)
+		if err != nil {
+			return
+		}
+
+		toSend, err = c.wrapMessageHeader(msgTypeData, reply.serialize())
+		if err != nil {
+			return
+		}
 	}
 
 	return
