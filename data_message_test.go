@@ -1,6 +1,9 @@
 package otr3
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func Test_processTLVs_ignoresInvalidTLVMessageTypes(t *testing.T) {
 	var nilT []tlv
@@ -110,7 +113,7 @@ func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 	msg, bob.keys = fixtureDataMsg(plain)
 
 	bob.msgState = encrypted
-	exp, _, err := bob.receiveDecoded(msg)
+	exp, _, _, err := bob.receiveDecoded(msg)
 
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, exp, []byte("hello"))
@@ -147,7 +150,7 @@ func Test_processDataMessage_willGenerateAHeartBeatEventForAnEmptyMessage(t *tes
 	bob.msgState = encrypted
 
 	bob.expectMessageEvent(t, func() {
-		exp, _, _ := bob.receiveDecoded(msg)
+		exp, _, _, _ := bob.receiveDecoded(msg)
 		assertNil(t, exp)
 	}, MessageEventLogHeartbeatReceived, "", nil)
 }
@@ -168,7 +171,7 @@ func Test_processDataMessage_processSMPMessage(t *testing.T) {
 	msg, bob.keys = fixtureDataMsg(plain)
 
 	bob.msgState = encrypted
-	_, toSend, err := bob.receiveDecoded(msg)
+	_, toSend, _, err := bob.receiveDecoded(msg)
 
 	exp := fixtureDecryptDataMsg(toSend)
 
@@ -192,7 +195,7 @@ func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing
 	c.keys.theirCounter++ // force a bigger counter
 
 	c.msgState = encrypted
-	_, _, err := c.receiveDecoded(msg)
+	_, _, _, err := c.receiveDecoded(msg)
 
 	assertEquals(t, err, errInvalidOTRMessage)
 }
@@ -213,7 +216,7 @@ func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 	alicePreviousKey := bob.keys.theirPreviousDHPubKey
 
 	bob.msgState = encrypted
-	_, _, err := bob.receiveDecoded(msg)
+	_, _, _, err := bob.receiveDecoded(msg)
 
 	assertDeepEquals(t, err, newOtrError("bad authenticator MAC in data message"))
 	assertDeepEquals(t, bobCurrentDHKeys, bob.keys.ourCurrentDHKeys)
@@ -224,7 +227,6 @@ func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 }
 
 func Test_processDataMessage_rotateOurKeysAfterDecryptingTheMessage(t *testing.T) {
-	var nilB []byte
 	bob := newConversation(otrV3{}, nil)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
@@ -236,13 +238,31 @@ func Test_processDataMessage_rotateOurKeysAfterDecryptingTheMessage(t *testing.T
 	bobCurrentDHKeys := bob.keys.ourCurrentDHKeys
 
 	bob.msgState = encrypted
-	_, toSend, err := bob.receiveDecoded(msg)
+	_, toSend, _, err := bob.receiveDecoded(msg)
 
-	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, err)
+	assertNil(t, toSend)
 	assertDeepEquals(t, bobCurrentDHKeys, bob.keys.ourPreviousDHKeys)
 	assertEquals(t, eq(bobCurrentDHKeys.pub, bob.keys.ourCurrentDHKeys.pub), false)
 	assertEquals(t, eq(bobCurrentDHKeys.priv, bob.keys.ourCurrentDHKeys.priv), false)
+}
+
+func Test_processDataMessage_willReturnAHeartbeatMessageAfterAPlainTextMessage(t *testing.T) {
+	bob := newConversation(otrV3{}, nil)
+	bob.Policies.add(allowV3)
+	bob.OurKey = bobPrivateKey
+	bob.heartbeat.lastSent = time.Now().Add(-61 * time.Second)
+
+	var msg []byte
+	msg, bob.keys = fixtureDataMsg(plainDataMsg{message: []byte("something")})
+
+	bob.keys.ourKeyID = 1
+
+	bob.msgState = encrypted
+	_, _, toSendExtra, err := bob.receiveDecoded(msg)
+
+	assertDeepEquals(t, err, nil)
+	assertDeepEquals(t, len(toSendExtra), 497)
 }
 
 func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing.T) {
@@ -258,7 +278,7 @@ func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing
 	aliceCurrentDHPubKey := bob.keys.theirCurrentDHPubKey
 
 	bob.msgState = encrypted
-	_, toSend, err := bob.receiveDecoded(msg)
+	_, toSend, _, err := bob.receiveDecoded(msg)
 
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, toSend, nilB)
@@ -280,7 +300,7 @@ func Test_processDataMessage_returnErrorWhenOurKeyIDUnexpected(t *testing.T) {
 	bob.keys.theirCurrentDHPubKey = bnFromHex("da61b77be39426456fecfd6df16645bd2c967bc1a27b165dbf77fea4753ece7a8b938532395bbd1def2890a2792f1854c2d736ee27139356b3bb2583afa4c96a9083209d9f2bb1caeb6fe5ee608715ae6dc1c470e38b895e48e0532af5388c8e591d9ebe361f118ad54d8640f24fa54fdb1d07594d496150554094e5ec4bcfcc6b1b4b058b679824306ad7ae481a25d0758cc01c29c281ce33ac2f58d6eaa99985f855e9ce667ff287b4d27d7c73a7717277546d17e8dd5539861bc26fa04c1b")
 
 	bob.msgState = encrypted
-	_, _, err := bob.receiveDecoded(datamsg)
+	_, _, _, err := bob.receiveDecoded(datamsg)
 
 	assertDeepEquals(t, err, ErrGPGConflict)
 }

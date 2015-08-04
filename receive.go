@@ -26,17 +26,26 @@ func (c *Conversation) toSendEncoded2(toSend []byte, err error) ([]byte, [][]byt
 	return nil, c.encode(toSend), err
 }
 
-func (c *Conversation) toSendEncoded3(plain, toSend []byte, err error) ([]byte, [][]byte, error) {
+func (c *Conversation) toSendEncoded3(plain []byte, toSend []byte, err error) ([]byte, [][]byte, error) {
 	if err != nil || len(toSend) == 0 {
 		return plain, nil, err
 	}
+
 	return plain, c.encode(toSend), err
 }
 
-func (c *Conversation) receiveEncoded(message []byte) ([]byte, []byte, error) {
+func (c *Conversation) toSendEncoded34(plain []byte, toSend []byte, toSendExtra []byte, err error) ([]byte, [][]byte, error) {
+	if err != nil || len(toSend) == 0 {
+		return plain, nil, err
+	}
+
+	return plain, append(c.encode(toSend), c.encode(toSendExtra)...), err
+}
+
+func (c *Conversation) receiveEncoded(message []byte) ([]byte, []byte, []byte, error) {
 	decodedMessage, err := c.decode(message)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	return c.receiveDecoded(decodedMessage)
 }
@@ -70,7 +79,7 @@ func (c *Conversation) decode(encoded []byte) ([]byte, error) {
 	return msg[:msgLen], nil
 }
 
-func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err error) {
+func (c *Conversation) receiveDecoded(message []byte) (plain []byte, toSend []byte, toSendExtra []byte, err error) {
 	if err = c.checkVersion(message); err != nil {
 		return
 	}
@@ -88,7 +97,7 @@ func (c *Conversation) receiveDecoded(message []byte) (plain, toSend []byte, err
 			return
 		}
 
-		plain, toSend, err = c.processDataMessage(messageHeader, messageBody)
+		plain, toSend, toSendExtra, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
 	} else {
 		toSend, err = c.receiveAKE(msgType, messageBody)
 	}
@@ -111,7 +120,7 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, e
 	case isErrorMessage(message):
 		return c.receiveErrorMessage(message)
 	case isEncoded(message):
-		return c.toSendEncoded3(c.receiveEncoded(message))
+		return c.toSendEncoded34(c.receiveEncoded(message))
 	case isQueryMessage(message):
 		return c.toSendEncoded2(c.receiveQueryMessage(message))
 	default:

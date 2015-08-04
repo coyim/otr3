@@ -3,6 +3,10 @@ package otr3
 import "encoding/binary"
 
 func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) (dataMsg, error) {
+	return c.genDataMsgWithFlag(message, 0x00, tlvs...)
+}
+
+func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv) (dataMsg, error) {
 	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	if err != nil {
 		return dataMsg{}, err
@@ -26,7 +30,7 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) (dataMsg, error) 
 
 	dataMessage := dataMsg{
 		//TODO: implement IGNORE_UNREADABLE
-		flag:           0x00,
+		flag:           flag,
 		senderKeyID:    c.keys.ourKeyID - 1,
 		recipientKeyID: c.keys.theirKeyID,
 		y:              c.keys.ourCurrentDHKeys.pub,

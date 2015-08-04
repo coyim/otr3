@@ -67,8 +67,6 @@ type MessageEvent int
  *      Cannot read the received message.
  * - OTRL_MSGEVENT_RCVDMSG_MALFORMED
  *      The message received contains malformed data.
- * - OTRL_MSGEVENT_LOG_HEARTBEAT_SENT
- *      Sent a heartbeat.
  * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
  *      Received a general OTR error. The argument 'message' will
  *      also be passed and it will contain the OTR error message.
@@ -91,10 +89,12 @@ const (
 	// MessageEventReceivedMessageUnreadable
 	// MessageEventReceivedMessageMalformed
 
-	// MessageEventLogHeartbeatReceived is sent when we received a heartbeat.
+	// MessageEventLogHeartbeatReceived is triggered when we received a heartbeat.
 	MessageEventLogHeartbeatReceived
 
-	// MessageEventLogHeartbeatSent
+	// MessageEventLogHeartbeatSent is triggered when we have sent a heartbeat.
+	MessageEventLogHeartbeatSent
+
 	// MessageEventReceivedMessageGeneralError
 	// MessageEventReceivedMessageUnencrypted
 	// MessageEventReceivedMessageUnrecognized
@@ -166,4 +166,8 @@ func smpEventAbort(c *Conversation) {
 
 func messageEventHeartbeatReceived(c *Conversation) {
 	c.getEventHandler().handleMessageEvent(MessageEventLogHeartbeatReceived, "", nil)
+}
+
+func messageEventHeartbeatSent(c *Conversation) {
+	c.getEventHandler().handleMessageEvent(MessageEventLogHeartbeatSent, "", nil)
 }

@@ -10,6 +10,8 @@ import (
 	"math/big"
 )
 
+const messageFlagIgnoreUnreadable = byte(0x01)
+
 const messageHeaderPrefix = 3
 
 const (

@@ -15,10 +15,11 @@ type Conversation struct {
 	OurKey   *PrivateKey
 	TheirKey *PublicKey
 
-	ake      *ake
-	smp      smp
-	keys     keyManagementContext
-	Policies policies
+	ake       *ake
+	smp       smp
+	keys      keyManagementContext
+	Policies  policies
+	heartbeat heartbeatContext
 
 	fragmentSize              uint16
 	stopSendingWhitespaceTags bool

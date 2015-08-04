@@ -38,7 +38,7 @@ func Test_receive_verifiesMessageProtocolVersion(t *testing.T) {
 	msg := []byte{0x00, 0x02, 0x00, msgTypeDHKey}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, _, err := c.receiveDecoded(msg)
+	_, _, _, err := c.receiveDecoded(msg)
 
 	assertEquals(t, err, errWrongProtocolVersion)
 }
@@ -47,7 +47,7 @@ func Test_receive_returnsAnErrorForAnInvalidOTRMessageWithoutVersionData(t *test
 	msg := []byte{0x00}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, _, err := c.receiveDecoded(msg)
+	_, _, _, err := c.receiveDecoded(msg)
 
 	assertEquals(t, err, errInvalidOTRMessage)
 }
@@ -61,7 +61,7 @@ func Test_receive_returnsAnErrorForADataMessageWhenNoEncryptionIsActive(t *testi
 	}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, _, err := c.receiveDecoded(m)
+	_, _, _, err := c.receiveDecoded(m)
 	assertDeepEquals(t, err, errEncryptedMessageWithNoSecureChannel)
 }
 
@@ -78,7 +78,7 @@ func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.Policies.add(allowV3)
 
-	_, dhKeyMsg, err := c.receiveDecoded(dhCommitMsg)
+	_, dhKeyMsg, _, err := c.receiveDecoded(dhCommitMsg)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhKeyMsg[:messageHeaderPrefix], exp)
@@ -90,7 +90,7 @@ func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
 	msg := fixtureDHKeyMsg(v)
 	c := bobContextAtAwaitingDHKey()
 
-	_, toSend, err := c.receiveDecoded(msg)
+	_, toSend, _, err := c.receiveDecoded(msg)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, dhMsgType(toSend), msgTypeRevealSig)

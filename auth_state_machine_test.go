@@ -313,7 +313,6 @@ func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {
 }
 
 func Test_receiveAKE_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.T) {
-	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
 	cV2.Policies.add(allowV2)
 
@@ -324,13 +323,13 @@ func Test_receiveAKE_ignoresDHCommitIfItsVersionIsNotInThePolicy(t *testing.T) {
 	msgV2, _ := ake.dhCommitMessage()
 	msgV3 := fixtureDHCommitMsgBody()
 
-	_, toSend, _ := cV2.receiveDecoded(msgV3)
+	_, toSend, _, _ := cV2.receiveDecoded(msgV3)
 	assertEquals(t, cV2.ake.state, authStateNone{})
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 
-	_, toSend, _ = cV3.receiveDecoded(msgV2[otrv3HeaderLen:])
+	_, toSend, _, _ = cV3.receiveDecoded(msgV2[otrv3HeaderLen:])
 	assertEquals(t, cV3.ake.state, authStateNone{})
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 }
 
 func Test_receiveDecoded_resolveProtocolVersionFromDHCommitMessage(t *testing.T) {
@@ -348,7 +347,6 @@ func Test_receiveDecoded_resolveProtocolVersionFromDHCommitMessage(t *testing.T)
 }
 
 func Test_receiveAKE_ignoresDHKeyIfItsVersionIsNotInThePolicy(t *testing.T) {
-	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
 	cV2.ensureAKE()
 	cV2.ake.state = authStateAwaitingDHKey{}
@@ -362,17 +360,16 @@ func Test_receiveAKE_ignoresDHKeyIfItsVersionIsNotInThePolicy(t *testing.T) {
 	msgV2 := fixtureDHKeyMsg(otrV2{})[otrv2HeaderLen:]
 	msgV3 := fixtureDHKeyMsg(otrV3{})[otrv3HeaderLen:]
 
-	_, toSend, _ := cV2.receiveDecoded(msgV3)
+	_, toSend, _, _ := cV2.receiveDecoded(msgV3)
 	assertEquals(t, cV2.ake.state, authStateAwaitingDHKey{})
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 
-	_, toSend, _ = cV3.receiveDecoded(msgV2)
+	_, toSend, _, _ = cV3.receiveDecoded(msgV2)
 	assertEquals(t, cV3.ake.state, authStateAwaitingDHKey{})
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 }
 
 func Test_receiveAKE_ignoresRevealSigIfItsVersionIsNotInThePolicy(t *testing.T) {
-	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
 	cV2.ensureAKE()
 	cV2.ake.state = authStateAwaitingRevealSig{}
@@ -386,17 +383,16 @@ func Test_receiveAKE_ignoresRevealSigIfItsVersionIsNotInThePolicy(t *testing.T) 
 	msgV2 := fixtureRevealSigMsg(otrV2{})
 	msgV3 := fixtureRevealSigMsg(otrV3{})
 
-	_, toSend, _ := cV2.receiveDecoded(msgV3)
+	_, toSend, _, _ := cV2.receiveDecoded(msgV3)
 	assertEquals(t, cV2.ake.state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 
-	_, toSend, _ = cV3.receiveDecoded(msgV2)
+	_, toSend, _, _ = cV3.receiveDecoded(msgV2)
 	assertEquals(t, cV3.ake.state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 }
 
 func Test_receiveAKE_ignoresSignatureIfItsVersionIsNotInThePolicy(t *testing.T) {
-	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
 	cV2.ensureAKE()
 	cV2.ake.state = authStateAwaitingSig{}
@@ -410,19 +406,18 @@ func Test_receiveAKE_ignoresSignatureIfItsVersionIsNotInThePolicy(t *testing.T) 
 	msgV2 := fixtureSigMsg(otrV2{})
 	msgV3 := fixtureSigMsg(otrV3{})
 
-	_, toSend, _ := cV2.receiveDecoded(msgV3)
+	_, toSend, _, _ := cV2.receiveDecoded(msgV3)
 	_, sameStateType := cV2.ake.state.(authStateAwaitingSig)
 	assertDeepEquals(t, sameStateType, true)
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 
-	_, toSend, _ = cV3.receiveDecoded(msgV2)
+	_, toSend, _, _ = cV3.receiveDecoded(msgV2)
 	_, sameStateType = cV3.ake.state.(authStateAwaitingSig)
 	assertDeepEquals(t, sameStateType, true)
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 }
 
 func Test_receiveAKE_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
-	var nilB []byte
 	cV2 := newConversation(otrV2{}, fixtureRand())
 	cV2.ensureAKE()
 	cV2.ake.state = authStateAwaitingRevealSig{}
@@ -436,13 +431,13 @@ func Test_receiveAKE_ignoresRevealSignaureIfDoesNotAllowV2(t *testing.T) {
 	msgV2 := fixtureRevealSigMsg(otrV2{})[otrv2HeaderLen:]
 	msgV3 := fixtureRevealSigMsg(otrV3{})[otrv3HeaderLen:]
 
-	_, toSend, _ := cV3.receiveDecoded(msgV3)
+	_, toSend, _, _ := cV3.receiveDecoded(msgV3)
 	assertEquals(t, cV3.ake.state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 
-	_, toSend, _ = cV2.receiveDecoded(msgV2)
+	_, toSend, _, _ = cV2.receiveDecoded(msgV2)
 	assertEquals(t, cV2.ake.state, authStateAwaitingRevealSig{})
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 }
 
 func Test_receiveAKE_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
@@ -451,13 +446,13 @@ func Test_receiveAKE_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 	cV3.ake.state = authStateAwaitingSig{}
 	cV3.Policies.add(allowV3)
 
-	_, _, err := cV3.receiveDecoded([]byte{})
+	_, _, _, err := cV3.receiveDecoded([]byte{})
 	assertEquals(t, err, errInvalidOTRMessage)
 
-	_, _, err = cV3.receiveDecoded([]byte{0x00, 0x00})
+	_, _, _, err = cV3.receiveDecoded([]byte{0x00, 0x00})
 	assertEquals(t, err, errWrongProtocolVersion)
 
-	_, _, err = cV3.receiveDecoded([]byte{0x00, 0x03, 0x56, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x01})
+	_, _, _, err = cV3.receiveDecoded([]byte{0x00, 0x03, 0x56, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x01})
 	assertDeepEquals(t, err, newOtrError("unknown message type 0x56"))
 }
 
@@ -466,7 +461,7 @@ func Test_receiveAKE_receiveRevealSigMessageAndSetMessageStateToEncrypted(t *tes
 	msg := fixtureRevealSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
-	_, _, err := c.receiveDecoded(msg)
+	_, _, _, err := c.receiveDecoded(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.msgState, encrypted)
@@ -479,7 +474,7 @@ func Test_receiveAKE_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurrentDH
 	msg := fixtureRevealSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
-	_, _, err := c.receiveDecoded(msg)
+	_, _, _, err := c.receiveDecoded(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
@@ -492,7 +487,7 @@ func Test_receiveAKE_receiveSigMessageAndSetMessageStateToEncrypted(t *testing.T
 	msg := fixtureSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
-	_, _, err := c.receiveDecoded(msg)
+	_, _, _, err := c.receiveDecoded(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.msgState, encrypted)
@@ -506,7 +501,7 @@ func Test_receiveAKE_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey
 	msg := fixtureSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
-	_, _, err := c.receiveDecoded(msg)
+	_, _, _, err := c.receiveDecoded(msg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
