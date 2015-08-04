@@ -43,6 +43,9 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 	return dataMessage, nil
 }
 
+// processDataMessage receives a decoded incoming message and returns the plain text inside that message
+// and a data message (with header) generated in response to any TLV contained in the incoming message.
+// The header and message compose the decoded incoming message.
 func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []byte, err error) {
 	dataMessage := dataMsg{}
 
@@ -94,6 +97,7 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 			return
 		}
 
+		//TODO: This should be probably out of this method
 		toSend, err = c.wrapMessageHeader(msgTypeData, reply.serialize())
 		if err != nil {
 			return

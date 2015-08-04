@@ -13,6 +13,7 @@ func (c *Conversation) updateLastSent() {
 	c.heartbeat.lastSent = time.Now()
 }
 
+// Returns a serialized data message (with/without header depending on the case)
 func (c *Conversation) maybeHeartbeat(plain, toSend []byte, err error) ([]byte, []byte, []byte, error) {
 	if err != nil {
 		return nil, nil, nil, err
@@ -21,6 +22,7 @@ func (c *Conversation) maybeHeartbeat(plain, toSend []byte, err error) ([]byte, 
 	return plain, toSend, tsExtra, e
 }
 
+// Returns a serialized data message (with NO header)
 func (c *Conversation) potentialHeartbeat(plain []byte) (toSend []byte, err error) {
 	if plain != nil {
 		now := time.Now()

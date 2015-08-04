@@ -23,6 +23,7 @@ func (c *Conversation) akeHasFinished() error {
 	return c.generateNewDHKeyPair()
 }
 
+// Returns a AKE message (with header)
 func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend []byte, err error) {
 	c.ensureAKE()
 
