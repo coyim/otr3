@@ -497,6 +497,10 @@ func Test_smpStateExpect3_String_returnsTheCorrectString(t *testing.T) {
 	assertEquals(t, smpStateExpect3{}.String(), "SMPSTATE_EXPECT3")
 }
 
+func Test_smpStateExpect4_String_returnsTheCorrectString(t *testing.T) {
+	assertEquals(t, smpStateExpect4{}.String(), "SMPSTATE_EXPECT4")
+}
+
 func Test_smpMessageAbort_receivedMessage_setsTheNewState(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.state = smpStateExpect2{}
