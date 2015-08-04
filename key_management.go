@@ -129,7 +129,7 @@ func (c *keyManagementContext) revealMACKeysForOurPreviousKeyID() {
 func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
 	x, err := c.randMPI(make([]byte, 40))
 	if err != nil {
-		//NOTE: what should we do?
+		//TODO: what should we do?
 		//This is one kind of error that breaks the encrypted channel. I believe we
 		//should change the msgState to != encrypted
 		return err

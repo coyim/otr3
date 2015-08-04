@@ -56,7 +56,7 @@ func (c *Conversation) receiveOther(message []byte) ([]byte, []byte, error) {
 
 	//TODO:	warn that the message was received unencrypted
 	if c.msgState != plainText || c.Policies.has(requireEncryption) {
-		//FIXME: returning an error might not be the best semantic to "it worked,
+		//TODO: returning an error might not be the best semantic to "it worked,
 		//but we have to notify you that something unexpected happened"
 		//err = errUnexpectedPlainMessage
 	}

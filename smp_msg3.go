@@ -2,7 +2,7 @@ package otr3
 
 import "math/big"
 
-// FIXME should store g3b, (Pa / Pb), (Qa / Qb) and Ra
+// TODO should store g3b, (Pa / Pb), (Qa / Qb) and Ra
 // after generating smpMessage3
 
 type smp3State struct {
@@ -88,7 +88,7 @@ func (c *Conversation) verifySMP3(s2 *smp2State, msg smp3Message) error {
 		return newOtrError("cP is not a valid zero knowledge proof")
 	}
 
-	//FIXME should it calculate it here?
+	//TODO should it calculate it here?
 	qaqb := divMod(msg.qa, s2.qb, p)
 
 	if !verifyZKP4(msg.cr, s2.g3a, msg.d7, qaqb, msg.ra, 7) {

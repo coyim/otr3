@@ -201,7 +201,7 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 
 	state, msg, _ := sigState.receiveDHKeyMessage(c, sameDHKeyMsg)
 
-	//FIXME: What about gy and sigKey?
+	//TODO: What about gy and sigKey?
 	_, sameStateType := state.(authStateAwaitingSig)
 	assertDeepEquals(t, sameStateType, true)
 	assertDeepEquals(t, msg, previousRevealSig)

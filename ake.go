@@ -204,7 +204,7 @@ func (c *Conversation) processDHKey(msg []byte) (isSame bool, err error) {
 		return false, err
 	}
 
-	//NOTE: This keeps only the first Gy received
+	//TODO: This keeps only the first Gy received
 	//Not sure if this is part of the spec,
 	//or simply a crypto/otr safeguard
 	if c.ake.theirPublicValue != nil {

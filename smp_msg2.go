@@ -2,7 +2,7 @@ package otr3
 
 import "math/big"
 
-// FIXME should store g3a*, g2, g3, b3, Pb and Qb
+// TODO should store g3a*, g2, g3, b3, Pb and Qb
 // after generating smp2Message
 
 type smp2State struct {

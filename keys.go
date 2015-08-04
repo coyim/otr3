@@ -251,7 +251,6 @@ func (priv *PrivateKey) serialize() []byte {
 	return appendMPI(result, priv.PrivateKey.X)
 }
 
-//NOTE:only for compat use
 func (priv *PrivateKey) Serialize() []byte {
 	return priv.serialize()
 }
