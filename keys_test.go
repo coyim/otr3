@@ -955,7 +955,10 @@ func Test_ImportKeys_willReturnTheParsedAccountInformation(t *testing.T) {
 
 func Test_ImportKeysFromFile_willReturnAnErrorIfAskedToReadAFileNameThatDoesntExist(t *testing.T) {
 	_, err := ImportKeysFromFile("this_file_doesnt_exist.asc")
-	assertDeepEquals(t, err, &os.PathError{"open", "this_file_doesnt_exist.asc", syscall.Errno(0x02)})
+	assertDeepEquals(t, err, &os.PathError{
+		Op:   "open",
+		Path: "this_file_doesnt_exist.asc",
+		Err:  syscall.Errno(0x02)})
 }
 
 func Test_ImportKeysFromFile_willReturnAValidAccountReadFromAFile(t *testing.T) {
