@@ -32,6 +32,7 @@ func (c *Conversation) potentialHeartbeat(plain []byte) (toSend []byte, err erro
 				return nil, err
 			}
 			toSend = dataMsg.serialize()
+			//TODO: why no messageHeader?
 			c.updateLastSent()
 			messageEventHeartbeatSent(c)
 		}

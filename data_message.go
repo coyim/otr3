@@ -3,7 +3,7 @@ package otr3
 import "encoding/binary"
 
 func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) (dataMsg, error) {
-	return c.genDataMsgWithFlag(message, 0x00, tlvs...)
+	return c.genDataMsgWithFlag(message, messageFlagNormal, tlvs...)
 }
 
 func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv) (dataMsg, error) {
