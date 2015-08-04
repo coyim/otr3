@@ -29,7 +29,6 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 	}
 
 	dataMessage := dataMsg{
-		//TODO: implement IGNORE_UNREADABLE
 		flag:           flag,
 		senderKeyID:    c.keys.ourKeyID - 1,
 		recipientKeyID: c.keys.theirKeyID,
@@ -92,7 +91,7 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 
 	if len(tlvs) > 0 {
 		var reply dataMsg
-		reply, err = c.genDataMsg(nil, tlvs...)
+		reply, err = c.genDataMsgWithFlag(nil, decideFlagFrom(tlvs), tlvs...)
 		if err != nil {
 			return
 		}
@@ -105,6 +104,17 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []b
 	}
 
 	return
+}
+
+func decideFlagFrom(tlvs []tlv) byte {
+	flag := byte(0x00)
+	for _, t := range tlvs {
+		if t.tlvType >= tlvTypeSMP1 && t.tlvType <= tlvTypeSMP1WithQuestion {
+			flag = messageFlagIgnoreUnreadable
+		}
+
+	}
+	return flag
 }
 
 func (c *Conversation) processSMPTLV(t tlv) (toSend *tlv, err error) {

@@ -20,7 +20,7 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 		}
 		return [][]byte{msg}, nil
 	case encrypted:
-		return c.createSerializedDataMessage(msg, []tlv{})
+		return c.createSerializedDataMessage(msg, 0x00, []tlv{})
 	case finished:
 		return nil, errors.New("otr: cannot send message because secure conversation has finished")
 	}
