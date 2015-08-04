@@ -7,12 +7,12 @@ import (
 
 func Test_conversation_rand_returnsTheSetRandomIfThereIsOne(t *testing.T) {
 	r := fixtureRand()
-	c := newConversation(otrV3{}, r)
+	c := &Conversation{Rand: r}
 	assertEquals(t, c.rand(), r)
 }
 
 func Test_conversation_rand_returnsRandReaderIfNoRandomnessIsSet(t *testing.T) {
-	c := newConversation(otrV3{}, nil)
+	c := &Conversation{}
 	assertEquals(t, c.rand(), rand.Reader)
 }
 

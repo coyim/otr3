@@ -1,6 +1,7 @@
 package otr3
 
 import (
+	"crypto/rand"
 	"testing"
 	"time"
 )
@@ -85,7 +86,7 @@ func Test_genDataMsg_revealOldMACKeysFromKeyManagementContext(t *testing.T) {
 }
 
 func Test_genDataMsg_returnsErrorIfFailsToCalculateDHSessionKey(t *testing.T) {
-	c := newConversation(otrV3{}, nil)
+	c := newConversation(otrV3{}, rand.Reader)
 	_, err := c.genDataMsg(nil)
 	assertEquals(t, err, ErrGPGConflict)
 }
@@ -100,7 +101,7 @@ func Test_genDataMsg_returnsErrorIfFailsToGenerateInstanceTag(t *testing.T) {
 }
 
 func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
-	bob := newConversation(otrV3{}, nil)
+	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
 	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
@@ -120,7 +121,7 @@ func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 }
 
 func Test_processDataMessage_willGenerateAHeartBeatEventForAnEmptyMessage(t *testing.T) {
-	bob := newConversation(otrV3{}, nil)
+	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
 	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
@@ -141,7 +142,7 @@ func Test_processDataMessage_willGenerateAHeartBeatEventForAnEmptyMessage(t *tes
 }
 
 func Test_processDataMessage_processSMPMessage(t *testing.T) {
-	bob := newConversation(otrV3{}, nil)
+	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
 	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
@@ -165,14 +166,14 @@ func Test_processDataMessage_processSMPMessage(t *testing.T) {
 }
 
 func Test_processDataMessage_returnsErrorIfSomethingGoesWrongWithDeserialize(t *testing.T) {
-	c := newConversation(otrV3{}, nil)
+	c := newConversation(otrV3{}, rand.Reader)
 	_, _, err := c.processDataMessage([]byte{}, []byte{})
 
 	assertEquals(t, err.Error(), "otr: dataMsg.deserialize empty message")
 }
 
 func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing.T) {
-	c := newConversation(otrV3{}, nil)
+	c := newConversation(otrV3{}, rand.Reader)
 	c.OurKey = bobPrivateKey
 
 	var msg []byte
@@ -186,7 +187,7 @@ func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing
 }
 
 func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
-	bob := newConversation(otrV3{}, nil)
+	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
 
@@ -212,7 +213,7 @@ func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 }
 
 func Test_processDataMessage_rotateOurKeysAfterDecryptingTheMessage(t *testing.T) {
-	bob := newConversation(otrV3{}, nil)
+	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
 
@@ -233,7 +234,7 @@ func Test_processDataMessage_rotateOurKeysAfterDecryptingTheMessage(t *testing.T
 }
 
 func Test_processDataMessage_willReturnAHeartbeatMessageAfterAPlainTextMessage(t *testing.T) {
-	bob := newConversation(otrV3{}, nil)
+	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
 	bob.heartbeat.lastSent = time.Now().Add(-61 * time.Second)
@@ -252,7 +253,7 @@ func Test_processDataMessage_willReturnAHeartbeatMessageAfterAPlainTextMessage(t
 
 func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing.T) {
 	var nilB []byte
-	bob := newConversation(otrV3{}, nil)
+	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
 
@@ -273,7 +274,7 @@ func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing
 
 func Test_processDataMessage_returnErrorWhenOurKeyIDUnexpected(t *testing.T) {
 	datamsg := bytesFromHex("0003030000010100000101000000000100000001000000c03a3ca02c03bef84c7596504b7b2dee2820500bf51107e4447cfd2fddd8132a29668ef7cb3f56ff75f80e9d5a3c34e4aaa45a63beee83c058d21653e45d56ad04f6493545ad5bc3441f9a1a23fdf5ea0d812f3dfa02de9742ee9b1779dd1d84bf1bf06700a05779ff1a730c51ecdce34d251317dacdcbe865f12c2bf8e4a8a15cc10975184a7509e3f82244c8594d3df18b411648dc059cf341c50ab0d3981f186519ca3104609e89a5f4be44047068c5ba33d2b1de0e9b7d5e6aa67c148f57d70000000000000001000001007104b8684860d2eacc0d653ca9696171f5d7b03d90a06fd46305c041ab4af8313826ca82f8fc43c755c56dd62fa025822e72d9566a32fe88f189e0fb1b07128a37db49350392470cdd57f280f565ab775d58af6f5d8efca39126192efefe1f98bdfd2135b1c6ce8e68d8d3bfd50eae34187191524492193d20dd75d6b04a1e7d90fe1e71a9843b720df310119c1db82928c11308d93ed508641e73b6d579eefbcb432ab2ebf2b15a3b1c8baca86d5008c81286705b9368abec0d5cf4b6e2289be1040b5ac172cbc81f7a594d721cafd50e7cfdc2616c6d59cf445f885d8e80980a73f6a55a34be9e90b7ec25f757e212fa2b79c4c56d922a804168bfeca75199dbede31d8101018586d1f992afdd80117cf84d1000000000")
-	bob := newConversation(otrV3{}, nil)
+	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV2)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey

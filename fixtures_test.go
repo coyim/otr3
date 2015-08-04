@@ -1,6 +1,9 @@
 package otr3
 
-import "io"
+import (
+	"crypto/rand"
+	"io"
+)
 
 type fixedRandReader struct {
 	data []string
@@ -174,7 +177,7 @@ func aliceContextAtAwaitingRevealSig() *Conversation {
 func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	var senderKeyID uint32 = 1
 	var recipientKeyID uint32 = 1
-	conv := newConversation(otrV3{}, nil)
+	conv := newConversation(otrV3{}, rand.Reader)
 	//We use a combination of ourKeyId, theirKeyID, senderKeyID and recipientKeyID
 	//to make sure both sender and receiver will use the same DH session keys
 	receiverContext := keyManagementContext{
@@ -215,7 +218,7 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 //Alice decrypts a encrypted message from Bob, generated after receiving
 //an encrypted message from Alice generated with fixtureDataMsg()
 func fixtureDecryptDataMsg(encryptedDataMsg []byte) plainDataMsg {
-	c := newConversation(otrV3{}, nil)
+	c := newConversation(otrV3{}, rand.Reader)
 	c.ourInstanceTag = 0x00000100 + 0x01
 	c.theirInstanceTag = 0x00000100 + 0x01
 	_, withoutHeader, _ := c.parseMessageHeader(encryptedDataMsg)

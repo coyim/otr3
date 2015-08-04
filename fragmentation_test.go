@@ -1,41 +1,44 @@
 package otr3
 
-import "testing"
+import (
+	"crypto/rand"
+	"testing"
+)
 
 const defaultInstanceTag = 0x00000100
 
 func Test_isFragmented_returnsFalseForAShortValue(t *testing.T) {
-	ctx := newConversation(otrV2{}, nil)
+	ctx := newConversation(otrV2{}, rand.Reader)
 	assertEquals(t, ctx.version.isFragmented([]byte("")), false)
 }
 
 func Test_isFragmented_returnsFalseForALongValue(t *testing.T) {
-	ctx := newConversation(otrV2{}, nil)
+	ctx := newConversation(otrV2{}, rand.Reader)
 	assertEquals(t, ctx.version.isFragmented([]byte("?OTR:BLA")), false)
 }
 
 func Test_isFragmented_returnsFalseForAFragmentedV3MessageWhenRunningV2(t *testing.T) {
-	ctx := newConversation(otrV2{}, nil)
+	ctx := newConversation(otrV2{}, rand.Reader)
 	assertEquals(t, ctx.version.isFragmented([]byte("?OTR|BLA")), false)
 }
 
 func Test_isFragmented_returnsTrueForAFragmentedV3MessageWhenRunningV3(t *testing.T) {
-	ctx := newConversation(otrV3{}, nil)
+	ctx := newConversation(otrV3{}, rand.Reader)
 	assertEquals(t, ctx.version.isFragmented([]byte("?OTR|BLA")), true)
 }
 
 func Test_isFragmented_returnsTrueForAFragmentedV2MessageWhenRunningV2(t *testing.T) {
-	ctx := newConversation(otrV2{}, nil)
+	ctx := newConversation(otrV2{}, rand.Reader)
 	assertEquals(t, ctx.version.isFragmented([]byte("?OTR,BLA")), true)
 }
 
 func Test_isFragmented_returnsTrueForAFragmentedV2MessageWhenRunningV3(t *testing.T) {
-	ctx := newConversation(otrV3{}, nil)
+	ctx := newConversation(otrV3{}, rand.Reader)
 	assertEquals(t, ctx.version.isFragmented([]byte("?OTR,BLA")), true)
 }
 
 func Test_fragment_returnsNoChangeForASmallerPackage(t *testing.T) {
-	ctx := newConversation(otrV3{}, nil)
+	ctx := newConversation(otrV3{}, rand.Reader)
 
 	data := []byte("one two three")
 
@@ -43,7 +46,7 @@ func Test_fragment_returnsNoChangeForASmallerPackage(t *testing.T) {
 }
 
 func Test_fragment_returnsFragmentsForNeededFragmentation(t *testing.T) {
-	ctx := newConversation(otrV3{}, nil)
+	ctx := newConversation(otrV3{}, rand.Reader)
 
 	data := []byte("one two three")
 
@@ -56,7 +59,7 @@ func Test_fragment_returnsFragmentsForNeededFragmentation(t *testing.T) {
 }
 
 func Test_fragment_returnsFragmentsForNeededFragmentationForV2(t *testing.T) {
-	ctx := newConversation(otrV2{}, nil)
+	ctx := newConversation(otrV2{}, rand.Reader)
 
 	data := []byte("one two three")
 

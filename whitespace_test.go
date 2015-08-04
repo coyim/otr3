@@ -113,7 +113,7 @@ func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testin
 }
 
 func Test_stopAppendingWhitespaceTagsAfterReceivingAPlainMessage(t *testing.T) {
-	c := newConversation(nil, nil)
+	c := &Conversation{}
 	c.Policies = policies(allowV3 | sendWhitespaceTag)
 
 	toSend, err := c.Send([]byte("hi"))

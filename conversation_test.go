@@ -131,7 +131,7 @@ func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {
 		0x20, 0x20, 0x09, 0x09, 0x20, 0x20, 0x09, 0x09,
 	}
 
-	c := newConversation(nil, nil)
+	c := &Conversation{}
 	c.Policies = policies(allowV3 | sendWhitespaceTag)
 
 	m, _ := c.Send([]byte("hello"))
@@ -141,7 +141,7 @@ func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {
 
 func Test_send_doesNotAppendWhitespaceTagsWhenItsNotAllowedbyThePolicy(t *testing.T) {
 	m := []byte("hello")
-	c := newConversation(nil, nil)
+	c := &Conversation{}
 	c.Policies = policies(allowV3)
 
 	toSend, _ := c.Send(m)
@@ -250,7 +250,7 @@ func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {
 }
 
 func Test_receive_ignoresMesagesWithWrongInstanceTags(t *testing.T) {
-	bob := newConversation(otrV3{}, nil)
+	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
 
@@ -267,7 +267,7 @@ func Test_receive_displayErrorMessageToTheUser(t *testing.T) {
 	var nilB [][]byte
 
 	msg := []byte("?OTR Error:You are wrong")
-	c := newConversation(nil, nil)
+	c := &Conversation{}
 	c.Policies.add(allowV3)
 	plain, toSend, err := c.Receive(msg)
 
@@ -278,7 +278,7 @@ func Test_receive_displayErrorMessageToTheUser(t *testing.T) {
 
 func Test_receive_displayErrorMessageToTheUserAndStartAKE(t *testing.T) {
 	msg := []byte("?OTR Error:You are wrong")
-	c := newConversation(nil, nil)
+	c := &Conversation{}
 	c.Policies.add(allowV3)
 	c.Policies.add(errorStartAKE)
 	plain, toSend, err := c.Receive(msg)

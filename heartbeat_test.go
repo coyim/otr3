@@ -1,12 +1,13 @@
 package otr3
 
 import (
+	"crypto/rand"
 	"testing"
 	"time"
 )
 
 func Test_potentialHeartbeat_returnsNothingIfThereWasntPlaintext(t *testing.T) {
-	c := newConversation(otrV3{}, nil)
+	c := newConversation(otrV3{}, rand.Reader)
 	var plain []byte
 	ret, err := c.potentialHeartbeat(plain)
 	assertNil(t, ret)
@@ -14,7 +15,7 @@ func Test_potentialHeartbeat_returnsNothingIfThereWasntPlaintext(t *testing.T) {
 }
 
 func Test_potentialHeartbeat_returnsNothingIfLastSentWasRecently(t *testing.T) {
-	c := newConversation(otrV3{}, nil)
+	c := newConversation(otrV3{}, rand.Reader)
 	c.heartbeat.lastSent = time.Now().Add(-10 * time.Second)
 	plain := []byte("Foo plain")
 	ret, err := c.potentialHeartbeat(plain)
@@ -23,7 +24,7 @@ func Test_potentialHeartbeat_returnsNothingIfLastSentWasRecently(t *testing.T) {
 }
 
 func Test_potentialHeartbeat_doesntUpdateLastSentIfLastSentWasRecently(t *testing.T) {
-	c := newConversation(otrV3{}, nil)
+	c := newConversation(otrV3{}, rand.Reader)
 	tt := time.Now().Add(-10 * time.Second)
 	c.heartbeat.lastSent = tt
 	plain := []byte("Foo plain")

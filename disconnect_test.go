@@ -6,7 +6,7 @@ import (
 )
 
 func Test_processDisconnectedTLV_forgetAllKeysAndTransitionToFinished(t *testing.T) {
-	c := newConversation(nil, nil)
+	c := &Conversation{}
 	c.msgState = encrypted
 	c.keys.theirCurrentDHPubKey = big.NewInt(99)
 
