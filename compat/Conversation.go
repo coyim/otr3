@@ -2,9 +2,7 @@ package compat
 
 import (
 	"crypto/sha1"
-	"encoding/base64"
 	"io"
-	"strconv"
 
 	"github.com/twstrike/otr3"
 )
@@ -82,39 +80,6 @@ func (c *Conversation) SMPQuestion() string {
 	c.compatInit()
 	question, _ := c.Conversation.SMPQuestion()
 	return question
-}
-
-func (c *Conversation) encode(msg []byte) [][]byte {
-	msgPrefix := []byte("?OTR:")
-	minFragmentSize := 18
-	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgPrefix)+1)
-	base64.StdEncoding.Encode(b64[len(msgPrefix):], msg)
-	copy(b64, msgPrefix)
-	b64[len(b64)-1] = '.'
-
-	if c.FragmentSize < minFragmentSize || len(b64) <= c.FragmentSize {
-		// We can encode this in a single fragment.
-		return [][]byte{b64}
-	}
-
-	// We have to fragment this message.
-	var ret [][]byte
-	bytesPerFragment := c.FragmentSize - minFragmentSize
-	numFragments := (len(b64) + bytesPerFragment) / bytesPerFragment
-
-	for i := 0; i < numFragments; i++ {
-		frag := []byte("?OTR," + strconv.Itoa(i+1) + "," + strconv.Itoa(numFragments) + ",")
-		todo := bytesPerFragment
-		if todo > len(b64) {
-			todo = len(b64)
-		}
-		frag = append(frag, b64[:todo]...)
-		b64 = b64[todo:]
-		frag = append(frag, ',')
-		ret = append(ret, frag)
-	}
-
-	return ret
 }
 
 type PublicKey struct {
