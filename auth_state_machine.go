@@ -52,7 +52,6 @@ type authStateAwaitingSig struct {
 	// revealSigMsg is only used to store the message so we can re-transmit it if needed
 	revealSigMsg []byte
 }
-type authStateV1Setup struct{ authStateBase }
 
 type authState interface {
 	receiveDHCommitMessage(*Conversation, []byte) (authState, []byte, error)
@@ -229,6 +228,3 @@ func (authStateNone) String() string              { return "AUTHSTATE_NONE" }
 func (authStateAwaitingDHKey) String() string     { return "AUTHSTATE_AWAITING_DHKEY" }
 func (authStateAwaitingRevealSig) String() string { return "AUTHSTATE_AWAITING_REVEALSIG" }
 func (authStateAwaitingSig) String() string       { return "AUTHSTATE_AWAITING_SIG" }
-func (authStateV1Setup) String() string           { return "AUTHSTATE_V1_SETUP" }
-
-//TODO need to implements AUTHSTATE_V1_SETUP

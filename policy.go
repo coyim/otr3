@@ -5,8 +5,7 @@ type policies int
 type policy int
 
 const (
-	allowV1 policy = 1 << iota
-	allowV2
+	allowV2 policy = 2 << iota
 	allowV3
 	requireEncryption
 	sendWhitespaceTag
@@ -15,7 +14,7 @@ const (
 )
 
 func (p *policies) isOTREnabled() bool {
-	return p.has(allowV1) || p.has(allowV2) || p.has(allowV3)
+	return p.has(allowV2) || p.has(allowV3)
 }
 
 func (p *policies) has(c policy) bool {
@@ -24,10 +23,6 @@ func (p *policies) has(c policy) bool {
 
 func (p *policies) add(c policy) {
 	*p = policies(int(*p) | int(c))
-}
-
-func (p *policies) allowV1() {
-	p.add(allowV1)
 }
 
 func (p *policies) AllowV2() {

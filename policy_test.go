@@ -2,12 +2,6 @@ package otr3
 
 import "testing"
 
-func Test_policies_allowV1_addsAllowingOfV1(t *testing.T) {
-	p := policies(0)
-	p.allowV1()
-	assertEquals(t, p.has(allowV1), true)
-}
-
 func Test_policies_requireEncryption_addsRequirementOfEncryption(t *testing.T) {
 	p := policies(0)
 	p.requireEncryption()

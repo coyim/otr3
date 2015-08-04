@@ -67,7 +67,6 @@ func (c *Conversation) End() (toSend [][]byte) {
 	case encrypted:
 		c.msgState = plainText
 		dataMsg, _ := c.genDataMsg(nil, tlv{tlvType: tlvTypeDisconnected})
-		//TODO: at this point, is it possible to happen an error??
 		toSend = c.encode(dataMsg.serialize())
 	case finished:
 		c.msgState = plainText

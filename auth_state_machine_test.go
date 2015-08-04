@@ -679,7 +679,3 @@ func Test_authStateAwaitingRevealSig_String_returnsTheCorrectString(t *testing.T
 func Test_authStateAwaitingSig_String_returnsTheCorrectString(t *testing.T) {
 	assertEquals(t, authStateAwaitingSig{}.String(), "AUTHSTATE_AWAITING_SIG")
 }
-
-func Test_authStateV1Setup_String_returnsTheCorrectString(t *testing.T) {
-	assertEquals(t, authStateV1Setup{}.String(), "AUTHSTATE_V1_SETUP")
-}
