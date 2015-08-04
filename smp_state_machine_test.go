@@ -60,13 +60,16 @@ func Test_smpStateExpect1_receiveMessage1_setsTheSMPQuestionIfThereWasOneInTheMe
 func Test_smpStateExpect1_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect1{}
 	c := newConversation(otrV3{}, fixtureRand())
-	_, msg, _ := state.receiveMessage2(c, smp2Message{})
+	_, msg, err := state.receiveMessage2(c, smp2Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
-	_, msg, _ = state.receiveMessage3(c, smp3Message{})
+	_, msg, err = state.receiveMessage3(c, smp3Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
-	_, msg, _ = state.receiveMessage4(c, smp4Message{})
+	_, msg, err = state.receiveMessage4(c, smp4Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 }
 
@@ -162,13 +165,16 @@ func Test_smpStateExpect2_sendsAnSMPEventAboutSMPProgressHere(t *testing.T) {
 func Test_smpStateExpect2_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect2{}
 	c := newConversation(otrV3{}, fixtureRand())
-	_, msg, _ := state.receiveMessage1(c, smp1Message{})
+	_, msg, err := state.receiveMessage1(c, smp1Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
-	_, msg, _ = state.receiveMessage3(c, smp3Message{})
+	_, msg, err = state.receiveMessage3(c, smp3Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
-	_, msg, _ = state.receiveMessage4(c, smp4Message{})
+	_, msg, err = state.receiveMessage4(c, smp4Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 }
 
@@ -196,13 +202,16 @@ func Test_smpStateExpect3_willSendAnSMPNotificationOnProtocolSuccess(t *testing.
 func Test_smpStateExpect3_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect3{}
 	c := newConversation(otrV3{}, fixtureRand())
-	_, msg, _ := state.receiveMessage1(c, smp1Message{})
+	_, msg, err := state.receiveMessage1(c, smp1Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
-	_, msg, _ = state.receiveMessage2(c, smp2Message{})
+	_, msg, err = state.receiveMessage2(c, smp2Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
-	_, msg, _ = state.receiveMessage4(c, smp4Message{})
+	_, msg, err = state.receiveMessage4(c, smp4Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 }
 
@@ -245,13 +254,16 @@ func Test_smpStateExpect4_willSendAnSMPNotificationOnProtocolSuccess(t *testing.
 func Test_smpStateExpect4_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {
 	state := smpStateExpect4{}
 	c := newConversation(otrV3{}, fixtureRand())
-	_, msg, _ := state.receiveMessage1(c, smp1Message{})
+	_, msg, err := state.receiveMessage1(c, smp1Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
-	_, msg, _ = state.receiveMessage2(c, smp2Message{})
+	_, msg, err = state.receiveMessage2(c, smp2Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 
-	_, msg, _ = state.receiveMessage3(c, smp3Message{})
+	_, msg, err = state.receiveMessage3(c, smp3Message{})
+	assertEquals(t, err, nil)
 	assertDeepEquals(t, msg, smpMessageAbort{})
 }
 
