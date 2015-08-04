@@ -155,6 +155,7 @@ func (s authStateAwaitingSig) receiveDHKeyMessage(c *Conversation, msg []byte) (
 	}
 
 	if isSame {
+		// Retransmit the Reveal Signature Message
 		return s, s.revealSigMsg, nil
 	}
 

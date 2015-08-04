@@ -204,9 +204,7 @@ func (c *Conversation) processDHKey(msg []byte) (isSame bool, err error) {
 		return false, err
 	}
 
-	//TODO: This keeps only the first Gy received
-	//Not sure if this is part of the spec,
-	//or simply a crypto/otr safeguard
+	//If receive same public key twice, just retransmit the previous Reveal Signature
 	if c.ake.theirPublicValue != nil {
 		isSame = eq(c.ake.theirPublicValue, dhKeyMsg.gy)
 		return
