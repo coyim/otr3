@@ -94,9 +94,10 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 
 	if m.hasQuestion {
 		c.smp.question = &m.question
+		c.getEventHandler().handleSMPEvent(SMPEventAskForAnswer, 25, m.question)
+	} else {
+		c.getEventHandler().handleSMPEvent(SMPEventAskForSecret, 25, "")
 	}
-
-	// TODO: NOTIFY USER HERE
 
 	return smpStateWaitingForSecret{msg: m}, nil, nil
 }

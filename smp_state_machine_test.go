@@ -13,6 +13,24 @@ func Test_smpStateExpect1_goToWaitingForSecretWhenReceivesSmpMessage1(t *testing
 	assertDeepEquals(t, nextState, smpStateWaitingForSecret{msg: msg})
 }
 
+func Test_smpStateExpect1_willSendANotificationThatASecretIsNeeded(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.expectSMPEvent(t, func() {
+		smpStateExpect1{}.receiveMessage1(c, fixtureMessage1())
+	}, SMPEventAskForSecret, 25, "")
+}
+
+func Test_smpStateExpect1_willSendANotificationThatAnAnswerIsNeededIfQuestionProvided(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	msg := fixtureMessage1()
+	msg.hasQuestion = true
+	msg.question = "What do you think?"
+
+	c.expectSMPEvent(t, func() {
+		smpStateExpect1{}.receiveMessage1(c, msg)
+	}, SMPEventAskForAnswer, 25, "What do you think?")
+}
+
 func Test_smpStateWaitingForSecret_goToExpectState3WhenReceivesContinueSmpMessage1(t *testing.T) {
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
