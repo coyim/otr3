@@ -92,3 +92,18 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 		theirInstanceTag: 0x101,
 	}
 }
+
+func (c *Conversation) expectMessageEvent(t *testing.T, f func(), expectedEvent MessageEvent, expectedMessage string, expectedError error) {
+	called := false
+
+	c.getEventHandler().handleMessageEvent = func(event MessageEvent, message string, err error) {
+		assertDeepEquals(t, event, expectedEvent)
+		assertDeepEquals(t, message, expectedMessage)
+		assertDeepEquals(t, err, expectedError)
+		called = true
+	}
+
+	f()
+
+	assertEquals(t, called, true)
+}
