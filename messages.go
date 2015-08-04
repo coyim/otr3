@@ -164,7 +164,6 @@ func (c dataMsg) checkSign(key macKey, header []byte) error {
 func (c dataMsg) serializeUnsigned() []byte {
 	var out []byte
 
-	//TODO: implement IGNORE_UNREADABLE
 	out = append(out, c.flag)
 	out = appendWord(out, c.senderKeyID)
 	out = appendWord(out, c.recipientKeyID)

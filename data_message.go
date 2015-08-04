@@ -42,11 +42,32 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 	return dataMessage, nil
 }
 
-// processDataMessage receives a decoded incoming message and returns the plain text inside that message
+func extractDataMessageFlag(msg []byte) byte {
+	if len(msg) == 0 {
+		return 0x00
+	}
+	return msg[0]
+}
+
+func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []byte, err error) {
+	ignoreUnreadable := (extractDataMessageFlag(msg) & messageFlagIgnoreUnreadable) == messageFlagIgnoreUnreadable
+	plain, toSend, err = c.processDataMessageWithRawErrors(header, msg)
+	if err != nil && ignoreUnreadable {
+		err = nil
+	}
+	return
+}
+
+// processDataMessageWithRawErrors receives a decoded incoming message and returns the plain text inside that message
 // and a data message (with header) generated in response to any TLV contained in the incoming message.
 // The header and message compose the decoded incoming message.
-func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []byte, err error) {
+func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plain, toSend []byte, err error) {
 	dataMessage := dataMsg{}
+
+	if c.msgState != encrypted {
+		err = errEncryptedMessageWithNoSecureChannel
+		return
+	}
 
 	if err = dataMessage.deserialize(msg); err != nil {
 		return

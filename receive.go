@@ -92,11 +92,6 @@ func (c *Conversation) receiveDecoded(message []byte) (plain []byte, toSend []by
 
 	msgType := message[2]
 	if msgType == msgTypeData {
-		if c.msgState != encrypted {
-			err = errEncryptedMessageWithNoSecureChannel
-			return
-		}
-
 		plain, toSend, toSendExtra, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
 	} else {
 		toSend, err = c.receiveAKE(msgType, messageBody)

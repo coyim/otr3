@@ -172,6 +172,7 @@ func Test_processDataMessage_processSMPMessage(t *testing.T) {
 
 func Test_processDataMessage_returnsErrorIfSomethingGoesWrongWithDeserialize(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
+	c.msgState = encrypted
 	_, _, err := c.processDataMessage([]byte{}, []byte{})
 
 	assertEquals(t, err.Error(), "otr: dataMsg.deserialize empty message")

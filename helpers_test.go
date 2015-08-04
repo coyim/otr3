@@ -22,14 +22,26 @@ func assertFuncEquals(t *testing.T, actual, expected interface{}) {
 	}
 }
 
+func isNil(actual interface{}) bool {
+	val := reflect.ValueOf(actual)
+	switch val.Kind() {
+	case reflect.Invalid:
+		return true
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		return val.IsNil()
+	default:
+		return actual == nil
+	}
+}
+
 func assertNil(t *testing.T, actual interface{}) {
-	if actual != nil && !reflect.ValueOf(actual).IsNil() {
+	if !isNil(actual) {
 		t.Errorf("Expected:\n%#v \nto be nil\n", actual)
 	}
 }
 
 func assertNotNil(t *testing.T, actual interface{}) {
-	if actual == nil || reflect.ValueOf(actual).IsNil() {
+	if isNil(actual) {
 		t.Errorf("Expected:\n%#v \nto not be nil\n", actual)
 	}
 }
