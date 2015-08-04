@@ -208,30 +208,38 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int) session
 }
 
 func (c *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *big.Int, err error) {
+	if ourKeyID == 0 {
+		return nil, nil, ErrGPGConflict
+	}
+
 	switch ourKeyID {
 	case c.ourKeyID:
 		privKey, pubKey = c.ourCurrentDHKeys.priv, c.ourCurrentDHKeys.pub
 	case c.ourKeyID - 1:
 		privKey, pubKey = c.ourPreviousDHKeys.priv, c.ourPreviousDHKeys.pub
 	default:
-		err = newOtrErrorf("unexpected ourKeyID %d", ourKeyID)
+		err = ErrGPGConflict
 	}
 
 	return privKey, pubKey, err
 }
 
 func (c *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int, err error) {
+	if theirKeyID == 0 {
+		return nil, ErrGPGConflict
+	}
+
 	switch theirKeyID {
 	case c.theirKeyID:
 		pubKey = c.theirCurrentDHPubKey
 	case c.theirKeyID - 1:
 		if c.theirPreviousDHPubKey == nil {
-			err = newOtrErrorf("unexpected theirKeyID %d", theirKeyID-1)
+			err = ErrGPGConflict
 		} else {
 			pubKey = c.theirPreviousDHPubKey
 		}
 	default:
-		err = newOtrErrorf("unexpected theirKeyID %d", theirKeyID)
+		err = ErrGPGConflict
 	}
 
 	return pubKey, err

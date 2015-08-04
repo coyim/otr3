@@ -333,7 +333,6 @@ func (c *Conversation) processEncryptedSig(encryptedSig []byte, theirMAC []byte,
 
 	c.keys.theirKeyID = keyID
 
-	//zero(c.theirLastCtr[:])
 	return nil
 }
 

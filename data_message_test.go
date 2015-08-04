@@ -225,5 +225,5 @@ func Test_processDataMessage_returnErrorWhenOurKeyIDUnexpected(t *testing.T) {
 	bob.msgState = encrypted
 	_, _, err := bob.receiveDecoded(datamsg)
 
-	assertDeepEquals(t, err.Error(), "otr: unexpected ourKeyID 1")
+	assertDeepEquals(t, err, ErrGPGConflict)
 }

@@ -62,10 +62,10 @@ func Test_calculateDHSessionKeys_failsWhenOurOrTheyKeyIsUnknown(t *testing.T) {
 	}
 
 	_, err := c.calculateDHSessionKeys(2, 1)
-	assertDeepEquals(t, err, newOtrError("unexpected ourKeyID 2"))
+	assertDeepEquals(t, err, ErrGPGConflict)
 
 	_, err = c.calculateDHSessionKeys(1, 3)
-	assertDeepEquals(t, err, newOtrError("unexpected theirKeyID 3"))
+	assertDeepEquals(t, err, ErrGPGConflict)
 }
 
 func Test_calculateDHSessionKeys_failsWhenTheirPreviousPubliKeyIsNull(t *testing.T) {
@@ -75,7 +75,36 @@ func Test_calculateDHSessionKeys_failsWhenTheirPreviousPubliKeyIsNull(t *testing
 	}
 	_, err := c.calculateDHSessionKeys(2, 1)
 
-	assertEquals(t, err.Error(), "otr: unexpected theirKeyID 0")
+	assertEquals(t, err, ErrGPGConflict)
+}
+
+func Test_pickTheirKey_shouldFailsForInvalidSenderID(t *testing.T) {
+	c := keyManagementContext{}
+
+	c.theirKeyID = uint32(0)
+	_, err := c.pickTheirKey(uint32(0x00000000))
+	assertEquals(t, err, ErrGPGConflict)
+
+	c.theirKeyID = uint32(2)
+	_, err = c.pickTheirKey(uint32(0x00000000))
+	assertEquals(t, err, ErrGPGConflict)
+
+	c.theirKeyID = uint32(1)
+	c.theirPreviousDHPubKey = nil
+	_, err = c.pickTheirKey(uint32(0x00000000))
+	assertEquals(t, err, ErrGPGConflict)
+}
+
+func Test_pickOurKeys_shouldFailsForInvalidRecipientID(t *testing.T) {
+	c := keyManagementContext{}
+
+	c.ourKeyID = uint32(0x00000000)
+	_, _, err := c.pickOurKeys(uint32(0x00000000))
+	assertEquals(t, err, ErrGPGConflict)
+
+	c.ourKeyID = uint32(3)
+	_, _, err = c.pickOurKeys(uint32(0x00000001))
+	assertEquals(t, err, ErrGPGConflict)
 }
 
 func Test_calculateAKEKeys(t *testing.T) {
