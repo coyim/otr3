@@ -9,6 +9,10 @@ type heartbeatContext struct {
 	lastSent time.Time
 }
 
+func (c *Conversation) updateLastSent() {
+	c.heartbeat.lastSent = time.Now()
+}
+
 func (c *Conversation) maybeHeartbeat(plain, toSend []byte, err error) ([]byte, []byte, []byte, error) {
 	if err != nil {
 		return nil, nil, nil, err
@@ -16,8 +20,6 @@ func (c *Conversation) maybeHeartbeat(plain, toSend []byte, err error) ([]byte, 
 	tsExtra, e := c.potentialHeartbeat(plain)
 	return plain, toSend, tsExtra, e
 }
-
-// We need to update lastsent all the time. Sigh
 
 func (c *Conversation) potentialHeartbeat(plain []byte) (toSend []byte, err error) {
 	if plain != nil {
@@ -28,7 +30,7 @@ func (c *Conversation) potentialHeartbeat(plain []byte) (toSend []byte, err erro
 				return nil, err
 			}
 			toSend = dataMsg.serialize()
-			c.heartbeat.lastSent = now
+			c.updateLastSent()
 			messageEventHeartbeatSent(c)
 		}
 	}

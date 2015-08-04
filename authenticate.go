@@ -33,6 +33,6 @@ func (c *Conversation) createSerializedDataMessage(msg []byte, tlvs []tlv) ([][]
 	if err != nil {
 		return nil, err
 	}
-	// TODO: add lastSent
+	c.updateLastSent()
 	return c.encode(res), nil
 }
