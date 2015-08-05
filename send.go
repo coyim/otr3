@@ -23,6 +23,7 @@ func (c *Conversation) Send(msg []byte) (FragmentedMessage, error) {
 	case encrypted:
 		return c.createSerializedDataMessage(msg, messageFlagNormal, []tlv{})
 	case finished:
+		messageEventConnectionEnded(c)
 		return nil, errors.New("otr: cannot send message because secure conversation has finished")
 	}
 

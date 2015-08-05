@@ -45,3 +45,14 @@ func Test_Send_signalsMessageEventIfTryingToSendWithoutEncryptedChannel(t *testi
 		c.Send(m)
 	}, MessageEventEncryptionRequired, "", nil)
 }
+
+func Test_Send_signalsMessageEventIfTryingToSendOnAFinishedChannel(t *testing.T) {
+	m := []byte("hello")
+	c := bobContextAfterAKE()
+	c.msgState = finished
+	c.Policies = policies(allowV3 | requireEncryption)
+
+	c.expectMessageEvent(t, func() {
+		c.Send(m)
+	}, MessageEventConnectionEnded, "", nil)
+}

@@ -46,10 +46,6 @@ type MessageEvent int
  * - OTRL_MSGEVENT_ENCRYPTION_ERROR
  *      An error occured while encrypting a message and the message
  *      was not sent.
- * - OTRL_MSGEVENT_CONNECTION_ENDED
- *      Message has not been sent because our buddy has ended the
- *      private Conversation. We should either close the connection,
- *      or refresh it.
  * - OTRL_MSGEVENT_MSG_RESENT
  *      The previous message was resent.
  * - OTRL_MSGEVENT_RCVDMSG_NOT_IN_PRIVATE
@@ -74,7 +70,9 @@ const (
 	MessageEventEncryptionRequired MessageEvent = iota
 
 	// MessageEventEncryptionError
-	// MessageEventConnectionEnded
+
+	// MessageEventConnectionEnded is signaled when we are asked to send a message but the peer has ended the private conversation. At this point the connection should be closed or refreshed
+	MessageEventConnectionEnded
 
 	// MessageEventSetupError will be signaled when a private conversation could not be established. The reason for this will be communicated with the attached error instance
 	MessageEventSetupError
@@ -198,4 +196,8 @@ func messageEventReflected(c *Conversation) {
 
 func messageEventEncryptionRequired(c *Conversation) {
 	c.getEventHandler().HandleMessageEvent(MessageEventEncryptionRequired, "", nil)
+}
+
+func messageEventConnectionEnded(c *Conversation) {
+	c.getEventHandler().HandleMessageEvent(MessageEventConnectionEnded, "", nil)
 }
