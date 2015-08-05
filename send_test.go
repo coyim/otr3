@@ -56,3 +56,16 @@ func Test_Send_signalsMessageEventIfTryingToSendOnAFinishedChannel(t *testing.T)
 		c.Send(m)
 	}, MessageEventConnectionEnded, nil, nil)
 }
+
+func Test_Send_signalsEncryptionErrorMessageEventIfSomethingWentWrong(t *testing.T) {
+	msg := []byte("hello")
+
+	c := bobContextAfterAKE()
+	c.msgState = encrypted
+	c.Policies = policies(allowV3)
+	c.keys.theirKeyID = 0
+
+	c.expectMessageEvent(t, func() {
+		c.Send(msg)
+	}, MessageEventEncryptionError, nil, nil)
+}

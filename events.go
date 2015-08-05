@@ -43,9 +43,6 @@ type MessageEvent int
  * depending on the message events. All the events only require an opdata,
  * the event, and the context. The message and err will be NULL except for
  * some events (see below). The possible events are:
- * - OTRL_MSGEVENT_ENCRYPTION_ERROR
- *      An error occured while encrypting a message and the message
- *      was not sent.
  * - OTRL_MSGEVENT_MSG_RESENT
  *      The previous message was resent.
  * - OTRL_MSGEVENT_RCVDMSG_NOT_IN_PRIVATE
@@ -63,7 +60,8 @@ const (
 	// MessageEventEncryptionRequired is signaled when our policy requires encryption bt we are trying to send an unencrypted message
 	MessageEventEncryptionRequired MessageEvent = iota
 
-	// MessageEventEncryptionError
+	// MessageEventEncryptionError is signaled when an error occured while encrypting a message and the message was not sent
+	MessageEventEncryptionError
 
 	// MessageEventConnectionEnded is signaled when we are asked to send a message but the peer has ended the private conversation. At this point the connection should be closed or refreshed
 	MessageEventConnectionEnded
@@ -212,4 +210,8 @@ func messageEventReceivedUnrecognizedMessage(c *Conversation) {
 
 func messageEventReceivedMessageForOtherInstance(c *Conversation) {
 	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageForOtherInstance, nil, nil)
+}
+
+func messageEventEncryptionError(c *Conversation) {
+	c.getEventHandler().HandleMessageEvent(MessageEventEncryptionError, nil, nil)
 }

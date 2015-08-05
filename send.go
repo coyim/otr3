@@ -18,7 +18,11 @@ func (c *Conversation) Send(msg ValidMessage) ([]ValidMessage, error) {
 		}
 		return []ValidMessage{msg}, nil
 	case encrypted:
-		return c.createSerializedDataMessage(msg, messageFlagNormal, []tlv{})
+		result, err := c.createSerializedDataMessage(msg, messageFlagNormal, []tlv{})
+		if err != nil {
+			messageEventEncryptionError(c)
+		}
+		return result, err
 	case finished:
 		messageEventConnectionEnded(c)
 		return nil, errors.New("otr: cannot send message because secure conversation has finished")
