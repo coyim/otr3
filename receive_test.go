@@ -102,3 +102,12 @@ func Test_receiveTaggedPlaintext_doesntSignalAMessageEventThatItWasUnencryptedIf
 		c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
 	})
 }
+
+func Test_Receive_signalsAMessageEventWhenWeReceiveAMessageThatLooksLikeAnOTRMessageButWeCantUnderstandIt(t *testing.T) {
+	c := &Conversation{}
+	c.Policies = policies(allowV3)
+
+	c.expectMessageEvent(t, func() {
+		c.Receive(ValidMessage("?OTR Something: strange"))
+	}, MessageEventReceivedMessageUnrecognized, nil, nil)
+}

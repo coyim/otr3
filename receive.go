@@ -119,7 +119,7 @@ func (c *Conversation) Receive(message ValidMessage) (plain MessagePlaintext, to
 	case msgGuessFragment:
 		// TODO: fix fragment here
 	case msgGuessUnknown:
-		// TODO: event here
+		messageEventReceivedUnrecognizedMessage(c)
 	case msgGuessDHCommit, msgGuessDHKey, msgGuessRevealSig, msgGuessSignature, msgGuessData:
 		plain, messagesToSend, err = c.receiveEncoded(encodedMessage(message))
 	}
