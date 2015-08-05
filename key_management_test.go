@@ -10,10 +10,10 @@ func Test_calculateDHSessionKeys(t *testing.T) {
 		ourKeyID:   1,
 		theirKeyID: 2,
 		ourCurrentDHKeys: dhKeyPair{
-			pub:  fixedgx,
-			priv: fixedx,
+			pub:  fixedGX(),
+			priv: fixedX(),
 		},
-		theirPreviousDHPubKey: fixedgy,
+		theirPreviousDHPubKey: fixedGY(),
 	}
 
 	sendingAESKey := bytesFromHex("42e258bebf031acf442f52d6ef52d6f1")
@@ -161,18 +161,18 @@ func Test_rotateOurKeys_rotateOurCurrentDHKeys(t *testing.T) {
 	c := keyManagementContext{
 		ourKeyID: recipientKeyID,
 		ourCurrentDHKeys: dhKeyPair{
-			pub:  fixedgx,
-			priv: fixedx,
+			pub:  fixedGX(),
+			priv: fixedX(),
 		},
 	}
 
-	c.rotateOurKeys(recipientKeyID, fixedy)
+	c.rotateOurKeys(recipientKeyID, fixedY())
 
 	assertEquals(t, c.ourKeyID, recipientKeyID+1)
-	assertDeepEquals(t, c.ourPreviousDHKeys.priv, fixedx)
-	assertDeepEquals(t, c.ourPreviousDHKeys.pub, fixedgx)
-	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedy)
-	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgy)
+	assertDeepEquals(t, c.ourPreviousDHKeys.priv, fixedX())
+	assertDeepEquals(t, c.ourPreviousDHKeys.pub, fixedGX())
+	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedY())
+	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedGY())
 }
 
 func Test_rotateOurKeys_doesNotRotateIfWeDontReceiveOurCurrentKeyID(t *testing.T) {
@@ -182,18 +182,18 @@ func Test_rotateOurKeys_doesNotRotateIfWeDontReceiveOurCurrentKeyID(t *testing.T
 	c := keyManagementContext{
 		ourKeyID: recipientKeyID,
 		ourCurrentDHKeys: dhKeyPair{
-			pub:  fixedgx,
-			priv: fixedx,
+			pub:  fixedGX(),
+			priv: fixedX(),
 		},
 	}
 
-	c.rotateOurKeys(recipientKeyID+1, fixedy)
+	c.rotateOurKeys(recipientKeyID+1, fixedY())
 
 	assertEquals(t, c.ourKeyID, recipientKeyID)
 	assertEquals(t, c.ourPreviousDHKeys.priv, nilB)
 	assertEquals(t, c.ourPreviousDHKeys.pub, nilB)
-	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedx)
-	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedgx)
+	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedX())
+	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedGX())
 }
 
 func Test_revealMACKeys_ForgotOldKeysAfterBeenCalled(t *testing.T) {

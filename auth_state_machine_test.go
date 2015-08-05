@@ -24,8 +24,8 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsg())
 
-	assertDeepEquals(t, c.ake.ourPublicValue, fixedgy)
-	assertDeepEquals(t, c.ake.secretExponent, fixedy)
+	assertDeepEquals(t, c.ake.ourPublicValue, fixedGY())
+	assertDeepEquals(t, c.ake.secretExponent, fixedY())
 }
 
 func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing.T) {
@@ -121,8 +121,8 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 	assertDeepEquals(t, err, nil)
 	assertEquals(t, state, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(newMsg), msgTypeDHKey)
-	assertDeepEquals(t, c.ake.ourPublicValue, fixedgy)
-	assertDeepEquals(t, c.ake.secretExponent, fixedy)
+	assertDeepEquals(t, c.ake.ourPublicValue, fixedGY())
+	assertDeepEquals(t, c.ake.secretExponent, fixedY())
 }
 
 func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *testing.T) {
@@ -167,7 +167,7 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, fixtureDHKeyMsg(otrV3{})[otrv3HeaderLen:])
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, c.ake.theirPublicValue, fixedgy)
+	assertDeepEquals(t, c.ake.theirPublicValue, fixedGY())
 	assertDeepEquals(t, c.ake.sigKey.c[:], expectedC)
 	assertDeepEquals(t, c.ake.sigKey.m1[:], expectedM1)
 	assertDeepEquals(t, c.ake.sigKey.m2[:], expectedM2)
@@ -182,9 +182,9 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeysAndIncreaseCounter
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, fixtureDHKeyMsg(otrV3{})[otrv3HeaderLen:])
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgy)
-	assertDeepEquals(t, c.keys.ourCurrentDHKeys.pub, fixedgx)
-	assertDeepEquals(t, c.keys.ourCurrentDHKeys.priv, fixedx)
+	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedGY())
+	assertDeepEquals(t, c.keys.ourCurrentDHKeys.pub, fixedGX())
+	assertDeepEquals(t, c.keys.ourCurrentDHKeys.priv, fixedX())
 	assertEquals(t, c.keys.ourCounter, uint64(1))
 	assertEquals(t, c.keys.ourKeyID, uint32(1))
 	assertEquals(t, c.keys.theirKeyID, uint32(0))
@@ -207,13 +207,13 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 	sigState, previousRevealSig, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, sameDHKeyMsg)
 
 	assertNil(t, err)
-	assertDeepEquals(t, c.ake.theirPublicValue, fixedgy)
+	assertDeepEquals(t, c.ake.theirPublicValue, fixedGY())
 
 	state, msg, err := sigState.receiveDHKeyMessage(c, sameDHKeyMsg)
 	_, sameStateType := state.(authStateAwaitingSig)
 
 	assertNil(t, err)
-	assertDeepEquals(t, c.ake.theirPublicValue, fixedgy)
+	assertDeepEquals(t, c.ake.theirPublicValue, fixedGY())
 	assertDeepEquals(t, sameStateType, true)
 	assertDeepEquals(t, msg, previousRevealSig)
 }
@@ -251,10 +251,10 @@ func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeysAndIncreas
 	_, _, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(c, revealSignMsg)
 
 	assertNil(t, err)
-	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgx)
+	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedGX())
 	assertNil(t, c.keys.theirPreviousDHPubKey)
-	assertDeepEquals(t, c.keys.ourPreviousDHKeys.pub, fixedgy)
-	assertDeepEquals(t, c.keys.ourPreviousDHKeys.priv, fixedy)
+	assertDeepEquals(t, c.keys.ourPreviousDHKeys.pub, fixedGY())
+	assertDeepEquals(t, c.keys.ourPreviousDHKeys.priv, fixedY())
 	assertEquals(t, c.keys.ourCounter, uint64(1))
 	assertEquals(t, c.keys.ourKeyID, uint32(2))
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
@@ -339,7 +339,7 @@ func Test_receiveDecoded_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurre
 
 	assertNil(t, err)
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
-	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgx)
+	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedGX())
 	assertEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
 }
 
@@ -406,7 +406,7 @@ func Test_receiveDecoded_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPu
 
 	assertNil(t, err)
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
-	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgy)
+	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedGY())
 	assertEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
 }
 

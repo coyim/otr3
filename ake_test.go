@@ -10,10 +10,6 @@ import (
 
 var (
 	fixedr                   = bytesFromHex("abcdabcdabcdabcdabcdabcdabcdabcd")
-	fixedx                   = bnFromHex("bbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
-	fixedy                   = bnFromHex("abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
-	fixedgx                  = bnFromHex("75dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
-	fixedgy                  = bnFromHex("2cdacabb00e63d8949aa85f7e6a095b1ee81a60779e58f8938ff1a7ed1e651d954bd739162e699cc73b820728af53aae60a46d529620792ddf839c5d03d2d4e92137a535b27500e3b3d34d59d0cd460d1f386b5eb46a7404b15c1ef84840697d2d3d2405dcdda351014d24a8717f7b9c51f6c84de365fea634737ae18ba22253a8e15249d9beb2dded640c6c0d74e4f7e19161cf828ce3ffa9d425fb68c0fddcaa7cbe81a7a5c2c595cce69a255059d9e5c04b49fb15901c087e225da850ff27")
 	expectedEncryptedGxValue = bytesFromHex("5dd6a5999be73a99b80bdb78194a125f3067bd79e69c648b76a068117a8c4d0f36f275305423a933541937145d85ab4618094cbafbe4db0c0081614c1ff0f516c3dc4f352e9c92f88e4883166f12324d82240a8f32874c3d6bc35acedb8d501aa0111937a4859f33aa9b43ec342d78c3a45a5939c1e58e6b4f02725c1922f3df8754d1e1ab7648f558e9043ad118e63603b3ba2d8cbfea99a481835e42e73e6cd6019840f4470b606e168b1cd4a1f401c3dc52525d79fa6b959a80d4e11f1ec3a7984cf9")
 	expectedHashedGxValue    = bytesFromHex("a3f2c4b9e3a7d1f565157ae7b0e71c721d59d3c79d39e5e4e8d08cb8464ff857")
 	expectedSharedSecret     = bnFromHex("b15e9eb80f16f4beabcf7ac44c06f0b69b9f890a86a11b6cc2fd29e0f7cd15d9af7c052c4c55dfce929783e339ef094eedcfcaeb9edf896b7e201d46f16ba42dbec0a9738daa37c47a598849735b8b9ac8c98578431f8c7a6a54944ec6d830cb0ffcdf31d39cb8414bd3ddae0c483daf4e80a5990f7618edf648e68935126639d1752f49b2b8a83b170f39dd7d2a2c4ab99cb28684df2c6ee1feff9d171c25059eb6920bdf4cdab2fc0aed4aafeb66a51e938db8ca80881ad219413ecf7e0257")
@@ -25,7 +21,7 @@ var (
 )
 
 func Test_dhCommitMessage(t *testing.T) {
-	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
+	rnd := fixedRand([]string{hex.EncodeToString(fixedX().Bytes()), hex.EncodeToString(fixedr[:])})
 	c := newConversation(otrV3{}, rnd)
 
 	c.OurKey = bobPrivateKey
@@ -40,7 +36,7 @@ func Test_dhCommitMessage(t *testing.T) {
 }
 
 func Test_dhKeyMessage(t *testing.T) {
-	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes()), hex.EncodeToString(fixedr[:])})
+	rnd := fixedRand([]string{hex.EncodeToString(fixedX().Bytes()), hex.EncodeToString(fixedr[:])})
 	c := newConversation(otrV3{}, rnd)
 
 	c.OurKey = alicePrivateKey
@@ -68,8 +64,8 @@ func Test_revealSigMessage(t *testing.T) {
 	c.OurKey = bobPrivateKey
 	c.initAKE()
 	copy(c.ake.r[:], fixedr)
-	c.setSecretExponent(fixedx)
-	c.ake.theirPublicValue = fixedgy
+	c.setSecretExponent(fixedX())
+	c.ake.theirPublicValue = fixedGY()
 	expectedEncryptedSignature := bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf")
 	expedctedMACSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 
@@ -88,8 +84,8 @@ func Test_revealSigMessage_increasesOurKeyId(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.OurKey = bobPrivateKey
 	c.initAKE()
-	c.setSecretExponent(fixedx)
-	c.ake.theirPublicValue = fixedgy
+	c.setSecretExponent(fixedX())
+	c.ake.theirPublicValue = fixedGY()
 	c.keys.ourKeyID = ourKeyID
 
 	_, err := c.revealSigMessage()
@@ -100,7 +96,7 @@ func Test_revealSigMessage_increasesOurKeyId(t *testing.T) {
 func Test_processDHKey(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.initAKE()
-	c.ake.theirPublicValue = fixedgy
+	c.ake.theirPublicValue = fixedGY()
 
 	msg := appendMPI(nil, c.ake.theirPublicValue)
 
@@ -112,9 +108,9 @@ func Test_processDHKey(t *testing.T) {
 func Test_processDHKeyNotSame(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.initAKE()
-	c.ake.theirPublicValue = fixedgy
+	c.ake.theirPublicValue = fixedGY()
 
-	msg := appendMPI(nil, fixedgx)
+	msg := appendMPI(nil, fixedGX())
 
 	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err, nil)
@@ -126,7 +122,7 @@ func Test_processDHKeyHavingError(t *testing.T) {
 
 	c := newConversation(otrV2{}, fixtureRand())
 	c.initAKE()
-	c.ake.theirPublicValue = fixedgy
+	c.ake.theirPublicValue = fixedGY()
 
 	msg := appendMPI(nil, invalidGy)
 
@@ -139,8 +135,8 @@ func Test_processEncryptedSig(t *testing.T) {
 	rnd := fixedRand([]string{})
 	c := newConversation(otrV3{}, rnd)
 	c.initAKE()
-	c.setSecretExponent(fixedy)
-	c.ake.theirPublicValue = fixedgx
+	c.setSecretExponent(fixedY())
+	c.ake.theirPublicValue = fixedGX()
 	c.keys.ourKeyID = 1
 	c.calcAKEKeys(c.calcDHSharedSecret())
 
@@ -168,8 +164,8 @@ func Test_processEncryptedSigWithBadSignatureError(t *testing.T) {
 	c.initAKE()
 	c.OurKey = bobPrivateKey
 	c.TheirKey = &bobPrivateKey.PublicKey
-	c.setSecretExponent(fixedx)
-	c.ake.theirPublicValue = fixedgy
+	c.setSecretExponent(fixedX())
+	c.ake.theirPublicValue = fixedGY()
 	c.keys.ourKeyID = 1
 	s := c.calcDHSharedSecret()
 	c.calcAKEKeys(s)
@@ -190,11 +186,11 @@ func Test_processRevealSig(t *testing.T) {
 
 	bob.OurKey = bobPrivateKey
 	copy(bob.ake.r[:], fixedr)
-	bob.setSecretExponent(fixedx)
-	bob.ake.theirPublicValue = fixedgy
+	bob.setSecretExponent(fixedX())
+	bob.ake.theirPublicValue = fixedGY()
 	msg, err := bob.revealSigMessage()
 
-	alice.setSecretExponent(fixedy)
+	alice.setSecretExponent(fixedY())
 	alice.ake.encryptedGx = bytesFromHex("5dd6a5999be73a99b80bdb78194a125f3067bd79e69c648b76a068117a8c4d0f36f275305423a933541937145d85ab4618094cbafbe4db0c0081614c1ff0f516c3dc4f352e9c92f88e4883166f12324d82240a8f32874c3d6bc35acedb8d501aa0111937a4859f33aa9b43ec342d78c3a45a5939c1e58e6b4f02725c1922f3df8754d1e1ab7648f558e9043ad118e63603b3ba2d8cbfea99a481835e42e73e6cd6019840f4470b606e168b1cd4a1f401c3dc52525d79fa6b959a80d4e11f1ec3a7984cf9")
 	copy(alice.ake.hashedGx[:], bytesFromHex("a3f2c4b9e3a7d1f565157ae7b0e71c721d59d3c79d39e5e4e8d08cb8464ff857"))
 	err = alice.processRevealSig(msg)
@@ -209,16 +205,16 @@ func Test_processSig(t *testing.T) {
 	alice := newConversation(otrV3{}, rnd)
 	alice.initAKE()
 	alice.OurKey = bobPrivateKey
-	alice.setSecretExponent(fixedy)
-	alice.ake.theirPublicValue = fixedgx
+	alice.setSecretExponent(fixedY())
+	alice.ake.theirPublicValue = fixedGX()
 	msg, _ := alice.sigMessage()
 
 	bob := newConversation(otrV3{}, rnd)
 	bob.initAKE()
 	bob.ake.sigKey = alice.ake.sigKey
 	bob.OurKey = alicePrivateKey
-	bob.setSecretExponent(fixedx)
-	bob.ake.theirPublicValue = fixedgy
+	bob.setSecretExponent(fixedX())
+	bob.ake.theirPublicValue = fixedGY()
 
 	err := bob.processSig(msg)
 
@@ -250,8 +246,8 @@ func Test_sigMessage(t *testing.T) {
 	c.initAKE()
 
 	c.OurKey = alicePrivateKey
-	c.setSecretExponent(fixedy)
-	c.ake.theirPublicValue = fixedgx
+	c.setSecretExponent(fixedY())
+	c.ake.theirPublicValue = fixedGX()
 
 	expectedEncryptedSignature, _ := hex.DecodeString("000001d2b4f6ac650cc1d28f61a3b9bdf3cd60e2d1ea55d4c56e9f954eb22e10764861fb40d69917f5c4249fa701f3c04fae9449cd13a5054861f95fbc5775fc3cfd931cf5cc1a89eac82e7209b607c4fbf18df945e23bd0e91365fcc6c5dac072703dd8e2287372107f6a2cbb9139f5e82108d4cbcc1c6cdfcc772014136e756338745e2210d42c6e3ec4e9cf87fa8ebd8190e00f3a54bec86ee06cb7664059bb0fa79529e9d2e563ffecc5561477b3ba6bbf4ac679624b6da69a85822ed5c6ceb56a98740b1002026c503c39badab13b5d5ec948bbb961f0c90e68894a1fb70645a8e21ffe6b78e2e4ee62a62c48bd54e3d27c1166d098791518b53a10c409b5e55d16555b721a7750b7084e8972540bf0f1d76602e9b5fd58f94ed2dbf69fafccef84fdca2f9d800346b2358a200db060d8cf1b984a5213d02f7c27e452ad1cd893b0a668aaf6733809c31a392fc6cfc754691aca9a51582b636b92ea10abd661dd88bfd4c5f19b3ce265951728637b23fff7f7c0638721b6a01b3f1c3e923c10ea37d4e240fd973647d34dde6991cc3a04ce459c23e3ee2a858912ff78f405bbd9951935a120017904537db50f6e9e29338938f2b45ed323fc508d02fd0a0703e53ffc1889bccdec87e7c3d87e442fe29a7654d1")
 	expedctedMACSignature, _ := hex.DecodeString("66b47e29be91a7cf4803d731921482fd514b4a53a9dd1639b17705c90185f91d")
@@ -271,8 +267,8 @@ func Test_sigMessage_increasesOurKeyId(t *testing.T) {
 	c.initAKE()
 
 	c.OurKey = alicePrivateKey
-	c.setSecretExponent(fixedy)
-	c.ake.theirPublicValue = fixedgx
+	c.setSecretExponent(fixedY())
+	c.ake.theirPublicValue = fixedGX()
 	c.keys.ourKeyID = ourKeyID
 
 	_, err := c.sigMessage()
@@ -281,11 +277,11 @@ func Test_sigMessage_increasesOurKeyId(t *testing.T) {
 }
 
 func Test_encrypt(t *testing.T) {
-	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes())})
+	rnd := fixedRand([]string{hex.EncodeToString(fixedX().Bytes())})
 	c := newConversation(otrV3{}, rnd)
 	c.initAKE()
 
-	c.ake.theirPublicValue = fixedgx
+	c.ake.theirPublicValue = fixedGX()
 	io.ReadFull(c.rand(), c.ake.r[:])
 
 	encryptedGx, err := encrypt(c.ake.r[:], appendMPI(nil, c.ake.theirPublicValue))
@@ -294,11 +290,11 @@ func Test_encrypt(t *testing.T) {
 }
 
 func Test_decrypt(t *testing.T) {
-	rnd := fixedRand([]string{hex.EncodeToString(fixedx.Bytes())})
+	rnd := fixedRand([]string{hex.EncodeToString(fixedX().Bytes())})
 	c := newConversation(otrV3{}, rnd)
 	c.initAKE()
 
-	c.ake.theirPublicValue = fixedgx
+	c.ake.theirPublicValue = fixedGX()
 	io.ReadFull(c.rand(), c.ake.r[:])
 
 	encryptedGx, _ := encrypt(c.ake.r[:], appendMPI(nil, c.ake.theirPublicValue))
@@ -310,27 +306,27 @@ func Test_decrypt(t *testing.T) {
 }
 
 func Test_checkDecryptedGxWithoutError(t *testing.T) {
-	hashedGx := sha256.Sum256(appendMPI([]byte{}, fixedgx))
-	err := checkDecryptedGx(appendMPI([]byte{}, fixedgx), hashedGx[:])
+	hashedGx := sha256.Sum256(appendMPI([]byte{}, fixedGX()))
+	err := checkDecryptedGx(appendMPI([]byte{}, fixedGX()), hashedGx[:])
 	assertDeepEquals(t, err, nil)
 }
 
 func Test_checkDecryptedGxWithError(t *testing.T) {
-	hashedGx := sha256.Sum256(appendMPI([]byte{}, fixedgy))
-	err := checkDecryptedGx(appendMPI([]byte{}, fixedgx), hashedGx[:])
+	hashedGx := sha256.Sum256(appendMPI([]byte{}, fixedGY()))
+	err := checkDecryptedGx(appendMPI([]byte{}, fixedGX()), hashedGx[:])
 	assertDeepEquals(t, err.Error(), "otr: bad commit MAC in reveal signature message")
 }
 
 func Test_extractGxWithoutError(t *testing.T) {
-	gx, err := extractGx(appendMPI([]byte{}, fixedgx))
+	gx, err := extractGx(appendMPI([]byte{}, fixedGX()))
 	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, gx, fixedgx)
+	assertDeepEquals(t, gx, fixedGX())
 }
 
 func Test_extractGxWithCorruptError(t *testing.T) {
-	gx, err := extractGx(appendMPI(appendMPI([]byte{}, fixedgx), fixedy))
+	gx, err := extractGx(appendMPI(appendMPI([]byte{}, fixedGX()), fixedY()))
 	assertDeepEquals(t, err.Error(), "otr: gx corrupt after decryption")
-	assertDeepEquals(t, gx, fixedgx)
+	assertDeepEquals(t, gx, fixedGX())
 }
 
 func Test_extractGx_returnsErrorWhenThereIsNotEnoughLengthForTheMPI(t *testing.T) {
@@ -347,16 +343,16 @@ func Test_extractGxWithRangeError(t *testing.T) {
 func Test_calcDHSharedSecret(t *testing.T) {
 	var bob Conversation
 	bob.initAKE()
-	bob.setSecretExponent(fixedx)
-	bob.ake.theirPublicValue = fixedgy
+	bob.setSecretExponent(fixedX())
+	bob.ake.theirPublicValue = fixedGY()
 
 	sharedSecretB := bob.calcDHSharedSecret()
 	assertDeepEquals(t, sharedSecretB, expectedSharedSecret)
 
 	var alice Conversation
 	alice.initAKE()
-	alice.setSecretExponent(fixedy)
-	alice.ake.theirPublicValue = fixedgx
+	alice.setSecretExponent(fixedY())
+	alice.ake.theirPublicValue = fixedGX()
 
 	sharedSecretA := alice.calcDHSharedSecret()
 
@@ -383,8 +379,8 @@ func Test_generateRevealKeyEncryptedSignature(t *testing.T) {
 	c.initAKE()
 
 	c.OurKey = bobPrivateKey
-	c.setSecretExponent(fixedx)
-	c.ake.theirPublicValue = fixedgy
+	c.setSecretExponent(fixedX())
+	c.ake.theirPublicValue = fixedGY()
 	c.keys.ourKeyID = 1
 
 	key := c.calcDHSharedSecret()
@@ -405,8 +401,8 @@ func Test_generateSigKeyEncryptedSignature(t *testing.T) {
 	c.initAKE()
 
 	c.OurKey = alicePrivateKey
-	c.setSecretExponent(fixedy)
-	c.ake.theirPublicValue = fixedgx
+	c.setSecretExponent(fixedY())
+	c.ake.theirPublicValue = fixedGX()
 	c.keys.ourKeyID = 1
 
 	key := c.calcDHSharedSecret()
@@ -465,8 +461,8 @@ func Test_generateEncryptedSignature_returnsErrorIfCalcXbFails(t *testing.T) {
 	c.initAKE()
 
 	c.OurKey = bobPrivateKey
-	c.ake.theirPublicValue = fixedgx
-	c.ake.ourPublicValue = fixedgy
+	c.ake.theirPublicValue = fixedGX()
+	c.ake.ourPublicValue = fixedGY()
 
 	_, err := c.generateEncryptedSignature(&c.ake.revealKey)
 	assertDeepEquals(t, err, errShortRandomRead)
@@ -478,8 +474,8 @@ func Test_revealSigMessage_returnsErrorFromGenerateEncryptedSignature(t *testing
 	c.initAKE()
 
 	c.OurKey = bobPrivateKey
-	c.setSecretExponent(fixedy)
-	c.ake.theirPublicValue = fixedgx
+	c.setSecretExponent(fixedY())
+	c.ake.theirPublicValue = fixedGX()
 
 	_, err := c.revealSigMessage()
 	assertDeepEquals(t, err, errShortRandomRead)
@@ -491,8 +487,8 @@ func Test_sigMessage_returnsErrorFromgenerateEncryptedSignature(t *testing.T) {
 	c.initAKE()
 
 	c.OurKey = bobPrivateKey
-	c.setSecretExponent(fixedy)
-	c.ake.theirPublicValue = fixedgx
+	c.setSecretExponent(fixedY())
+	c.ake.theirPublicValue = fixedGX()
 	c.keys.ourKeyID = 1
 	_, err := c.sigMessage()
 	assertEquals(t, err, errShortRandomRead)
