@@ -95,6 +95,15 @@ func (h *macKeyHistory) forgetMACKeysForTheirKey(theirKeyID uint32) []macKey {
 	return ret
 }
 
+func (c *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {
+	c.theirCurrentDHPubKey = setBigInt(c.theirCurrentDHPubKey, key)
+}
+
+func (c *keyManagementContext) setOurCurrentDHKeys(priv *big.Int, pub *big.Int) {
+	c.ourCurrentDHKeys.priv = setBigInt(c.ourCurrentDHKeys.priv, priv)
+	c.ourCurrentDHKeys.pub = setBigInt(c.ourCurrentDHKeys.pub, pub)
+}
+
 func (c *keyManagementContext) checkMessageCounter(message dataMsg) error {
 	theirNextCounter := binary.BigEndian.Uint64(message.topHalfCtr[:])
 

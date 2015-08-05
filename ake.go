@@ -43,7 +43,7 @@ func (c *Conversation) calcAKEKeys(s *big.Int) {
 }
 
 func (c *Conversation) setSecretExponent(val *big.Int) {
-	c.ake.secretExponent = val
+	c.ake.secretExponent = new(big.Int).Set(val)
 	c.ake.ourPublicValue = modExp(g1, val)
 }
 
@@ -98,6 +98,7 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 	}
 
 	c.setSecretExponent(x)
+	wipeBigInt(x)
 
 	if err := c.randomInto(c.ake.r[:]); err != nil {
 		return nil, err
@@ -128,6 +129,8 @@ func (c *Conversation) dhKeyMessage() ([]byte, error) {
 	}
 
 	c.setSecretExponent(y)
+	wipeBigInt(y)
+
 	return c.serializeDHKey(), nil
 }
 
