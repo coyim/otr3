@@ -62,7 +62,7 @@ func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
 }
 
-func (c *Conversation) End() (toSend []messageFragment, err error) {
+func (c *Conversation) End() (toSend []MessageFragment, err error) {
 	switch c.msgState {
 	case plainText:
 	case encrypted:

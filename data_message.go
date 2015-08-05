@@ -49,7 +49,7 @@ func extractDataMessageFlag(msg []byte) byte {
 	return msg[0]
 }
 
-func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs []tlv) ([]messageFragment, error) {
+func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs []tlv) ([]MessageFragment, error) {
 	dataMsg, err := c.genDataMsgWithFlag(msg, flag, tlvs...)
 	if err != nil {
 		return nil, err

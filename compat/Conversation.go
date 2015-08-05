@@ -52,20 +52,20 @@ func (c *Conversation) compatInit() {
 	c.TheirKey = &c.TheirPublicKey.PublicKey
 }
 
-func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change SecurityChange, toSend [][]byte, err error) {
+func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change SecurityChange, toSend []otr3.MessageFragment, err error) {
 	c.compatInit()
 	encrypted = c.IsEncrypted()
 	out, toSend, err = c.Conversation.Receive(in)
 	return
 }
 
-func (c *Conversation) Send(in []byte) (toSend [][]byte, err error) {
+func (c *Conversation) Send(in []byte) (toSend []otr3.MessageFragment, err error) {
 	c.compatInit()
 	toSend, err = c.Conversation.Send(in)
 	return
 }
 
-func (c *Conversation) End() (toSend [][]byte) {
+func (c *Conversation) End() (toSend []otr3.MessageFragment) {
 	c.compatInit()
 	toSend, _ = c.Conversation.End()
 	return
