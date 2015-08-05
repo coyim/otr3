@@ -117,6 +117,23 @@ func bobContextAfterAKE() *Conversation {
 	return c
 }
 
+func aliceContextAfterAKE() *Conversation {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.keys.ourKeyID = 1
+	c.keys.ourCurrentDHKeys.pub = fixedGY()
+	c.keys.ourPreviousDHKeys.priv = fixedY()
+	c.keys.ourPreviousDHKeys.pub = fixedGY()
+
+	c.keys.theirKeyID = 1
+	c.keys.theirCurrentDHPubKey = fixedGX()
+
+	//TODO ourKeyID must be greater than 0
+	// Temp fix for 2 because when we call genDataMsg, we are sending ourKeyID-1
+	c.keys.ourKeyID = 2
+
+	return c
+}
+
 func bobContextAtAwaitingSig() *Conversation {
 	c := bobContextAtReceiveDHKey()
 	c.version = otrV2{}

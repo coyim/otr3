@@ -150,3 +150,35 @@ func Test_Recieve_signalsAMessageEventWhenWeReceiveADataMessageForAnotherInstanc
 		alice.Receive(reencoded)
 	}, MessageEventReceivedMessageForOtherInstance, nil, nil)
 }
+
+func Test_Receive_NoFragments(t *testing.T) {
+	alice := aliceContextAfterAKE()
+	alice.msgState = encrypted
+	alice.keys.ourCounter = 1
+	bob := bobContextAfterAKE()
+	bob.msgState = encrypted
+	fragments, _ := alice.createSerializedDataMessage(MessagePlaintext("hello!"), messageFlagNormal, []tlv{})
+	plain, _, err := bob.Receive(fragments[0])
+	assertNil(t, err)
+	assertDeepEquals(t, plain, MessagePlaintext("hello!"))
+}
+
+func Test_Receive_Fragments(t *testing.T) {
+	alice := aliceContextAfterAKE()
+	alice.msgState = encrypted
+	alice.keys.ourCounter = 1
+	alice.setFragmentSize(200)
+
+	bob := bobContextAfterAKE()
+	bob.msgState = encrypted
+	fragments, _ := alice.createSerializedDataMessage(MessagePlaintext("hello!"), messageFlagNormal, []tlv{})
+	plain, _, err := bob.Receive(fragments[0])
+	assertNil(t, err)
+	plain, _, err = bob.Receive(fragments[1])
+	assertNil(t, err)
+	plain, _, err = bob.Receive(fragments[2])
+	assertNil(t, err)
+	plain, _, err = bob.Receive(fragments[3])
+	assertNil(t, err)
+	assertDeepEquals(t, plain, MessagePlaintext("hello!"))
+}

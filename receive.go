@@ -124,7 +124,10 @@ func (c *Conversation) Receive(message ValidMessage) (plain MessagePlaintext, to
 	case msgGuessV1KeyExch:
 		// TODO: warn here
 	case msgGuessFragment:
-		// TODO: fix fragment here
+		c.fragmentationContext, err = c.receiveFragment(c.fragmentationContext, message)
+		if fragmentsFinished(c.fragmentationContext) {
+			plain, messagesToSend, err = c.receiveEncoded(encodedMessage(c.fragmentationContext.frag))
+		}
 	case msgGuessUnknown:
 		messageEventReceivedUnrecognizedMessage(c)
 	case msgGuessDHCommit, msgGuessDHKey, msgGuessRevealSig, msgGuessSignature, msgGuessData:

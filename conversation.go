@@ -22,6 +22,7 @@ type Conversation struct {
 	heartbeat heartbeatContext
 
 	fragmentSize              uint16
+	fragmentationContext      fragmentationContext
 	stopSendingWhitespaceTags bool
 
 	eventHandler EventHandler
