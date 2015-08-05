@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"crypto/rand"
+	"math/big"
 	"testing"
 )
 
@@ -234,6 +235,18 @@ func Test_End_whenStateIsEncrypted(t *testing.T) {
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, bob.msgState, plainText)
 	assertDeepEquals(t, msg, expectedMsg)
+}
+
+func Test_End_wipesKeys(t *testing.T) {
+	bob := bobContextAfterAKE()
+	bob.msgState = encrypted
+	bob.End()
+	stub := bobContextAfterAKE()
+	stub.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
+
+	assertDeepEquals(t, dhKeyPair{}, bob.keys.ourCurrentDHKeys)
+	assertDeepEquals(t, dhKeyPair{}, bob.keys.ourPreviousDHKeys)
+	assertDeepEquals(t, eq(bob.keys.theirCurrentDHPubKey, big.NewInt(0)), true)
 }
 
 func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {

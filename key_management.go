@@ -21,6 +21,8 @@ func (p *dhKeyPair) wipe() {
 
 	wipeBigInt(p.pub)
 	wipeBigInt(p.priv)
+	p.pub = nil
+	p.priv = nil
 }
 
 type akeKeys struct {

@@ -72,5 +72,8 @@ func (c *Conversation) End() (toSend []ValidMessage, err error) {
 	case finished:
 		c.msgState = plainText
 	}
+	c.keys.ourCurrentDHKeys.wipe()
+	c.keys.ourPreviousDHKeys.wipe()
+	wipeBigInt(c.keys.theirCurrentDHPubKey)
 	return
 }
