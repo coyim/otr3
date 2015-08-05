@@ -61,7 +61,6 @@ func Test_receive_ignoresV2WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE
 }
 
 func Test_receive_failsWhenReceivesV2WhitespaceTagIfV2IsNotInThePolicy(t *testing.T) {
-	var nilB FragmentedMessage
 	c := newConversation(nil, fixtureRand())
 	c.Policies = policies(allowV3 | whitespaceStartAKE)
 
@@ -70,7 +69,7 @@ func Test_receive_failsWhenReceivesV2WhitespaceTagIfV2IsNotInThePolicy(t *testin
 	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, errInvalidVersion)
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 }
 
 func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
@@ -98,7 +97,6 @@ func Test_receive_whiteSpaceTagWillSignalSetupErrorIfSomethingFails(t *testing.T
 }
 
 func Test_receive_ignoresV3WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {
-	var nilB FragmentedMessage
 	c := newConversation(nil, fixtureRand())
 	c.Policies = policies(allowV2 | allowV3)
 
@@ -107,11 +105,10 @@ func Test_receive_ignoresV3WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE
 	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 }
 
 func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testing.T) {
-	var nilB FragmentedMessage
 	c := newConversation(nil, fixtureRand())
 	c.Policies = policies(allowV2 | whitespaceStartAKE)
 
@@ -119,7 +116,7 @@ func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testin
 	_, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, errInvalidVersion)
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, toSend)
 }
 
 func Test_stopAppendingWhitespaceTagsAfterReceivingAPlainMessage(t *testing.T) {

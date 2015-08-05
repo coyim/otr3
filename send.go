@@ -5,21 +5,21 @@ import (
 	"errors"
 )
 
-func (c *Conversation) Send(msg []byte) (FragmentedMessage, error) {
+func (c *Conversation) Send(msg []byte) ([]ValidMessage, error) {
 	if !c.Policies.isOTREnabled() {
-		return FragmentedMessage{msg}, nil
+		return []ValidMessage{ValidMessage(msg)}, nil
 	}
 	switch c.msgState {
 	case plainText:
 		if c.Policies.has(requireEncryption) {
 			messageEventEncryptionRequired(c)
 			c.updateLastSent()
-			return FragmentedMessage{c.queryMessage()}, nil
+			return []ValidMessage{c.queryMessage()}, nil
 		}
 		if c.Policies.has(sendWhitespaceTag) {
 			msg = c.appendWhitespaceTag(msg)
 		}
-		return FragmentedMessage{msg}, nil
+		return []ValidMessage{msg}, nil
 	case encrypted:
 		return c.createSerializedDataMessage(msg, messageFlagNormal, []tlv{})
 	case finished:
@@ -30,7 +30,7 @@ func (c *Conversation) Send(msg []byte) (FragmentedMessage, error) {
 	return nil, errors.New("otr: cannot send message in current state")
 }
 
-func (c *Conversation) encode(msg []byte) FragmentedMessage {
+func (c *Conversation) encode(msg []byte) []ValidMessage {
 	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgMarker)+1)
 	base64.StdEncoding.Encode(b64[len(msgMarker):], msg)
 	copy(b64, msgMarker)

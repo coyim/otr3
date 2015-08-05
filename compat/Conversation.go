@@ -55,11 +55,11 @@ func (c *Conversation) compatInit() {
 func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change SecurityChange, toSend [][]byte, err error) {
 	c.compatInit()
 	encrypted = c.IsEncrypted()
-	var ret otr3.FragmentedMessage
+	var ret []otr3.ValidMessage
 	out, ret, err = c.Conversation.Receive(in)
 
 	if ret != nil {
-		toSend = ret.Bytes()
+		toSend = otr3.Bytes(ret)
 	}
 
 	return
@@ -68,11 +68,11 @@ func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change Se
 func (c *Conversation) Send(in []byte) (toSend [][]byte, err error) {
 	c.compatInit()
 
-	var ret otr3.FragmentedMessage
+	var ret []otr3.ValidMessage
 	ret, err = c.Conversation.Send(in)
 
 	if ret != nil {
-		toSend = ret.Bytes()
+		toSend = otr3.Bytes(ret)
 	}
 
 	return
@@ -81,11 +81,11 @@ func (c *Conversation) Send(in []byte) (toSend [][]byte, err error) {
 func (c *Conversation) End() (toSend [][]byte) {
 	c.compatInit()
 
-	var ret otr3.FragmentedMessage
+	var ret []otr3.ValidMessage
 	ret, _ = c.Conversation.End()
 
 	if ret != nil {
-		toSend = ret.Bytes()
+		toSend = otr3.Bytes(ret)
 	}
 
 	return

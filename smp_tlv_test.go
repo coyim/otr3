@@ -123,7 +123,7 @@ func Test_readSmpMessage1TLVWithAQuestion(t *testing.T) {
 	assertDeepEquals(t, val, msg)
 }
 
-func Test_readSmpMessage1TLV_ReturnsNotOKForInvalidMessage1(t *testing.T) {
+func Test_readSmpMessage1TLV_ReturnsNotOKForInValidMessage1(t *testing.T) {
 	msg := fixtureMessage1()
 	tlv := msg.tlv()
 	tlv.tlvValue = tlv.tlvValue[:24]
@@ -141,7 +141,7 @@ func Test_readSmpMessage1TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.
 	assertEquals(t, parsedOk, false)
 }
 
-func Test_readSmpMessage2TLV_ReturnsNotOKForInvalidMessage2(t *testing.T) {
+func Test_readSmpMessage2TLV_ReturnsNotOKForInValidMessage2(t *testing.T) {
 	msg := fixtureMessage2()
 	tlv := msg.tlv()
 	tlv.tlvValue = tlv.tlvValue[:24]
@@ -159,7 +159,7 @@ func Test_readSmpMessage2TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.
 	assertEquals(t, parsedOk, false)
 }
 
-func Test_readSmpMessage3TLV_ReturnsNotOKForInvalidMessage2(t *testing.T) {
+func Test_readSmpMessage3TLV_ReturnsNotOKForInValidMessage2(t *testing.T) {
 	msg := fixtureMessage3()
 	tlv := msg.tlv()
 	tlv.tlvValue = tlv.tlvValue[:24]
@@ -177,7 +177,7 @@ func Test_readSmpMessage3TLV_ReturnsNotOKIfTheNumberOfMPIsIsTooShort(t *testing.
 	assertEquals(t, parsedOk, false)
 }
 
-func Test_readSmpMessage4TLV_ReturnsNotOKForInvalidMessage2(t *testing.T) {
+func Test_readSmpMessage4TLV_ReturnsNotOKForInValidMessage2(t *testing.T) {
 	msg := fixtureMessage4()
 	tlv := msg.tlv()
 	tlv.tlvValue = tlv.tlvValue[:24]

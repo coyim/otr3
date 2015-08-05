@@ -66,11 +66,9 @@ func guessMessageType(msg []byte) messageTypeGuess {
 			return msgGuessFragment
 		}
 		return msgGuessUnknown
-	} else {
-		if bytes.Index(msg, whitespaceTagHeader) != -1 {
-			return msgGuessTaggedPlaintext
-		} else {
-			return msgGuessNotOTR
-		}
 	}
+	if bytes.Index(msg, whitespaceTagHeader) != -1 {
+		return msgGuessTaggedPlaintext
+	}
+	return msgGuessNotOTR
 }

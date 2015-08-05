@@ -42,7 +42,7 @@ func Test_fragment_returnsNoChangeForASmallerPackage(t *testing.T) {
 
 	data := []byte("one two three")
 
-	assertDeepEquals(t, ctx.fragment(data, 13, defaultInstanceTag, defaultInstanceTag), FragmentedMessage{data})
+	assertDeepEquals(t, ctx.fragment(data, 13, defaultInstanceTag, defaultInstanceTag), []ValidMessage{data})
 }
 
 func Test_fragment_returnsFragmentsForNeededFragmentation(t *testing.T) {
@@ -50,7 +50,7 @@ func Test_fragment_returnsFragmentsForNeededFragmentation(t *testing.T) {
 
 	data := []byte("one two three")
 
-	assertDeepEquals(t, ctx.fragment(data, 4, defaultInstanceTag, defaultInstanceTag+2), FragmentedMessage{
+	assertDeepEquals(t, ctx.fragment(data, 4, defaultInstanceTag, defaultInstanceTag+2), []ValidMessage{
 		[]byte("?OTR|00000100|00000102,00001,00004,one ,"),
 		[]byte("?OTR|00000100|00000102,00002,00004,two ,"),
 		[]byte("?OTR|00000100|00000102,00003,00004,thre,"),
@@ -63,7 +63,7 @@ func Test_fragment_returnsFragmentsForNeededFragmentationForV2(t *testing.T) {
 
 	data := []byte("one two three")
 
-	assertDeepEquals(t, ctx.fragment(data, 4, defaultInstanceTag, defaultInstanceTag+1), FragmentedMessage{
+	assertDeepEquals(t, ctx.fragment(data, 4, defaultInstanceTag, defaultInstanceTag+1), []ValidMessage{
 		[]byte("?OTR,00001,00004,one ,"),
 		[]byte("?OTR,00002,00004,two ,"),
 		[]byte("?OTR,00003,00004,thre,"),

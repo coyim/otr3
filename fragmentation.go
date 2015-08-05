@@ -39,15 +39,15 @@ func (c *Conversation) setFragmentSize(size uint16) {
 	c.fragmentSize = size
 }
 
-func (c *Conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr uint32) FragmentedMessage {
+func (c *Conversation) fragment(data encodedMessage, fraglen uint16, itags uint32, itagr uint32) []ValidMessage {
 	len := len(data)
 
 	if len <= int(fraglen) || fraglen == 0 {
-		return FragmentedMessage{data}
+		return []ValidMessage{ValidMessage(data)}
 	}
 
 	numFragments := (len / int(fraglen)) + 1
-	ret := make(FragmentedMessage, numFragments)
+	ret := make([]ValidMessage, numFragments)
 	for i := 0; i < numFragments; i++ {
 		prefix := c.version.fragmentPrefix(i, numFragments, itags, itagr)
 		ret[i] = append(append(prefix, fragmentData(data, i, fraglen, uint16(len))...), fragmentSeparator[0])
@@ -105,7 +105,7 @@ func forgetFragment() fragmentationContext {
 	return fragmentationContext{}
 }
 
-func receiveFragment(beforeCtx fragmentationContext, data []byte) (fragmentationContext, error) {
+func receiveFragment(beforeCtx fragmentationContext, data ValidMessage) (fragmentationContext, error) {
 	// TODO: check instance tags, and optionally warn the user
 	// TODO: check for malformed data
 
