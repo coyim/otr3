@@ -2,15 +2,47 @@ package otr3
 
 import "testing"
 
-func Test_receiveQueryMessage_SendDHCommitAndTransitToStateAwaitingDHKey(t *testing.T) {
-	queryMsg := []byte("?OTRv3?")
+func Test_receiveQueryMessage_sendDHCommitv3AndTransitToStateAwaitingDHKey(t *testing.T) {
+	queryMsg := []byte("?OTRv?23?")
 
-	c := newConversation(nil, fixtureRand())
-	c.Policies.add(allowV3)
-	msg, _ := c.receiveQueryMessage(queryMsg)
+	c := &Conversation{Policies: policies(allowV3)}
+	msg, err := c.receiveQueryMessage(queryMsg)
 
+	assertNil(t, err)
 	assertEquals(t, c.ake.state, authStateAwaitingDHKey{})
 	assertDeepEquals(t, dhMsgType(msg), msgTypeDHCommit)
+	assertDeepEquals(t, dhMsgVersion(msg), uint16(3))
+}
+
+func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
+	queryMsg := []byte("?OTRv?23?")
+
+	c := &Conversation{Policies: policies(allowV2)}
+	msg, err := c.receiveQueryMessage(queryMsg)
+
+	assertNil(t, err)
+	assertEquals(t, c.ake.state, authStateAwaitingDHKey{})
+	assertDeepEquals(t, dhMsgType(msg), msgTypeDHCommit)
+	assertDeepEquals(t, dhMsgVersion(msg), uint16(2))
+}
+
+//FIXME: Should not it be tested on sendDHCommit?
+func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
+	fixture := fixtureConversation()
+	fixture.dhCommitMessage()
+
+	msg := []byte("?OTRv3?")
+	cxt := &Conversation{
+		Policies: policies(allowV3),
+		Rand:     fixtureRand(),
+	}
+
+	_, err := cxt.receiveQueryMessage(msg)
+
+	assertNil(t, err)
+	assertDeepEquals(t, cxt.ake.r, fixture.ake.r)
+	assertDeepEquals(t, cxt.ake.secretExponent, fixture.ake.secretExponent)
+	assertDeepEquals(t, cxt.ake.ourPublicValue, fixture.ake.ourPublicValue)
 }
 
 func Test_receiveQueryMessage_signalsMessageEventOnFailure(t *testing.T) {
@@ -23,29 +55,19 @@ func Test_receiveQueryMessage_signalsMessageEventOnFailure(t *testing.T) {
 	}, MessageEventSetupError, "", errShortRandomRead)
 }
 
-func Test_receiveQueryMessageV2_SendDHCommitv2(t *testing.T) {
-	queryMsg := []byte("?OTRv2?")
-
-	c := newConversation(nil, fixtureRand())
-	c.Policies.add(allowV2)
-	msg, _ := c.receiveQueryMessage(queryMsg)
-
-	assertDeepEquals(t, dhMsgType(msg), msgTypeDHCommit)
-	assertDeepEquals(t, dhMsgVersion(msg), uint16(2))
+func Test_receiveQueryMessage_returnsErrorIfNoCompatibleVersionCouldBeFound(t *testing.T) {
+	c := &Conversation{Policies: policies(allowV3)}
+	_, err := c.receiveQueryMessage([]byte("?OTRv?2?"))
+	assertEquals(t, err, errInvalidVersion)
 }
 
-func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
-	fixture := fixtureConversation()
-	fixture.dhCommitMessage()
-
-	msg := []byte("?OTRv3?")
-	cxt := newConversation(nil, fixtureRand())
-	cxt.Policies.add(allowV3)
-
-	cxt.receiveQueryMessage(msg)
-	assertDeepEquals(t, cxt.ake.r, fixture.ake.r)
-	assertDeepEquals(t, cxt.ake.secretExponent, fixture.ake.secretExponent)
-	assertDeepEquals(t, cxt.ake.ourPublicValue, fixture.ake.ourPublicValue)
+func Test_receiveQueryMessage_returnsErrorIfDhCommitMessageGeneratesError(t *testing.T) {
+	c := &Conversation{
+		Policies: policies(allowV2),
+		Rand:     fixedRand([]string{"ABCDABCD"}),
+	}
+	_, err := c.receiveQueryMessage([]byte("?OTRv2?"))
+	assertEquals(t, err, errShortRandomRead)
 }
 
 func Test_parseOTRQueryMessage(t *testing.T) {
@@ -76,9 +98,7 @@ func Test_acceptOTRRequest_returnsNilForUnsupportedVersions(t *testing.T) {
 
 func Test_acceptOTRRequest_acceptsOTRV3IfHasAllowV3Policy(t *testing.T) {
 	msg := []byte("?OTRv32?")
-	p := policies(0)
-	p.AllowV2()
-	p.allowV3()
+	p := policies(allowV2 | allowV3)
 	v, ok := acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, otrV3{})
@@ -87,8 +107,7 @@ func Test_acceptOTRRequest_acceptsOTRV3IfHasAllowV3Policy(t *testing.T) {
 
 func Test_acceptOTRRequest_acceptsOTRV2IfHasOnlyAllowV2Policy(t *testing.T) {
 	msg := []byte("?OTRv32?")
-	p := policies(0)
-	p.AllowV2()
+	p := policies(allowV2)
 	v, ok := acceptOTRRequest(p, msg)
 
 	assertEquals(t, v, otrV2{})

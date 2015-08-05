@@ -317,18 +317,18 @@ func Test_receiveSig_IgnoreMessageIfNotInStateAwaitingSig(t *testing.T) {
 	}
 }
 
-func Test_receiveAKE_receiveRevealSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
+func Test_receiveDecoded_receiveRevealSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
 	c := aliceContextAtAwaitingRevealSig()
 	msg := fixtureRevealSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
 	_, _, _, err := c.receiveDecoded(msg)
 
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 	assertEquals(t, c.msgState, encrypted)
 }
 
-func Test_receiveAKE_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey(t *testing.T) {
+func Test_receiveDecoded_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey(t *testing.T) {
 	var nilBigInt *big.Int
 
 	c := aliceContextAtAwaitingRevealSig()
@@ -337,13 +337,13 @@ func Test_receiveAKE_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurrentDH
 
 	_, _, _, err := c.receiveDecoded(msg)
 
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
 	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgx)
 	assertEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
 }
 
-func Test_receiveAKE_receiveDHCommitMessageAndFailsWillSignalSetupError(t *testing.T) {
+func Test_receiveDecoded_receiveDHCommitMessageAndFailsWillSignalSetupError(t *testing.T) {
 	c := aliceContextAtAwaitingDHCommit()
 	c.Rand = fixedRand([]string{"ABCD"})
 	msg := fixtureDHCommitMsgV2()
@@ -353,7 +353,7 @@ func Test_receiveAKE_receiveDHCommitMessageAndFailsWillSignalSetupError(t *testi
 	}, MessageEventSetupError, "", errShortRandomRead)
 }
 
-func Test_receiveAKE_receiveDHKeyMessageAndFailsWillSignalSetupError(t *testing.T) {
+func Test_receiveDecoded_receiveDHKeyMessageAndFailsWillSignalSetupError(t *testing.T) {
 	c := bobContextAtAwaitingDHKey()
 	c.Rand = fixedRand([]string{"ABCD"})
 	msg := fixtureDHKeyMsg(otrV3{})
@@ -363,7 +363,7 @@ func Test_receiveAKE_receiveDHKeyMessageAndFailsWillSignalSetupError(t *testing.
 	}, MessageEventSetupError, "", errShortRandomRead)
 }
 
-func Test_receiveAKE_receiveRevealSigMessageAndFailsWillSignalSetupError(t *testing.T) {
+func Test_receiveDecoded_receiveRevealSigMessageAndFailsWillSignalSetupError(t *testing.T) {
 	c := aliceContextAtAwaitingRevealSig()
 	c.Rand = fixedRand([]string{"ABCD"})
 	msg := fixtureRevealSigMsg(otrV2{})
@@ -373,7 +373,7 @@ func Test_receiveAKE_receiveRevealSigMessageAndFailsWillSignalSetupError(t *test
 	}, MessageEventSetupError, "", errShortRandomRead)
 }
 
-func Test_receiveAKE_receiveSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
+func Test_receiveDecoded_receiveSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
 	c := bobContextAtAwaitingSig()
 	c.Rand = fixedRand([]string{"ABCD"})
 	msg := fixtureSigMsg(otrV2{})
@@ -383,18 +383,18 @@ func Test_receiveAKE_receiveSigMessageAndSetMessageStateToEncrypted(t *testing.T
 	}, MessageEventSetupError, "", errShortRandomRead)
 }
 
-func Test_receiveAKE_receiveSigMessageAndFailsWillSignalSetupError(t *testing.T) {
+func Test_receiveDecoded_receiveSigMessageAndFailsWillSignalSetupError(t *testing.T) {
 	c := bobContextAtAwaitingSig()
 	msg := fixtureSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
 	_, _, _, err := c.receiveDecoded(msg)
 
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 	assertEquals(t, c.msgState, encrypted)
 }
 
-func Test_receiveAKE_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey(t *testing.T) {
+func Test_receiveDecoded_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey(t *testing.T) {
 	var nilBigInt *big.Int
 
 	c := bobContextAtAwaitingSig()
@@ -404,7 +404,7 @@ func Test_receiveAKE_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey
 
 	_, _, _, err := c.receiveDecoded(msg)
 
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
 	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedgy)
 	assertEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
@@ -506,27 +506,6 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfProcessDHCommitFail
 
 	_, _, err := authStateNone{}.receiveDHCommitMessage(c, []byte{0x00, 0x00})
 	assertEquals(t, err, newOtrError("corrupt DH commit message"))
-}
-
-func Test_authStateNone_receiveQueryMessage_returnsNoErrorForValidMessage(t *testing.T) {
-	c := newConversation(otrV3{}, fixtureRand())
-	c.Policies.add(allowV3)
-	_, err := c.receiveQueryMessage([]byte("?OTRv3?"))
-	assertEquals(t, err, nil)
-}
-
-func Test_authStateNone_receiveQueryMessage_returnsErrorIfNoCompatibleVersionCouldBeFound(t *testing.T) {
-	c := newConversation(otrV3{}, fixtureRand())
-	c.Policies.add(allowV3)
-	_, err := c.receiveQueryMessage([]byte("?OTRv2?"))
-	assertEquals(t, err, errInvalidVersion)
-}
-
-func Test_authStateNone_receiveQueryMessage_returnsErrorIfDhCommitMessageGeneratesError(t *testing.T) {
-	c := newConversation(otrV2{}, fixedRand([]string{"ABCDABCD"}))
-	c.Policies.add(allowV2)
-	_, err := c.receiveQueryMessage([]byte("?OTRv2?"))
-	assertEquals(t, err, errShortRandomRead)
 }
 
 func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfMsgDoesntHaveHeader(t *testing.T) {
