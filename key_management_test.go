@@ -306,12 +306,12 @@ func Test_wipeBigInt_numberIsZeroed(t *testing.T) {
 
 func Test_setBigInt_numberIsSet(t *testing.T) {
 	n := big.NewInt(3)
-	n = SetBigInt(n, big.NewInt(5))
+	n = setBigInt(n, big.NewInt(5))
 	assertEquals(t, n.Cmp(big.NewInt(5)), 0)
 }
 
 func Test_setBigInt_setWhenSourceIsNull(t *testing.T) {
 	var n *big.Int
-	n = SetBigInt(n, big.NewInt(5))
+	n = setBigInt(n, big.NewInt(5))
 	assertEquals(t, n.Cmp(big.NewInt(5)), 0)
 }

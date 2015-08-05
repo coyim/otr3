@@ -145,9 +145,9 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *Conversation, msg []byte)
 		return s, nil, err
 	}
 
-	c.keys.theirCurrentDHPubKey = c.ake.theirPublicValue
-	c.keys.ourCurrentDHKeys.pub = c.ake.ourPublicValue
-	c.keys.ourCurrentDHKeys.priv = c.ake.secretExponent
+	c.keys.theirCurrentDHPubKey = setBigInt(c.keys.theirCurrentDHPubKey, c.ake.theirPublicValue)
+	c.keys.ourCurrentDHKeys.pub = setBigInt(c.keys.ourCurrentDHKeys.pub, c.ake.ourPublicValue)
+	c.keys.ourCurrentDHKeys.priv = setBigInt(c.keys.ourCurrentDHKeys.priv, c.ake.secretExponent)
 	c.keys.ourCounter++
 
 	return authStateAwaitingSig{revealSigMsg: revealSigMsg}, revealSigMsg, nil
@@ -186,11 +186,11 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg
 		return s, nil, err
 	}
 
-	c.keys.theirCurrentDHPubKey = c.ake.theirPublicValue
-	c.keys.theirPreviousDHPubKey = nil
+	c.keys.theirCurrentDHPubKey = setBigInt(c.keys.theirCurrentDHPubKey, c.ake.theirPublicValue)
+	wipeBigInt(c.keys.theirPreviousDHPubKey)
 
-	c.keys.ourCurrentDHKeys.priv = c.ake.secretExponent
-	c.keys.ourCurrentDHKeys.pub = c.ake.ourPublicValue
+	c.keys.ourCurrentDHKeys.priv = setBigInt(c.keys.ourCurrentDHKeys.priv, c.ake.secretExponent)
+	c.keys.ourCurrentDHKeys.pub = setBigInt(c.keys.ourCurrentDHKeys.pub, c.ake.ourPublicValue)
 	c.keys.ourCounter++
 
 	return authStateNone{}, sigMsg, c.akeHasFinished()
@@ -224,8 +224,8 @@ func (s authStateAwaitingSig) receiveSigMessage(c *Conversation, msg []byte) (au
 	}
 
 	//gy was stored when we receive DH-Key
-	c.keys.theirCurrentDHPubKey = c.ake.theirPublicValue
-	c.keys.theirPreviousDHPubKey = nil
+	c.keys.theirCurrentDHPubKey = setBigInt(c.keys.theirCurrentDHPubKey, c.ake.theirPublicValue)
+	wipeBigInt(c.keys.theirPreviousDHPubKey)
 
 	return authStateNone{}, nil, c.akeHasFinished()
 }

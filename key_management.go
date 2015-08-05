@@ -277,13 +277,14 @@ func wipeBigInt(k *big.Int) {
 	k.SetBytes(zeroes(len(k.Bytes())))
 }
 
+func zeroes(n int) []byte {
+	return make([]byte, n)
+}
+
 func setBigInt(dst *big.Int, src *big.Int) *big.Int {
 	wipeBigInt(dst)
 
-	if dst == nil {
-		dst = big.NewInt(0)
-	}
-
-	dst.Set(src)
-	return dst
+	ret := big.NewInt(0)
+	ret.Set(src)
+	return ret
 }
