@@ -43,9 +43,6 @@ type MessageEvent int
  * depending on the message events. All the events only require an opdata,
  * the event, and the context. The message and err will be NULL except for
  * some events (see below). The possible events are:
- * - OTRL_MSGEVENT_ENCRYPTION_REQUIRED
- *      Our policy requires encryption but we are trying to send
- *      an unencrypted message out.
  * - OTRL_MSGEVENT_ENCRYPTION_ERROR
  *      An error occured while encrypting a message and the message
  *      was not sent.
@@ -73,8 +70,9 @@ type MessageEvent int
  * - OTRL_MSGEVENT_RCVDMSG_FOR_OTHER_INSTANCE
  *      Received and discarded a message intended for another instance. */
 const (
-	MessageEventNone MessageEvent = iota
-	// MessageEventEncryptionRequired MessageEvent = iota
+	// MessageEventEncryptionRequired is signaled when our policy requires encryption bt we are trying to send an unencrypted message
+	MessageEventEncryptionRequired MessageEvent = iota
+
 	// MessageEventEncryptionError
 	// MessageEventConnectionEnded
 
@@ -196,4 +194,8 @@ func messageEventSetupError(c *Conversation, e error) {
 
 func messageEventReflected(c *Conversation) {
 	c.getEventHandler().HandleMessageEvent(MessageEventMessageReflected, "", nil)
+}
+
+func messageEventEncryptionRequired(c *Conversation) {
+	c.getEventHandler().HandleMessageEvent(MessageEventEncryptionRequired, "", nil)
 }

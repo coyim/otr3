@@ -34,3 +34,14 @@ func Test_sendDHCommit_resetsTheKeyManagementContext(t *testing.T) {
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, c.keys, expectedKeyContext)
 }
+
+func Test_Send_signalsMessageEventIfTryingToSendWithoutEncryptedChannel(t *testing.T) {
+	m := []byte("hello")
+	c := bobContextAfterAKE()
+	c.msgState = plainText
+	c.Policies = policies(allowV3 | requireEncryption)
+
+	c.expectMessageEvent(t, func() {
+		c.Send(m)
+	}, MessageEventEncryptionRequired, "", nil)
+}

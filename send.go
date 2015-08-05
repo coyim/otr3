@@ -12,6 +12,7 @@ func (c *Conversation) Send(msg []byte) (FragmentedMessage, error) {
 	switch c.msgState {
 	case plainText:
 		if c.Policies.has(requireEncryption) {
+			messageEventEncryptionRequired(c)
 			c.updateLastSent()
 			return FragmentedMessage{c.queryMessage()}, nil
 		}
