@@ -22,6 +22,7 @@ func (c *Conversation) maybeHeartbeat(plain, toSend []byte, err error) ([]byte, 
 	return plain, toSend, tsExtra, e
 }
 
+// TODO: Fix a better test for this, so we can see that no message header is there
 // Returns a serialized data message (with NO header)
 func (c *Conversation) potentialHeartbeat(plain []byte) (toSend []byte, err error) {
 	if plain != nil {
