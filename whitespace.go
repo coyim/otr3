@@ -49,7 +49,7 @@ func (c *Conversation) processWhitespaceTag(message []byte) (plain, toSend []byt
 	return
 }
 
-func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (toSend []byte, err error) {
+func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (toSend messageWithHeader, err error) {
 	switch {
 	case c.Policies.has(allowV3) && bytes.Contains(tag, otrV3{}.whitespaceTag()):
 		c.version = otrV3{}

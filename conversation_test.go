@@ -66,7 +66,7 @@ func Test_receive_returnsAnErrorForADataMessageWhenNoEncryptionIsActive(t *testi
 }
 
 func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {
-	exp := []byte{
+	exp := messageWithHeader{
 		0x00, 0x03, // protocol version
 		msgTypeDHKey,
 	}

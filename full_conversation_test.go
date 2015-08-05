@@ -159,7 +159,6 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 func Test_processDataMessageShouldExtractData(t *testing.T) {
 	var toSend []messageFragment
 	var err error
-	var nilB []byte
 
 	alice := &Conversation{Rand: rand.Reader}
 	alice.Policies = policies(allowV2 | allowV3)
@@ -173,29 +172,29 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(msg)
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
 	assertEquals(t, bob.version, otrV3{})
 
 	//Bob send Alice DHCommit
 	_, toSend, err = alice.Receive(toSend[0])
 	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 
 	//Alice send Bob DHKey
 	_, toSend, err = bob.Receive(toSend[0])
 	m, _ := bob.decode(toSend[0])
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: m})
 
 	//Bob send Alice RevealSig
 	_, toSend, err = alice.Receive(toSend[0])
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 	assertEquals(t, alice.ake.state, authStateNone{})
 
 	//Alice send Bob Sig
 	_, toSend, err = bob.Receive(toSend[0])
-	assertEquals(t, err, nil)
+	assertNil(t, err)
 	assertEquals(t, bob.ake.state, authStateNone{})
 
 	// Alice sends a message to bob
@@ -206,5 +205,5 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, plain, msg)
-	assertDeepEquals(t, ret, nilB)
+	assertNil(t, ret)
 }

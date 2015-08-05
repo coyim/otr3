@@ -63,7 +63,7 @@ func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs [
 	return c.encode(res), nil
 }
 
-func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend []byte, err error) {
+func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend messageWithHeader, err error) {
 	ignoreUnreadable := (extractDataMessageFlag(msg) & messageFlagIgnoreUnreadable) == messageFlagIgnoreUnreadable
 	plain, toSend, err = c.processDataMessageWithRawErrors(header, msg)
 	if err != nil && ignoreUnreadable {

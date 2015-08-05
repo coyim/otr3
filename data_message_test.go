@@ -265,7 +265,6 @@ func Test_processDataMessage_willReturnAHeartbeatMessageAfterAPlainTextMessage(t
 }
 
 func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing.T) {
-	var nilB []byte
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
@@ -279,8 +278,8 @@ func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing
 	bob.msgState = encrypted
 	_, toSend, _, err := bob.receiveDecoded(msg)
 
-	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, toSend, nilB)
+	assertNil(t, err)
+	assertNil(t, toSend)
 	assertDeepEquals(t, aliceCurrentDHPubKey, bob.keys.theirPreviousDHPubKey)
 	assertEquals(t, eq(aliceCurrentDHPubKey, bob.keys.theirCurrentDHPubKey), false)
 }

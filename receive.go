@@ -80,7 +80,7 @@ func (c *Conversation) decode(encoded []byte) ([]byte, error) {
 	return msg[:msgLen], nil
 }
 
-func (c *Conversation) receiveDecoded(message []byte) (plain []byte, toSend []byte, toSendExtra []byte, err error) {
+func (c *Conversation) receiveDecoded(message []byte) (plain []byte, toSend messageWithHeader, toSendExtra []byte, err error) {
 	if err = c.checkVersion(message); err != nil {
 		return
 	}
