@@ -105,13 +105,15 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 	}
 
 	p := plainDataMsg{}
-	//Never fails because receivingAESKey is a AES-128 key
-	err = p.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
-	if err != nil {
-		return
-	}
+	//this can't return an error since receivingAESKey is a AES-128 key
+	p.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
 
-	plain = p.message
+	//TODO: The plain was zeroed when we wiped the received message
+	//This is becuase we've been using slice assignments without copying all over the place.
+	//Should we copy more? Where?
+	plain = make([]byte, len(p.message))
+	copy(plain, p.message)
+
 	if len(plain) == 0 {
 		plain = nil
 		messageEventHeartbeatReceived(c)
