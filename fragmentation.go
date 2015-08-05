@@ -39,15 +39,15 @@ func (c *Conversation) setFragmentSize(size uint16) {
 	c.fragmentSize = size
 }
 
-func (c *Conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr uint32) []MessageFragment {
+func (c *Conversation) fragment(data []byte, fraglen uint16, itags uint32, itagr uint32) FragmentedMessage {
 	len := len(data)
 
 	if len <= int(fraglen) || fraglen == 0 {
-		return []MessageFragment{data}
+		return FragmentedMessage{data}
 	}
 
 	numFragments := (len / int(fraglen)) + 1
-	ret := make([]MessageFragment, numFragments)
+	ret := make(FragmentedMessage, numFragments)
 	for i := 0; i < numFragments; i++ {
 		prefix := c.version.fragmentPrefix(i, numFragments, itags, itagr)
 		ret[i] = append(append(prefix, fragmentData(data, i, fraglen, uint16(len))...), fragmentSeparator[0])
