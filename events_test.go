@@ -6,26 +6,27 @@ func Test_Conversation_eventHandler_returnsAndSetsAndEmptyEventHandlerIfNoneExis
 	c := &Conversation{}
 
 	ev := c.getEventHandler()
-	assertFuncEquals(t, ev.errorMessage, emptyErrorMessageHandler)
-	assertFuncEquals(t, ev.handleSMPEvent, emptySMPEventHandler)
-	assertFuncEquals(t, ev.handleMessageEvent, emptyMessageEventHandler)
+	ev2 := ev.(dynamicEventHandler)
+	assertFuncEquals(t, ev2.handleErrorMessage, emptyErrorMessageHandler)
+	assertFuncEquals(t, ev2.handleSMPEvent, emptySMPEventHandler)
+	assertFuncEquals(t, ev2.handleMessageEvent, emptyMessageEventHandler)
 	assertNotNil(t, c.eventHandler)
 }
 
 func Test_Conversation_eventHandler_returnsAnExistingEventHandlerIfItExists(t *testing.T) {
 	c := &Conversation{}
-	before := &EventHandler{}
-	c.eventHandler = before
+	c.eventHandler = dynamicEventHandler{}
 
 	ev := c.getEventHandler()
-	assertEquals(t, ev, before)
+	ev2 := ev.(dynamicEventHandler)
+	assertNil(t, ev2.handleMessageEvent)
 }
 
 func Test_Conversation_eventHandler_doesntSetEventHandlerIfOneExists(t *testing.T) {
 	c := &Conversation{}
-	before := &EventHandler{}
-	c.eventHandler = before
+	c.eventHandler = dynamicEventHandler{}
 
 	c.getEventHandler()
-	assertEquals(t, c.eventHandler, before)
+	ev2 := c.eventHandler.(dynamicEventHandler)
+	assertNil(t, ev2.handleMessageEvent)
 }

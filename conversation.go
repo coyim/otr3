@@ -24,7 +24,7 @@ type Conversation struct {
 	fragmentSize              uint16
 	stopSendingWhitespaceTags bool
 
-	eventHandler *EventHandler
+	eventHandler EventHandler
 }
 
 type msgState int

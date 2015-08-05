@@ -102,13 +102,31 @@ const (
 )
 
 // EventHandler contains the configuration necessary to be able to communicate events to the client
-type EventHandler struct {
-	// Should return a string according to the error event. This string will be concatenated to an OTR header to produce an OTR protocol error message
-	errorMessage func(error ErrorCode) string
-	// Update the authentication UI with respect to SMP events
-	handleSMPEvent func(event SMPEvent, progressPercent int, question string)
-	// Handle and send the appropriate message(s) to the sender/recipient depending on the message events
+type EventHandler interface {
+	// HandleErrorMessage should return a string according to the error event. This string will be concatenated to an OTR header to produce an OTR protocol error message
+	HandleErrorMessage(error ErrorCode) string
+	// HandleSMPEvent should update the authentication UI with respect to SMP events
+	HandleSMPEvent(event SMPEvent, progressPercent int, question string)
+	// HandleMessageEvent should handle and send the appropriate message(s) to the sender/recipient depending on the message events
+	HandleMessageEvent(event MessageEvent, message string, err error)
+}
+
+type dynamicEventHandler struct {
+	handleErrorMessage func(error ErrorCode) string
+	handleSMPEvent     func(event SMPEvent, progressPercent int, question string)
 	handleMessageEvent func(event MessageEvent, message string, err error)
+}
+
+func (d dynamicEventHandler) HandleErrorMessage(error ErrorCode) string {
+	return d.handleErrorMessage(error)
+}
+
+func (d dynamicEventHandler) HandleSMPEvent(event SMPEvent, progressPercent int, question string) {
+	d.handleSMPEvent(event, progressPercent, question)
+}
+
+func (d dynamicEventHandler) HandleMessageEvent(event MessageEvent, message string, err error) {
+	d.handleMessageEvent(event, message, err)
 }
 
 func emptyErrorMessageHandler(_ ErrorCode) string {
@@ -121,9 +139,9 @@ func emptySMPEventHandler(_ SMPEvent, _ int, _ string) {
 func emptyMessageEventHandler(_ MessageEvent, _ string, _ error) {
 }
 
-func (c *Conversation) getEventHandler() *EventHandler {
+func (c *Conversation) getEventHandler() EventHandler {
 	if c.eventHandler == nil {
-		c.eventHandler = &EventHandler{
+		c.eventHandler = dynamicEventHandler{
 			emptyErrorMessageHandler,
 			emptySMPEventHandler,
 			emptyMessageEventHandler,
@@ -133,45 +151,45 @@ func (c *Conversation) getEventHandler() *EventHandler {
 }
 
 func smpEventCheated(c *Conversation) {
-	c.getEventHandler().handleSMPEvent(SMPEventCheated, 0, "")
+	c.getEventHandler().HandleSMPEvent(SMPEventCheated, 0, "")
 }
 
 func smpEventError(c *Conversation) {
-	c.getEventHandler().handleSMPEvent(SMPEventError, 0, "")
+	c.getEventHandler().HandleSMPEvent(SMPEventError, 0, "")
 }
 
 func smpEventAskForAnswer(c *Conversation, question string) {
-	c.getEventHandler().handleSMPEvent(SMPEventAskForAnswer, 25, question)
+	c.getEventHandler().HandleSMPEvent(SMPEventAskForAnswer, 25, question)
 }
 
 func smpEventAskForSecret(c *Conversation) {
-	c.getEventHandler().handleSMPEvent(SMPEventAskForSecret, 25, "")
+	c.getEventHandler().HandleSMPEvent(SMPEventAskForSecret, 25, "")
 }
 
 func smpEventInProgress(c *Conversation) {
-	c.getEventHandler().handleSMPEvent(SMPEventInProgress, 60, "")
+	c.getEventHandler().HandleSMPEvent(SMPEventInProgress, 60, "")
 }
 
 func smpEventFailure(c *Conversation) {
-	c.getEventHandler().handleSMPEvent(SMPEventFailure, 100, "")
+	c.getEventHandler().HandleSMPEvent(SMPEventFailure, 100, "")
 }
 
 func smpEventSuccess(c *Conversation) {
-	c.getEventHandler().handleSMPEvent(SMPEventSuccess, 100, "")
+	c.getEventHandler().HandleSMPEvent(SMPEventSuccess, 100, "")
 }
 
 func smpEventAbort(c *Conversation) {
-	c.getEventHandler().handleSMPEvent(SMPEventAbort, 0, "")
+	c.getEventHandler().HandleSMPEvent(SMPEventAbort, 0, "")
 }
 
 func messageEventHeartbeatReceived(c *Conversation) {
-	c.getEventHandler().handleMessageEvent(MessageEventLogHeartbeatReceived, "", nil)
+	c.getEventHandler().HandleMessageEvent(MessageEventLogHeartbeatReceived, "", nil)
 }
 
 func messageEventHeartbeatSent(c *Conversation) {
-	c.getEventHandler().handleMessageEvent(MessageEventLogHeartbeatSent, "", nil)
+	c.getEventHandler().HandleMessageEvent(MessageEventLogHeartbeatSent, "", nil)
 }
 
 func messageEventSetupError(c *Conversation, e error) {
-	c.getEventHandler().handleMessageEvent(MessageEventSetupError, "", e)
+	c.getEventHandler().HandleMessageEvent(MessageEventSetupError, "", e)
 }

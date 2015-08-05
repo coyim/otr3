@@ -108,11 +108,30 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 func (c *Conversation) expectMessageEvent(t *testing.T, f func(), expectedEvent MessageEvent, expectedMessage string, expectedError error) {
 	called := false
 
-	c.getEventHandler().handleMessageEvent = func(event MessageEvent, message string, err error) {
-		assertDeepEquals(t, event, expectedEvent)
-		assertDeepEquals(t, message, expectedMessage)
-		assertDeepEquals(t, err, expectedError)
-		called = true
+	c.eventHandler = dynamicEventHandler{
+		handleMessageEvent: func(event MessageEvent, message string, err error) {
+			assertDeepEquals(t, event, expectedEvent)
+			assertDeepEquals(t, message, expectedMessage)
+			assertDeepEquals(t, err, expectedError)
+			called = true
+		},
+	}
+
+	f()
+
+	assertEquals(t, called, true)
+}
+
+func (c *Conversation) expectSMPEvent(t *testing.T, f func(), expectedEvent SMPEvent, expectedProgress int, expectedQuestion string) {
+	called := false
+
+	c.eventHandler = dynamicEventHandler{
+		handleSMPEvent: func(event SMPEvent, progressPercent int, question string) {
+			assertEquals(t, event, expectedEvent)
+			assertEquals(t, progressPercent, expectedProgress)
+			assertEquals(t, question, expectedQuestion)
+			called = true
+		},
 	}
 
 	f()

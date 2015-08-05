@@ -226,21 +226,6 @@ func Test_smpStateExpect4_goToExpectState1WhenReceivesSmpMessage4(t *testing.T) 
 	assertEquals(t, nextState, smpStateExpect1{})
 }
 
-func (c *Conversation) expectSMPEvent(t *testing.T, f func(), expectedEvent SMPEvent, expectedProgress int, expectedQuestion string) {
-	called := false
-
-	c.getEventHandler().handleSMPEvent = func(event SMPEvent, progressPercent int, question string) {
-		assertEquals(t, event, expectedEvent)
-		assertEquals(t, progressPercent, expectedProgress)
-		assertEquals(t, question, expectedQuestion)
-		called = true
-	}
-
-	f()
-
-	assertEquals(t, called, true)
-}
-
 func Test_smpStateExpect4_willSendAnSMPNotificationOnProtocolSuccess(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.s1 = fixtureSmp1()
