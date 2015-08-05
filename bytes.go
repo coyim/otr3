@@ -1,5 +1,8 @@
 package otr3
 
+// MessagePlaintext contains regular plaintext to send or receive
+type MessagePlaintext []byte
+
 // A messageWithHeader is simply a full message with all content but not valid to send
 type messageWithHeader []byte
 

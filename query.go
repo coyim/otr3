@@ -5,11 +5,11 @@ import (
 	"strconv"
 )
 
-func isQueryMessage(msg []byte) bool {
+func isQueryMessage(msg ValidMessage) bool {
 	return bytes.HasPrefix(msg, queryMarker)
 }
 
-func parseOTRQueryMessage(msg []byte) []int {
+func parseOTRQueryMessage(msg ValidMessage) []int {
 	ret := []int{}
 
 	if bytes.HasPrefix(msg, queryMarker) && len(msg) > len(queryMarker) {
@@ -32,7 +32,7 @@ func parseOTRQueryMessage(msg []byte) []int {
 	return ret
 }
 
-func acceptOTRRequest(p policies, msg []byte) (otrVersion, bool) {
+func acceptOTRRequest(p policies, msg ValidMessage) (otrVersion, bool) {
 	versions := parseOTRQueryMessage(msg)
 
 	for _, v := range versions {
@@ -47,7 +47,7 @@ func acceptOTRRequest(p policies, msg []byte) (otrVersion, bool) {
 	return nil, false
 }
 
-func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
+func (c *Conversation) receiveQueryMessage(msg ValidMessage) (messageWithHeader, error) {
 	v, ok := acceptOTRRequest(c.Policies, msg)
 	if !ok {
 		return nil, errInvalidVersion
@@ -57,7 +57,7 @@ func (c *Conversation) receiveQueryMessage(msg []byte) ([]byte, error) {
 	return c.potentialAuthError(c.sendDHCommit())
 }
 
-func (c Conversation) queryMessage() []byte {
+func (c Conversation) queryMessage() ValidMessage {
 	queryMessage := []byte("?OTRv")
 
 	if c.Policies.has(allowV2) {

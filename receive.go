@@ -2,12 +2,12 @@ package otr3
 
 import "encoding/base64"
 
-func (c *Conversation) receiveWithoutOTR(message ValidMessage) (plain []byte, toSend []ValidMessage, err error) {
-	return message, nil, nil
+func (c *Conversation) receiveWithoutOTR(message ValidMessage) (MessagePlaintext, []ValidMessage, error) {
+	return MessagePlaintext(message), nil, nil
 }
 
-func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain []byte, toSend []ValidMessage, err error) {
-	plain = message[len(errorMarker):]
+func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
+	plain = MessagePlaintext(message[len(errorMarker):])
 
 	if c.Policies.has(errorStartAKE) {
 		toSend = []ValidMessage{c.queryMessage()}
@@ -16,14 +16,14 @@ func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain []byte, 
 	return
 }
 
-func (c *Conversation) toSendEncoded2(toSend []byte, err error) ([]byte, []ValidMessage, error) {
+func (c *Conversation) toSendEncoded2(toSend messageWithHeader, err error) (MessagePlaintext, []ValidMessage, error) {
 	if err != nil {
 		return nil, nil, err
 	}
 	return nil, c.encode(toSend), err
 }
 
-func (c *Conversation) toSendEncoded3(plain []byte, toSend []byte, err error) ([]byte, []ValidMessage, error) {
+func (c *Conversation) toSendEncoded3(plain MessagePlaintext, toSend messageWithHeader, err error) (MessagePlaintext, []ValidMessage, error) {
 	if err != nil || len(toSend) == 0 {
 		return plain, nil, err
 	}
@@ -31,7 +31,7 @@ func (c *Conversation) toSendEncoded3(plain []byte, toSend []byte, err error) ([
 	return plain, c.encode(toSend), err
 }
 
-func (c *Conversation) toSendEncoded34(plain []byte, toSend []byte, toSendExtra []byte, err error) ([]byte, []ValidMessage, error) {
+func (c *Conversation) toSendEncoded34(plain MessagePlaintext, toSend messageWithHeader, toSendExtra messageWithHeader, err error) (MessagePlaintext, []ValidMessage, error) {
 	if err != nil || len(toSend) == 0 {
 		return plain, nil, err
 	}
@@ -39,7 +39,7 @@ func (c *Conversation) toSendEncoded34(plain []byte, toSend []byte, toSendExtra 
 	return plain, append(c.encode(toSend), c.encode(toSendExtra)...), err
 }
 
-func (c *Conversation) receiveEncoded(message encodedMessage) ([]byte, []byte, []byte, error) {
+func (c *Conversation) receiveEncoded(message encodedMessage) (MessagePlaintext, messageWithHeader, messageWithHeader, error) {
 	decodedMessage, err := c.decode(message)
 	if err != nil {
 		return nil, nil, nil, err
@@ -47,15 +47,15 @@ func (c *Conversation) receiveEncoded(message encodedMessage) ([]byte, []byte, [
 	return c.receiveDecoded(decodedMessage)
 }
 
-func (c *Conversation) receivePlaintext(message ValidMessage) (plain []byte, toSend ValidMessage, err error) {
+func (c *Conversation) receivePlaintext(message ValidMessage) (plain MessagePlaintext, toSend messageWithHeader, err error) {
 	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
 	//TODO:	warn that the message was received unencrypted
 
-	return message, nil, nil
+	return MessagePlaintext(message), nil, nil
 }
 
-func (c *Conversation) receiveTaggedPlaintext(message ValidMessage) (plain []byte, toSend ValidMessage, err error) {
+func (c *Conversation) receiveTaggedPlaintext(message ValidMessage) (plain MessagePlaintext, toSend messageWithHeader, err error) {
 	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
 	//TODO:	warn that the message was received unencrypted
@@ -68,7 +68,7 @@ func (c *Conversation) receiveTaggedPlaintext(message ValidMessage) (plain []byt
 	return c.processWhitespaceTag(message)
 }
 
-func removeOTRMsgEnvelope(msg []byte) []byte {
+func removeOTRMsgEnvelope(msg encodedMessage) []byte {
 	return msg[len(msgMarker) : len(msg)-1]
 }
 
@@ -84,7 +84,7 @@ func (c *Conversation) decode(encoded encodedMessage) (messageWithHeader, error)
 	return msg[:msgLen], nil
 }
 
-func (c *Conversation) receiveDecoded(message []byte) (plain []byte, toSend messageWithHeader, toSendExtra []byte, err error) {
+func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessagePlaintext, toSend messageWithHeader, toSendExtra messageWithHeader, err error) {
 	if err = c.checkVersion(message); err != nil {
 		return
 	}
@@ -104,7 +104,7 @@ func (c *Conversation) receiveDecoded(message []byte) (plain []byte, toSend mess
 	return
 }
 
-func (c *Conversation) Receive(message ValidMessage) (plain []byte, toSend []ValidMessage, err error) {
+func (c *Conversation) Receive(message ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
 	if !c.Policies.isOTREnabled() {
 		return c.receiveWithoutOTR(message)
 	}

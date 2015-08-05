@@ -63,7 +63,7 @@ func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs [
 	return c.encode(res), nil
 }
 
-func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend messageWithHeader, err error) {
+func (c *Conversation) processDataMessage(header, msg []byte) (plain MessagePlaintext, toSend messageWithHeader, err error) {
 	ignoreUnreadable := (extractDataMessageFlag(msg) & messageFlagIgnoreUnreadable) == messageFlagIgnoreUnreadable
 	plain, toSend, err = c.processDataMessageWithRawErrors(header, msg)
 	if err != nil && ignoreUnreadable {
@@ -75,7 +75,7 @@ func (c *Conversation) processDataMessage(header, msg []byte) (plain, toSend mes
 // processDataMessageWithRawErrors receives a decoded incoming message and returns the plain text inside that message
 // and a data message (with header) generated in response to any TLV contained in the incoming message.
 // The header and message compose the decoded incoming message.
-func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plain, toSend messageWithHeader, err error) {
+func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plain MessagePlaintext, toSend messageWithHeader, err error) {
 	dataMessage := dataMsg{}
 
 	if c.msgState != encrypted {

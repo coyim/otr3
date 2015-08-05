@@ -5,9 +5,9 @@ import (
 	"errors"
 )
 
-func (c *Conversation) Send(msg []byte) ([]ValidMessage, error) {
+func (c *Conversation) Send(msg ValidMessage) ([]ValidMessage, error) {
 	if !c.Policies.isOTREnabled() {
-		return []ValidMessage{ValidMessage(msg)}, nil
+		return []ValidMessage{msg}, nil
 	}
 	switch c.msgState {
 	case plainText:
@@ -30,7 +30,7 @@ func (c *Conversation) Send(msg []byte) ([]ValidMessage, error) {
 	return nil, errors.New("otr: cannot send message in current state")
 }
 
-func (c *Conversation) encode(msg []byte) []ValidMessage {
+func (c *Conversation) encode(msg messageWithHeader) []ValidMessage {
 	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgMarker)+1)
 	base64.StdEncoding.Encode(b64[len(msgMarker):], msg)
 	copy(b64, msgMarker)

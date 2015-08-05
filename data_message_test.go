@@ -117,7 +117,7 @@ func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 	exp, _, _, err := bob.receiveDecoded(msg)
 
 	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, exp, []byte("hello"))
+	assertDeepEquals(t, exp, MessagePlaintext("hello"))
 }
 
 func Test_processDataMessage_willGenerateAHeartBeatEventForAnEmptyMessage(t *testing.T) {

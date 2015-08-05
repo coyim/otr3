@@ -269,7 +269,7 @@ func Test_receive_displayErrorMessageToTheUser(t *testing.T) {
 	plain, toSend, err := c.Receive(msg)
 
 	assertNil(t, err)
-	assertDeepEquals(t, plain, []byte("You are wrong"))
+	assertDeepEquals(t, plain, MessagePlaintext("You are wrong"))
 	assertNil(t, toSend)
 }
 
@@ -281,6 +281,6 @@ func Test_receive_displayErrorMessageToTheUserAndStartAKE(t *testing.T) {
 	plain, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, plain, []byte("You are wrong"))
+	assertDeepEquals(t, plain, MessagePlaintext("You are wrong"))
 	assertDeepEquals(t, toSend[0], ValidMessage("?OTRv3?"))
 }

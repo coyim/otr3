@@ -29,10 +29,10 @@ func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
 	return append(message, genWhitespaceTag(c.Policies)...)
 }
 
-func (c *Conversation) processWhitespaceTag(message []byte) (plain, toSend []byte, err error) {
+func (c *Conversation) processWhitespaceTag(message ValidMessage) (plain MessagePlaintext, toSend messageWithHeader, err error) {
 	wsPos := bytes.Index(message, whitespaceTagHeader)
 
-	plain = message[:wsPos]
+	plain = MessagePlaintext(message[:wsPos])
 
 	if !c.Policies.has(whitespaceStartAKE) {
 		return

@@ -45,7 +45,7 @@ func (c *Conversation) messageHeader(msgType byte) ([]byte, error) {
 	return c.version.messageHeader(c, msgType)
 }
 
-func (c *Conversation) parseMessageHeader(msg []byte) ([]byte, []byte, error) {
+func (c *Conversation) parseMessageHeader(msg messageWithHeader) ([]byte, []byte, error) {
 	return c.version.parseMessageHeader(c, msg)
 }
 
