@@ -117,7 +117,7 @@ func (c *keyManagementContext) generateNewDHKeyPair(newPrivKey *big.Int) {
 	c.ourPreviousDHKeys = c.ourCurrentDHKeys
 
 	c.ourCurrentDHKeys = dhKeyPair{
-		priv: newPrivKey,
+		priv: new(big.Int).Set(newPrivKey),
 		pub:  modExp(g1, newPrivKey),
 	}
 	c.ourKeyID++
@@ -139,6 +139,7 @@ func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
 
 	c.keys.rotateOurKeys(dataMessage.recipientKeyID, x)
 	c.keys.rotateTheirKey(dataMessage.senderKeyID, dataMessage.y)
+	wipeBigInt(x)
 
 	return nil
 }

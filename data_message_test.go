@@ -122,7 +122,7 @@ func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 	bob.msgState = encrypted
 	exp, _, err := bob.receiveDecoded(msg)
 
-	assertDeepEquals(t, err, nil)
+	assertNil(t, err)
 	assertDeepEquals(t, exp, MessagePlaintext("hello"))
 }
 

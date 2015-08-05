@@ -205,7 +205,7 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	bob.updateLastSent()
 	plain, ret, err := bob.receiveDecoded(m)
 
-	assertDeepEquals(t, err, nil)
+	assertNil(t, err)
 	assertDeepEquals(t, plain, MessagePlaintext(msg))
 	assertNil(t, ret)
 }

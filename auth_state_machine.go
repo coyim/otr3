@@ -14,6 +14,7 @@ func (c *Conversation) generateNewDHKeyPair() error {
 	}
 
 	c.keys.generateNewDHKeyPair(x)
+	wipeBigInt(x)
 
 	return nil
 }
