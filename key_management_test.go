@@ -298,24 +298,6 @@ func Test_checkMessageCounter_messageIsValidWhenCounterIsLargerThanTheLastReceiv
 	assertEquals(t, c.theirCounter, uint64(2))
 }
 
-func Test_wipeBigInt_numberIsZeroed(t *testing.T) {
-	n := big.NewInt(3)
-	wipeBigInt(n)
-	assertEquals(t, n.Cmp(big.NewInt(0)), 0)
-}
-
-func Test_setBigInt_numberIsSet(t *testing.T) {
-	n := big.NewInt(3)
-	n = setBigInt(n, big.NewInt(5))
-	assertEquals(t, n.Cmp(big.NewInt(5)), 0)
-}
-
-func Test_setBigInt_setWhenSourceIsNull(t *testing.T) {
-	var n *big.Int
-	n = setBigInt(n, big.NewInt(5))
-	assertEquals(t, n.Cmp(big.NewInt(5)), 0)
-}
-
 func Test_generateNewDHKeypair_wipesPreviousDHKeysBeforePointingToCurrentDHKeys(t *testing.T) {
 	prevPrivKey := big.NewInt(1)
 	prevPubKey := big.NewInt(2)

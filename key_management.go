@@ -14,17 +14,6 @@ type dhKeyPair struct {
 	priv *big.Int
 }
 
-func (p *dhKeyPair) wipe() {
-	if p == nil {
-		return
-	}
-
-	wipeBigInt(p.pub)
-	wipeBigInt(p.priv)
-	p.pub = nil
-	p.priv = nil
-}
-
 type akeKeys struct {
 	c      [aes.BlockSize]byte
 	m1, m2 [sha256.Size]byte
@@ -280,24 +269,4 @@ func h(b byte, secbytes []byte, h hash.Hash) []byte {
 	h.Write([]byte{b})
 	h.Write(secbytes[:])
 	return h.Sum(nil)
-}
-
-func wipeBigInt(k *big.Int) {
-	if k == nil {
-		return
-	}
-
-	k.SetBytes(zeroes(len(k.Bytes())))
-}
-
-func zeroes(n int) []byte {
-	return make([]byte, n)
-}
-
-func setBigInt(dst *big.Int, src *big.Int) *big.Int {
-	wipeBigInt(dst)
-
-	ret := big.NewInt(0)
-	ret.Set(src)
-	return ret
 }
