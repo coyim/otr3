@@ -269,6 +269,21 @@ func h(b byte, secbytes []byte, h hash.Hash) []byte {
 	return h.Sum(nil)
 }
 
-//calculateSessionKeysWhenAKEIsCompleted (receiveRevealSig and recevieSig)
-//rotateDhKeys
-//rotateYKeys
+func wipeBigInt(k *big.Int) {
+	if k == nil {
+		return
+	}
+
+	k.SetBytes(zeroes(len(k.Bytes())))
+}
+
+func setBigInt(dst *big.Int, src *big.Int) *big.Int {
+	wipeBigInt(dst)
+
+	if dst == nil {
+		dst = big.NewInt(0)
+	}
+
+	dst.Set(src)
+	return dst
+}
