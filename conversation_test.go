@@ -10,13 +10,13 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	c := newConversation(nil, fixtureRand())
 	c.Policies.add(allowV3)
 
-	exp := []byte{
+	exp := messageWithHeader{
 		0x00, 0x03, // protocol version
 		msgTypeDHCommit,
 	}
 
 	_, enc, err := c.Receive(msg)
-	toSend, _ := c.decode(enc[0])
+	toSend, _ := c.decode(encodedMessage(enc[0]))
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, toSend[:3], exp)

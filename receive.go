@@ -1,15 +1,12 @@
 package otr3
 
-import (
-	"bytes"
-	"encoding/base64"
-)
+import "encoding/base64"
 
-func (c *Conversation) receiveWithoutOTR(message []byte) (plain []byte, toSend []ValidMessage, err error) {
+func (c *Conversation) receiveWithoutOTR(message ValidMessage) (plain []byte, toSend []ValidMessage, err error) {
 	return message, nil, nil
 }
 
-func (c *Conversation) receiveErrorMessage(message []byte) (plain []byte, toSend []ValidMessage, err error) {
+func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain []byte, toSend []ValidMessage, err error) {
 	plain = message[len(errorMarker):]
 
 	if c.Policies.has(errorStartAKE) {
@@ -42,7 +39,7 @@ func (c *Conversation) toSendEncoded34(plain []byte, toSend []byte, toSendExtra 
 	return plain, append(c.encode(toSend), c.encode(toSendExtra)...), err
 }
 
-func (c *Conversation) receiveEncoded(message []byte) ([]byte, []byte, []byte, error) {
+func (c *Conversation) receiveEncoded(message encodedMessage) ([]byte, []byte, []byte, error) {
 	decodedMessage, err := c.decode(message)
 	if err != nil {
 		return nil, nil, nil, err
@@ -50,7 +47,7 @@ func (c *Conversation) receiveEncoded(message []byte) ([]byte, []byte, []byte, e
 	return c.receiveDecoded(decodedMessage)
 }
 
-func (c *Conversation) receivePlaintext(message []byte) ([]byte, []byte, error) {
+func (c *Conversation) receivePlaintext(message ValidMessage) (plain []byte, toSend ValidMessage, err error) {
 	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
 	//TODO:	warn that the message was received unencrypted
@@ -58,7 +55,7 @@ func (c *Conversation) receivePlaintext(message []byte) ([]byte, []byte, error) 
 	return message, nil, nil
 }
 
-func (c *Conversation) receiveTaggedPlaintext(message []byte) ([]byte, []byte, error) {
+func (c *Conversation) receiveTaggedPlaintext(message ValidMessage) (plain []byte, toSend ValidMessage, err error) {
 	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
 	//TODO:	warn that the message was received unencrypted
@@ -75,9 +72,9 @@ func removeOTRMsgEnvelope(msg []byte) []byte {
 	return msg[len(msgMarker) : len(msg)-1]
 }
 
-func (c *Conversation) decode(encoded []byte) ([]byte, error) {
+func (c *Conversation) decode(encoded encodedMessage) (messageWithHeader, error) {
 	encoded = removeOTRMsgEnvelope(encoded)
-	msg := make([]byte, base64.StdEncoding.DecodedLen(len(encoded)))
+	msg := make(messageWithHeader, base64.StdEncoding.DecodedLen(len(encoded)))
 	msgLen, err := base64.StdEncoding.Decode(msg, encoded)
 
 	if err != nil {
@@ -107,15 +104,7 @@ func (c *Conversation) receiveDecoded(message []byte) (plain []byte, toSend mess
 	return
 }
 
-func isEncoded(msg []byte) bool {
-	return bytes.HasPrefix(msg, msgMarker) && msg[len(msg)-1] == '.'
-}
-
-func isErrorMessage(msg []byte) bool {
-	return bytes.HasPrefix(msg, errorMarker)
-}
-
-func (c *Conversation) Receive(message []byte) (plain []byte, toSend []ValidMessage, err error) {
+func (c *Conversation) Receive(message ValidMessage) (plain []byte, toSend []ValidMessage, err error) {
 	if !c.Policies.isOTREnabled() {
 		return c.receiveWithoutOTR(message)
 	}
@@ -140,7 +129,7 @@ func (c *Conversation) Receive(message []byte) (plain []byte, toSend []ValidMess
 		// TODO: event here
 		return
 	case msgGuessDHCommit, msgGuessDHKey, msgGuessRevealSig, msgGuessSignature, msgGuessData:
-		return c.toSendEncoded34(c.receiveEncoded(message))
+		return c.toSendEncoded34(c.receiveEncoded(encodedMessage(message)))
 	}
 	return // should never be possible
 }

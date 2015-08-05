@@ -43,8 +43,7 @@ func Test_StartAuthenticate_generatesAndReturnsTheFirstSMPMessageToSend(t *testi
 
 	msg, e := c.StartAuthenticate("", []byte("hello world"))
 	assertEquals(t, e, nil)
-	assertEquals(t, isEncoded(msg[0]), true)
-	dec, _ := c.decode(msg[0])
+	dec, _ := c.decode(encodedMessage(msg[0]))
 	_, messageBody, _ := c.parseMessageHeader(dec)
 	assertDeepEquals(t, len(messageBody), 1361)
 }
@@ -89,7 +88,7 @@ func Test_StartAuthenticate_generatesAnAbortMessageTLVIfWeAreInAnSMPStateAlready
 
 	msg, e := c.StartAuthenticate("", []byte("hello world"))
 	assertEquals(t, e, nil)
-	dec, _ := c.decode(msg[0])
+	dec, _ := c.decode(encodedMessage(msg[0]))
 	_, messageBody, _ := c.parseMessageHeader(dec)
 	assertDeepEquals(t, len(messageBody), 1369)
 }
@@ -141,7 +140,7 @@ func Test_ProvideAuthenticationSecret_continuesWithMessageProcessingIfInTheRight
 
 	msg, e := c.ProvideAuthenticationSecret([]byte("hello world"))
 	assertNil(t, e)
-	dec, _ := c.decode(msg[0])
+	dec, _ := c.decode(encodedMessage(msg[0]))
 	_, messageBody, _ := c.parseMessageHeader(dec)
 	assertDeepEquals(t, len(messageBody), 2181)
 }

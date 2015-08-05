@@ -42,7 +42,7 @@ func Test_receive_acceptsV2WhitespaceTagAndStartsAKE(t *testing.T) {
 	msg := genWhitespaceTag(policies(allowV2))
 
 	_, enc, err := c.Receive(msg)
-	toSend, _ := c.decode(enc[0])
+	toSend, _ := c.decode(encodedMessage(enc[0]))
 
 	assertEquals(t, err, nil)
 	assertEquals(t, dhMsgType(toSend), msgTypeDHCommit)
@@ -79,7 +79,7 @@ func Test_receive_acceptsV3WhitespaceTagAndStartsAKE(t *testing.T) {
 	msg := genWhitespaceTag(policies(allowV2 | allowV3))
 
 	_, enc, err := c.Receive(msg)
-	toSend, _ := c.decode(enc[0])
+	toSend, _ := c.decode(encodedMessage(enc[0]))
 
 	assertEquals(t, err, nil)
 	assertEquals(t, dhMsgType(toSend), msgTypeDHCommit)
