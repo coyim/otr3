@@ -24,7 +24,7 @@ func (c *Conversation) akeHasFinished() error {
 }
 
 // Returns a AKE message (with header)
-func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend []byte, err error) {
+func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend messageWithHeader, err error) {
 	c.ensureAKE()
 
 	switch msgType {
@@ -50,21 +50,21 @@ type authStateAwaitingRevealSig struct{ authStateBase }
 type authStateAwaitingSig struct {
 	authStateBase
 	// revealSigMsg is only used to store the message so we can re-transmit it if needed
-	revealSigMsg []byte
+	revealSigMsg messageWithHeader
 }
 
 type authState interface {
-	receiveDHCommitMessage(*Conversation, []byte) (authState, []byte, error)
-	receiveDHKeyMessage(*Conversation, []byte) (authState, []byte, error)
-	receiveRevealSigMessage(*Conversation, []byte) (authState, []byte, error)
-	receiveSigMessage(*Conversation, []byte) (authState, []byte, error)
+	receiveDHCommitMessage(*Conversation, []byte) (authState, messageWithHeader, error)
+	receiveDHKeyMessage(*Conversation, []byte) (authState, messageWithHeader, error)
+	receiveRevealSigMessage(*Conversation, []byte) (authState, messageWithHeader, error)
+	receiveSigMessage(*Conversation, []byte) (authState, messageWithHeader, error)
 }
 
-func (authStateBase) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (authStateBase) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
-func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	dhKeyMsg, err := c.dhKeyMessage()
 	if err != nil {
 		return s, nil, err
@@ -81,7 +81,7 @@ func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (auth
 	return authStateAwaitingRevealSig{}, dhKeyMsg, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	//Forget the DH-commit received before we sent the DH-Key
 
 	if err := c.processDHCommit(msg); err != nil {
@@ -96,7 +96,7 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg 
 	return authStateAwaitingRevealSig{}, dhKeyMsg, nil
 }
 
-func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	newMsg, _, ok1 := extractData(msg)
 	_, theirHashedGx, ok2 := extractData(newMsg)
 
@@ -117,15 +117,15 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []by
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
-func (s authStateNone) receiveDHKeyMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateNone) receiveDHKeyMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingRevealSig) receiveDHKeyMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	_, err := c.processDHKey(msg)
 	if err != nil {
 		return s, nil, err
@@ -148,7 +148,7 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *Conversation, msg []byte)
 	return authStateAwaitingSig{revealSigMsg: revealSigMsg}, revealSigMsg, nil
 }
 
-func (s authStateAwaitingSig) receiveDHKeyMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingSig) receiveDHKeyMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	isSame, err := c.processDHKey(msg)
 	if err != nil {
 		return s, nil, err
@@ -162,11 +162,11 @@ func (s authStateAwaitingSig) receiveDHKeyMessage(c *Conversation, msg []byte) (
 	return s, nil, nil
 }
 
-func (s authStateNone) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateNone) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	err := c.processRevealSig(msg)
 
 	if err != nil {
@@ -191,27 +191,27 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg
 	return authStateNone{}, sigMsg, c.akeHasFinished()
 }
 
-func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingDHKey) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingSig) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingSig) receiveRevealSigMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	return s, nil, nil
 }
 
-func (s authStateNone) receiveSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateNone) receiveSigMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingRevealSig) receiveSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingRevealSig) receiveSigMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingDHKey) receiveSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingDHKey) receiveSigMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	return s, nil, nil
 }
 
-func (s authStateAwaitingSig) receiveSigMessage(c *Conversation, msg []byte) (authState, []byte, error) {
+func (s authStateAwaitingSig) receiveSigMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	err := c.processSig(msg)
 
 	if err != nil {

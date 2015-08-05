@@ -97,13 +97,13 @@ func Test_receive_DHKeyMessageReturnsRevealSignature(t *testing.T) {
 }
 
 func Test_OTRisDisabledIfNoVersionIsAllowedInThePolicy(t *testing.T) {
-	var nilB [][]byte
+	var nilB []messageFragment
 	msg := []byte("?OTRv3?")
 
 	c := newConversation(nil, fixtureRand())
 
 	s, _ := c.Send(msg)
-	assertDeepEquals(t, s, [][]byte{msg})
+	assertDeepEquals(t, s, []messageFragment{msg})
 
 	_, r, err := c.Receive(msg)
 	assertEquals(t, err, nil)
@@ -111,7 +111,7 @@ func Test_OTRisDisabledIfNoVersionIsAllowedInThePolicy(t *testing.T) {
 }
 
 func Test_Send_returnsErrorIfFaislToGenerateDataMsg(t *testing.T) {
-	var nilB [][]byte
+	var nilB []messageFragment
 	msg := []byte("hello")
 
 	c := bobContextAfterAKE()
@@ -125,7 +125,7 @@ func Test_Send_returnsErrorIfFaislToGenerateDataMsg(t *testing.T) {
 }
 
 func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {
-	expectedWhitespaceTag := []byte{
+	expectedWhitespaceTag := messageFragment{
 		0x20, 0x09, 0x20, 0x20, 0x09, 0x09, 0x09, 0x09,
 		0x20, 0x09, 0x20, 0x09, 0x20, 0x09, 0x20, 0x20,
 		0x20, 0x20, 0x09, 0x09, 0x20, 0x20, 0x09, 0x09,
@@ -145,7 +145,7 @@ func Test_send_doesNotAppendWhitespaceTagsWhenItsNotAllowedbyThePolicy(t *testin
 	c.Policies = policies(allowV3)
 
 	toSend, _ := c.Send(m)
-	assertDeepEquals(t, toSend, [][]byte{m})
+	assertDeepEquals(t, toSend, []messageFragment{m})
 }
 
 func Test_send_dataMessageWhenItsMsgStateEncrypted(t *testing.T) {
@@ -170,7 +170,7 @@ func Test_encodeWithoutFragment(t *testing.T) {
 
 	msg := c.encode([]byte("one two three"))
 
-	expectedFragments := [][]byte{
+	expectedFragments := []messageFragment{
 		[]byte("?OTR:b25lIHR3byB0aHJlZQ==."),
 	}
 	assertDeepEquals(t, msg, expectedFragments)
@@ -183,7 +183,7 @@ func Test_encodeWithoutFragmentTooSmall(t *testing.T) {
 
 	msg := c.encode([]byte("one two three"))
 
-	expectedFragments := [][]byte{
+	expectedFragments := []messageFragment{
 		[]byte("?OTR:b25lIHR3byB0aHJlZQ==."),
 	}
 	assertDeepEquals(t, msg, expectedFragments)
@@ -196,7 +196,7 @@ func Test_encodeWithFragment(t *testing.T) {
 
 	msg := c.encode([]byte("one two three"))
 
-	expectedFragments := [][]byte{
+	expectedFragments := []messageFragment{
 		[]byte("?OTR,00001,00007,?OTR,"),
 		[]byte("?OTR,00002,00007,:b25,"),
 		[]byte("?OTR,00003,00007,lIHR,"),
@@ -213,8 +213,8 @@ func Test_End_whenStateIsPlainText(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.msgState = plainText
 	msg, err := c.End()
-	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, msg, [][]uint8(nil))
+	assertNil(t, err)
+	assertNil(t, msg)
 }
 
 func Test_End_whenStateIsFinished(t *testing.T) {
@@ -222,8 +222,8 @@ func Test_End_whenStateIsFinished(t *testing.T) {
 	c.msgState = finished
 	msg, err := c.End()
 	assertDeepEquals(t, c.msgState, plainText)
-	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, msg, [][]uint8(nil))
+	assertNil(t, err)
+	assertNil(t, msg)
 }
 
 func Test_End_whenStateIsEncrypted(t *testing.T) {
@@ -265,7 +265,7 @@ func Test_receive_ignoresMesagesWithWrongInstanceTags(t *testing.T) {
 }
 
 func Test_receive_displayErrorMessageToTheUser(t *testing.T) {
-	var nilB [][]byte
+	var nilB []messageFragment
 
 	msg := []byte("?OTR Error:You are wrong")
 	c := &Conversation{}
@@ -286,5 +286,5 @@ func Test_receive_displayErrorMessageToTheUserAndStartAKE(t *testing.T) {
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, plain, []byte("You are wrong"))
-	assertDeepEquals(t, toSend[0], []byte("?OTRv3?"))
+	assertDeepEquals(t, toSend[0], messageFragment("?OTRv3?"))
 }

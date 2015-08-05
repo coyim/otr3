@@ -5,20 +5,20 @@ import (
 	"errors"
 )
 
-func (c *Conversation) Send(msg []byte) ([][]byte, error) {
+func (c *Conversation) Send(msg []byte) ([]messageFragment, error) {
 	if !c.Policies.isOTREnabled() {
-		return [][]byte{msg}, nil
+		return []messageFragment{msg}, nil
 	}
 	switch c.msgState {
 	case plainText:
 		if c.Policies.has(requireEncryption) {
 			c.updateLastSent()
-			return [][]byte{c.queryMessage()}, nil
+			return []messageFragment{c.queryMessage()}, nil
 		}
 		if c.Policies.has(sendWhitespaceTag) {
 			msg = c.appendWhitespaceTag(msg)
 		}
-		return [][]byte{msg}, nil
+		return []messageFragment{msg}, nil
 	case encrypted:
 		return c.createSerializedDataMessage(msg, messageFlagNormal, []tlv{})
 	case finished:
@@ -28,7 +28,7 @@ func (c *Conversation) Send(msg []byte) ([][]byte, error) {
 	return nil, errors.New("otr: cannot send message in current state")
 }
 
-func (c *Conversation) encode(msg []byte) [][]byte {
+func (c *Conversation) encode(msg []byte) []messageFragment {
 	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgMarker)+1)
 	base64.StdEncoding.Encode(b64[len(msgMarker):], msg)
 	copy(b64, msgMarker)
@@ -38,7 +38,7 @@ func (c *Conversation) encode(msg []byte) [][]byte {
 	return c.fragment(b64, bytesPerFragment, uint32(0), uint32(0))
 }
 
-func (c *Conversation) sendDHCommit() (toSend []byte, err error) {
+func (c *Conversation) sendDHCommit() (toSend messageWithHeader, err error) {
 	toSend, err = c.dhCommitMessage()
 	if err != nil {
 		return

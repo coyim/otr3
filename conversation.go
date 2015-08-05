@@ -49,19 +49,20 @@ func (c *Conversation) parseMessageHeader(msg []byte) ([]byte, []byte, error) {
 	return c.version.parseMessageHeader(c, msg)
 }
 
-func (c *Conversation) wrapMessageHeader(msgType byte, msg []byte) ([]byte, error) {
-	messageHeader, err := c.messageHeader(msgType)
+func (c *Conversation) wrapMessageHeader(msgType byte, msg []byte) (messageWithHeader, error) {
+	header, err := c.messageHeader(msgType)
 	if err != nil {
 		return nil, err
 	}
-	return append(messageHeader, msg...), nil
+
+	return append(header, msg...), nil
 }
 
 func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
 }
 
-func (c *Conversation) End() (toSend [][]byte, err error) {
+func (c *Conversation) End() (toSend []messageFragment, err error) {
 	switch c.msgState {
 	case plainText:
 	case encrypted:

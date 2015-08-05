@@ -53,7 +53,7 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	bob.Policies = policies(allowV2 | allowV3)
 	bob.TheirKey = &alicePrivateKey.PublicKey
 
-	var toSend [][]byte
+	var toSend []messageFragment
 	var err error
 	msg := alice.queryMessage()
 
@@ -109,7 +109,7 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	bob.Policies = policies(allowV3)
 	bob.TheirKey = &alicePrivateKey.PublicKey
 
-	var toSend [][]byte
+	var toSend []messageFragment
 	var err error
 	msg := alice.queryMessage()
 
@@ -157,7 +157,7 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 }
 
 func Test_processDataMessageShouldExtractData(t *testing.T) {
-	var toSend [][]byte
+	var toSend []messageFragment
 	var err error
 	var nilB []byte
 

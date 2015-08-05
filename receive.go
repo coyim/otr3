@@ -5,28 +5,28 @@ import (
 	"encoding/base64"
 )
 
-func (c *Conversation) receiveWithoutOTR(message []byte) (plain []byte, toSend [][]byte, err error) {
+func (c *Conversation) receiveWithoutOTR(message []byte) (plain []byte, toSend []messageFragment, err error) {
 	return message, nil, nil
 }
 
-func (c *Conversation) receiveErrorMessage(message []byte) (plain []byte, toSend [][]byte, err error) {
+func (c *Conversation) receiveErrorMessage(message []byte) (plain []byte, toSend []messageFragment, err error) {
 	plain = message[len(errorMarker):]
 
 	if c.Policies.has(errorStartAKE) {
-		toSend = [][]byte{c.queryMessage()}
+		toSend = []messageFragment{c.queryMessage()}
 	}
 
 	return
 }
 
-func (c *Conversation) toSendEncoded2(toSend []byte, err error) ([]byte, [][]byte, error) {
+func (c *Conversation) toSendEncoded2(toSend []byte, err error) ([]byte, []messageFragment, error) {
 	if err != nil {
 		return nil, nil, err
 	}
 	return nil, c.encode(toSend), err
 }
 
-func (c *Conversation) toSendEncoded3(plain []byte, toSend []byte, err error) ([]byte, [][]byte, error) {
+func (c *Conversation) toSendEncoded3(plain []byte, toSend []byte, err error) ([]byte, []messageFragment, error) {
 	if err != nil || len(toSend) == 0 {
 		return plain, nil, err
 	}
@@ -34,7 +34,7 @@ func (c *Conversation) toSendEncoded3(plain []byte, toSend []byte, err error) ([
 	return plain, c.encode(toSend), err
 }
 
-func (c *Conversation) toSendEncoded34(plain []byte, toSend []byte, toSendExtra []byte, err error) ([]byte, [][]byte, error) {
+func (c *Conversation) toSendEncoded34(plain []byte, toSend []byte, toSendExtra []byte, err error) ([]byte, []messageFragment, error) {
 	if err != nil || len(toSend) == 0 {
 		return plain, nil, err
 	}
@@ -108,7 +108,7 @@ func isErrorMessage(msg []byte) bool {
 	return bytes.HasPrefix(msg, errorMarker)
 }
 
-func (c *Conversation) Receive(message []byte) (plain []byte, toSend [][]byte, err error) {
+func (c *Conversation) Receive(message []byte) (plain []byte, toSend []messageFragment, err error) {
 	switch {
 	case !c.Policies.isOTREnabled():
 		return c.receiveWithoutOTR(message)
