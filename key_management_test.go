@@ -277,12 +277,12 @@ func Test_checkMessageCounter_messageIsInvalidWhenCounterIsNotLargerThanTheLastR
 	msg := dataMsg{}
 
 	err := c.checkMessageCounter(msg)
-	assertEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, ErrGPGConflict)
 	assertEquals(t, c.theirCounter, uint64(1))
 
 	msg.topHalfCtr[7] = 1
 	err = c.checkMessageCounter(msg)
-	assertEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, ErrGPGConflict)
 	assertEquals(t, c.theirCounter, uint64(1))
 }
 

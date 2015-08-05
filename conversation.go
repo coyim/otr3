@@ -66,12 +66,11 @@ func (c *Conversation) End() (toSend []ValidMessage, err error) {
 	switch c.msgState {
 	case plainText:
 	case encrypted:
-		c.msgState = plainText
 		//NOTE:Error can only happen when Rand reader is broken
 		toSend, err = c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
 	case finished:
-		c.msgState = plainText
 	}
+	c.msgState = plainText
 	c.keys.ourCurrentDHKeys.wipe()
 	c.keys.ourPreviousDHKeys.wipe()
 	wipeBigInt(c.keys.theirCurrentDHPubKey)

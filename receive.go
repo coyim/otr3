@@ -91,6 +91,7 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 	msgType := message[2]
 	if msgType == msgTypeData {
 		plain, toSend, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
+
 	} else {
 		toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))
 	}

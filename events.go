@@ -48,8 +48,6 @@ type MessageEvent int
  * - OTRL_MSGEVENT_RCVDMSG_NOT_IN_PRIVATE
  *      Received an encrypted message but cannot read
  *      it because no private connection is established yet.
- * - OTRL_MSGEVENT_RCVDMSG_UNREADABLE
- *      Cannot read the received message.
  * - OTRL_MSGEVENT_RCVDMSG_MALFORMED
  *      The message received contains malformed data.
  * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
@@ -74,7 +72,11 @@ const (
 
 	// MessageEventMessageResent
 	// MessageEventReceivedMessageNotInPrivate
-	// MessageEventReceivedMessageUnreadable
+
+	// * - OTRL_MSGEVENT_RCVDMSG_UNREADABLE
+	// *      Cannot read the received message.
+	MessageEventReceivedMessageUnreadable
+
 	// MessageEventReceivedMessageMalformed
 
 	// MessageEventLogHeartbeatReceived is triggered when we received a heartbeat.

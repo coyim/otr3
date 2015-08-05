@@ -7,6 +7,10 @@ func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) (dataMsg, error) 
 }
 
 func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv) (dataMsg, error) {
+	if c.msgState != encrypted {
+		return dataMsg{}, ErrGPGConflict
+	}
+
 	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	if err != nil {
 		return dataMsg{}, err

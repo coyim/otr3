@@ -8,6 +8,7 @@ import (
 
 func Test_potentialHeartbeat_returnsNothingIfThereWasntPlaintext(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
+	c.msgState = encrypted
 	var plain []byte
 	ret, err := c.potentialHeartbeat(plain)
 	assertNil(t, ret)
@@ -16,6 +17,7 @@ func Test_potentialHeartbeat_returnsNothingIfThereWasntPlaintext(t *testing.T) {
 
 func Test_potentialHeartbeat_returnsNothingIfLastSentWasRecently(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
+	c.msgState = encrypted
 	c.heartbeat.lastSent = time.Now().Add(-10 * time.Second)
 	plain := []byte("Foo plain")
 	ret, err := c.potentialHeartbeat(plain)
@@ -25,6 +27,7 @@ func Test_potentialHeartbeat_returnsNothingIfLastSentWasRecently(t *testing.T) {
 
 func Test_potentialHeartbeat_doesntUpdateLastSentIfLastSentWasRecently(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
+	c.msgState = encrypted
 	tt := time.Now().Add(-10 * time.Second)
 	c.heartbeat.lastSent = tt
 	plain := []byte("Foo plain")
@@ -34,6 +37,7 @@ func Test_potentialHeartbeat_doesntUpdateLastSentIfLastSentWasRecently(t *testin
 
 func Test_potentialHeartbeat_updatesLastSentIfWeNeedToSendAHeartbeat(t *testing.T) {
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 	tt := time.Now().Add(-61 * time.Second)
 	c.heartbeat.lastSent = tt
 	plain := []byte("Foo plain")
@@ -43,6 +47,7 @@ func Test_potentialHeartbeat_updatesLastSentIfWeNeedToSendAHeartbeat(t *testing.
 
 func Test_potentialHeartbeat_logsTheHeartbeatWhenWeSendIt(t *testing.T) {
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 	tt := time.Now().Add(-61 * time.Second)
 	c.heartbeat.lastSent = tt
 	plain := []byte("Foo plain")
@@ -54,6 +59,7 @@ func Test_potentialHeartbeat_logsTheHeartbeatWhenWeSendIt(t *testing.T) {
 
 func Test_potentialHeartbeat_putsTogetherAMessageForAHeartbeat(t *testing.T) {
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 	tt := time.Now().Add(-61 * time.Second)
 	c.heartbeat.lastSent = tt
 	plain := []byte("Foo plain")
@@ -65,6 +71,7 @@ func Test_potentialHeartbeat_putsTogetherAMessageForAHeartbeat(t *testing.T) {
 
 func Test_potentialHeartbeat_returnsAnErrorIfWeCantPutTogetherAMessage(t *testing.T) {
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 	c.keys.ourKeyID = 0
 	tt := time.Now().Add(-61 * time.Second)
 	c.heartbeat.lastSent = tt

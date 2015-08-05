@@ -44,6 +44,7 @@ func Test_processTLVs_ignoresPaddingTLV(t *testing.T) {
 
 func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 	c.keys.ourKeyID = 2
 	c.keys.theirKeyID = 3
 	c.keys.ourCounter = 0x1011121314
@@ -62,6 +63,7 @@ func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
 
 func Test_genDataMsg_hasEncryptedMessage(t *testing.T) {
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 
 	expected := bytesFromHex("4f0de18011633ed0264ccc1840d64f4cf8f0c91ef78890ab82edef36cb38210bb80760585ff43d736a9ff3e4bb05fc088fa34c2f21012988d539ebc839e9bc97633f4c42de15ea5c3c55a2b9940ca35015ded14205b9df78f936cb1521aedbea98df7dc03c116570ba8d034abc8e2d23185d2ce225845f38c08cb2aae192d66d601c1bc86149c98e8874705ae365b31cda76d274429de5e07b93f0ff29152716980a63c31b7bda150b222ba1d373f786d5f59f580d4f690a71d7fc620e0a3b05d692221ddeebac98d6ed16272e7c4596de27fb104ad747aa9a3ad9d3bc4f988af0beb21760df06047e267af0109baceb0f363bcaff7b205f2c42b3cb67a942f2")
 	dataMsg, err := c.genDataMsg([]byte("we are awesome"))
@@ -77,6 +79,7 @@ func Test_genDataMsg_revealOldMACKeysFromKeyManagementContext(t *testing.T) {
 	}
 
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 	c.keys.oldMACKeys = oldMACKeys
 
 	dataMsg, err := c.genDataMsg(nil)
@@ -87,12 +90,14 @@ func Test_genDataMsg_revealOldMACKeysFromKeyManagementContext(t *testing.T) {
 
 func Test_genDataMsg_returnsErrorIfFailsToCalculateDHSessionKey(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
+	c.msgState = encrypted
 	_, err := c.genDataMsg(nil)
 	assertEquals(t, err, ErrGPGConflict)
 }
 
 func Test_genDataMsg_returnsErrorIfFailsToGenerateInstanceTag(t *testing.T) {
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 	c.Rand = fixedRand([]string{})
 	c.ourInstanceTag = 0
 
@@ -102,6 +107,7 @@ func Test_genDataMsg_returnsErrorIfFailsToGenerateInstanceTag(t *testing.T) {
 
 func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
+	bob.msgState = encrypted
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
 	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
@@ -189,7 +195,7 @@ func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing
 	c.msgState = encrypted
 	_, _, err := c.receiveDecoded(msg)
 
-	assertEquals(t, err, errInvalidOTRMessage)
+	assertEquals(t, err, ErrGPGConflict)
 }
 
 func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
@@ -210,7 +216,7 @@ func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 	bob.msgState = encrypted
 	_, _, err := bob.receiveDecoded(msg)
 
-	assertDeepEquals(t, err, newOtrError("bad authenticator MAC in data message"))
+	assertDeepEquals(t, err, ErrGPGConflict)
 	assertDeepEquals(t, bobCurrentDHKeys, bob.keys.ourCurrentDHKeys)
 	assertDeepEquals(t, bobPreviousDHKeys, bob.keys.ourPreviousDHKeys)
 

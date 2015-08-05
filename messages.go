@@ -157,7 +157,7 @@ func (c dataMsg) checkSign(key macKey, header []byte) error {
 	copy(authenticatorCalculated[:], mac.Sum(nil))
 
 	if subtle.ConstantTimeCompare(c.authenticator[:], authenticatorCalculated[:]) == 0 {
-		return newOtrError("bad authenticator MAC in data message")
+		return ErrGPGConflict
 	}
 	return nil
 }

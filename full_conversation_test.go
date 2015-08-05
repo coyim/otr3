@@ -15,6 +15,7 @@ func Test_receive_generatesErrorIfDoesNotHaveASecureChannel(t *testing.T) {
 		plainText, finished,
 	}
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 	smpMsg := fixtureMessage1()
 	dataMsg, _ := c.genDataMsg(nil, smpMsg.tlv())
 	m := dataMsg.serialize()
@@ -31,6 +32,7 @@ func Test_receive_doesntGenerateErrorIfThereIsNoSecureChannelButTheMessageIsIGNO
 		plainText, finished,
 	}
 	c := bobContextAfterAKE()
+	c.msgState = encrypted
 	smpMsg := fixtureMessage1()
 	dataMsg, _ := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable, smpMsg.tlv())
 	m, _ := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
