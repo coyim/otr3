@@ -90,9 +90,7 @@ const (
 
 	// MessageEventReceivedMessageGeneralError
 
-	// * - OTRL_MSGEVENT_RCVDMSG_UNENCRYPTED
-	// *      Received an unencrypted message. The argument 'message' will
-	// *      also be passed and it will contain the plaintext message.
+	// MessageEventReceivedMessageUnencrypted is triggered when we receive a message that was sent in the clear when it should have been encrypted. The actual message received will also be passed.
 	MessageEventReceivedMessageUnencrypted
 
 	// MessageEventReceivedMessageUnrecognized
@@ -106,13 +104,13 @@ type EventHandler interface {
 	// HandleSMPEvent should update the authentication UI with respect to SMP events
 	HandleSMPEvent(event SMPEvent, progressPercent int, question string)
 	// HandleMessageEvent should handle and send the appropriate message(s) to the sender/recipient depending on the message events
-	HandleMessageEvent(event MessageEvent, message string, err error)
+	HandleMessageEvent(event MessageEvent, message []byte, err error)
 }
 
 type dynamicEventHandler struct {
 	handleErrorMessage func(error ErrorCode) string
 	handleSMPEvent     func(event SMPEvent, progressPercent int, question string)
-	handleMessageEvent func(event MessageEvent, message string, err error)
+	handleMessageEvent func(event MessageEvent, message []byte, err error)
 }
 
 func (d dynamicEventHandler) HandleErrorMessage(error ErrorCode) string {
@@ -123,7 +121,7 @@ func (d dynamicEventHandler) HandleSMPEvent(event SMPEvent, progressPercent int,
 	d.handleSMPEvent(event, progressPercent, question)
 }
 
-func (d dynamicEventHandler) HandleMessageEvent(event MessageEvent, message string, err error) {
+func (d dynamicEventHandler) HandleMessageEvent(event MessageEvent, message []byte, err error) {
 	d.handleMessageEvent(event, message, err)
 }
 
@@ -134,7 +132,7 @@ func emptyErrorMessageHandler(_ ErrorCode) string {
 func emptySMPEventHandler(_ SMPEvent, _ int, _ string) {
 }
 
-func emptyMessageEventHandler(_ MessageEvent, _ string, _ error) {
+func emptyMessageEventHandler(_ MessageEvent, _ []byte, _ error) {
 }
 
 func (c *Conversation) getEventHandler() EventHandler {
@@ -181,25 +179,29 @@ func smpEventAbort(c *Conversation) {
 }
 
 func messageEventHeartbeatReceived(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventLogHeartbeatReceived, "", nil)
+	c.getEventHandler().HandleMessageEvent(MessageEventLogHeartbeatReceived, nil, nil)
 }
 
 func messageEventHeartbeatSent(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventLogHeartbeatSent, "", nil)
+	c.getEventHandler().HandleMessageEvent(MessageEventLogHeartbeatSent, nil, nil)
 }
 
 func messageEventSetupError(c *Conversation, e error) {
-	c.getEventHandler().HandleMessageEvent(MessageEventSetupError, "", e)
+	c.getEventHandler().HandleMessageEvent(MessageEventSetupError, nil, e)
 }
 
 func messageEventReflected(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventMessageReflected, "", nil)
+	c.getEventHandler().HandleMessageEvent(MessageEventMessageReflected, nil, nil)
 }
 
 func messageEventEncryptionRequired(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventEncryptionRequired, "", nil)
+	c.getEventHandler().HandleMessageEvent(MessageEventEncryptionRequired, nil, nil)
 }
 
 func messageEventConnectionEnded(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventConnectionEnded, "", nil)
+	c.getEventHandler().HandleMessageEvent(MessageEventConnectionEnded, nil, nil)
+}
+
+func messageEventReceivedUnencryptedMessage(c *Conversation, msg []byte) {
+	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageUnencrypted, msg, nil)
 }

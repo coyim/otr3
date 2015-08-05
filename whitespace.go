@@ -34,25 +34,60 @@ func (c *Conversation) processWhitespaceTag(message ValidMessage) (plain Message
 
 	plain = MessagePlaintext(message[:wsPos])
 
+	var restPlain MessagePlaintext
+	restPlain, toSend, err = c.startAKEFromWhitespaceTag(message[(wsPos + len(whitespaceTagHeader)):])
+
+	plain = append(plain, restPlain...)
+
 	if !c.Policies.has(whitespaceStartAKE) {
+		toSend = nil
+		err = nil
 		return
 	}
-
-	toSend, err = c.startAKEFromWhitespaceTag(message[wsPos:])
-
 	return
 }
 
-func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (toSend []messageWithHeader, err error) {
+func nextAllWhite(data []byte) (allwhite []byte, rest []byte, hasAllWhite bool) {
+	if len(data) < 8 {
+		return nil, data, false
+	}
+
+	for i := 0; i < 8; i++ {
+		if data[i] != ' ' && data[i] != '\t' {
+			return nil, data, false
+		}
+	}
+
+	return data[0:8], data[8:], true
+}
+
+func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (restPlain MessagePlaintext, toSend []messageWithHeader, err error) {
+	versions := 0
+
+	currentData := tag
+	for {
+		aw, r, has := nextAllWhite(currentData)
+		if !has {
+			break
+		}
+		currentData = r
+		if bytes.Equal(aw, otrV3{}.whitespaceTag()) {
+			versions |= (1 << 3)
+		} else if bytes.Equal(aw, otrV2{}.whitespaceTag()) {
+			versions |= (1 << 2)
+		}
+	}
+
+	restPlain = currentData
 	switch {
-	case c.Policies.has(allowV3) && bytes.Contains(tag, otrV3{}.whitespaceTag()):
+	case c.Policies.has(allowV3) && versions&(1<<3) > 0:
 		c.version = otrV3{}
-	case c.Policies.has(allowV2) && bytes.Contains(tag, otrV2{}.whitespaceTag()):
+	case c.Policies.has(allowV2) && versions&(1<<2) > 0:
 		c.version = otrV2{}
 	default:
 		err = errInvalidVersion
 		return
 	}
-
-	return c.potentialAuthError(c.sendDHCommit())
+	toSend, err = c.potentialAuthError(c.sendDHCommit())
+	return
 }

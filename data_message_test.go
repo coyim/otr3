@@ -138,7 +138,7 @@ func Test_processDataMessage_willGenerateAHeartBeatEventForAnEmptyMessage(t *tes
 	bob.expectMessageEvent(t, func() {
 		exp, _, _ := bob.receiveDecoded(msg)
 		assertNil(t, exp)
-	}, MessageEventLogHeartbeatReceived, "", nil)
+	}, MessageEventLogHeartbeatReceived, nil, nil)
 }
 
 func Test_processDataMessage_processSMPMessage(t *testing.T) {

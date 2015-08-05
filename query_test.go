@@ -52,7 +52,7 @@ func Test_receiveQueryMessage_signalsMessageEventOnFailure(t *testing.T) {
 	c.Policies.add(allowV3)
 	c.expectMessageEvent(t, func() {
 		c.receiveQueryMessage(queryMsg)
-	}, MessageEventSetupError, "", errShortRandomRead)
+	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
 func Test_receiveQueryMessage_returnsErrorIfNoCompatibleVersionCouldBeFound(t *testing.T) {

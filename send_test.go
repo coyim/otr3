@@ -43,7 +43,7 @@ func Test_Send_signalsMessageEventIfTryingToSendWithoutEncryptedChannel(t *testi
 
 	c.expectMessageEvent(t, func() {
 		c.Send(m)
-	}, MessageEventEncryptionRequired, "", nil)
+	}, MessageEventEncryptionRequired, nil, nil)
 }
 
 func Test_Send_signalsMessageEventIfTryingToSendOnAFinishedChannel(t *testing.T) {
@@ -54,5 +54,5 @@ func Test_Send_signalsMessageEventIfTryingToSendOnAFinishedChannel(t *testing.T)
 
 	c.expectMessageEvent(t, func() {
 		c.Send(m)
-	}, MessageEventConnectionEnded, "", nil)
+	}, MessageEventConnectionEnded, nil, nil)
 }

@@ -93,7 +93,7 @@ func Test_receive_whiteSpaceTagWillSignalSetupErrorIfSomethingFails(t *testing.T
 
 	c.expectMessageEvent(t, func() {
 		c.Receive(msg)
-	}, MessageEventSetupError, "", errShortRandomRead)
+	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
 func Test_receive_ignoresV3WhitespaceTagIfThePolicyDoesNotHaveWhitespaceStartAKE(t *testing.T) {

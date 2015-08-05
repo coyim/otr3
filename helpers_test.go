@@ -105,11 +105,11 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 	}
 }
 
-func (c *Conversation) expectMessageEvent(t *testing.T, f func(), expectedEvent MessageEvent, expectedMessage string, expectedError error) {
+func (c *Conversation) expectMessageEvent(t *testing.T, f func(), expectedEvent MessageEvent, expectedMessage []byte, expectedError error) {
 	called := false
 
 	c.eventHandler = dynamicEventHandler{
-		handleMessageEvent: func(event MessageEvent, message string, err error) {
+		handleMessageEvent: func(event MessageEvent, message []byte, err error) {
 			assertDeepEquals(t, event, expectedEvent)
 			assertDeepEquals(t, message, expectedMessage)
 			assertDeepEquals(t, err, expectedError)
@@ -120,6 +120,16 @@ func (c *Conversation) expectMessageEvent(t *testing.T, f func(), expectedEvent 
 	f()
 
 	assertEquals(t, called, true)
+}
+
+func (c *Conversation) doesntExpectMessageEvent(t *testing.T, f func()) {
+	c.eventHandler = dynamicEventHandler{
+		handleMessageEvent: func(event MessageEvent, message []byte, err error) {
+			t.Errorf("Didn't expect a message event, but got: %#v with msg %v and error %#v", event, message, err)
+		},
+	}
+
+	f()
 }
 
 func (c *Conversation) expectSMPEvent(t *testing.T, f func(), expectedEvent SMPEvent, expectedProgress int, expectedQuestion string) {

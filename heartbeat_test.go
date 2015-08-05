@@ -49,7 +49,7 @@ func Test_potentialHeartbeat_logsTheHeartbeatWhenWeSendIt(t *testing.T) {
 
 	c.expectMessageEvent(t, func() {
 		c.potentialHeartbeat(plain)
-	}, MessageEventLogHeartbeatSent, "", nil)
+	}, MessageEventLogHeartbeatSent, nil, nil)
 }
 
 func Test_potentialHeartbeat_putsTogetherAMessageForAHeartbeat(t *testing.T) {

@@ -350,7 +350,7 @@ func Test_receiveDecoded_receiveDHCommitMessageAndFailsWillSignalSetupError(t *t
 
 	c.expectMessageEvent(t, func() {
 		c.receiveDecoded(msg)
-	}, MessageEventSetupError, "", errShortRandomRead)
+	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
 func Test_receiveDecoded_receiveDHKeyMessageAndFailsWillSignalSetupError(t *testing.T) {
@@ -360,7 +360,7 @@ func Test_receiveDecoded_receiveDHKeyMessageAndFailsWillSignalSetupError(t *test
 
 	c.expectMessageEvent(t, func() {
 		c.receiveDecoded(msg)
-	}, MessageEventSetupError, "", errShortRandomRead)
+	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
 func Test_receiveDecoded_receiveRevealSigMessageAndFailsWillSignalSetupError(t *testing.T) {
@@ -370,7 +370,7 @@ func Test_receiveDecoded_receiveRevealSigMessageAndFailsWillSignalSetupError(t *
 
 	c.expectMessageEvent(t, func() {
 		c.receiveDecoded(msg)
-	}, MessageEventSetupError, "", errShortRandomRead)
+	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
 func Test_receiveDecoded_receiveSigMessageAndSetMessageStateToEncrypted(t *testing.T) {
@@ -380,7 +380,7 @@ func Test_receiveDecoded_receiveSigMessageAndSetMessageStateToEncrypted(t *testi
 
 	c.expectMessageEvent(t, func() {
 		c.receiveDecoded(msg)
-	}, MessageEventSetupError, "", errShortRandomRead)
+	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
 func Test_receiveDecoded_receiveSigMessageAndFailsWillSignalSetupError(t *testing.T) {
@@ -567,5 +567,5 @@ func Test_akeHasFinished_willSignalThatWeAreTalkingToOurselvesIfWeAre(t *testing
 
 	c.expectMessageEvent(t, func() {
 		c.akeHasFinished()
-	}, MessageEventMessageReflected, "", nil)
+	}, MessageEventMessageReflected, nil, nil)
 }

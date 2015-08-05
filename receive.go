@@ -42,25 +42,24 @@ func (c *Conversation) receiveEncoded(message encodedMessage) (MessagePlaintext,
 	return c.receiveDecoded(decodedMessage)
 }
 
-func (c *Conversation) receivePlaintext(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
+func (c *Conversation) checkPlaintextPolicies(plain MessagePlaintext) {
 	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
-	//TODO:	warn that the message was received unencrypted
+	if c.msgState != plainText || c.Policies.has(requireEncryption) {
+		messageEventReceivedUnencryptedMessage(c, plain)
+	}
+}
 
-	return MessagePlaintext(message), nil, nil
+func (c *Conversation) receivePlaintext(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
+	plain = MessagePlaintext(message)
+	c.checkPlaintextPolicies(plain)
+	return
 }
 
 func (c *Conversation) receiveTaggedPlaintext(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
-	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
-
-	//TODO:	warn that the message was received unencrypted
-	if c.msgState != plainText || c.Policies.has(requireEncryption) {
-		//TODO: returning an error might not be the best semantic to "it worked,
-		//but we have to notify you that something unexpected happened"
-		//err = errUnexpectedPlainMessage
-	}
-
-	return c.processWhitespaceTag(message)
+	plain, toSend, err = c.processWhitespaceTag(message)
+	c.checkPlaintextPolicies(plain)
+	return
 }
 
 func removeOTRMsgEnvelope(msg encodedMessage) []byte {

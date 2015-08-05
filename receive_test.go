@@ -46,3 +46,59 @@ func Test_receiveDecoded_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 	_, _, err = cV3.receiveDecoded([]byte{0x00, 0x03, 0x56, 0x00, 0x00, 0x01, 0x02, 0x00, 0x00, 0x01, 0x01})
 	assertDeepEquals(t, err, newOtrError("unknown message type 0x56"))
 }
+
+func Test_receivePlaintext_signalsAMessageEventThatItWasUnencryptedIfNotInPlaintextMessageMode(t *testing.T) {
+	c := &Conversation{}
+	c.msgState = encrypted
+
+	c.expectMessageEvent(t, func() {
+		c.receivePlaintext(ValidMessage("Hello world"))
+	}, MessageEventReceivedMessageUnencrypted, []byte("Hello world"), nil)
+}
+
+func Test_receivePlaintext_signalsAMessageEventThatItWasUnencryptedIfRequiringEncryption(t *testing.T) {
+	c := &Conversation{}
+	c.msgState = plainText
+	c.Policies = policies(requireEncryption)
+
+	c.expectMessageEvent(t, func() {
+		c.receivePlaintext(ValidMessage("Hello world"))
+	}, MessageEventReceivedMessageUnencrypted, []byte("Hello world"), nil)
+}
+
+func Test_receivePlaintext_doesntSignalAMessageEventThatItWasUnencryptedIfNotInPlaintextMessageModeIfNotRequiringEncryption(t *testing.T) {
+	c := &Conversation{}
+	c.msgState = plainText
+
+	c.doesntExpectMessageEvent(t, func() {
+		c.receivePlaintext(ValidMessage("Hello world"))
+	})
+}
+
+func Test_receiveTaggedPlaintext_signalsAMessageEventThatItWasUnencryptedIfNotInPlaintextMessageMode(t *testing.T) {
+	c := &Conversation{}
+	c.msgState = encrypted
+
+	c.expectMessageEvent(t, func() {
+		c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
+	}, MessageEventReceivedMessageUnencrypted, []byte("Hello world"), nil)
+}
+
+func Test_receiveTaggedPlaintext_signalsAMessageEventThatItWasUnencryptedIfRequiringEncryption(t *testing.T) {
+	c := &Conversation{}
+	c.msgState = plainText
+	c.Policies = policies(requireEncryption)
+
+	c.expectMessageEvent(t, func() {
+		c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
+	}, MessageEventReceivedMessageUnencrypted, []byte("Hello world"), nil)
+}
+
+func Test_receiveTaggedPlaintext_doesntSignalAMessageEventThatItWasUnencryptedIfNotInPlaintextMessageModeIfNotRequiringEncryption(t *testing.T) {
+	c := &Conversation{}
+	c.msgState = plainText
+
+	c.doesntExpectMessageEvent(t, func() {
+		c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
+	})
+}
