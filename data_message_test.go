@@ -198,6 +198,21 @@ func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing
 	assertEquals(t, err, ErrGPGConflict)
 }
 
+func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.OurKey = bobPrivateKey
+
+	var msg []byte
+	msg, c.keys = fixtureDataMsg(plainDataMsg{})
+	c.keys.theirCounter++ // force a bigger counter
+
+	c.msgState = encrypted
+
+	c.expectMessageEvent(t, func() {
+		c.receiveDecoded(msg)
+	}, MessageEventReceivedMessageUnreadable, nil, nil)
+}
+
 func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)

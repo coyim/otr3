@@ -73,8 +73,7 @@ const (
 	// MessageEventMessageResent
 	// MessageEventReceivedMessageNotInPrivate
 
-	// * - OTRL_MSGEVENT_RCVDMSG_UNREADABLE
-	// *      Cannot read the received message.
+	// MessageEventReceivedMessageUnreadable will be signaled when we cannot read the received message
 	MessageEventReceivedMessageUnreadable
 
 	// MessageEventReceivedMessageMalformed
@@ -216,4 +215,8 @@ func messageEventReceivedMessageForOtherInstance(c *Conversation) {
 
 func messageEventEncryptionError(c *Conversation) {
 	c.getEventHandler().HandleMessageEvent(MessageEventEncryptionError, nil, nil)
+}
+
+func messageEventReceivedUnreadableMessage(c *Conversation) {
+	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageUnreadable, nil, nil)
 }
