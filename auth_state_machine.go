@@ -20,6 +20,11 @@ func (c *Conversation) generateNewDHKeyPair() error {
 
 func (c *Conversation) akeHasFinished() error {
 	c.msgState = encrypted
+
+	if c.OurKey.PublicKey == *c.TheirKey {
+		messageEventReflected(c)
+	}
+
 	return c.generateNewDHKeyPair()
 }
 

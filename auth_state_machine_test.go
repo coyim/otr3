@@ -559,3 +559,13 @@ func Test_authStateAwaitingRevealSig_String_returnsTheCorrectString(t *testing.T
 func Test_authStateAwaitingSig_String_returnsTheCorrectString(t *testing.T) {
 	assertEquals(t, authStateAwaitingSig{}.String(), "AUTHSTATE_AWAITING_SIG")
 }
+
+func Test_akeHasFinished_willSignalThatWeAreTalkingToOurselvesIfWeAre(t *testing.T) {
+	c := bobContextAfterAKE()
+	c.OurKey = bobPrivateKey
+	c.TheirKey = &bobPrivateKey.PublicKey
+
+	c.expectMessageEvent(t, func() {
+		c.akeHasFinished()
+	}, MessageEventMessageReflected, "", nil)
+}

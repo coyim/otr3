@@ -53,8 +53,6 @@ type MessageEvent int
  *      Message has not been sent because our buddy has ended the
  *      private Conversation. We should either close the connection,
  *      or refresh it.
- * - OTRL_MSGEVENT_MSG_REFLECTED
- *      Received our own OTR messages.
  * - OTRL_MSGEVENT_MSG_RESENT
  *      The previous message was resent.
  * - OTRL_MSGEVENT_RCVDMSG_NOT_IN_PRIVATE
@@ -83,7 +81,9 @@ const (
 	// MessageEventSetupError will be signaled when a private conversation could not be established. The reason for this will be communicated with the attached error instance
 	MessageEventSetupError
 
-	// MessageEventMessageReflected
+	// MessageEventMessageReflected will be signaled if we received our own OTR messages.
+	MessageEventMessageReflected
+
 	// MessageEventMessageResent
 	// MessageEventReceivedMessageNotInPrivate
 	// MessageEventReceivedMessageUnreadable
@@ -192,4 +192,8 @@ func messageEventHeartbeatSent(c *Conversation) {
 
 func messageEventSetupError(c *Conversation, e error) {
 	c.getEventHandler().HandleMessageEvent(MessageEventSetupError, "", e)
+}
+
+func messageEventReflected(c *Conversation) {
+	c.getEventHandler().HandleMessageEvent(MessageEventMessageReflected, "", nil)
 }
