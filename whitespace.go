@@ -31,10 +31,6 @@ func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
 
 func (c *Conversation) processWhitespaceTag(message []byte) (plain, toSend []byte, err error) {
 	wsPos := bytes.Index(message, whitespaceTagHeader)
-	if wsPos == -1 {
-		plain = message
-		return
-	}
 
 	plain = message[:wsPos]
 

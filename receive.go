@@ -50,7 +50,15 @@ func (c *Conversation) receiveEncoded(message []byte) ([]byte, []byte, []byte, e
 	return c.receiveDecoded(decodedMessage)
 }
 
-func (c *Conversation) receiveOther(message []byte) ([]byte, []byte, error) {
+func (c *Conversation) receivePlaintext(message []byte) ([]byte, []byte, error) {
+	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
+
+	//TODO:	warn that the message was received unencrypted
+
+	return message, nil, nil
+}
+
+func (c *Conversation) receiveTaggedPlaintext(message []byte) ([]byte, []byte, error) {
 	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
 	//TODO:	warn that the message was received unencrypted
@@ -107,18 +115,32 @@ func isErrorMessage(msg []byte) bool {
 	return bytes.HasPrefix(msg, errorMarker)
 }
 
-//TODO: receive fragmented messages
 func (c *Conversation) Receive(message []byte) (plain []byte, toSend FragmentedMessage, err error) {
-	switch {
-	case !c.Policies.isOTREnabled():
+	if !c.Policies.isOTREnabled() {
 		return c.receiveWithoutOTR(message)
-	case isErrorMessage(message):
-		return c.receiveErrorMessage(message)
-	case isEncoded(message):
-		return c.toSendEncoded34(c.receiveEncoded(message))
-	case isQueryMessage(message):
-		return c.toSendEncoded2(c.receiveQueryMessage(message))
-	default:
-		return c.toSendEncoded3(c.receiveOther(message))
 	}
+
+	msgType := guessMessageType(message)
+	switch msgType {
+	case msgGuessError:
+		return c.receiveErrorMessage(message)
+	case msgGuessQuery:
+		return c.toSendEncoded2(c.receiveQueryMessage(message))
+	case msgGuessTaggedPlaintext:
+		return c.toSendEncoded3(c.receiveTaggedPlaintext(message))
+	case msgGuessNotOTR:
+		return c.toSendEncoded3(c.receivePlaintext(message))
+	case msgGuessV1KeyExch:
+		// TODO: warn here
+		return
+	case msgGuessFragment:
+		// TODO: fix fragment here
+		return
+	case msgGuessUnknown:
+		// TODO: event here
+		return
+	case msgGuessDHCommit, msgGuessDHKey, msgGuessRevealSig, msgGuessSignature, msgGuessData:
+		return c.toSendEncoded34(c.receiveEncoded(message))
+	}
+	return // should never be possible
 }
