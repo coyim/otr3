@@ -315,3 +315,20 @@ func Test_setBigInt_setWhenSourceIsNull(t *testing.T) {
 	n = setBigInt(n, big.NewInt(5))
 	assertEquals(t, n.Cmp(big.NewInt(5)), 0)
 }
+
+func Test_generateNewDHKeypair_wipesPreviousDHKeysBeforePointingToCurrentDHKeys(t *testing.T) {
+	prevPrivKey := big.NewInt(1)
+	prevPubKey := big.NewInt(2)
+
+	c := keyManagementContext{
+		ourPreviousDHKeys: dhKeyPair{
+			priv: prevPrivKey,
+			pub:  prevPubKey,
+		},
+	}
+
+	c.generateNewDHKeyPair(big.NewInt(3))
+
+	assertEquals(t, prevPrivKey.Int64(), int64(0))
+	assertEquals(t, prevPubKey.Int64(), int64(0))
+}

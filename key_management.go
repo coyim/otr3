@@ -14,6 +14,15 @@ type dhKeyPair struct {
 	priv *big.Int
 }
 
+func (p *dhKeyPair) wipe() {
+	if p == nil {
+		return
+	}
+
+	wipeBigInt(p.pub)
+	wipeBigInt(p.priv)
+}
+
 type akeKeys struct {
 	c      [aes.BlockSize]byte
 	m1, m2 [sha256.Size]byte
@@ -113,7 +122,9 @@ func (c *keyManagementContext) revealMACKeys() []macKey {
 }
 
 func (c *keyManagementContext) generateNewDHKeyPair(newPrivKey *big.Int) {
+	c.ourPreviousDHKeys.wipe()
 	c.ourPreviousDHKeys = c.ourCurrentDHKeys
+
 	c.ourCurrentDHKeys = dhKeyPair{
 		priv: newPrivKey,
 		pub:  modExp(g1, newPrivKey),
