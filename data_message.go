@@ -44,7 +44,7 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 
 func extractDataMessageFlag(msg []byte) byte {
 	if len(msg) == 0 {
-		return 0x00
+		return messageFlagNormal
 	}
 	return msg[0]
 }
@@ -131,7 +131,6 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 			return
 		}
 
-		//TODO: This should be probably out of this method
 		toSend, err = c.wrapMessageHeader(msgTypeData, reply.serialize())
 		if err != nil {
 			return

@@ -254,7 +254,14 @@ func Test_processDataMessage_willReturnAHeartbeatMessageAfterAPlainTextMessage(t
 	_, _, toSendExtra, err := bob.receiveDecoded(msg)
 
 	assertDeepEquals(t, err, nil)
-	assertDeepEquals(t, len(toSendExtra) > 450, true)
+
+	header, exp, e := fixtureDecryptDataMsgBase(toSendExtra)
+	assertNil(t, e)
+	assertDeepEquals(t, header, bytesFromHex("0003030000010100000101"))
+	assertDeepEquals(t, exp.message, []byte{})
+	assertDeepEquals(t, len(exp.tlvs), 1)
+	assertDeepEquals(t, exp.tlvs[0].tlvType, tlvTypePadding)
+	assertDeepEquals(t, exp.tlvs[0].tlvLength, uint16(0xFB))
 }
 
 func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing.T) {

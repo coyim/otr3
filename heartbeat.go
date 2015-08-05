@@ -22,8 +22,6 @@ func (c *Conversation) maybeHeartbeat(plain, toSend []byte, err error) ([]byte, 
 	return plain, toSend, tsExtra, e
 }
 
-// TODO: Fix a better test for this, so we can see that no message header is there
-// Returns a serialized data message (with NO header)
 func (c *Conversation) potentialHeartbeat(plain []byte) (toSend []byte, err error) {
 	if plain != nil {
 		now := time.Now()
@@ -32,8 +30,10 @@ func (c *Conversation) potentialHeartbeat(plain []byte) (toSend []byte, err erro
 			if err != nil {
 				return nil, err
 			}
-			toSend = dataMsg.serialize()
-			//TODO: why no messageHeader?
+			toSend, err = c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+			if err != nil {
+				return nil, err
+			}
 			c.updateLastSent()
 			messageEventHeartbeatSent(c)
 		}
