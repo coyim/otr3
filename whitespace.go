@@ -3,10 +3,8 @@ package otr3
 import "bytes"
 
 var (
-	whitespaceTagHeader = []byte{
-		0x20, 0x09, 0x20, 0x20, 0x09, 0x09, 0x09, 0x09,
-		0x20, 0x09, 0x20, 0x09, 0x20, 0x09, 0x20, 0x20,
-	}
+	// Maps to OTRL_MESSAGE_TAG_BASE
+	whitespaceTagHeader = []byte(" \t  \t\t\t\t \t \t \t  ")
 )
 
 func genWhitespaceTag(p policies) []byte {

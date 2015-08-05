@@ -58,9 +58,6 @@ type MessageEvent int
  * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
  *      Received a general OTR error. The argument 'message' will
  *      also be passed and it will contain the OTR error message.
- * - OTRL_MSGEVENT_RCVDMSG_UNENCRYPTED
- *      Received an unencrypted message. The argument 'message' will
- *      also be passed and it will contain the plaintext message.
  * - OTRL_MSGEVENT_RCVDMSG_UNRECOGNIZED
  *      Cannot recognize the type of OTR message received.
  * - OTRL_MSGEVENT_RCVDMSG_FOR_OTHER_INSTANCE
@@ -92,7 +89,12 @@ const (
 	MessageEventLogHeartbeatSent
 
 	// MessageEventReceivedMessageGeneralError
-	// MessageEventReceivedMessageUnencrypted
+
+	// * - OTRL_MSGEVENT_RCVDMSG_UNENCRYPTED
+	// *      Received an unencrypted message. The argument 'message' will
+	// *      also be passed and it will contain the plaintext message.
+	MessageEventReceivedMessageUnencrypted
+
 	// MessageEventReceivedMessageUnrecognized
 	// MessageEventReceivedMessageForOtherInstance
 )

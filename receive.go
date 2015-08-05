@@ -42,7 +42,6 @@ func (c *Conversation) toSendEncoded34(plain []byte, toSend []byte, toSendExtra 
 	return plain, append(c.encode(toSend), c.encode(toSendExtra)...), err
 }
 
-//TODO: receive fragmented messages
 func (c *Conversation) receiveEncoded(message []byte) ([]byte, []byte, []byte, error) {
 	decodedMessage, err := c.decode(message)
 	if err != nil {
@@ -108,6 +107,7 @@ func isErrorMessage(msg []byte) bool {
 	return bytes.HasPrefix(msg, errorMarker)
 }
 
+//TODO: receive fragmented messages
 func (c *Conversation) Receive(message []byte) (plain []byte, toSend FragmentedMessage, err error) {
 	switch {
 	case !c.Policies.isOTREnabled():
