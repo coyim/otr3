@@ -3,7 +3,8 @@ package otr3
 import "bytes"
 
 var (
-	fragmentSeparator = []byte{','}
+	fragmentSeparator      = []byte{','}
+	fragmentItagsSeparator = []byte{'|'}
 )
 
 // fragmentationContext store the current fragmentation running. A fragmentationContext is zero-valid and can be immediately used without initialization.
@@ -39,7 +40,7 @@ func (c *Conversation) setFragmentSize(size uint16) {
 	c.fragmentSize = size
 }
 
-func (c *Conversation) fragment(data encodedMessage, fraglen uint16, itags uint32, itagr uint32) []ValidMessage {
+func (c *Conversation) fragment(data encodedMessage, fraglen uint16) []ValidMessage {
 	len := len(data)
 
 	if len <= int(fraglen) || fraglen == 0 {
@@ -49,7 +50,7 @@ func (c *Conversation) fragment(data encodedMessage, fraglen uint16, itags uint3
 	numFragments := (len / int(fraglen)) + 1
 	ret := make([]ValidMessage, numFragments)
 	for i := 0; i < numFragments; i++ {
-		prefix := c.version.fragmentPrefix(i, numFragments, itags, itagr)
+		prefix := c.version.fragmentPrefix(i, numFragments, c.ourInstanceTag, c.theirInstanceTag)
 		ret[i] = append(append(prefix, fragmentData(data, i, fraglen, uint16(len))...), fragmentSeparator[0])
 	}
 	return ret
@@ -60,12 +61,7 @@ func fragmentsFinished(fctx fragmentationContext) bool {
 }
 
 func parseFragment(data []byte) (resultData []byte, ix uint16, length uint16, ok bool) {
-	if len(data) < 5 {
-		return nil, 0, 0, false
-	}
-
-	dataWithoutPrefix := data[5:]
-	parts := bytes.Split(dataWithoutPrefix, fragmentSeparator)
+	parts := bytes.Split(data, fragmentSeparator)
 	if len(parts) != 4 {
 		return nil, 0, 0, false
 	}
@@ -105,13 +101,16 @@ func forgetFragment() fragmentationContext {
 	return fragmentationContext{}
 }
 
-func receiveFragment(beforeCtx fragmentationContext, data ValidMessage) (fragmentationContext, error) {
-	// TODO: check instance tags, and optionally warn the user
-	// TODO: check for malformed data
+func (c *Conversation) receiveFragment(beforeCtx fragmentationContext, data ValidMessage) (fragmentationContext, error) {
+	fragBody, ignore, ok1 := c.version.parseFragmentPrefix(data, c.theirInstanceTag, c.ourInstanceTag)
+	resultData, ix, l, ok2 := parseFragment(fragBody)
 
-	resultData, ix, l, ok := parseFragment(data)
+	if ignore {
+		messageEventReceivedMessageForOtherInstance(c)
+		return beforeCtx, nil
+	}
 
-	if !ok {
+	if !ok1 || !ok2 {
 		return beforeCtx, newOtrError("invalid OTR fragment")
 	}
 

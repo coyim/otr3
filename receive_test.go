@@ -1,6 +1,9 @@
 package otr3
 
-import "testing"
+import (
+	"crypto/rand"
+	"testing"
+)
 
 func Test_receiveDecoded_resolveProtocolVersion(t *testing.T) {
 	c := &Conversation{}
@@ -110,4 +113,40 @@ func Test_Receive_signalsAMessageEventWhenWeReceiveAMessageThatLooksLikeAnOTRMes
 	c.expectMessageEvent(t, func() {
 		c.Receive(ValidMessage("?OTR Something: strange"))
 	}, MessageEventReceivedMessageUnrecognized, nil, nil)
+}
+
+func Test_Recieve_signalsAMessageEventWhenWeReceiveADataMessageForAnotherInstance(t *testing.T) {
+	alice := &Conversation{Rand: rand.Reader}
+	alice.ourInstanceTag = 0x201
+	alice.theirInstanceTag = 0x301
+	alice.OurKey = alicePrivateKey
+	alice.Policies = policies(allowV3)
+	alice.TheirKey = &bobPrivateKey.PublicKey
+
+	bob := &Conversation{Rand: rand.Reader}
+	bob.ourInstanceTag = 0x301
+	bob.theirInstanceTag = 0x201
+	bob.OurKey = bobPrivateKey
+	bob.Policies = policies(allowV3)
+	bob.TheirKey = &alicePrivateKey.PublicKey
+
+	var toSend []ValidMessage
+	msg := alice.queryMessage()
+	_, toSend, _ = bob.Receive(msg)
+	encoded := toSend[0][5 : len(toSend[0])-1]
+	decoded, _ := b64decode(encoded)
+	decoded[6] = 0x02 // Change the instance tag low byte
+	reencoded := append(append(msgMarker, b64encode(decoded)...), '.')
+
+	alice.expectMessageEvent(t, func() {
+		alice.Receive(reencoded)
+	}, MessageEventReceivedMessageForOtherInstance, nil, nil)
+
+	decoded[6] = 0x01
+	decoded[10] = 0x05
+	reencoded = append(append(msgMarker, b64encode(decoded)...), '.')
+
+	alice.expectMessageEvent(t, func() {
+		alice.Receive(reencoded)
+	}, MessageEventReceivedMessageForOtherInstance, nil, nil)
 }

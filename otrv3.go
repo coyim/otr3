@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
+	"strconv"
 )
 
 var otrv3FragmentationPrefix = []byte("?OTR|")
@@ -26,6 +27,47 @@ func (v otrV3) isGroupElement(n *big.Int) bool {
 
 func (v otrV3) isFragmented(data []byte) bool {
 	return bytes.HasPrefix(data, otrv3FragmentationPrefix) || otrV2{}.isFragmented(data)
+}
+
+func parseItag(s []byte) (uint32, error) {
+	v, err := strconv.ParseInt(string(s), 16, 0)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(v), nil
+}
+
+func (v otrV3) parseFragmentPrefix(data []byte, itags uint32, itagr uint32) (rest []byte, ignore bool, ok bool) {
+	if len(data) < 23 {
+		return data, false, false
+	}
+	header := data[:23]
+	headerPart := bytes.Split(header, fragmentSeparator)[0]
+	itagParts := bytes.Split(headerPart, fragmentItagsSeparator)
+
+	if len(itagParts) < 3 {
+		return data, false, false
+	}
+
+	dataItags, err1 := parseItag(itagParts[1])
+	if err1 != nil {
+		return data, false, false
+	}
+
+	if dataItags != itags {
+		return data, true, true
+	}
+
+	dataItagr, err2 := parseItag(itagParts[2])
+	if err2 != nil {
+		return data, false, false
+	}
+
+	if dataItagr != itagr {
+		return data, true, true
+	}
+
+	return data[23:], false, true
 }
 
 func (v otrV3) fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte {
@@ -102,10 +144,12 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, 
 	}
 
 	if receiverInstanceTag != 0 && c.ourInstanceTag != receiverInstanceTag {
+		messageEventReceivedMessageForOtherInstance(c)
 		return nil, nil, errReceivedMessageForOtherInstance
 	}
 
 	if senderInstanceTag >= minValidInstanceTag && c.theirInstanceTag != senderInstanceTag {
+		messageEventReceivedMessageForOtherInstance(c)
 		return nil, nil, errReceivedMessageForOtherInstance
 	}
 

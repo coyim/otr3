@@ -7,6 +7,7 @@ type otrVersion interface {
 	parameterLength() int
 	isGroupElement(n *big.Int) bool
 	isFragmented(data []byte) bool
+	parseFragmentPrefix(data []byte, itags uint32, itagr uint32) (rest []byte, ignore bool, ok bool)
 	fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte
 	minFragmentSize() uint16
 	whitespaceTag() []byte

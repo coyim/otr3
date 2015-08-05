@@ -1,7 +1,5 @@
 package otr3
 
-import "encoding/base64"
-
 func (c *Conversation) receiveWithoutOTR(message ValidMessage) (MessagePlaintext, []ValidMessage, error) {
 	return MessagePlaintext(message), nil, nil
 }
@@ -68,14 +66,13 @@ func removeOTRMsgEnvelope(msg encodedMessage) []byte {
 
 func (c *Conversation) decode(encoded encodedMessage) (messageWithHeader, error) {
 	encoded = removeOTRMsgEnvelope(encoded)
-	msg := make(messageWithHeader, base64.StdEncoding.DecodedLen(len(encoded)))
-	msgLen, err := base64.StdEncoding.Decode(msg, encoded)
+	msg, err := b64decode(encoded)
 
 	if err != nil {
 		return nil, errInvalidOTRMessage
 	}
 
-	return msg[:msgLen], nil
+	return msg, nil
 }
 
 func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
@@ -85,6 +82,9 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 
 	var messageHeader, messageBody []byte
 	if messageHeader, messageBody, err = c.parseMessageHeader(message); err != nil {
+		if err == errReceivedMessageForOtherInstance {
+			err = nil
+		}
 		return
 	}
 

@@ -261,7 +261,7 @@ func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {
 	assertEquals(t, c.version, otrV2{})
 }
 
-func Test_receive_ignoresMesagesWithWrongInstanceTags(t *testing.T) {
+func Test_receive_ignoresMessagesWithWrongInstanceTags(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
 	bob.OurKey = bobPrivateKey
@@ -271,8 +271,10 @@ func Test_receive_ignoresMesagesWithWrongInstanceTags(t *testing.T) {
 
 	bob.ourInstanceTag = 0x1000 // different than the fixture
 	bob.keys.ourKeyID = 1       //this would force key rotation
-	_, _, err := bob.Receive(bob.encode(msg)[0])
-	assertDeepEquals(t, err, errReceivedMessageForOtherInstance)
+	plain, toSend, err := bob.Receive(bob.encode(msg)[0])
+	assertNil(t, plain)
+	assertNil(t, toSend)
+	assertNil(t, err)
 }
 
 func Test_receive_displayErrorMessageToTheUser(t *testing.T) {

@@ -58,8 +58,7 @@ type MessageEvent int
  * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
  *      Received a general OTR error. The argument 'message' will
  *      also be passed and it will contain the OTR error message.
- * - OTRL_MSGEVENT_RCVDMSG_FOR_OTHER_INSTANCE
- *      Received and discarded a message intended for another instance. */
+ */
 const (
 	// MessageEventEncryptionRequired is signaled when our policy requires encryption bt we are trying to send an unencrypted message
 	MessageEventEncryptionRequired MessageEvent = iota
@@ -94,7 +93,8 @@ const (
 	// MessageEventReceivedMessageUnrecognized is triggered when we receive an OTR message whose type we cannot recognize
 	MessageEventReceivedMessageUnrecognized
 
-	// MessageEventReceivedMessageForOtherInstance
+	// MessageEventReceivedMessageForOtherInstance is triggered when we receive and discard a message for another instance
+	MessageEventReceivedMessageForOtherInstance
 )
 
 // EventHandler contains the configuration necessary to be able to communicate events to the client
@@ -208,4 +208,8 @@ func messageEventReceivedUnencryptedMessage(c *Conversation, msg []byte) {
 
 func messageEventReceivedUnrecognizedMessage(c *Conversation) {
 	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageUnrecognized, nil, nil)
+}
+
+func messageEventReceivedMessageForOtherInstance(c *Conversation) {
+	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageForOtherInstance, nil, nil)
 }

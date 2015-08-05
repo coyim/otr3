@@ -1,9 +1,6 @@
 package otr3
 
-import (
-	"encoding/base64"
-	"errors"
-)
+import "errors"
 
 func (c *Conversation) Send(msg ValidMessage) ([]ValidMessage, error) {
 	if !c.Policies.isOTREnabled() {
@@ -31,13 +28,9 @@ func (c *Conversation) Send(msg ValidMessage) ([]ValidMessage, error) {
 }
 
 func (c *Conversation) encode(msg messageWithHeader) []ValidMessage {
-	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg))+len(msgMarker)+1)
-	base64.StdEncoding.Encode(b64[len(msgMarker):], msg)
-	copy(b64, msgMarker)
-	b64[len(b64)-1] = '.'
-
+	b64 := append(append(msgMarker, b64encode(msg)...), '.')
 	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
-	return c.fragment(b64, bytesPerFragment, uint32(0), uint32(0))
+	return c.fragment(b64, bytesPerFragment)
 }
 
 func (c *Conversation) sendDHCommit() (toSend messageWithHeader, err error) {
