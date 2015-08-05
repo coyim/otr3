@@ -213,6 +213,17 @@ func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(
 	}, MessageEventReceivedMessageUnreadable, nil, nil)
 }
 
+func Test_processDataMessage_signalsThatMessageIsMalformedIfSomeOtherErrorHappens(t *testing.T) {
+	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
+	c.OurKey = bobPrivateKey
+	var msg []byte
+	msg, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("Making sure this isn't a heartbeat message")})
+	c.msgState = encrypted
+	c.expectMessageEvent(t, func() {
+		c.receiveDecoded(msg)
+	}, MessageEventReceivedMessageMalformed, nil, nil)
+}
+
 func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)

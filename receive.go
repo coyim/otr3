@@ -92,7 +92,11 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 	if msgType == msgTypeData {
 		plain, toSend, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
 		if err != nil {
-			messageEventReceivedUnreadableMessage(c)
+			if err == ErrGPGConflict {
+				messageEventReceivedUnreadableMessage(c)
+			} else {
+				messageEventReceivedMalformedMessage(c)
+			}
 		}
 	} else {
 		toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))

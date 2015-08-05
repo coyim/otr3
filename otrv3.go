@@ -37,10 +37,11 @@ func parseItag(s []byte) (uint32, error) {
 	return uint32(v), nil
 }
 
-func (v otrV3) parseFragmentPrefix(data []byte, itags uint32, itagr uint32) (rest []byte, ignore bool, ok bool) {
+func (v otrV3) parseFragmentPrefix(c *Conversation, data []byte) (rest []byte, ignore bool, ok bool) {
 	if len(data) < 23 {
 		return data, false, false
 	}
+
 	header := data[:23]
 	headerPart := bytes.Split(header, fragmentSeparator)[0]
 	itagParts := bytes.Split(headerPart, fragmentItagsSeparator)
@@ -54,7 +55,12 @@ func (v otrV3) parseFragmentPrefix(data []byte, itags uint32, itagr uint32) (res
 		return data, false, false
 	}
 
-	if dataItags != itags {
+	if dataItags < minValidInstanceTag {
+		malformedMessage(c)
+		return data, false, false
+	}
+
+	if dataItags != c.theirInstanceTag {
 		return data, true, true
 	}
 
@@ -63,7 +69,7 @@ func (v otrV3) parseFragmentPrefix(data []byte, itags uint32, itagr uint32) (res
 		return data, false, false
 	}
 
-	if dataItagr != itagr {
+	if dataItagr != c.ourInstanceTag {
 		return data, true, true
 	}
 
@@ -122,8 +128,13 @@ func (c *Conversation) generateInstanceTag() error {
 	return nil
 }
 
+func malformedMessage(c *Conversation) {
+	messageEventReceivedMalformedMessage(c)
+}
+
 func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error) {
 	if len(msg) < otrv3HeaderLen {
+		malformedMessage(c)
 		return nil, nil, errInvalidOTRMessage
 	}
 	header := msg[:otrv3HeaderLen]
@@ -140,6 +151,7 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, 
 	}
 
 	if senderInstanceTag < minValidInstanceTag {
+		malformedMessage(c)
 		return nil, nil, errInvalidOTRMessage
 	}
 

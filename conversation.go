@@ -49,6 +49,10 @@ func (c *Conversation) parseMessageHeader(msg messageWithHeader) ([]byte, []byte
 	return c.version.parseMessageHeader(c, msg)
 }
 
+func (c *Conversation) parseFragmentPrefix(data []byte) ([]byte, bool, bool) {
+	return c.version.parseFragmentPrefix(c, data)
+}
+
 func (c *Conversation) wrapMessageHeader(msgType byte, msg []byte) (messageWithHeader, error) {
 	header, err := c.messageHeader(msgType)
 	if err != nil {

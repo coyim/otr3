@@ -24,7 +24,7 @@ func (v otrV2) isFragmented(data []byte) bool {
 	return bytes.HasPrefix(data, otrv2FragmentationPrefix)
 }
 
-func (v otrV2) parseFragmentPrefix(data []byte, itags uint32, itagr uint32) (rest []byte, ignore bool, ok bool) {
+func (v otrV2) parseFragmentPrefix(c *Conversation, data []byte) (rest []byte, ignore bool, ok bool) {
 	if len(data) < 5 {
 		return data, false, false
 	}

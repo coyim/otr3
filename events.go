@@ -48,23 +48,21 @@ type MessageEvent int
  * - OTRL_MSGEVENT_RCVDMSG_NOT_IN_PRIVATE
  *      Received an encrypted message but cannot read
  *      it because no private connection is established yet.
- * - OTRL_MSGEVENT_RCVDMSG_MALFORMED
- *      The message received contains malformed data.
  * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
  *      Received a general OTR error. The argument 'message' will
  *      also be passed and it will contain the OTR error message.
  */
 const (
-	// MessageEventEncryptionRequired is signaled when our policy requires encryption bt we are trying to send an unencrypted message
+	// MessageEventEncryptionRequired is signaled when our policy requires encryption bt we are trying to send an unencrypted message.
 	MessageEventEncryptionRequired MessageEvent = iota
 
-	// MessageEventEncryptionError is signaled when an error occured while encrypting a message and the message was not sent
+	// MessageEventEncryptionError is signaled when an error occured while encrypting a message and the message was not sent.
 	MessageEventEncryptionError
 
-	// MessageEventConnectionEnded is signaled when we are asked to send a message but the peer has ended the private conversation. At this point the connection should be closed or refreshed
+	// MessageEventConnectionEnded is signaled when we are asked to send a message but the peer has ended the private conversation. At this point the connection should be closed or refreshed.
 	MessageEventConnectionEnded
 
-	// MessageEventSetupError will be signaled when a private conversation could not be established. The reason for this will be communicated with the attached error instance
+	// MessageEventSetupError will be signaled when a private conversation could not be established. The reason for this will be communicated with the attached error instance.
 	MessageEventSetupError
 
 	// MessageEventMessageReflected will be signaled if we received our own OTR messages.
@@ -73,10 +71,11 @@ const (
 	// MessageEventMessageResent
 	// MessageEventReceivedMessageNotInPrivate
 
-	// MessageEventReceivedMessageUnreadable will be signaled when we cannot read the received message
+	// MessageEventReceivedMessageUnreadable will be signaled when we cannot read the received message.
 	MessageEventReceivedMessageUnreadable
 
-	// MessageEventReceivedMessageMalformed
+	// MessageEventReceivedMessageMalformed is signaled when we receive a message that contains malformed data.
+	MessageEventReceivedMessageMalformed
 
 	// MessageEventLogHeartbeatReceived is triggered when we received a heartbeat.
 	MessageEventLogHeartbeatReceived
@@ -219,4 +218,8 @@ func messageEventEncryptionError(c *Conversation) {
 
 func messageEventReceivedUnreadableMessage(c *Conversation) {
 	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageUnreadable, nil, nil)
+}
+
+func messageEventReceivedMalformedMessage(c *Conversation) {
+	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageMalformed, nil, nil)
 }

@@ -75,6 +75,24 @@ func Test_parseMessageHeader_returnsErrorWhenOurInstanceDoesNotMatchReceiverInst
 	assertEquals(t, err, errReceivedMessageForOtherInstance)
 }
 
+func Test_otrv3_parseMessageHeader_signalsMalformedMessageWhenWeCantParseInstanceTags(t *testing.T) {
+	v := otrV3{}
+	c := &Conversation{version: v}
+
+	c.expectMessageEvent(t, func() {
+		v.parseMessageHeader(c, []byte{0x00, 0x03, 0x02, 0x00, 0x00, 0x01, 0x22, 0x00, 0x00, 0x01})
+	}, MessageEventReceivedMessageMalformed, nil, nil)
+}
+
+func Test_otrv3_parseMessageHeader_signalsMalformedMessageWhenWeTheirInstanceTagIsTooLow(t *testing.T) {
+	v := otrV3{}
+	c := &Conversation{version: v}
+
+	c.expectMessageEvent(t, func() {
+		v.parseMessageHeader(c, []byte{0x00, 0x03, 0x02, 0x00, 0x00, 0x00, 0x22, 0x00, 0x00, 0x01, 0x01})
+	}, MessageEventReceivedMessageMalformed, nil, nil)
+}
+
 func Test_parseMessageHeader_returnsErrorWhenTheirInstanceTagDoesNotMatchSenderInstanceTag(t *testing.T) {
 	v := otrV3{}
 	c := &Conversation{version: v}

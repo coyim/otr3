@@ -102,7 +102,7 @@ func forgetFragment() fragmentationContext {
 }
 
 func (c *Conversation) receiveFragment(beforeCtx fragmentationContext, data ValidMessage) (fragmentationContext, error) {
-	fragBody, ignore, ok1 := c.version.parseFragmentPrefix(data, c.theirInstanceTag, c.ourInstanceTag)
+	fragBody, ignore, ok1 := c.parseFragmentPrefix(data)
 	resultData, ix, l, ok2 := parseFragment(fragBody)
 
 	if ignore {
