@@ -10,8 +10,8 @@ func Test_receiveQueryMessage_sendDHCommitv3AndTransitToStateAwaitingDHKey(t *te
 
 	assertNil(t, err)
 	assertEquals(t, c.ake.state, authStateAwaitingDHKey{})
-	assertDeepEquals(t, dhMsgType(msg), msgTypeDHCommit)
-	assertDeepEquals(t, dhMsgVersion(msg), uint16(3))
+	assertDeepEquals(t, dhMsgType(msg[0]), msgTypeDHCommit)
+	assertDeepEquals(t, dhMsgVersion(msg[0]), uint16(3))
 }
 
 func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
@@ -22,8 +22,8 @@ func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
 
 	assertNil(t, err)
 	assertEquals(t, c.ake.state, authStateAwaitingDHKey{})
-	assertDeepEquals(t, dhMsgType(msg), msgTypeDHCommit)
-	assertDeepEquals(t, dhMsgVersion(msg), uint16(2))
+	assertDeepEquals(t, dhMsgType(msg[0]), msgTypeDHCommit)
+	assertDeepEquals(t, dhMsgVersion(msg[0]), uint16(2))
 }
 
 //FIXME: Should not it be tested on sendDHCommit?

@@ -21,7 +21,7 @@ func Test_receive_generatesErrorIfDoesNotHaveASecureChannel(t *testing.T) {
 	m, _ = c.wrapMessageHeader(msgTypeData, m)
 	for _, s := range states {
 		c.msgState = s
-		_, _, _, err := c.receiveDecoded(m)
+		_, _, err := c.receiveDecoded(m)
 		assertEquals(t, err, errEncryptedMessageWithNoSecureChannel)
 	}
 }
@@ -37,7 +37,7 @@ func Test_receive_doesntGenerateErrorIfThereIsNoSecureChannelButTheMessageIsIGNO
 
 	for _, s := range states {
 		c.msgState = s
-		_, _, _, err := c.receiveDecoded(m)
+		_, _, err := c.receiveDecoded(m)
 		assertNil(t, err)
 	}
 }
@@ -199,7 +199,9 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	msg = []byte("hello")
 	dataMsg, _ := alice.genDataMsg(msg)
 	m, _ = alice.wrapMessageHeader(msgTypeData, dataMsg.serialize())
-	plain, ret, _, err := bob.receiveDecoded(m)
+
+	bob.updateLastSent()
+	plain, ret, err := bob.receiveDecoded(m)
 
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, plain, MessagePlaintext(msg))

@@ -16,38 +16,33 @@ func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain MessageP
 	return
 }
 
-func (c *Conversation) toSendEncoded2(toSend messageWithHeader, err error) (MessagePlaintext, []ValidMessage, error) {
-	if err != nil {
-		return nil, nil, err
+func (c *Conversation) encodeAndCombine(toSend []messageWithHeader) []ValidMessage {
+	var result []ValidMessage
+
+	for _, ts := range toSend {
+		result = append(result, c.encode(ts)...)
 	}
-	return nil, c.encode(toSend), err
+
+	return result
 }
 
-func (c *Conversation) toSendEncoded3(plain MessagePlaintext, toSend messageWithHeader, err error) (MessagePlaintext, []ValidMessage, error) {
-	if err != nil || len(toSend) == 0 {
+func (c *Conversation) toSendEncoded(plain MessagePlaintext, toSend []messageWithHeader, err error) (MessagePlaintext, []ValidMessage, error) {
+	if err != nil || len(toSend) == 0 || len(toSend[0]) == 0 {
 		return plain, nil, err
 	}
 
-	return plain, c.encode(toSend), err
+	return plain, c.encodeAndCombine(toSend), err
 }
 
-func (c *Conversation) toSendEncoded34(plain MessagePlaintext, toSend messageWithHeader, toSendExtra messageWithHeader, err error) (MessagePlaintext, []ValidMessage, error) {
-	if err != nil || len(toSend) == 0 {
-		return plain, nil, err
-	}
-
-	return plain, append(c.encode(toSend), c.encode(toSendExtra)...), err
-}
-
-func (c *Conversation) receiveEncoded(message encodedMessage) (MessagePlaintext, messageWithHeader, messageWithHeader, error) {
+func (c *Conversation) receiveEncoded(message encodedMessage) (MessagePlaintext, []messageWithHeader, error) {
 	decodedMessage, err := c.decode(message)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	return c.receiveDecoded(decodedMessage)
 }
 
-func (c *Conversation) receivePlaintext(message ValidMessage) (plain MessagePlaintext, toSend messageWithHeader, err error) {
+func (c *Conversation) receivePlaintext(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
 	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
 	//TODO:	warn that the message was received unencrypted
@@ -55,7 +50,7 @@ func (c *Conversation) receivePlaintext(message ValidMessage) (plain MessagePlai
 	return MessagePlaintext(message), nil, nil
 }
 
-func (c *Conversation) receiveTaggedPlaintext(message ValidMessage) (plain MessagePlaintext, toSend messageWithHeader, err error) {
+func (c *Conversation) receiveTaggedPlaintext(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
 	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
 	//TODO:	warn that the message was received unencrypted
@@ -84,7 +79,7 @@ func (c *Conversation) decode(encoded encodedMessage) (messageWithHeader, error)
 	return msg[:msgLen], nil
 }
 
-func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessagePlaintext, toSend messageWithHeader, toSendExtra messageWithHeader, err error) {
+func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
 	if err = c.checkVersion(message); err != nil {
 		return
 	}
@@ -96,7 +91,7 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 
 	msgType := message[2]
 	if msgType == msgTypeData {
-		plain, toSend, toSendExtra, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
+		plain, toSend, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
 	} else {
 		toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))
 	}
@@ -110,26 +105,25 @@ func (c *Conversation) Receive(message ValidMessage) (plain MessagePlaintext, to
 	}
 
 	msgType := guessMessageType(message)
+	var messagesToSend []messageWithHeader
 	switch msgType {
 	case msgGuessError:
 		return c.receiveErrorMessage(message)
 	case msgGuessQuery:
-		return c.toSendEncoded2(c.receiveQueryMessage(message))
+		messagesToSend, err = c.receiveQueryMessage(message)
 	case msgGuessTaggedPlaintext:
-		return c.toSendEncoded3(c.receiveTaggedPlaintext(message))
+		plain, messagesToSend, err = c.receiveTaggedPlaintext(message)
 	case msgGuessNotOTR:
-		return c.toSendEncoded3(c.receivePlaintext(message))
+		plain, messagesToSend, err = c.receivePlaintext(message)
 	case msgGuessV1KeyExch:
 		// TODO: warn here
-		return
 	case msgGuessFragment:
 		// TODO: fix fragment here
-		return
 	case msgGuessUnknown:
 		// TODO: event here
-		return
 	case msgGuessDHCommit, msgGuessDHKey, msgGuessRevealSig, msgGuessSignature, msgGuessData:
-		return c.toSendEncoded34(c.receiveEncoded(encodedMessage(message)))
+		plain, messagesToSend, err = c.receiveEncoded(encodedMessage(message))
 	}
-	return // should never be possible
+
+	return c.toSendEncoded(plain, messagesToSend, err)
 }

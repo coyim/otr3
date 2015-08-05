@@ -23,3 +23,13 @@ func Bytes(m []ValidMessage) [][]byte {
 	}
 	return ret
 }
+
+func compactMessagesWithHeader(msgs ...messageWithHeader) []messageWithHeader {
+	var res []messageWithHeader
+	for _, m := range msgs {
+		if m != nil {
+			res = append(res, m)
+		}
+	}
+	return res
+}

@@ -13,12 +13,12 @@ func (c *Conversation) updateLastSent() {
 	c.heartbeat.lastSent = time.Now()
 }
 
-func (c *Conversation) maybeHeartbeat(plain MessagePlaintext, toSend messageWithHeader, err error) (MessagePlaintext, messageWithHeader, messageWithHeader, error) {
+func (c *Conversation) maybeHeartbeat(plain MessagePlaintext, toSend messageWithHeader, err error) (MessagePlaintext, []messageWithHeader, error) {
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	tsExtra, e := c.potentialHeartbeat(plain)
-	return plain, toSend, tsExtra, e
+	return plain, compactMessagesWithHeader(toSend, tsExtra), e
 }
 
 func (c *Conversation) potentialHeartbeat(plain MessagePlaintext) (toSend messageWithHeader, err error) {

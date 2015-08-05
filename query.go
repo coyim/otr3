@@ -47,7 +47,7 @@ func acceptOTRRequest(p policies, msg ValidMessage) (otrVersion, bool) {
 	return nil, false
 }
 
-func (c *Conversation) receiveQueryMessage(msg ValidMessage) (messageWithHeader, error) {
+func (c *Conversation) receiveQueryMessage(msg ValidMessage) ([]messageWithHeader, error) {
 	v, ok := acceptOTRRequest(c.Policies, msg)
 	if !ok {
 		return nil, errInvalidVersion

@@ -322,7 +322,7 @@ func Test_receiveDecoded_receiveRevealSigMessageAndSetMessageStateToEncrypted(t 
 	msg := fixtureRevealSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
-	_, _, _, err := c.receiveDecoded(msg)
+	_, _, err := c.receiveDecoded(msg)
 
 	assertNil(t, err)
 	assertEquals(t, c.msgState, encrypted)
@@ -335,7 +335,7 @@ func Test_receiveDecoded_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurre
 	msg := fixtureRevealSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
-	_, _, _, err := c.receiveDecoded(msg)
+	_, _, err := c.receiveDecoded(msg)
 
 	assertNil(t, err)
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
@@ -388,7 +388,7 @@ func Test_receiveDecoded_receiveSigMessageAndFailsWillSignalSetupError(t *testin
 	msg := fixtureSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
-	_, _, _, err := c.receiveDecoded(msg)
+	_, _, err := c.receiveDecoded(msg)
 
 	assertNil(t, err)
 	assertEquals(t, c.msgState, encrypted)
@@ -402,7 +402,7 @@ func Test_receiveDecoded_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPu
 	msg := fixtureSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
 
-	_, _, _, err := c.receiveDecoded(msg)
+	_, _, err := c.receiveDecoded(msg)
 
 	assertNil(t, err)
 	assertEquals(t, c.keys.theirKeyID, uint32(1))

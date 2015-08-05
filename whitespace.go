@@ -29,7 +29,7 @@ func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
 	return append(message, genWhitespaceTag(c.Policies)...)
 }
 
-func (c *Conversation) processWhitespaceTag(message ValidMessage) (plain MessagePlaintext, toSend messageWithHeader, err error) {
+func (c *Conversation) processWhitespaceTag(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
 	wsPos := bytes.Index(message, whitespaceTagHeader)
 
 	plain = MessagePlaintext(message[:wsPos])
@@ -43,7 +43,7 @@ func (c *Conversation) processWhitespaceTag(message ValidMessage) (plain Message
 	return
 }
 
-func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (toSend messageWithHeader, err error) {
+func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (toSend []messageWithHeader, err error) {
 	switch {
 	case c.Policies.has(allowV3) && bytes.Contains(tag, otrV3{}.whitespaceTag()):
 		c.version = otrV3{}
