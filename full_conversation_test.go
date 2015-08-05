@@ -139,8 +139,6 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	assertEquals(t, err, nil)
 	assertEquals(t, bob.ake.state, authStateNone{})
 
-	//TODO: They will never be at authStateNone{} again.
-
 	// "When starting a private Conversation [...],
 	// generate two DH key pairs for yourself, and set our_keyid = 2"
 	assertEquals(t, alice.keys.ourKeyID, uint32(2))
