@@ -20,6 +20,7 @@ func (c *Conversation) generateNewDHKeyPair() error {
 }
 
 func (c *Conversation) akeHasFinished() error {
+	c.ake.wipe()
 	c.msgState = encrypted
 
 	if c.OurKey.PublicKey == *c.TheirKey {
@@ -29,7 +30,6 @@ func (c *Conversation) akeHasFinished() error {
 	return c.generateNewDHKeyPair()
 }
 
-// Returns a AKE message (with header)
 func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend messageWithHeader, err error) {
 	c.ensureAKE()
 

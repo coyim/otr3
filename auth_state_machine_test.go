@@ -1,6 +1,7 @@
 package otr3
 
 import (
+	"crypto/aes"
 	"crypto/sha256"
 	"math/big"
 	"testing"
@@ -568,4 +569,38 @@ func Test_akeHasFinished_willSignalThatWeAreTalkingToOurselvesIfWeAre(t *testing
 	c.expectMessageEvent(t, func() {
 		c.akeHasFinished()
 	}, MessageEventMessageReflected, nil, nil)
+}
+
+func Test_akeHasFinished_wipesAKEKeys(t *testing.T) {
+	c := &Conversation{}
+	c.OurKey = bobPrivateKey
+	c.TheirKey = &bobPrivateKey.PublicKey
+
+	revKey := akeKeys{
+		c:  [aes.BlockSize]byte{1, 2, 3},
+		m1: [sha256.Size]byte{4, 5, 6},
+		m2: [sha256.Size]byte{7, 8, 9},
+	}
+
+	sigKey := akeKeys{
+		c:  [aes.BlockSize]byte{3, 2, 1},
+		m1: [sha256.Size]byte{6, 5, 4},
+		m2: [sha256.Size]byte{9, 8, 7},
+	}
+
+	c.ake = &ake{
+		secretExponent:   big.NewInt(1),
+		ourPublicValue:   big.NewInt(2),
+		theirPublicValue: big.NewInt(2),
+		revealKey:        revKey,
+		sigKey:           sigKey,
+		r:                [16]byte{1, 2, 3},
+		encryptedGx:      []byte{1, 2, 3},
+		hashedGx:         [sha256.Size]byte{1, 2, 3},
+		state:            authStateNone{},
+	}
+
+	c.akeHasFinished()
+
+	assertDeepEquals(t, *c.ake, ake{state: c.ake.state})
 }

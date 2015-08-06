@@ -13,6 +13,40 @@ func (p *dhKeyPair) wipe() {
 	p.priv = nil
 }
 
+func (k *akeKeys) wipe() {
+	if k == nil {
+		return
+	}
+
+	wipeBytes(k.c[:])
+	wipeBytes(k.m1[:])
+	wipeBytes(k.m2[:])
+}
+
+func (a *ake) wipe() {
+	if a == nil {
+		return
+	}
+
+	wipeBigInt(a.secretExponent)
+	a.secretExponent = nil
+
+	wipeBigInt(a.ourPublicValue)
+	a.ourPublicValue = nil
+
+	wipeBigInt(a.theirPublicValue)
+	a.theirPublicValue = nil
+
+	wipeBytes(a.r[:])
+	wipeBytes(a.hashedGx[:])
+
+	wipeBytes(a.encryptedGx[:])
+	a.encryptedGx = nil
+
+	a.revealKey.wipe()
+	a.sigKey.wipe()
+}
+
 func zeroes(n int) []byte {
 	return make([]byte, n)
 }
