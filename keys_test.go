@@ -995,7 +995,6 @@ func Test_PrivateKey_ImportWithoutError(t *testing.T) {
 
 func Test_PrivateKey_GenerateWithoutError(t *testing.T) {
 	priv := PrivateKey{}
-	//TODO: key generate is using big prime
 	err := priv.Generate(rand.Reader)
 	assertEquals(t, err, nil)
 }
