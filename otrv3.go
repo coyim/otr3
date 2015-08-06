@@ -81,7 +81,6 @@ func (v otrV3) fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte {
 }
 
 func (v otrV3) minFragmentSize() uint16 {
-	//TODO: need to double check
 	return 26
 }
 
