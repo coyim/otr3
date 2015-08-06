@@ -14,15 +14,15 @@ func (c *Conversation) Send(m ValidMessage) ([]ValidMessage, error) {
 
 	switch c.msgState {
 	case plainText:
-		return c.sendMessageOnPlaintext(message)
+		return c.withInjections(c.sendMessageOnPlaintext(message))
 	case encrypted:
-		return c.sendMessageOnEncrypted(message)
+		return c.withInjections(c.sendMessageOnEncrypted(message))
 	case finished:
 		messageEventConnectionEnded(c)
-		return nil, errors.New("otr: cannot send message because secure conversation has finished")
+		return c.withInjections(nil, errors.New("otr: cannot send message because secure conversation has finished"))
 	}
 
-	return nil, errors.New("otr: cannot send message in current state")
+	return c.withInjections(nil, errors.New("otr: cannot send message in current state"))
 }
 
 func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMessage, error) {
@@ -41,19 +41,18 @@ func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMess
 	return []ValidMessage{makeCopy(message)}, nil
 }
 
-func (c *Conversation) generatePotentialErrorMessage(before []ValidMessage, ec ErrorCode) []ValidMessage {
+func (c *Conversation) generatePotentialErrorMessage(ec ErrorCode) {
 	if c.getEventHandler().WishToHandleErrorMessage() {
 		msg := c.getEventHandler().HandleErrorMessage(ec)
-		return []ValidMessage{append(append(errorMarker, ' '), msg...)}
+		c.injectMessage(append(append(errorMarker, ' '), msg...))
 	}
-	return before
 }
 
 func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMessage, error) {
 	result, err := c.createSerializedDataMessage(message, messageFlagNormal, []tlv{})
 	if err != nil {
 		messageEventEncryptionError(c)
-		result = c.generatePotentialErrorMessage(result, ErrorCodeEncryptionError)
+		c.generatePotentialErrorMessage(ErrorCodeEncryptionError)
 	}
 
 	return result, err

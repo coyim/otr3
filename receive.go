@@ -113,7 +113,7 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 				messageEventReceivedMalformedMessage(c)
 				e = ErrorCodeMessageMalformed
 			}
-			plain = MessagePlaintext(c.generatePotentialErrorMessage([]ValidMessage{ValidMessage(plain)}, e)[0])
+			c.generatePotentialErrorMessage(e)
 		}
 	} else {
 		toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))
@@ -135,7 +135,7 @@ func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend [
 	var messagesToSend []messageWithHeader
 	switch msgType {
 	case msgGuessError:
-		return c.receiveErrorMessage(message)
+		return c.withInjectionsPlain(c.receiveErrorMessage(message))
 	case msgGuessQuery:
 		messagesToSend, err = c.receiveQueryMessage(message)
 	case msgGuessTaggedPlaintext:
@@ -147,7 +147,7 @@ func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend [
 	case msgGuessFragment:
 		c.fragmentationContext, err = c.receiveFragment(c.fragmentationContext, message)
 		if fragmentsFinished(c.fragmentationContext) {
-			return c.Receive(c.fragmentationContext.frag)
+			return c.withInjectionsPlain(c.Receive(c.fragmentationContext.frag))
 		}
 	case msgGuessUnknown:
 		messageEventReceivedUnrecognizedMessage(c)
@@ -155,5 +155,5 @@ func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend [
 		plain, messagesToSend, err = c.receiveEncoded(encodedMessage(message))
 	}
 
-	return c.toSendEncoded(plain, messagesToSend, err)
+	return c.withInjectionsPlain(c.toSendEncoded(plain, messagesToSend, err))
 }

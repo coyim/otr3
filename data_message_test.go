@@ -251,7 +251,7 @@ func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(
 	}, MessageEventReceivedMessageUnreadable, nil, nil)
 }
 
-func Test_processDataMessage_returnsACustomErrorMessageIfOneIsAvailable(t *testing.T) {
+func Test_Receive_returnsACustomErrorMessageIfOneIsAvailable(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.ourKey = bobPrivateKey
 
@@ -270,8 +270,9 @@ func Test_processDataMessage_returnsACustomErrorMessageIfOneIsAvailable(t *testi
 			return []byte("white hole happened")
 		}, nil, nil)
 
-	p, _, _ := c.receiveDecoded(msg)
-	assertDeepEquals(t, string(p), "?OTR Error: nova happened")
+	c.receiveDecoded(msg)
+	ts, _ := c.withInjections(nil, nil)
+	assertDeepEquals(t, string(ts[0]), "?OTR Error: nova happened")
 }
 
 func Test_processDataMessage_signalsThatMessageIsMalformedIfSomeOtherErrorHappens(t *testing.T) {
@@ -301,8 +302,9 @@ func Test_processDataMessage_callsErrorMessageHandlerAndReturnsTheResultAsAnOTRE
 			return []byte("dandelion happened")
 		}, nil, nil)
 
-	plain, _, _ := c.receiveDecoded(msg)
-	assertDeepEquals(t, string(plain), "?OTR Error: sunflower happened")
+	c.receiveDecoded(msg)
+	ts, _ := c.withInjections(nil, nil)
+	assertDeepEquals(t, string(ts[0]), "?OTR Error: sunflower happened")
 }
 
 func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {

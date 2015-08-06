@@ -129,6 +129,27 @@ func Test_receiveFragment_signalsMessageEventIfInstanceTagsDoesNotMatch(t *testi
 	}, MessageEventReceivedMessageForOtherInstance, nil, nil)
 }
 
+func Test_receiveFragment_sendsAnErrorMessageAboutMalformedIfHandlerExists(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.ourInstanceTag = 0x103
+	c.theirInstanceTag = 0x0A
+
+	existingContext := fragmentationContext{frag: []byte("shouldn't change")}
+
+	c.eventHandler = emptyEventHandlerWith(
+		func() bool { return true },
+		func(error ErrorCode) []byte {
+			if error == ErrorCodeMessageMalformed {
+				return []byte("black happened")
+			}
+			return []byte("white happened")
+		}, nil, nil)
+
+	c.receiveFragment(existingContext, []byte("?OTR|0000000A|00000103,00001,00004,one ,"))
+	ts, _ := c.withInjections(nil, nil)
+	assertDeepEquals(t, string(ts[0]), "?OTR Error: black happened")
+}
+
 func Test_receiveFragment_signalsMalformedMessageIfTheirInstanceTagIsBelowTheLimit(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.ourInstanceTag = 0x103

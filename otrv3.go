@@ -129,6 +129,7 @@ func (c *Conversation) generateInstanceTag() error {
 
 func malformedMessage(c *Conversation) {
 	messageEventReceivedMalformedMessage(c)
+	c.generatePotentialErrorMessage(ErrorCodeMessageMalformed)
 }
 
 func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error) {
