@@ -108,7 +108,7 @@ func (c *Conversation) End() (toSend [][]byte) {
 // aborted) or SMPFailed.
 func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend [][]byte, err error) {
 	c.compatInit()
-	ret, err := c.StartAuthenticate(question, mutualSecret)
+	ret, err := c.Conversation.Authenticate(question, mutualSecret)
 	return otr3.Bytes(ret), err
 }
 

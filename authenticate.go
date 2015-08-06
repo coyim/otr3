@@ -29,3 +29,18 @@ func (c *Conversation) potentialAuthError(toSend []messageWithHeader, err error)
 	}
 	return toSend, err
 }
+
+// Authenticate begins an authentication with the peer. Authentication involves
+// an optional challenge message and a shared secret. The authentication
+// proceeds until either Receive returns SMPComplete, SMPSecretNeeded (which
+// indicates that a new authentication is happening and thus this one was
+// aborted) or SMPFailed.
+func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend []ValidMessage, err error) {
+	switch c.smp.state.(type) {
+	case smpStateWaitingForSecret:
+		toSend, err = c.ProvideAuthenticationSecret(mutualSecret)
+	default:
+		toSend, err = c.StartAuthenticate(question, mutualSecret)
+	}
+	return
+}
