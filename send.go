@@ -49,15 +49,6 @@ func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMess
 	return result, err
 }
 
-func (c *Conversation) fragEncode(msg messageWithHeader) []ValidMessage {
-	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
-	return c.fragment(c.encode(msg), bytesPerFragment)
-}
-
-func (c *Conversation) encode(msg messageWithHeader) encodedMessage {
-	return append(append(msgMarker, b64encode(msg)...), '.')
-}
-
 func (c *Conversation) sendDHCommit() (toSend messageWithHeader, err error) {
 	toSend, err = c.dhCommitMessage()
 	if err != nil {

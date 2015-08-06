@@ -67,6 +67,15 @@ func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs [
 	return c.fragEncode(res), nil
 }
 
+func (c *Conversation) fragEncode(msg messageWithHeader) []ValidMessage {
+	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
+	return c.fragment(c.encode(msg), bytesPerFragment)
+}
+
+func (c *Conversation) encode(msg messageWithHeader) encodedMessage {
+	return append(append(msgMarker, b64encode(msg)...), '.')
+}
+
 func (c *Conversation) processDataMessage(header, msg []byte) (plain MessagePlaintext, toSend messageWithHeader, err error) {
 	ignoreUnreadable := (extractDataMessageFlag(msg) & messageFlagIgnoreUnreadable) == messageFlagIgnoreUnreadable
 	plain, toSend, err = c.processDataMessageWithRawErrors(header, msg)
