@@ -70,6 +70,28 @@ func Test_Send_signalsEncryptionErrorMessageEventIfSomethingWentWrong(t *testing
 	}, MessageEventEncryptionError, nil, nil)
 }
 
+func Test_Send_callsErrorMessageHandlerAndReturnsTheResultAsAnOTRErrorMessage(t *testing.T) {
+	msg := []byte("hello")
+
+	c := bobContextAfterAKE()
+	c.msgState = encrypted
+	c.Policies = policies(allowV3)
+	c.keys.theirKeyID = 0
+
+	c.eventHandler = emptyEventHandlerWith(
+		func() bool { return true },
+		func(error ErrorCode) []byte {
+			if error == ErrorCodeEncryptionError {
+				return []byte("snowflake happened")
+			} else {
+				return []byte("nova happened")
+			}
+		}, nil, nil)
+
+	msgs, _ := c.Send(msg)
+	assertDeepEquals(t, msgs[0], ValidMessage("?OTR Error: snowflake happened"))
+}
+
 func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected(t *testing.T) {
 	m := []byte("hello")
 	c := bobContextAfterAKE()

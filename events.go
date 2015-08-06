@@ -4,8 +4,9 @@ package otr3
 type ErrorCode int
 
 const (
-// // ErrorCodeEncryptionError means an error occured while encrypting a message
-// ErrorCodeEncryptionError ErrorCode = iota
+	// ErrorCodeEncryptionError means an error occured while encrypting a message
+	ErrorCodeEncryptionError ErrorCode = iota
+
 // // ErrorCodeMessageNotInPrivate means we sent encrypted message to somebody who is not in a mutual OTR session
 // ErrorCodeMessageNotInPrivate
 // // ErrorCodeMessageUnreadable means we sent an unreadable encrypted message
@@ -91,8 +92,10 @@ const (
 
 // EventHandler contains the configuration necessary to be able to communicate events to the client
 type EventHandler interface {
+	// WishToHandleErrorMessage returns true if a valid implementation of HandleErrorMessage is available
+	WishToHandleErrorMessage() bool
 	// HandleErrorMessage should return a string according to the error event. This string will be concatenated to an OTR header to produce an OTR protocol error message
-	HandleErrorMessage(error ErrorCode) string
+	HandleErrorMessage(error ErrorCode) []byte
 	// HandleSMPEvent should update the authentication UI with respect to SMP events
 	HandleSMPEvent(event SMPEvent, progressPercent int, question string)
 	// HandleMessageEvent should handle and send the appropriate message(s) to the sender/recipient depending on the message events
@@ -100,12 +103,17 @@ type EventHandler interface {
 }
 
 type dynamicEventHandler struct {
-	handleErrorMessage func(error ErrorCode) string
-	handleSMPEvent     func(event SMPEvent, progressPercent int, question string)
-	handleMessageEvent func(event MessageEvent, message []byte, err error)
+	wishToHandleErrorMessage func() bool
+	handleErrorMessage       func(error ErrorCode) []byte
+	handleSMPEvent           func(event SMPEvent, progressPercent int, question string)
+	handleMessageEvent       func(event MessageEvent, message []byte, err error)
 }
 
-func (d dynamicEventHandler) HandleErrorMessage(error ErrorCode) string {
+func (d dynamicEventHandler) WishToHandleErrorMessage() bool {
+	return d.wishToHandleErrorMessage()
+}
+
+func (d dynamicEventHandler) HandleErrorMessage(error ErrorCode) []byte {
 	return d.handleErrorMessage(error)
 }
 
@@ -117,8 +125,12 @@ func (d dynamicEventHandler) HandleMessageEvent(event MessageEvent, message []by
 	d.handleMessageEvent(event, message, err)
 }
 
-func emptyErrorMessageHandler(_ ErrorCode) string {
-	return ""
+func emptyWishToHandleErrorMessages() bool {
+	return false
+}
+
+func emptyErrorMessageHandler(_ ErrorCode) []byte {
+	return nil
 }
 
 func emptySMPEventHandler(_ SMPEvent, _ int, _ string) {
@@ -127,13 +139,44 @@ func emptySMPEventHandler(_ SMPEvent, _ int, _ string) {
 func emptyMessageEventHandler(_ MessageEvent, _ []byte, _ error) {
 }
 
+func emptyEventHandler() dynamicEventHandler {
+	return dynamicEventHandler{
+		emptyWishToHandleErrorMessages,
+		emptyErrorMessageHandler,
+		emptySMPEventHandler,
+		emptyMessageEventHandler,
+	}
+}
+
+func emptyEventHandlerWith(
+	wishToHandle func() bool,
+	handleErrors func(ErrorCode) []byte,
+	handleSMP func(SMPEvent, int, string),
+	handleEvent func(MessageEvent, []byte, error),
+) EventHandler {
+	e := emptyEventHandler()
+	if wishToHandle != nil {
+		e.wishToHandleErrorMessage = wishToHandle
+	}
+	if handleErrors != nil {
+		e.handleErrorMessage = handleErrors
+	}
+	if handleSMP != nil {
+		e.handleSMPEvent = handleSMP
+	}
+	if handleEvent != nil {
+		e.handleMessageEvent = handleEvent
+	}
+	return e
+}
+
+func (c *Conversation) setEmptyEventHandler() {
+	c.eventHandler = emptyEventHandler()
+}
+
 func (c *Conversation) getEventHandler() EventHandler {
 	if c.eventHandler == nil {
-		c.eventHandler = dynamicEventHandler{
-			emptyErrorMessageHandler,
-			emptySMPEventHandler,
-			emptyMessageEventHandler,
-		}
+		c.setEmptyEventHandler()
 	}
 	return c.eventHandler
 }

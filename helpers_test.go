@@ -114,14 +114,12 @@ func newConversation(v otrVersion, rand io.Reader) *Conversation {
 func (c *Conversation) expectMessageEvent(t *testing.T, f func(), expectedEvent MessageEvent, expectedMessage []byte, expectedError error) {
 	called := false
 
-	c.eventHandler = dynamicEventHandler{
-		handleMessageEvent: func(event MessageEvent, message []byte, err error) {
-			assertDeepEquals(t, event, expectedEvent)
-			assertDeepEquals(t, message, expectedMessage)
-			assertDeepEquals(t, err, expectedError)
-			called = true
-		},
-	}
+	c.eventHandler = emptyEventHandlerWith(nil, nil, nil, func(event MessageEvent, message []byte, err error) {
+		assertDeepEquals(t, event, expectedEvent)
+		assertDeepEquals(t, message, expectedMessage)
+		assertDeepEquals(t, err, expectedError)
+		called = true
+	})
 
 	f()
 
@@ -129,11 +127,9 @@ func (c *Conversation) expectMessageEvent(t *testing.T, f func(), expectedEvent 
 }
 
 func (c *Conversation) doesntExpectMessageEvent(t *testing.T, f func()) {
-	c.eventHandler = dynamicEventHandler{
-		handleMessageEvent: func(event MessageEvent, message []byte, err error) {
-			t.Errorf("Didn't expect a message event, but got: %#v with msg %v and error %#v", event, message, err)
-		},
-	}
+	c.eventHandler = emptyEventHandlerWith(nil, nil, nil, func(event MessageEvent, message []byte, err error) {
+		t.Errorf("Didn't expect a message event, but got: %#v with msg %v and error %#v", event, message, err)
+	})
 
 	f()
 }
@@ -141,14 +137,13 @@ func (c *Conversation) doesntExpectMessageEvent(t *testing.T, f func()) {
 func (c *Conversation) expectSMPEvent(t *testing.T, f func(), expectedEvent SMPEvent, expectedProgress int, expectedQuestion string) {
 	called := false
 
-	c.eventHandler = dynamicEventHandler{
-		handleSMPEvent: func(event SMPEvent, progressPercent int, question string) {
-			assertEquals(t, event, expectedEvent)
-			assertEquals(t, progressPercent, expectedProgress)
-			assertEquals(t, question, expectedQuestion)
-			called = true
-		},
-	}
+	c.setEmptyEventHandler()
+	c.eventHandler = emptyEventHandlerWith(nil, nil, func(event SMPEvent, progressPercent int, question string) {
+		assertEquals(t, event, expectedEvent)
+		assertEquals(t, progressPercent, expectedProgress)
+		assertEquals(t, question, expectedQuestion)
+		called = true
+	}, nil)
 
 	f()
 

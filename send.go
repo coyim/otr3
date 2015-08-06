@@ -45,6 +45,10 @@ func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMess
 	result, err := c.createSerializedDataMessage(message, messageFlagNormal, []tlv{})
 	if err != nil {
 		messageEventEncryptionError(c)
+		if c.getEventHandler().WishToHandleErrorMessage() {
+			msg := c.getEventHandler().HandleErrorMessage(ErrorCodeEncryptionError)
+			result = []ValidMessage{append(append(errorMarker, ' '), msg...)}
+		}
 	}
 
 	return result, err
