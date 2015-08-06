@@ -147,7 +147,7 @@ func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.msgState = encrypted
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{
@@ -167,7 +167,7 @@ func Test_processDataMessage_deserializeAndDecryptDataMsg(t *testing.T) {
 func Test_processDataMessage_willGenerateAHeartBeatEventForAnEmptyMessage(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 	bob.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{
@@ -188,7 +188,7 @@ func Test_processDataMessage_willGenerateAHeartBeatEventForAnEmptyMessage(t *tes
 func Test_processDataMessage_processSMPMessage(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 
 	bob.smp.state = smpStateExpect2{}
 	bob.smp.s1 = fixtureSmp1()
@@ -224,7 +224,7 @@ func Test_processDataMessage_returnsErrorIfSomethingGoesWrongWithDeserialize(t *
 
 func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{})
@@ -238,7 +238,7 @@ func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing
 
 func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{})
@@ -253,7 +253,7 @@ func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(
 
 func Test_processDataMessage_returnsACustomErrorMessageIfOneIsAvailable(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{})
@@ -276,7 +276,7 @@ func Test_processDataMessage_returnsACustomErrorMessageIfOneIsAvailable(t *testi
 
 func Test_processDataMessage_signalsThatMessageIsMalformedIfSomeOtherErrorHappens(t *testing.T) {
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("Making sure this isn't a heartbeat message")})
 	c.msgState = encrypted
@@ -288,7 +288,7 @@ func Test_processDataMessage_signalsThatMessageIsMalformedIfSomeOtherErrorHappen
 func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 
 	var msg []byte
 	msg, bob.keys = fixtureDataMsg(plainDataMsg{})
@@ -314,7 +314,7 @@ func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 func Test_processDataMessage_rotateOurKeysAfterDecryptingTheMessage(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 
 	var msg []byte
 	msg, bob.keys = fixtureDataMsg(plainDataMsg{})
@@ -335,7 +335,7 @@ func Test_processDataMessage_rotateOurKeysAfterDecryptingTheMessage(t *testing.T
 func Test_processDataMessage_willReturnAHeartbeatMessageAfterAPlainTextMessage(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 	bob.heartbeat.lastSent = time.Now().Add(-61 * time.Second)
 
 	var msg []byte
@@ -360,7 +360,7 @@ func Test_processDataMessage_willReturnAHeartbeatMessageAfterAPlainTextMessage(t
 func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 
 	var msg []byte
 	msg, bob.keys = fixtureDataMsg(plainDataMsg{})
@@ -380,7 +380,7 @@ func Test_processDataMessage_rotateTheirKeysAfterDecryptingTheMessage(t *testing
 func Test_processDataMessage_ignoresTLVsWhenFailsToRotateKeys(t *testing.T) {
 	bob := newConversation(otrV3{}, fixedRand([]string{}))
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 
 	// setup state for receiving a SMP message 2
 	bob.smp.state = smpStateExpect2{}
@@ -409,8 +409,8 @@ func Test_processDataMessage_returnErrorWhenOurKeyIDUnexpected(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV2)
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
-	bob.TheirKey = &alicePrivateKey.PublicKey
+	bob.ourKey = bobPrivateKey
+	bob.theirKey = &alicePrivateKey.PublicKey
 	bob.keys.ourKeyID = 3
 	bob.keys.theirKeyID = 1
 	bob.keys.ourPreviousDHKeys.priv = bnFromHex("28cea443a1ddeae5c39fd9061a429243eeb52f9f963dcb483a77ec9ed201f8eb3e898fb645657f27")

@@ -50,8 +50,7 @@ type Conversation struct {
 
 func (c *Conversation) compatInit() {
 	c.Conversation.Policies.AllowV2()
-	c.OurKey = &c.PrivateKey.PrivateKey
-	c.TheirKey = &c.TheirPublicKey.PublicKey
+	c.Conversation.SetKeys(&c.PrivateKey.PrivateKey, &c.TheirPublicKey.PublicKey)
 }
 
 // Receive handles a message from a peer. It returns a human readable message,

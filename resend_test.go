@@ -65,7 +65,7 @@ func Test_maybeRetransmit_returnsNothingWhenShouldntRetransmit(t *testing.T) {
 func Test_maybeRetransmit_createsADataMessageWithTheExactMessageWhenAskedToRetransmitExact(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{
@@ -91,7 +91,7 @@ func Test_maybeRetransmit_createsADataMessageWithTheExactMessageWhenAskedToRetra
 func Test_maybeRetransmit_createsADataMessageWithTheResendPrefixAndMessageWhenAskedToRetransmitWithPrefix(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{
@@ -118,7 +118,7 @@ func Test_maybeRetransmit_createsADataMessageWithTheResendPrefixAndMessageWhenAs
 func Test_maybeRetransmit_createsADataMessageWithTheCustomResendPrefixAndMessageWhenAskedToRetransmitWithPrefix(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{
@@ -148,7 +148,7 @@ func Test_maybeRetransmit_createsADataMessageWithTheCustomResendPrefixAndMessage
 func Test_maybeRetransmit_updatesLastSentWhenSendingAMessage(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{
@@ -172,7 +172,7 @@ func Test_maybeRetransmit_updatesLastSentWhenSendingAMessage(t *testing.T) {
 func Test_maybeRetransmit_returnsErrorIfWeFailAtGeneratingDataMsg(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{
@@ -191,7 +191,7 @@ func Test_maybeRetransmit_returnsErrorIfWeFailAtGeneratingDataMsg(t *testing.T) 
 func Test_maybeRetransmit_signalsMessageEventWhenResendingMessage(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{
@@ -213,7 +213,7 @@ func Test_maybeRetransmit_signalsMessageEventWhenResendingMessage(t *testing.T) 
 func Test_maybeRetransmit_doesntSignalMessageEventWhenResendingMessageExact(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	plain := plainDataMsg{

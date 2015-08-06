@@ -119,16 +119,16 @@ func Test_Recieve_signalsAMessageEventWhenWeReceiveADataMessageForAnotherInstanc
 	alice := &Conversation{Rand: rand.Reader}
 	alice.ourInstanceTag = 0x201
 	alice.theirInstanceTag = 0x301
-	alice.OurKey = alicePrivateKey
+	alice.ourKey = alicePrivateKey
 	alice.Policies = policies(allowV3)
-	alice.TheirKey = &bobPrivateKey.PublicKey
+	alice.theirKey = &bobPrivateKey.PublicKey
 
 	bob := &Conversation{Rand: rand.Reader}
 	bob.ourInstanceTag = 0x301
 	bob.theirInstanceTag = 0x201
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 	bob.Policies = policies(allowV3)
-	bob.TheirKey = &alicePrivateKey.PublicKey
+	bob.theirKey = &alicePrivateKey.PublicKey
 
 	var toSend []ValidMessage
 	msg := alice.queryMessage()

@@ -15,8 +15,8 @@ func Test_StartAuthenticate_failsIfThereIsntEnoughRandomness(t *testing.T) {
 	c.Rand = fixedRand([]string{"ABCD"})
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = alicePrivateKey
-	c.TheirKey = &bobPrivateKey.PublicKey
+	c.ourKey = alicePrivateKey
+	c.theirKey = &bobPrivateKey.PublicKey
 
 	_, e := c.StartAuthenticate("", []byte("hello world"))
 	assertEquals(t, e, errShortRandomRead)
@@ -26,8 +26,8 @@ func Test_StartAuthenticate_generatesAnSMPSecretFromTheSharedSecret(t *testing.T
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = alicePrivateKey
-	c.TheirKey = &bobPrivateKey.PublicKey
+	c.ourKey = alicePrivateKey
+	c.theirKey = &bobPrivateKey.PublicKey
 
 	_, e := c.StartAuthenticate("", []byte("hello world"))
 	assertEquals(t, e, nil)
@@ -38,8 +38,8 @@ func Test_StartAuthenticate_generatesAndReturnsTheFirstSMPMessageToSend(t *testi
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 
 	msg, e := c.StartAuthenticate("", []byte("hello world"))
 	assertEquals(t, e, nil)
@@ -52,8 +52,8 @@ func Test_StartAuthenticate_generatesAndSetsTheFirstMessageOnTheConversation(t *
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.s1 = nil
 
 	c.StartAuthenticate("", []byte("hello world"))
@@ -66,8 +66,8 @@ func Test_StartAuthenticate_generatesAn1QMessageIfAQuestionIsGiven(t *testing.T)
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.s1 = nil
 
 	c.StartAuthenticate("Where did we meet?", []byte("hello world"))
@@ -81,8 +81,8 @@ func Test_StartAuthenticate_generatesAnAbortMessageTLVIfWeAreInAnSMPStateAlready
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.s1 = nil
 	c.smp.state = smpStateExpect3{}
 
@@ -97,8 +97,8 @@ func Test_ProvideAuthenticationSecret_failsIfWeAreNotCurrentlyEncrypted(t *testi
 	c := bobContextAfterAKE()
 	c.msgState = plainText
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	_, e := c.ProvideAuthenticationSecret([]byte("hello world"))
@@ -109,8 +109,8 @@ func Test_ProvideAuthenticationSecret_generatesAnSMPSecretFromTheSharedSecret(t 
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	_, e := c.ProvideAuthenticationSecret([]byte("hello world"))
@@ -122,8 +122,8 @@ func Test_ProvideAuthenticationSecret_failsAndAbortsIfWeAreNotWaitingForASecret(
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateExpect3{}
 
 	_, e := c.ProvideAuthenticationSecret([]byte("hello world"))
@@ -134,8 +134,8 @@ func Test_ProvideAuthenticationSecret_continuesWithMessageProcessingIfInTheRight
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	msg, e := c.ProvideAuthenticationSecret([]byte("hello world"))
@@ -149,8 +149,8 @@ func Test_ProvideAuthenticationSecret_setsTheNextMessageState(t *testing.T) {
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	_, e := c.ProvideAuthenticationSecret([]byte("hello world"))
@@ -164,8 +164,8 @@ func Test_ProvideAuthenticationSecret_returnsFailureFromContinueSMP(t *testing.T
 	c.Rand = fixedRand([]string{"ABCD"})
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	_, e := c.ProvideAuthenticationSecret([]byte("hello world"))

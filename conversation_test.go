@@ -284,7 +284,7 @@ func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {
 func Test_receive_ignoresMessagesWithWrongInstanceTags(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 
 	var msg []byte
 	msg, bob.keys = fixtureDataMsg(plainDataMsg{})

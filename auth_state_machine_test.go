@@ -200,7 +200,7 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
 	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 
 	assertDeepEquals(t, c.ake.theirPublicValue, nilB)
 
@@ -443,7 +443,7 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyR
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
 	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, []byte{0x00, 0x02})
 
@@ -457,7 +457,7 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMess
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
 	c.initAKE()
 	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 
 	sameDHKeyMsg := fixtureDHKeyMsgBody(otrV3{})
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, sameDHKeyMsg)
@@ -472,7 +472,7 @@ func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyRet
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
 	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 
 	_, _, err := authStateAwaitingSig{}.receiveDHKeyMessage(c, []byte{0x01, 0x02})
 
@@ -588,8 +588,8 @@ func Test_authStateAwaitingSig_String_returnsTheCorrectString(t *testing.T) {
 
 func Test_akeHasFinished_willSignalThatWeAreTalkingToOurselvesIfWeAre(t *testing.T) {
 	c := bobContextAfterAKE()
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &bobPrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &bobPrivateKey.PublicKey
 
 	c.expectMessageEvent(t, func() {
 		c.akeHasFinished()
@@ -598,8 +598,8 @@ func Test_akeHasFinished_willSignalThatWeAreTalkingToOurselvesIfWeAre(t *testing
 
 func Test_akeHasFinished_wipesAKEKeys(t *testing.T) {
 	c := &Conversation{}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &bobPrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &bobPrivateKey.PublicKey
 
 	revKey := akeKeys{
 		c:  [aes.BlockSize]byte{1, 2, 3},

@@ -13,8 +13,8 @@ type Conversation struct {
 	theirInstanceTag uint32
 
 	ssid     [8]byte
-	OurKey   *PrivateKey
-	TheirKey *PublicKey
+	ourKey   *PrivateKey
+	theirKey *PublicKey
 
 	ake       *ake
 	smp       smp
@@ -85,4 +85,9 @@ func (c *Conversation) End() (toSend []ValidMessage, err error) {
 	c.keys.ourPreviousDHKeys.wipe()
 	wipeBigInt(c.keys.theirCurrentDHPubKey)
 	return
+}
+
+func (c *Conversation) SetKeys(ourKey *PrivateKey, theirKey *PublicKey) {
+	c.ourKey = ourKey
+	c.theirKey = theirKey
 }

@@ -58,7 +58,7 @@ func fixtureDHCommitMsgV2() []byte {
 
 func fixtureDHKeyMsg(v otrVersion) []byte {
 	c := fixtureConversationWithVersion(v)
-	c.OurKey = alicePrivateKey
+	c.ourKey = alicePrivateKey
 	msg, _ := c.dhKeyMessage()
 	msg, _ = c.wrapMessageHeader(msgTypeDHKey, msg)
 	return msg
@@ -162,7 +162,7 @@ func bobContextAtAwaitingDHKey() *Conversation {
 	c.initAKE()
 	c.Policies.add(allowV3)
 	c.ake.state = authStateAwaitingDHKey{}
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 
 	copy(c.ake.r[:], fixedr)      // stored at sendDHCommit
 	c.setSecretExponent(fixedX()) // stored at sendDHCommit
@@ -182,7 +182,7 @@ func aliceContextAtAwaitingDHCommit() *Conversation {
 	c.initAKE()
 	c.Policies.add(allowV2)
 	c.ake.state = authStateNone{}
-	c.OurKey = alicePrivateKey
+	c.ourKey = alicePrivateKey
 	return c
 }
 
@@ -191,7 +191,7 @@ func aliceContextAtAwaitingRevealSig() *Conversation {
 	c.initAKE()
 	c.Policies.add(allowV2)
 	c.ake.state = authStateAwaitingRevealSig{}
-	c.OurKey = alicePrivateKey
+	c.ourKey = alicePrivateKey
 
 	copy(c.ake.hashedGx[:], hashedFixedGX()) //stored at receiveDHCommit
 	c.ake.encryptedGx = encryptedFixedGX()   //stored at receiveDHCommit

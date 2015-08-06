@@ -48,14 +48,14 @@ func Test_receive_doesntGenerateErrorIfThereIsNoSecureChannelButTheMessageIsIGNO
 
 func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
-	alice.OurKey = alicePrivateKey
+	alice.ourKey = alicePrivateKey
 	alice.Policies = policies(allowV2 | allowV3)
-	alice.TheirKey = &bobPrivateKey.PublicKey
+	alice.theirKey = &bobPrivateKey.PublicKey
 
 	bob := &Conversation{Rand: rand.Reader}
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 	bob.Policies = policies(allowV2 | allowV3)
-	bob.TheirKey = &alicePrivateKey.PublicKey
+	bob.theirKey = &alicePrivateKey.PublicKey
 
 	var toSend []ValidMessage
 	var err error
@@ -104,14 +104,14 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 
 func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
-	alice.OurKey = alicePrivateKey
+	alice.ourKey = alicePrivateKey
 	alice.Policies = policies(allowV3)
-	alice.TheirKey = &bobPrivateKey.PublicKey
+	alice.theirKey = &bobPrivateKey.PublicKey
 
 	bob := &Conversation{Rand: rand.Reader}
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 	bob.Policies = policies(allowV3)
-	bob.TheirKey = &alicePrivateKey.PublicKey
+	bob.theirKey = &alicePrivateKey.PublicKey
 
 	var toSend []ValidMessage
 	var err error
@@ -164,11 +164,11 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 
 	alice := &Conversation{Rand: rand.Reader}
 	alice.Policies = policies(allowV2 | allowV3)
-	alice.OurKey = alicePrivateKey
+	alice.ourKey = alicePrivateKey
 
 	bob := &Conversation{Rand: rand.Reader}
 	bob.Policies = policies(allowV2 | allowV3)
-	bob.OurKey = bobPrivateKey
+	bob.ourKey = bobPrivateKey
 
 	msg := []byte("?OTRv3?")
 

@@ -35,8 +35,8 @@ func Test_smpStateWaitingForSecret_goToExpectState3WhenReceivesContinueSmpMessag
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	msg := fixtureMessage1()
@@ -335,8 +335,8 @@ func Test_smpStateWaitingForSecret_continueMessage1_returnsErrorIfgenerateSMP2Fa
 	c.Rand = fixedRand([]string{"ABCD"})
 	c.msgState = encrypted
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
-	c.OurKey = bobPrivateKey
-	c.TheirKey = &alicePrivateKey.PublicKey
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	_, _, err := smpStateWaitingForSecret{msg: fixtureMessage1()}.continueMessage1(c, []byte("hello world"))

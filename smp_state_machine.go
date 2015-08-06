@@ -117,7 +117,7 @@ func (s smpStateWaitingForSecret) continueMessage1(c *Conversation, mutualSecret
 	}
 
 	// Using ssid here should always be safe - we can't be in an encrypted state without having gone through the AKE
-	c.smp.secret = generateSMPSecret(c.TheirKey.DefaultFingerprint(), c.OurKey.PublicKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
+	c.smp.secret = generateSMPSecret(c.theirKey.DefaultFingerprint(), c.ourKey.PublicKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
 	ret, err := c.generateSMP2(c.smp.secret, s.msg)
 	if err != nil {
 		return c.abortStateMachineWith(err)
@@ -227,7 +227,7 @@ func (smpStateExpect1) startAuthenticate(c *Conversation, question string, mutua
 	}
 
 	// Using ssid here should always be safe - we can't be in an encrypted state without having gone through the AKE
-	c.smp.secret = generateSMPSecret(c.OurKey.PublicKey.DefaultFingerprint(), c.TheirKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
+	c.smp.secret = generateSMPSecret(c.ourKey.PublicKey.DefaultFingerprint(), c.theirKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
 
 	s1, err := c.generateSMP1()
 

@@ -23,7 +23,7 @@ func (c *Conversation) akeHasFinished() error {
 	c.ake.wipe()
 	c.msgState = encrypted
 
-	if c.OurKey.PublicKey == *c.TheirKey {
+	if c.ourKey.PublicKey == *c.theirKey {
 		messageEventReflected(c)
 	}
 
