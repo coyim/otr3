@@ -212,6 +212,7 @@ func readParameter(r *bufio.Reader) (tag string, value *big.Int, end bool, ok bo
 	return
 }
 
+// Parse takes the given data and tries to parse it into the PublicKey receiver. It will return not ok if the data is malformed or not for a DSA key
 func (pub *PublicKey) Parse(in []byte) (index []byte, ok bool) {
 	var typeTag uint16
 	if index, typeTag, ok = extractShort(in); !ok || typeTag != dsaKeyTypeValue {
@@ -232,6 +233,7 @@ func (pub *PublicKey) Parse(in []byte) (index []byte, ok bool) {
 	return
 }
 
+// Parse will parse a Private Key from the given data, by first parsing the public key components and then the private key component. It returns not ok for the same reasons as PublicKey.Parse.
 func (priv *PrivateKey) Parse(in []byte) (index []byte, ok bool) {
 	if in, ok = priv.PublicKey.Parse(in); !ok {
 		return nil, false
@@ -251,6 +253,7 @@ func (priv *PrivateKey) serialize() []byte {
 	return appendMPI(result, priv.PrivateKey.X)
 }
 
+// Serialize will return the serialization of the private key to a byte array
 func (priv *PrivateKey) Serialize() []byte {
 	return priv.serialize()
 }
@@ -264,12 +267,14 @@ func (pub *PublicKey) serialize() []byte {
 	return result
 }
 
+// Fingerprint will generate a fingerprint of the serialized version of the key using the provided hash.
 func (pub *PublicKey) Fingerprint(h hash.Hash) []byte {
 	b := pub.serialize()
 	h.Write(b[2:]) // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
 	return h.Sum(nil)
 }
 
+// DefaultFingerprint generates a fingerprint of the public key using SHA-1.
 func (pub *PublicKey) DefaultFingerprint() []byte {
 	return pub.Fingerprint(sha1.New())
 }
@@ -363,6 +368,7 @@ func (priv *PrivateKey) Import(in []byte) bool {
 	return a.Cmp(priv.PrivateKey.Y) == 0
 }
 
+// Generate will generate a new DSA Private Key with the randomness provided. The parameter size used is 1024 and 160.
 func (priv *PrivateKey) Generate(rand io.Reader) error {
 	if err := dsa.GenerateParameters(&priv.PrivateKey.PublicKey.Parameters, rand, dsa.L1024N160); err != nil {
 		return err

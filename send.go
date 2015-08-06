@@ -2,6 +2,8 @@ package otr3
 
 import "errors"
 
+// Send takes a human readable message from the local user, possibly encrypts
+// it and returns zero or more messages to send to the peer.
 func (c *Conversation) Send(msg ValidMessage) ([]ValidMessage, error) {
 	if !c.Policies.isOTREnabled() {
 		return []ValidMessage{msg}, nil

@@ -2,6 +2,7 @@ package otr3
 
 import "io"
 
+// Conversation contains all the information for a specific connection between two peers in an IM system.
 type Conversation struct {
 	version otrVersion
 	Rand    io.Reader
@@ -67,15 +68,18 @@ func (c *Conversation) wrapMessageHeader(msgType byte, msg []byte) (messageWithH
 	return append(header, msg...), nil
 }
 
+// IsEncrypted returns true if the current conversation is private
 func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
 }
 
+// End ends a secure conversation by generating a termination message for
+// the peer and switches to unencrypted communication.
 func (c *Conversation) End() (toSend []ValidMessage, err error) {
 	switch c.msgState {
 	case plainText:
 	case encrypted:
-		//NOTE:Error can only happen when Rand reader is broken
+		// Error can only happen when Rand reader is broken
 		toSend, err = c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
 	case finished:
 	}

@@ -105,6 +105,7 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 	return
 }
 
+// Receive handles a message from a peer. It returns a human readable message and zero or more messages to send back to the peer.
 func (c *Conversation) Receive(message ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
 	if !c.Policies.isOTREnabled() {
 		return c.receiveWithoutOTR(message)
