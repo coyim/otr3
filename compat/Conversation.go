@@ -93,7 +93,8 @@ func (c *Conversation) End() (toSend [][]byte) {
 
 func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend [][]byte, err error) {
 	c.compatInit()
-	return [][]byte{}, nil
+	ret, err := c.StartAuthenticate(question, mutualSecret)
+	return otr3.Bytes(ret), err
 }
 
 func (c *Conversation) SMPQuestion() string {
