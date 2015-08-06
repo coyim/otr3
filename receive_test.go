@@ -172,13 +172,13 @@ func Test_Receive_Fragments(t *testing.T) {
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted
 	fragments, _ := alice.createSerializedDataMessage(MessagePlaintext("hello!"), messageFlagNormal, []tlv{})
-	plain, _, err := bob.Receive(fragments[0])
-	assertNil(t, err)
-	plain, _, err = bob.Receive(fragments[1])
-	assertNil(t, err)
-	plain, _, err = bob.Receive(fragments[2])
-	assertNil(t, err)
-	plain, _, err = bob.Receive(fragments[3])
-	assertNil(t, err)
+
+	var err error
+	var plain MessagePlaintext
+	for _, fragment := range fragments {
+		plain, _, err = bob.Receive(fragment)
+		assertNil(t, err)
+	}
+
 	assertDeepEquals(t, plain, MessagePlaintext("hello!"))
 }

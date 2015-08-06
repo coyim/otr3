@@ -5,7 +5,8 @@ func (c *Conversation) receiveWithoutOTR(message ValidMessage) (MessagePlaintext
 }
 
 func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
-	plain = MessagePlaintext(message[len(errorMarker):])
+	p := append([]byte{}, message[len(errorMarker):]...)
+	plain = MessagePlaintext(p)
 
 	if c.Policies.has(errorStartAKE) {
 		toSend = []ValidMessage{c.queryMessage()}
@@ -49,7 +50,8 @@ func (c *Conversation) checkPlaintextPolicies(plain MessagePlaintext) {
 }
 
 func (c *Conversation) receivePlaintext(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
-	plain = MessagePlaintext(message)
+	p := append([]byte{}, message...)
+	plain = MessagePlaintext(p)
 	c.checkPlaintextPolicies(plain)
 	return
 }
@@ -106,7 +108,11 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 }
 
 // Receive handles a message from a peer. It returns a human readable message and zero or more messages to send back to the peer.
-func (c *Conversation) Receive(message ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
+func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
+	message := make([]byte, len(m))
+	copy(message, m)
+	defer wipeBytes(message)
+
 	if !c.Policies.isOTREnabled() {
 		return c.receiveWithoutOTR(message)
 	}
