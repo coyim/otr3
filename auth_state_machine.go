@@ -117,6 +117,8 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []by
 
 	gxMPI := appendMPI(nil, c.ake.theirPublicValue)
 	hashedGx := sha256.Sum256(gxMPI)
+	//If yours is the higher hash value:
+	//Ignore the incoming D-H Commit message, but resend your D-H Commit message.
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
 		dhCommitMsg, err := c.wrapMessageHeader(msgTypeDHCommit, c.serializeDHCommit(c.ake.theirPublicValue))
 		if err != nil {
@@ -125,6 +127,9 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []by
 		return authStateAwaitingRevealSig{}, dhCommitMsg, nil
 	}
 
+	//Otherwise:
+	//Forget your old gx value that you sent (encrypted) earlier, and pretend you're in AUTHSTATE_NONE; i.e. reply with a D-H Key Message, and transition authstate to AUTHSTATE_AWAITING_REVEALSIG.
+	wipeBigInt(c.ake.ourPublicValue)
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
