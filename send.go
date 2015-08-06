@@ -4,9 +4,13 @@ import "errors"
 
 // Send takes a human readable message from the local user, possibly encrypts
 // it and returns zero or more messages to send to the peer.
-func (c *Conversation) Send(msg ValidMessage) ([]ValidMessage, error) {
+func (c *Conversation) Send(m ValidMessage) ([]ValidMessage, error) {
+	message := make([]byte, len(m))
+	copy(message, m)
+	defer wipeBytes(message)
+
 	if !c.Policies.isOTREnabled() {
-		return []ValidMessage{msg}, nil
+		return []ValidMessage{append([]byte{}, message...)}, nil
 	}
 	switch c.msgState {
 	case plainText:
@@ -16,11 +20,11 @@ func (c *Conversation) Send(msg ValidMessage) ([]ValidMessage, error) {
 			return []ValidMessage{c.queryMessage()}, nil
 		}
 		if c.Policies.has(sendWhitespaceTag) {
-			msg = c.appendWhitespaceTag(msg)
+			message = c.appendWhitespaceTag(message)
 		}
-		return []ValidMessage{msg}, nil
+		return []ValidMessage{append([]byte{}, message...)}, nil
 	case encrypted:
-		result, err := c.createSerializedDataMessage(msg, messageFlagNormal, []tlv{})
+		result, err := c.createSerializedDataMessage(message, messageFlagNormal, []tlv{})
 		if err != nil {
 			messageEventEncryptionError(c)
 		}
