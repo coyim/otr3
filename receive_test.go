@@ -192,3 +192,23 @@ func Test_receiveErrorMessage_updateMayRetransmitToRetransmitWithPrefix(t *testi
 
 	assertEquals(t, c.resend.mayRetransmit, retransmitWithPrefix)
 }
+
+func Test_receiveErrorMessage_willSignalAnEventWithTheErrorMessage(t *testing.T) {
+	c := aliceContextAfterAKE()
+	c.msgState = encrypted
+	m := []byte("?OTR Error:error msg")
+
+	c.expectMessageEvent(t, func() {
+		c.receiveErrorMessage(m)
+	}, MessageEventReceivedMessageGeneralError, []byte("error msg"), nil)
+}
+
+func Test_receiveErrorMessage_willSignalAnEventWithTheErrorMessageWithoutLeadingSpace(t *testing.T) {
+	c := aliceContextAfterAKE()
+	c.msgState = encrypted
+	m := []byte("?OTR Error: an error msg")
+
+	c.expectMessageEvent(t, func() {
+		c.receiveErrorMessage(m)
+	}, MessageEventReceivedMessageGeneralError, []byte("an error msg"), nil)
+}

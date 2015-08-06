@@ -74,10 +74,9 @@ const (
 	// MessageEventLogHeartbeatSent is triggered when we have sent a heartbeat.
 	MessageEventLogHeartbeatSent
 
-	// * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
-	// *      Received a general OTR error. The argument 'message' will
-	// *      also be passed and it will contain the OTR error message.
-	// MessageEventReceivedMessageGeneralError
+	// MessageEventReceivedMessageGeneralError will be signaled when we receive an OTR error from the peer.
+	// The message parameter will be passed, containing the error message
+	MessageEventReceivedMessageGeneralError
 
 	// MessageEventReceivedMessageUnencrypted is triggered when we receive a message that was sent in the clear when it should have been encrypted.
 	// The actual message received will also be passed.
@@ -225,4 +224,8 @@ func messageEventReceivedMessageNotInPrivate(c *Conversation) {
 
 func messageEventMessageResent(c *Conversation) {
 	c.getEventHandler().HandleMessageEvent(MessageEventMessageResent, nil, nil)
+}
+
+func messageEventReceivedMessageWithError(c *Conversation, msg []byte) {
+	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageGeneralError, msg, nil)
 }

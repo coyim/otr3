@@ -297,18 +297,18 @@ func Test_receive_ignoresMessagesWithWrongInstanceTags(t *testing.T) {
 	assertNil(t, err)
 }
 
-func Test_receive_displayErrorMessageToTheUser(t *testing.T) {
+func Test_receive_doesntDisplayErrorMessageToTheUser(t *testing.T) {
 	msg := []byte("?OTR Error:You are wrong")
 	c := &Conversation{}
 	c.Policies.add(allowV3)
 	plain, toSend, err := c.Receive(msg)
 
 	assertNil(t, err)
-	assertDeepEquals(t, plain, MessagePlaintext("You are wrong"))
+	assertNil(t, plain)
 	assertNil(t, toSend)
 }
 
-func Test_receive_displayErrorMessageToTheUserAndStartAKE(t *testing.T) {
+func Test_receive_doesntDisplayErrorMessageToTheUserAndStartAKE(t *testing.T) {
 	msg := []byte("?OTR Error:You are wrong")
 	c := &Conversation{}
 	c.Policies.add(allowV3)
@@ -316,6 +316,6 @@ func Test_receive_displayErrorMessageToTheUserAndStartAKE(t *testing.T) {
 	plain, toSend, err := c.Receive(msg)
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, plain, MessagePlaintext("You are wrong"))
+	assertNil(t, plain)
 	assertDeepEquals(t, toSend[0], ValidMessage("?OTRv3?"))
 }

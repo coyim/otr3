@@ -4,9 +4,15 @@ func (c *Conversation) receiveWithoutOTR(message ValidMessage) (MessagePlaintext
 	return MessagePlaintext(message), nil, nil
 }
 
+func withoutPotentialSpaceStart(msg []byte) []byte {
+	if len(msg) > 0 && msg[0] == ' ' {
+		return msg[1:]
+	}
+	return msg
+}
+
 func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
-	p := append([]byte{}, message[len(errorMarker):]...)
-	plain = MessagePlaintext(p)
+	msg := MessagePlaintext(makeCopy(message[len(errorMarker):]))
 
 	if c.Policies.has(errorStartAKE) {
 		toSend = []ValidMessage{c.queryMessage()}
@@ -16,6 +22,7 @@ func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain MessageP
 		c.updateMayRetransmitTo(retransmitWithPrefix)
 	}
 
+	messageEventReceivedMessageWithError(c, withoutPotentialSpaceStart(msg))
 	return
 }
 
@@ -113,8 +120,7 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 
 // Receive handles a message from a peer. It returns a human readable message and zero or more messages to send back to the peer.
 func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
-	message := make([]byte, len(m))
-	copy(message, m)
+	message := makeCopy(m)
 	defer wipeBytes(message)
 
 	if !c.Policies.isOTREnabled() {
