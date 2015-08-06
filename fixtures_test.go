@@ -190,8 +190,8 @@ func aliceContextAtAwaitingRevealSig() *Conversation {
 	c.ake.state = authStateAwaitingRevealSig{}
 	c.OurKey = alicePrivateKey
 
-	copy(c.ake.hashedGx[:], expectedHashedGxValue) //stored at receiveDHCommit
-	c.ake.encryptedGx = expectedEncryptedGxValue   //stored at receiveDHCommit
+	copy(c.ake.hashedGx[:], hashedFixedGX()) //stored at receiveDHCommit
+	c.ake.encryptedGx = encryptedFixedGX()   //stored at receiveDHCommit
 
 	c.setSecretExponent(fixedY()) //stored at sendDHKey
 
@@ -293,4 +293,12 @@ func fixedGX() *big.Int {
 
 func fixedGY() *big.Int {
 	return bnFromHex("2cdacabb00e63d8949aa85f7e6a095b1ee81a60779e58f8938ff1a7ed1e651d954bd739162e699cc73b820728af53aae60a46d529620792ddf839c5d03d2d4e92137a535b27500e3b3d34d59d0cd460d1f386b5eb46a7404b15c1ef84840697d2d3d2405dcdda351014d24a8717f7b9c51f6c84de365fea634737ae18ba22253a8e15249d9beb2dded640c6c0d74e4f7e19161cf828ce3ffa9d425fb68c0fddcaa7cbe81a7a5c2c595cce69a255059d9e5c04b49fb15901c087e225da850ff27")
+}
+
+func hashedFixedGX() []byte {
+	return bytesFromHex("a3f2c4b9e3a7d1f565157ae7b0e71c721d59d3c79d39e5e4e8d08cb8464ff857")
+}
+
+func encryptedFixedGX() []byte {
+	return bytesFromHex("5dd6a5999be73a99b80bdb78194a125f3067bd79e69c648b76a068117a8c4d0f36f275305423a933541937145d85ab4618094cbafbe4db0c0081614c1ff0f516c3dc4f352e9c92f88e4883166f12324d82240a8f32874c3d6bc35acedb8d501aa0111937a4859f33aa9b43ec342d78c3a45a5939c1e58e6b4f02725c1922f3df8754d1e1ab7648f558e9043ad118e63603b3ba2d8cbfea99a481835e42e73e6cd6019840f4470b606e168b1cd4a1f401c3dc52525d79fa6b959a80d4e11f1ec3a7984cf9")
 }
