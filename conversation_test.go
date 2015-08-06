@@ -53,7 +53,7 @@ func Test_receive_returnsAnErrorForAnInvalidOTRMessageWithoutVersionData(t *test
 	assertEquals(t, err, errInvalidOTRMessage)
 }
 
-func Test_receive_returnsAnErrorForADataMessageWhenNoEncryptionIsActive(t *testing.T) {
+func Test_receive_ignoresAMessageWhenNoEncryptionIsActive(t *testing.T) {
 	m := []byte{
 		0x00, 0x03, // protocol version
 		msgTypeData,
@@ -62,8 +62,24 @@ func Test_receive_returnsAnErrorForADataMessageWhenNoEncryptionIsActive(t *testi
 	}
 	c := newConversation(otrV3{}, fixtureRand())
 
-	_, _, err := c.receiveDecoded(m)
-	assertDeepEquals(t, err, errEncryptedMessageWithNoSecureChannel)
+	a, b, err := c.receiveDecoded(m)
+	assertNil(t, a)
+	assertNil(t, b)
+	assertNil(t, err)
+}
+
+func Test_receiveDecoded_signalsAMessageEventForADataMessageWhenNoEncryptionIsActive(t *testing.T) {
+	m := []byte{
+		0x00, 0x03, // protocol version
+		msgTypeData,
+		0x00, 0x00, 0x01, 0x01,
+		0x00, 0x00, 0x01, 0x01,
+	}
+	c := newConversation(otrV3{}, fixtureRand())
+
+	c.expectMessageEvent(t, func() {
+		c.receiveDecoded(m)
+	}, MessageEventReceivedMessageNotInPrivate, nil, nil)
 }
 
 func Test_receive_DHCommitMessageReturnsDHKeyForOTR3(t *testing.T) {

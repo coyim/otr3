@@ -45,9 +45,6 @@ type MessageEvent int
  * some events (see below). The possible events are:
  * - OTRL_MSGEVENT_MSG_RESENT
  *      The previous message was resent.
- * - OTRL_MSGEVENT_RCVDMSG_NOT_IN_PRIVATE
- *      Received an encrypted message but cannot read
- *      it because no private connection is established yet.
  * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
  *      Received a general OTR error. The argument 'message' will
  *      also be passed and it will contain the OTR error message.
@@ -69,7 +66,9 @@ const (
 	MessageEventMessageReflected
 
 	// MessageEventMessageResent
-	// MessageEventReceivedMessageNotInPrivate
+
+	// MessageEventReceivedMessageNotInPrivate will be signaled when we receive an encrypted message that we cannot read, because we don't have an established private connection
+	MessageEventReceivedMessageNotInPrivate
 
 	// MessageEventReceivedMessageUnreadable will be signaled when we cannot read the received message.
 	MessageEventReceivedMessageUnreadable
@@ -222,4 +221,8 @@ func messageEventReceivedUnreadableMessage(c *Conversation) {
 
 func messageEventReceivedMalformedMessage(c *Conversation) {
 	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageMalformed, nil, nil)
+}
+
+func messageEventReceivedMessageNotInPrivate(c *Conversation) {
+	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageNotInPrivate, nil, nil)
 }

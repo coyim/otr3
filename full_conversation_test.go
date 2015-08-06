@@ -22,8 +22,10 @@ func Test_receive_generatesErrorIfDoesNotHaveASecureChannel(t *testing.T) {
 	m, _ = c.wrapMessageHeader(msgTypeData, m)
 	for _, s := range states {
 		c.msgState = s
-		_, _, err := c.receiveDecoded(m)
-		assertEquals(t, err, errEncryptedMessageWithNoSecureChannel)
+		c.expectMessageEvent(t, func() {
+			_, _, err := c.receiveDecoded(m)
+			assertNil(t, err)
+		}, MessageEventReceivedMessageNotInPrivate, nil, nil)
 	}
 }
 
