@@ -110,8 +110,6 @@ func bobContextAfterAKE() *Conversation {
 	c.keys.theirKeyID = 1
 	c.keys.theirCurrentDHPubKey = fixedGY()
 
-	//TODO ourKeyID must be greater than 0
-	// Temp fix for 2 because when we call genDataMsg, we are sending ourKeyID-1
 	c.keys.ourKeyID = 2
 
 	return c
@@ -128,8 +126,6 @@ func aliceContextAfterAKE() *Conversation {
 	c.keys.theirKeyID = 1
 	c.keys.theirCurrentDHPubKey = fixedGX()
 
-	//TODO ourKeyID must be greater than 0
-	// Temp fix for 2 because when we call genDataMsg, we are sending ourKeyID-1
 	c.keys.ourKeyID = 2
 
 	return c

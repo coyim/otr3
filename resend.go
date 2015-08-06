@@ -51,8 +51,9 @@ func (c *Conversation) maybeRetransmit() (messageWithHeader, error) {
 	}
 
 	msg := c.resend.lastMessage
+	resending := c.resend.mayRetransmit == retransmitWithPrefix
 
-	if c.resend.mayRetransmit == retransmitWithPrefix {
+	if resending {
 		msg = c.resendMessageTransformer()(msg)
 	}
 
@@ -64,9 +65,12 @@ func (c *Conversation) maybeRetransmit() (messageWithHeader, error) {
 	// It is actually safe to ignore this error, since the only possible error
 	// here is a problem with generating the message header, which we already do once in genDataMsg
 	toSend, _ := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+
+	if resending {
+		messageEventMessageResent(c)
+	}
+
 	c.updateLastSent()
 
 	return toSend, nil
-
-	// potentially signal message event
 }

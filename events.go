@@ -39,11 +39,6 @@ const (
 // MessageEvent define the events used to indicate the messages that need to be sent
 type MessageEvent int
 
-/* Handle and send the appropriate message(s) to the sender/recipient
- * depending on the message events. All the events only require an opdata,
- * the event, and the context. The message and err will be NULL except for
- * some events (see below). The possible events are:
- */
 const (
 	// MessageEventEncryptionRequired is signaled when our policy requires encryption bt we are trying to send an unencrypted message.
 	MessageEventEncryptionRequired MessageEvent = iota
@@ -51,7 +46,8 @@ const (
 	// MessageEventEncryptionError is signaled when an error occured while encrypting a message and the message was not sent.
 	MessageEventEncryptionError
 
-	// MessageEventConnectionEnded is signaled when we are asked to send a message but the peer has ended the private conversation. At this point the connection should be closed or refreshed.
+	// MessageEventConnectionEnded is signaled when we are asked to send a message but the peer has ended the private conversation.
+	// At this point the connection should be closed or refreshed.
 	MessageEventConnectionEnded
 
 	// MessageEventSetupError will be signaled when a private conversation could not be established. The reason for this will be communicated with the attached error instance.
@@ -60,8 +56,7 @@ const (
 	// MessageEventMessageReflected will be signaled if we received our own OTR messages.
 	MessageEventMessageReflected
 
-	// * - OTRL_MSGEVENT_MSG_RESENT
-	// *      The previous message was resent.
+	// MessageEventMessageResent is signaled when a message is resent
 	MessageEventMessageResent
 
 	// MessageEventReceivedMessageNotInPrivate will be signaled when we receive an encrypted message that we cannot read, because we don't have an established private connection
@@ -84,7 +79,8 @@ const (
 	// *      also be passed and it will contain the OTR error message.
 	// MessageEventReceivedMessageGeneralError
 
-	// MessageEventReceivedMessageUnencrypted is triggered when we receive a message that was sent in the clear when it should have been encrypted. The actual message received will also be passed.
+	// MessageEventReceivedMessageUnencrypted is triggered when we receive a message that was sent in the clear when it should have been encrypted.
+	// The actual message received will also be passed.
 	MessageEventReceivedMessageUnencrypted
 
 	// MessageEventReceivedMessageUnrecognized is triggered when we receive an OTR message whose type we cannot recognize
@@ -225,4 +221,8 @@ func messageEventReceivedMalformedMessage(c *Conversation) {
 
 func messageEventReceivedMessageNotInPrivate(c *Conversation) {
 	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageNotInPrivate, nil, nil)
+}
+
+func messageEventMessageResent(c *Conversation) {
+	c.getEventHandler().HandleMessageEvent(MessageEventMessageResent, nil, nil)
 }

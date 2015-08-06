@@ -187,3 +187,47 @@ func Test_maybeRetransmit_returnsErrorIfWeFailAtGeneratingDataMsg(t *testing.T) 
 
 	assertEquals(t, err, ErrGPGConflict)
 }
+
+func Test_maybeRetransmit_signalsMessageEventWhenResendingMessage(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.Policies.add(allowV3)
+	c.OurKey = bobPrivateKey
+	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+
+	plain := plainDataMsg{
+		message: []byte(""),
+	}
+
+	_, c.keys = fixtureDataMsg(plain)
+
+	c.msgState = encrypted
+
+	fixtureCorrectResend(c)
+	c.resend.mayRetransmit = retransmitWithPrefix
+
+	c.expectMessageEvent(t, func() {
+		c.maybeRetransmit()
+	}, MessageEventMessageResent, nil, nil)
+}
+
+func Test_maybeRetransmit_doesntSignalMessageEventWhenResendingMessageExact(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.Policies.add(allowV3)
+	c.OurKey = bobPrivateKey
+	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+
+	plain := plainDataMsg{
+		message: []byte(""),
+	}
+
+	_, c.keys = fixtureDataMsg(plain)
+
+	c.msgState = encrypted
+
+	fixtureCorrectResend(c)
+	c.resend.mayRetransmit = retransmitExact
+
+	c.doesntExpectMessageEvent(t, func() {
+		c.maybeRetransmit()
+	})
+}

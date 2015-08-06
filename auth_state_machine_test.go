@@ -335,9 +335,11 @@ func Test_receiveDecoded_receiveRevealSigMessageWillResendPotentialLastMessage(t
 	c.resend.mayRetransmit = retransmitWithPrefix
 	c.updateLastSent()
 	msg := fixtureRevealSigMsg(otrV2{})
-	_, toSends, _ := c.receiveDecoded(msg)
-	assertEquals(t, len(toSends), 2)
-	// TODO: check for event here
+
+	c.expectMessageEvent(t, func() {
+		_, toSends, _ := c.receiveDecoded(msg)
+		assertEquals(t, len(toSends), 2)
+	}, MessageEventMessageResent, nil, nil)
 }
 
 func Test_receiveDecoded_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey(t *testing.T) {
@@ -400,9 +402,11 @@ func Test_receiveDecoded_receiveSigMessageWillResendTheLastPotentialMessage(t *t
 	c.updateLastSent()
 
 	msg := fixtureSigMsg(otrV2{})
-	_, toSends, _ := c.receiveDecoded(msg)
-	assertEquals(t, len(toSends), 1) // Only a retransmit message, nothing else
-	// TODO: check for event here
+
+	c.expectMessageEvent(t, func() {
+		_, toSends, _ := c.receiveDecoded(msg)
+		assertEquals(t, len(toSends), 1) // Only a retransmit message, nothing else
+	}, MessageEventMessageResent, nil, nil)
 }
 
 func Test_receiveDecoded_receiveSigMessageAndFailsWillSignalSetupError(t *testing.T) {
