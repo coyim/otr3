@@ -5,12 +5,11 @@ import "errors"
 // Send takes a human readable message from the local user, possibly encrypts
 // it and returns zero or more messages to send to the peer.
 func (c *Conversation) Send(m ValidMessage) ([]ValidMessage, error) {
-	message := make([]byte, len(m))
-	copy(message, m)
+	message := makeCopy(m)
 	defer wipeBytes(message)
 
 	if !c.Policies.isOTREnabled() {
-		return []ValidMessage{append([]byte{}, message...)}, nil
+		return []ValidMessage{makeCopy(message)}, nil
 	}
 
 	switch c.msgState {
@@ -31,7 +30,7 @@ func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMess
 		messageEventEncryptionRequired(c)
 		c.updateLastSent()
 		c.updateMayRetransmitTo(retransmitExact)
-		c.lastMessage(MessagePlaintext(msg))
+		c.lastMessage(MessagePlaintext(makeCopy(message)))
 		return []ValidMessage{c.queryMessage()}, nil
 	}
 
@@ -39,7 +38,7 @@ func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMess
 		message = c.appendWhitespaceTag(message)
 	}
 
-	return []ValidMessage{append([]byte{}, message...)}, nil
+	return []ValidMessage{makeCopy(message)}, nil
 }
 
 func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMessage, error) {

@@ -111,3 +111,7 @@ func bytesToUint16(d []byte) (uint16, error) {
 	res, e := strconv.Atoi(string(d))
 	return uint16(res), e
 }
+
+func makeCopy(i []byte) []byte {
+	return append([]byte{}, i...)
+}
