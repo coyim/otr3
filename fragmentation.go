@@ -40,6 +40,7 @@ func (c *Conversation) setFragmentSize(size uint16) {
 	c.fragmentSize = size
 }
 
+//TODO: a message to fragment seems not necessarily to be a b64 encoded message
 func (c *Conversation) fragment(data encodedMessage, fraglen uint16) []ValidMessage {
 	len := len(data)
 
