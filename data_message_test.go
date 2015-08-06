@@ -266,9 +266,8 @@ func Test_processDataMessage_returnsACustomErrorMessageIfOneIsAvailable(t *testi
 		func(error ErrorCode) []byte {
 			if error == ErrorCodeMessageUnreadable {
 				return []byte("nova happened")
-			} else {
-				return []byte("white hole happened")
 			}
+			return []byte("white hole happened")
 		}, nil, nil)
 
 	p, _, _ := c.receiveDecoded(msg)

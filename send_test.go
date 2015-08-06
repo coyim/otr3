@@ -83,9 +83,8 @@ func Test_Send_callsErrorMessageHandlerAndReturnsTheResultAsAnOTRErrorMessage(t 
 		func(error ErrorCode) []byte {
 			if error == ErrorCodeEncryptionError {
 				return []byte("snowflake happened")
-			} else {
-				return []byte("nova happened")
 			}
+			return []byte("nova happened")
 		}, nil, nil)
 
 	msgs, _ := c.Send(msg)
