@@ -31,8 +31,6 @@ func (c *Conversation) resendMessageTransformer() func([]byte) []byte {
 	return c.resend.messageTransform
 }
 
-// we want to call maybe_retransmit after receiving a reveal sig or a sig message
-
 func (c *Conversation) lastMessage(msg MessagePlaintext) {
 	c.resend.lastMessage = msg
 }
@@ -47,10 +45,9 @@ func (c *Conversation) shouldRetransmit() bool {
 		c.heartbeat.lastSent.After(time.Now().Add(-resendInterval))
 }
 
-// TODO: errors
-func (c *Conversation) maybeRetransmit() messageWithHeader {
+func (c *Conversation) maybeRetransmit() (messageWithHeader, error) {
 	if !c.shouldRetransmit() {
-		return nil
+		return nil, nil
 	}
 
 	msg := c.resend.lastMessage
@@ -59,18 +56,17 @@ func (c *Conversation) maybeRetransmit() messageWithHeader {
 		msg = c.resendMessageTransformer()(msg)
 	}
 
-	dataMsg, err1 := c.genDataMsgWithFlag(msg, messageFlagNormal)
-	if err1 != nil {
-		panic(err1)
+	dataMsg, err := c.genDataMsg(msg)
+	if err != nil {
+		return nil, err
 	}
 
-	toSend, err2 := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
-	if err2 != nil {
-		panic(err2)
-	}
+	// It is actually safe to ignore this error, since the only possible error
+	// here is a problem with generating the message header, which we already do once in genDataMsg
+	toSend, _ := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
 	c.updateLastSent()
 
-	return toSend
+	return toSend, nil
 
 	// potentially signal message event
 }

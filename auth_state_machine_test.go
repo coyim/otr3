@@ -329,9 +329,18 @@ func Test_receiveDecoded_receiveRevealSigMessageAndSetMessageStateToEncrypted(t 
 	assertEquals(t, c.msgState, encrypted)
 }
 
-func Test_receiveDecoded_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey(t *testing.T) {
-	var nilBigInt *big.Int
+func Test_receiveDecoded_receiveRevealSigMessageWillResendPotentialLastMessage(t *testing.T) {
+	c := aliceContextAtAwaitingRevealSig()
+	c.resend.lastMessage = MessagePlaintext("what do you think turn 2")
+	c.resend.mayRetransmit = retransmitWithPrefix
+	c.updateLastSent()
+	msg := fixtureRevealSigMsg(otrV2{})
+	_, toSends, _ := c.receiveDecoded(msg)
+	assertEquals(t, len(toSends), 2)
+	// TODO: check for event here
+}
 
+func Test_receiveDecoded_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPubKey(t *testing.T) {
 	c := aliceContextAtAwaitingRevealSig()
 	msg := fixtureRevealSigMsg(otrV2{})
 	assertEquals(t, c.msgState, plainText)
@@ -341,7 +350,7 @@ func Test_receiveDecoded_receiveRevealSigMessageAndStoresTheirKeyIDAndTheirCurre
 	assertNil(t, err)
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
 	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedGX())
-	assertEquals(t, c.keys.theirPreviousDHPubKey, nilBigInt)
+	assertNil(t, c.keys.theirPreviousDHPubKey)
 }
 
 func Test_receiveDecoded_receiveDHCommitMessageAndFailsWillSignalSetupError(t *testing.T) {
@@ -382,6 +391,18 @@ func Test_receiveDecoded_receiveSigMessageAndSetMessageStateToEncrypted(t *testi
 	c.expectMessageEvent(t, func() {
 		c.receiveDecoded(msg)
 	}, MessageEventSetupError, nil, errShortRandomRead)
+}
+
+func Test_receiveDecoded_receiveSigMessageWillResendTheLastPotentialMessage(t *testing.T) {
+	c := bobContextAtAwaitingSig()
+	c.resend.lastMessage = MessagePlaintext("what do you think")
+	c.resend.mayRetransmit = retransmitWithPrefix
+	c.updateLastSent()
+
+	msg := fixtureSigMsg(otrV2{})
+	_, toSends, _ := c.receiveDecoded(msg)
+	assertEquals(t, len(toSends), 1) // Only a retransmit message, nothing else
+	// TODO: check for event here
 }
 
 func Test_receiveDecoded_receiveSigMessageAndFailsWillSignalSetupError(t *testing.T) {

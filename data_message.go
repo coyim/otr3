@@ -120,11 +120,7 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 	//this can't return an error since receivingAESKey is a AES-128 key
 	p.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
 
-	//TODO: The plain was zeroed when we wiped the received message
-	//This is becuase we've been using slice assignments without copying all over the place.
-	//Should we copy more? Where?
-	plain = make([]byte, len(p.message))
-	copy(plain, p.message)
+	plain = makeCopy(p.message)
 
 	if len(plain) == 0 {
 		plain = nil

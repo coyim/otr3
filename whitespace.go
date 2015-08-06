@@ -88,6 +88,7 @@ func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (restPlain MessageP
 		err = errInvalidVersion
 		return
 	}
-	toSend, err = c.potentialAuthError(c.sendDHCommit())
+	ts, e := c.sendDHCommit()
+	toSend, err = c.potentialAuthError(compactMessagesWithHeader(ts), e)
 	return
 }

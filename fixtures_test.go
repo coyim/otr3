@@ -120,6 +120,7 @@ func bobContextAfterAKE() *Conversation {
 func aliceContextAfterAKE() *Conversation {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.keys.ourKeyID = 1
+	c.keys.ourCurrentDHKeys.priv = fixedY()
 	c.keys.ourCurrentDHKeys.pub = fixedGY()
 	c.keys.ourPreviousDHKeys.priv = fixedY()
 	c.keys.ourPreviousDHKeys.pub = fixedGY()
@@ -136,6 +137,12 @@ func aliceContextAfterAKE() *Conversation {
 
 func bobContextAtAwaitingSig() *Conversation {
 	c := bobContextAtReceiveDHKey()
+	c.keys.ourKeyID = 1
+	c.keys.ourCurrentDHKeys.priv = fixedX()
+	c.keys.ourCurrentDHKeys.pub = fixedGX()
+	c.keys.theirKeyID = 1
+	c.keys.theirCurrentDHPubKey = fixedGY()
+
 	c.version = otrV2{}
 	c.Policies.add(allowV2)
 	c.ake.state = authStateAwaitingSig{}

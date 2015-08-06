@@ -54,7 +54,8 @@ func (c *Conversation) receiveQueryMessage(msg ValidMessage) ([]messageWithHeade
 	}
 	c.version = v
 
-	return c.potentialAuthError(c.sendDHCommit())
+	ts, err := c.sendDHCommit()
+	return c.potentialAuthError(compactMessagesWithHeader(ts), err)
 }
 
 func (c Conversation) queryMessage() ValidMessage {

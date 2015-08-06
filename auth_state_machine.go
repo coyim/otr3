@@ -30,22 +30,27 @@ func (c *Conversation) akeHasFinished() error {
 	return c.generateNewDHKeyPair()
 }
 
-func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend messageWithHeader, err error) {
+func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend []messageWithHeader, err error) {
 	c.ensureAKE()
+
+	var toSendSingle messageWithHeader
+	var toSendExtra messageWithHeader
 
 	switch msgType {
 	case msgTypeDHCommit:
-		c.ake.state, toSend, err = c.ake.state.receiveDHCommitMessage(c, msg)
+		c.ake.state, toSendSingle, err = c.ake.state.receiveDHCommitMessage(c, msg)
 	case msgTypeDHKey:
-		c.ake.state, toSend, err = c.ake.state.receiveDHKeyMessage(c, msg)
+		c.ake.state, toSendSingle, err = c.ake.state.receiveDHKeyMessage(c, msg)
 	case msgTypeRevealSig:
-		c.ake.state, toSend, err = c.ake.state.receiveRevealSigMessage(c, msg)
+		c.ake.state, toSendSingle, err = c.ake.state.receiveRevealSigMessage(c, msg)
+		toSendExtra, _ = c.maybeRetransmit()
 	case msgTypeSig:
-		c.ake.state, toSend, err = c.ake.state.receiveSigMessage(c, msg)
+		c.ake.state, toSendSingle, err = c.ake.state.receiveSigMessage(c, msg)
+		toSendExtra, _ = c.maybeRetransmit()
 	default:
 		err = newOtrErrorf("unknown message type 0x%X", msgType)
 	}
-
+	toSend = compactMessagesWithHeader(toSendSingle, toSendExtra)
 	return
 }
 

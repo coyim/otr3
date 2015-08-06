@@ -56,9 +56,10 @@ func Test_maybeRetransmit_returnsNothingWhenShouldntRetransmit(t *testing.T) {
 	fixtureCorrectResend(c)
 	c.resend.lastMessage = nil
 
-	res := c.maybeRetransmit()
+	res, err := c.maybeRetransmit()
 
 	assertNil(t, res)
+	assertNil(t, err)
 }
 
 func Test_maybeRetransmit_createsADataMessageWithTheExactMessageWhenAskedToRetransmitExact(t *testing.T) {
@@ -78,7 +79,8 @@ func Test_maybeRetransmit_createsADataMessageWithTheExactMessageWhenAskedToRetra
 	fixtureCorrectResend(c)
 	c.resend.lastMessage = MessagePlaintext("Something else to think about")
 
-	res := c.maybeRetransmit()
+	res, err := c.maybeRetransmit()
+	assertNil(t, err)
 	dec := fixtureDecryptDataMsg(res)
 
 	assertDeepEquals(t, MessagePlaintext(dec.message), MessagePlaintext("Something else to think about"))
@@ -104,9 +106,10 @@ func Test_maybeRetransmit_createsADataMessageWithTheResendPrefixAndMessageWhenAs
 	c.resend.mayRetransmit = retransmitWithPrefix
 	c.resend.lastMessage = MessagePlaintext("Something else to think about")
 
-	res := c.maybeRetransmit()
+	res, err := c.maybeRetransmit()
 	dec := fixtureDecryptDataMsg(res)
 
+	assertNil(t, err)
 	assertDeepEquals(t, MessagePlaintext(dec.message), MessagePlaintext("[resent] Something else to think about"))
 	assertEquals(t, len(dec.tlvs), 1)
 	assertEquals(t, dec.tlvs[0].tlvType, tlvTypePadding)
@@ -133,9 +136,10 @@ func Test_maybeRetransmit_createsADataMessageWithTheCustomResendPrefixAndMessage
 		return append(append([]byte("<resend>"), msg...), []byte("</resend>")...)
 	}
 
-	res := c.maybeRetransmit()
+	res, err := c.maybeRetransmit()
 	dec := fixtureDecryptDataMsg(res)
 
+	assertNil(t, err)
 	assertDeepEquals(t, MessagePlaintext(dec.message), MessagePlaintext("<resend>Something much more to think about</resend>"))
 	assertEquals(t, len(dec.tlvs), 1)
 	assertEquals(t, dec.tlvs[0].tlvType, tlvTypePadding)
@@ -163,4 +167,23 @@ func Test_maybeRetransmit_updatesLastSentWhenSendingAMessage(t *testing.T) {
 	c.maybeRetransmit()
 
 	assertNotEquals(t, c.heartbeat.lastSent, setSent)
+}
+
+func Test_maybeRetransmit_returnsErrorIfWeFailAtGeneratingDataMsg(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.Policies.add(allowV3)
+	c.OurKey = bobPrivateKey
+	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+
+	plain := plainDataMsg{
+		message: []byte(""),
+	}
+
+	_, c.keys = fixtureDataMsg(plain)
+	c.msgState = encrypted
+	fixtureCorrectResend(c)
+	c.keys.ourKeyID = 0
+	_, err := c.maybeRetransmit()
+
+	assertEquals(t, err, ErrGPGConflict)
 }
