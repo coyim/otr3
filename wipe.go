@@ -82,6 +82,16 @@ func (c *keyManagementContext) wipe() {
 	c.macKeyHistory.wipe()
 }
 
+func (c *keyManagementContext) wipeAndKeepRevealKeys() keyManagementContext {
+	ret := keyManagementContext{}
+	ret.oldMACKeys = make([]macKey, len(c.oldMACKeys))
+	copy(ret.oldMACKeys, c.oldMACKeys)
+
+	c.wipe()
+
+	return ret
+}
+
 func (h *macKeyHistory) wipe() {
 	if h == nil {
 		return
