@@ -76,10 +76,15 @@ func (authStateBase) receiveDHCommitMessage(c *Conversation, msg []byte) (authSt
 }
 
 func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
+	//We have engaged in a new AKE so we forget all previous keys
+	c.keys = c.keys.wipeAndKeepRevealKeys()
+	c.ake.wipe()
+
 	dhKeyMsg, err := c.dhKeyMessage()
 	if err != nil {
 		return s, nil, err
 	}
+
 	dhKeyMsg, err = c.wrapMessageHeader(msgTypeDHKey, dhKeyMsg)
 	if err != nil {
 		return s, nil, err
@@ -93,7 +98,10 @@ func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (auth
 }
 
 func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
-	//Forget the DH-commit received before we sent the DH-Key
+	//As per spec, we forget the old DH-commit (received before we sent the DH-Key)
+	//and use this one, so we forget all the keys
+	c.keys = c.keys.wipeAndKeepRevealKeys()
+	c.ake.wipeGX()
 
 	if err := c.processDHCommit(msg); err != nil {
 		return s, nil, err
@@ -124,12 +132,13 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []by
 		if err != nil {
 			return s, nil, err
 		}
+
 		return authStateAwaitingRevealSig{}, dhCommitMsg, nil
 	}
 
 	//Otherwise:
 	//Forget your old gx value that you sent (encrypted) earlier, and pretend you're in AUTHSTATE_NONE; i.e. reply with a D-H Key Message, and transition authstate to AUTHSTATE_AWAITING_REVEALSIG.
-	c.ake.wipe()
+	//This is done as part of receiving a DHCommit message in AUTHSTATE_NONE
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 

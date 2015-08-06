@@ -60,6 +60,10 @@ func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMess
 }
 
 func (c *Conversation) sendDHCommit() (toSend messageWithHeader, err error) {
+	//We have engaged in a new AKE so we forget all previous keys
+	c.keys = c.keys.wipeAndKeepRevealKeys()
+	c.ake.wipe()
+
 	toSend, err = c.dhCommitMessage()
 	if err != nil {
 		return
@@ -70,10 +74,6 @@ func (c *Conversation) sendDHCommit() (toSend messageWithHeader, err error) {
 	}
 
 	c.ake.state = authStateAwaitingDHKey{}
-
-	//TODO: In which case Alice's keys are wiped?
-	//When she accepts a new DH-Commit?
-	c.keys = c.keys.wipeAndKeepRevealKeys()
 
 	return
 }

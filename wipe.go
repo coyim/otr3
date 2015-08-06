@@ -38,13 +38,20 @@ func (a *ake) wipe() {
 	a.theirPublicValue = nil
 
 	wipeBytes(a.r[:])
-	wipeBytes(a.hashedGx[:])
 
-	wipeBytes(a.encryptedGx[:])
-	a.encryptedGx = nil
-
+	a.wipeGX()
 	a.revealKey.wipe()
 	a.sigKey.wipe()
+}
+
+func (a *ake) wipeGX() {
+	if a == nil {
+		return
+	}
+
+	wipeBytes(a.hashedGx[:])
+	wipeBytes(a.encryptedGx[:])
+	a.encryptedGx = nil
 }
 
 func (c *keyManagementContext) wipeKeys() {
