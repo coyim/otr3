@@ -123,6 +123,36 @@ func Test_readSmpMessage1TLVWithAQuestion(t *testing.T) {
 	assertDeepEquals(t, val, msg)
 }
 
+func Test_readSmpMessage1TLVWithAQuestion_willFailIfThereIsNoNulByte(t *testing.T) {
+	msg := fixtureMessage1Q()
+	tlv := msg.tlv()
+	tlv.tlvLength = 0
+	tlv.tlvValue = []byte{}
+
+	_, parsedOk := tlv.smpMessage()
+	assertEquals(t, parsedOk, false)
+}
+
+func Test_readSmpMessage1TLVWithAQuestion_willHandleItCorrectlyIfTheQuestionEndsOnAByte(t *testing.T) {
+	msg := fixtureMessage1Q()
+	tlv := msg.tlv()
+	tlv.tlvLength = 2
+	tlv.tlvValue = []byte{0x01, 0x00}
+
+	_, parsedOk := tlv.smpMessage()
+	assertEquals(t, parsedOk, false)
+}
+
+func Test_readSmpMessage1TLVWithAQuestion_willHandleItCorrectlyIfANulByteIsTheOnlyContent(t *testing.T) {
+	msg := fixtureMessage1Q()
+	tlv := msg.tlv()
+	tlv.tlvLength = 1
+	tlv.tlvValue = []byte{0x00}
+
+	_, parsedOk := tlv.smpMessage()
+	assertEquals(t, parsedOk, false)
+}
+
 func Test_readSmpMessage1TLV_ReturnsNotOKForInValidMessage1(t *testing.T) {
 	msg := fixtureMessage1()
 	tlv := msg.tlv()

@@ -106,8 +106,10 @@ func toSmpMessage1(t tlv) (msg smp1Message, ok bool) {
 }
 
 func toSmpMessage1Q(t tlv) (msg smp1Message, ok bool) {
-	// TODO: fix errors here
 	nulPos := bytes.IndexByte(t.tlvValue, 0)
+	if nulPos == -1 {
+		return msg, false
+	}
 	question := string(t.tlvValue[:nulPos])
 	t.tlvValue = t.tlvValue[(nulPos + 1):]
 	msg, ok = toSmpMessage1(t)
