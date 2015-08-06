@@ -88,7 +88,6 @@ func (c *Conversation) verifySMP3(s2 *smp2State, msg smp3Message) error {
 		return newOtrError("cP is not a valid zero knowledge proof")
 	}
 
-	//TODO should it calculate it here?
 	qaqb := divMod(msg.qa, s2.qb, p)
 
 	if !verifyZKP4(msg.cr, s2.g3a, msg.d7, qaqb, msg.ra, 7) {
