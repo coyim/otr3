@@ -43,6 +43,9 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 	}
 	dataMessage.sign(keys.sendingMACKey, header)
 
+	c.updateMayRetransmitTo(noRetransmit)
+	c.lastMessage(message)
+
 	return dataMessage, nil
 }
 

@@ -69,3 +69,25 @@ func Test_Send_signalsEncryptionErrorMessageEventIfSomethingWentWrong(t *testing
 		c.Send(msg)
 	}, MessageEventEncryptionError, nil, nil)
 }
+
+func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected(t *testing.T) {
+	m := []byte("hello")
+	c := bobContextAfterAKE()
+	c.msgState = plainText
+	c.Policies = policies(allowV3 | requireEncryption)
+
+	c.Send(m)
+
+	assertDeepEquals(t, c.resend.lastMessage, MessagePlaintext(m))
+}
+
+func Test_Send_setsMayRetransmitFlagToExpectExactResending(t *testing.T) {
+	m := []byte("hello")
+	c := bobContextAfterAKE()
+	c.msgState = plainText
+	c.Policies = policies(allowV3 | requireEncryption)
+
+	c.Send(m)
+
+	assertEquals(t, c.resend.mayRetransmit, retransmitExact)
+}

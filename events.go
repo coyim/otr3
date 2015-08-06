@@ -43,11 +43,6 @@ type MessageEvent int
  * depending on the message events. All the events only require an opdata,
  * the event, and the context. The message and err will be NULL except for
  * some events (see below). The possible events are:
- * - OTRL_MSGEVENT_MSG_RESENT
- *      The previous message was resent.
- * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
- *      Received a general OTR error. The argument 'message' will
- *      also be passed and it will contain the OTR error message.
  */
 const (
 	// MessageEventEncryptionRequired is signaled when our policy requires encryption bt we are trying to send an unencrypted message.
@@ -65,7 +60,9 @@ const (
 	// MessageEventMessageReflected will be signaled if we received our own OTR messages.
 	MessageEventMessageReflected
 
-	// MessageEventMessageResent
+	// * - OTRL_MSGEVENT_MSG_RESENT
+	// *      The previous message was resent.
+	MessageEventMessageResent
 
 	// MessageEventReceivedMessageNotInPrivate will be signaled when we receive an encrypted message that we cannot read, because we don't have an established private connection
 	MessageEventReceivedMessageNotInPrivate
@@ -82,6 +79,9 @@ const (
 	// MessageEventLogHeartbeatSent is triggered when we have sent a heartbeat.
 	MessageEventLogHeartbeatSent
 
+	// * - OTRL_MSGEVENT_RCVDMSG_GENERAL_ERR
+	// *      Received a general OTR error. The argument 'message' will
+	// *      also be passed and it will contain the OTR error message.
 	// MessageEventReceivedMessageGeneralError
 
 	// MessageEventReceivedMessageUnencrypted is triggered when we receive a message that was sent in the clear when it should have been encrypted. The actual message received will also be passed.

@@ -21,6 +21,7 @@ type Conversation struct {
 	keys      keyManagementContext
 	Policies  policies
 	heartbeat heartbeatContext
+	resend    resendContext
 
 	fragmentSize              uint16
 	fragmentationContext      fragmentationContext

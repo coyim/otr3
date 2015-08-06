@@ -30,6 +30,8 @@ func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMess
 	if c.Policies.has(requireEncryption) {
 		messageEventEncryptionRequired(c)
 		c.updateLastSent()
+		c.updateMayRetransmitTo(retransmitExact)
+		c.lastMessage(MessagePlaintext(msg))
 		return []ValidMessage{c.queryMessage()}, nil
 	}
 

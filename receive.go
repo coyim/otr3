@@ -12,6 +12,10 @@ func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain MessageP
 		toSend = []ValidMessage{c.queryMessage()}
 	}
 
+	if c.msgState == encrypted {
+		c.updateMayRetransmitTo(retransmitWithPrefix)
+	}
+
 	return
 }
 

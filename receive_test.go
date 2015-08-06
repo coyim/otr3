@@ -182,3 +182,13 @@ func Test_Receive_Fragments(t *testing.T) {
 
 	assertDeepEquals(t, plain, MessagePlaintext("hello!"))
 }
+
+func Test_receiveErrorMessage_updateMayRetransmitToRetransmitWithPrefix(t *testing.T) {
+	c := aliceContextAfterAKE()
+	c.msgState = encrypted
+	m := []byte("?OTR Error:error msg")
+
+	c.receiveErrorMessage(m)
+
+	assertEquals(t, c.resend.mayRetransmit, retransmitWithPrefix)
+}

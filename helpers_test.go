@@ -14,6 +14,12 @@ func assertEquals(t *testing.T, actual, expected interface{}) {
 	}
 }
 
+func assertNotEquals(t *testing.T, actual, expected interface{}) {
+	if actual == expected {
+		t.Errorf("Expected:\n%#v \nto not equal:\n%#v\n", actual, expected)
+	}
+}
+
 func assertFuncEquals(t *testing.T, actual, expected interface{}) {
 	f1 := reflect.ValueOf(actual)
 	f2 := reflect.ValueOf(expected)

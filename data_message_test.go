@@ -61,6 +61,44 @@ func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
 	assertEquals(t, c.keys.ourCounter, uint64(0x1011121314+1))
 }
 
+func Test_genDataMsg_willResetMayRetransmit(t *testing.T) {
+	c := bobContextAfterAKE()
+	c.msgState = encrypted
+	c.keys.ourKeyID = 2
+	c.keys.theirKeyID = 3
+	c.keys.ourCounter = 0x1011121314
+	c.resend.mayRetransmit = retransmitExact
+
+	c.genDataMsg(nil)
+
+	assertEquals(t, c.resend.mayRetransmit, noRetransmit)
+}
+
+func Test_genDataMsg_willNotResetMayRetransmitIfItEncountersAnError(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.msgState = encrypted
+	c.Rand = fixedRand([]string{})
+	c.ourInstanceTag = 0
+	c.resend.mayRetransmit = retransmitExact
+
+	c.genDataMsg(nil)
+
+	assertEquals(t, c.resend.mayRetransmit, retransmitExact)
+}
+
+func Test_genDataMsg_setsLastMessageWhenNewMessageIsPlaintext(t *testing.T) {
+	msg := []byte("hello")
+	c := bobContextAfterAKE()
+	c.msgState = encrypted
+	c.keys.ourKeyID = 2
+	c.keys.theirKeyID = 3
+	c.keys.ourCounter = 0x1011121314
+
+	c.genDataMsg(msg)
+
+	assertDeepEquals(t, c.resend.lastMessage, MessagePlaintext(msg))
+}
+
 func Test_genDataMsg_hasEncryptedMessage(t *testing.T) {
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
