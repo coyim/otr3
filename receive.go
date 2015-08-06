@@ -126,7 +126,7 @@ func (c *Conversation) Receive(message ValidMessage) (plain MessagePlaintext, to
 	case msgGuessFragment:
 		c.fragmentationContext, err = c.receiveFragment(c.fragmentationContext, message)
 		if fragmentsFinished(c.fragmentationContext) {
-			plain, messagesToSend, err = c.receiveEncoded(encodedMessage(c.fragmentationContext.frag))
+			return c.Receive(c.fragmentationContext.frag)
 		}
 	case msgGuessUnknown:
 		messageEventReceivedUnrecognizedMessage(c)
