@@ -139,7 +139,7 @@ func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend [
 	case msgGuessNotOTR:
 		plain, messagesToSend, err = c.receivePlaintext(message)
 	case msgGuessV1KeyExch:
-		// TODO: warn here
+		return nil, nil, errUnsupportedOTRVersion
 	case msgGuessFragment:
 		c.fragmentationContext, err = c.receiveFragment(c.fragmentationContext, message)
 		if fragmentsFinished(c.fragmentationContext) {

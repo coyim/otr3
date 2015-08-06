@@ -212,3 +212,12 @@ func Test_receiveErrorMessage_willSignalAnEventWithTheErrorMessageWithoutLeading
 		c.receiveErrorMessage(m)
 	}, MessageEventReceivedMessageGeneralError, []byte("an error msg"), nil)
 }
+
+func Test_Receive_returnsAnErrorIfWeReceiveARequestToStartAVersion1KeyExchange(t *testing.T) {
+	c := &Conversation{}
+	c.Policies = policies(allowV3)
+
+	_, _, err := c.Receive(ValidMessage("?OTR:AAEK"))
+
+	assertEquals(t, err, errUnsupportedOTRVersion)
+}
