@@ -26,18 +26,6 @@ type sessionKeys struct {
 	sendingMACKey, receivingMACKey macKey
 }
 
-type keyManagementContext struct {
-	ourKeyID, theirKeyID                        uint32
-	ourCurrentDHKeys, ourPreviousDHKeys         dhKeyPair
-	theirCurrentDHPubKey, theirPreviousDHPubKey *big.Int
-
-	ourCounter   uint64
-	theirCounter uint64
-
-	macKeyHistory macKeyHistory
-	oldMACKeys    []macKey
-}
-
 type macKeyUsage struct {
 	ourKeyID, theirKeyID uint32
 	receivingKey         macKey
@@ -93,6 +81,18 @@ func (h *macKeyHistory) forgetMACKeysForTheirKey(theirKeyID uint32) []macKey {
 	h.deleteKeysAt(del...)
 
 	return ret
+}
+
+type keyManagementContext struct {
+	ourKeyID, theirKeyID                        uint32
+	ourCurrentDHKeys, ourPreviousDHKeys         dhKeyPair
+	theirCurrentDHPubKey, theirPreviousDHPubKey *big.Int
+
+	ourCounter   uint64
+	theirCounter uint64
+
+	macKeyHistory macKeyHistory
+	oldMACKeys    []macKey
 }
 
 func (c *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {

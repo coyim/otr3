@@ -61,9 +61,15 @@ func (c *Conversation) sendDHCommit() (toSend messageWithHeader, err error) {
 	}
 
 	c.ake.state = authStateAwaitingDHKey{}
-	//TODO: wipe keys from the memory
-	c.keys = keyManagementContext{
-		oldMACKeys: c.keys.oldMACKeys,
-	}
+
+	keys := keyManagementContext{}
+	keys.oldMACKeys = make([]macKey, len(c.keys.oldMACKeys))
+	copy(keys.oldMACKeys, c.keys.oldMACKeys)
+
+	//TODO: In which case Alice's keys are wiped?
+	//When she accepts a new DH-Commit?
+	c.keys.wipe()
+	c.keys = keys
+
 	return
 }

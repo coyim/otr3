@@ -47,6 +47,70 @@ func (a *ake) wipe() {
 	a.sigKey.wipe()
 }
 
+func (c *keyManagementContext) wipeKeys() {
+	if c == nil {
+		return
+	}
+
+	c.ourCurrentDHKeys.wipe()
+	c.ourPreviousDHKeys.wipe()
+
+	wipeBigInt(c.theirCurrentDHPubKey)
+	c.theirCurrentDHPubKey = nil
+
+	wipeBigInt(c.theirPreviousDHPubKey)
+	c.theirPreviousDHPubKey = nil
+}
+
+func (c *keyManagementContext) wipe() {
+	if c == nil {
+		return
+	}
+
+	c.wipeKeys()
+	c.ourCounter = 0
+	c.ourKeyID = 0
+	c.theirKeyID = 0
+	c.theirCounter = 0
+
+	for i := range c.oldMACKeys {
+		c.oldMACKeys[i].wipe()
+		c.oldMACKeys[i] = macKey{}
+	}
+	c.oldMACKeys = nil
+
+	c.macKeyHistory.wipe()
+}
+
+func (h *macKeyHistory) wipe() {
+	if h == nil {
+		return
+	}
+
+	for i := range h.items {
+		h.items[i].wipe()
+		h.items[i] = macKeyUsage{} //prevent memory leak
+	}
+	h.items = nil
+}
+
+func (u *macKeyUsage) wipe() {
+	if u == nil {
+		return
+	}
+
+	u.receivingKey.wipe()
+	u.receivingKey = macKey{}
+}
+
+func (k *macKey) wipe() {
+	if k == nil {
+		return
+	}
+
+	wipeBytes(k[:])
+}
+
 func zeroes(n int) []byte {
 	return make([]byte, n)
 }
