@@ -129,7 +129,7 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []by
 
 	//Otherwise:
 	//Forget your old gx value that you sent (encrypted) earlier, and pretend you're in AUTHSTATE_NONE; i.e. reply with a D-H Key Message, and transition authstate to AUTHSTATE_AWAITING_REVEALSIG.
-	wipeBigInt(c.ake.ourPublicValue)
+	c.ake.wipe()
 	return authStateNone{}.receiveDHCommitMessage(c, msg)
 }
 
