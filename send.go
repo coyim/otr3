@@ -41,14 +41,19 @@ func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMess
 	return []ValidMessage{makeCopy(message)}, nil
 }
 
+func (c *Conversation) generatePotentialErrorMessage(before []ValidMessage, ec ErrorCode) []ValidMessage {
+	if c.getEventHandler().WishToHandleErrorMessage() {
+		msg := c.getEventHandler().HandleErrorMessage(ec)
+		return []ValidMessage{append(append(errorMarker, ' '), msg...)}
+	}
+	return before
+}
+
 func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMessage, error) {
 	result, err := c.createSerializedDataMessage(message, messageFlagNormal, []tlv{})
 	if err != nil {
 		messageEventEncryptionError(c)
-		if c.getEventHandler().WishToHandleErrorMessage() {
-			msg := c.getEventHandler().HandleErrorMessage(ErrorCodeEncryptionError)
-			result = []ValidMessage{append(append(errorMarker, ' '), msg...)}
-		}
+		result = c.generatePotentialErrorMessage(result, ErrorCodeEncryptionError)
 	}
 
 	return result, err

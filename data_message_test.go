@@ -251,6 +251,30 @@ func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(
 	}, MessageEventReceivedMessageUnreadable, nil, nil)
 }
 
+func Test_processDataMessage_returnsACustomErrorMessageIfOneIsAvailable(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.OurKey = bobPrivateKey
+
+	var msg []byte
+	msg, c.keys = fixtureDataMsg(plainDataMsg{})
+	c.keys.theirCounter++ // force a bigger counter
+
+	c.msgState = encrypted
+
+	c.eventHandler = emptyEventHandlerWith(
+		func() bool { return true },
+		func(error ErrorCode) []byte {
+			if error == ErrorCodeMessageUnreadable {
+				return []byte("nova happened")
+			} else {
+				return []byte("white hole happened")
+			}
+		}, nil, nil)
+
+	p, _, _ := c.receiveDecoded(msg)
+	assertDeepEquals(t, string(p), "?OTR Error: nova happened")
+}
+
 func Test_processDataMessage_signalsThatMessageIsMalformedIfSomeOtherErrorHappens(t *testing.T) {
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
 	c.OurKey = bobPrivateKey

@@ -110,6 +110,7 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 			} else {
 				messageEventReceivedMalformedMessage(c)
 			}
+			plain = MessagePlaintext(c.generatePotentialErrorMessage([]ValidMessage{ValidMessage(plain)}, ErrorCodeMessageUnreadable)[0])
 		}
 	} else {
 		toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))

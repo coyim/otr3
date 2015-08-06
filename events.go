@@ -7,10 +7,9 @@ const (
 	// ErrorCodeEncryptionError means an error occured while encrypting a message
 	ErrorCodeEncryptionError ErrorCode = iota
 
-// // ErrorCodeMessageNotInPrivate means we sent encrypted message to somebody who is not in a mutual OTR session
-// ErrorCodeMessageNotInPrivate
-// // ErrorCodeMessageUnreadable means we sent an unreadable encrypted message
-// ErrorCodeMessageUnreadable
+	// ErrorCodeMessageUnreadable means we received an unreadable encrypted message
+	ErrorCodeMessageUnreadable
+
 // // ErrorCodeMessageMalformed means the message sent is malformed
 // ErrorCodeMessageMalformed
 )
