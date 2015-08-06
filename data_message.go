@@ -64,7 +64,7 @@ func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs [
 		return nil, err
 	}
 	c.updateLastSent()
-	return c.encode(res), nil
+	return c.fragEncode(res), nil
 }
 
 func (c *Conversation) processDataMessage(header, msg []byte) (plain MessagePlaintext, toSend messageWithHeader, err error) {

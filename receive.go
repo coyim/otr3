@@ -18,7 +18,7 @@ func (c *Conversation) encodeAndCombine(toSend []messageWithHeader) []ValidMessa
 	var result []ValidMessage
 
 	for _, ts := range toSend {
-		result = append(result, c.encode(ts)...)
+		result = append(result, c.fragEncode(ts)...)
 	}
 
 	return result

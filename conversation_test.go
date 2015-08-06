@@ -167,7 +167,7 @@ func Test_encodeWithoutFragment(t *testing.T) {
 	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
 	c.setFragmentSize(64)
 
-	msg := c.encode([]byte("one two three"))
+	msg := c.fragEncode([]byte("one two three"))
 
 	expectedFragments := []ValidMessage{
 		[]byte("?OTR:b25lIHR3byB0aHJlZQ==."),
@@ -180,7 +180,7 @@ func Test_encodeWithoutFragmentTooSmall(t *testing.T) {
 	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
 	c.setFragmentSize(18)
 
-	msg := c.encode([]byte("one two three"))
+	msg := c.fragEncode([]byte("one two three"))
 
 	expectedFragments := []ValidMessage{
 		[]byte("?OTR:b25lIHR3byB0aHJlZQ==."),
@@ -193,7 +193,7 @@ func Test_encodeWithFragment(t *testing.T) {
 	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
 	c.setFragmentSize(22)
 
-	msg := c.encode([]byte("one two three"))
+	msg := c.fragEncode([]byte("one two three"))
 
 	expectedFragments := []ValidMessage{
 		[]byte("?OTR,00001,00007,?OTR,"),
@@ -275,7 +275,7 @@ func Test_receive_ignoresMessagesWithWrongInstanceTags(t *testing.T) {
 
 	bob.ourInstanceTag = 0x1000 // different than the fixture
 	bob.keys.ourKeyID = 1       //this would force key rotation
-	plain, toSend, err := bob.Receive(bob.encode(msg)[0])
+	plain, toSend, err := bob.Receive(bob.fragEncode(msg)[0])
 	assertNil(t, plain)
 	assertNil(t, toSend)
 	assertNil(t, err)

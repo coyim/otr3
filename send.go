@@ -31,14 +31,13 @@ func (c *Conversation) Send(msg ValidMessage) ([]ValidMessage, error) {
 	return nil, errors.New("otr: cannot send message in current state")
 }
 
-func (c *Conversation) encode(msg messageWithHeader) []ValidMessage {
-	return c.fragment(c.encodeB64(msg))
+func (c *Conversation) fragEncode(msg messageWithHeader) []ValidMessage {
+	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
+	return c.fragment(c.encode(msg), bytesPerFragment)
 }
 
-func (c *Conversation) encodeB64(msg messageWithHeader) (encodedMessage, uint16) {
-	b64 := append(append(msgMarker, b64encode(msg)...), '.')
-	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
-	return b64, bytesPerFragment
+func (c *Conversation) encode(msg messageWithHeader) encodedMessage {
+	return append(append(msgMarker, b64encode(msg)...), '.')
 }
 
 func (c *Conversation) sendDHCommit() (toSend messageWithHeader, err error) {
