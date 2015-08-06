@@ -10,8 +10,8 @@ const (
 	// ErrorCodeMessageUnreadable means we received an unreadable encrypted message
 	ErrorCodeMessageUnreadable
 
-// // ErrorCodeMessageMalformed means the message sent is malformed
-// ErrorCodeMessageMalformed
+	// ErrorCodeMessageMalformed means the message sent is malformed
+	ErrorCodeMessageMalformed
 )
 
 // SMPEvent define the events used to indicate status of SMP to the UI

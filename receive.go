@@ -105,12 +105,15 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 	if msgType == msgTypeData {
 		plain, toSend, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
 		if err != nil {
+			var e ErrorCode
 			if err == ErrGPGConflict {
 				messageEventReceivedUnreadableMessage(c)
+				e = ErrorCodeMessageUnreadable
 			} else {
 				messageEventReceivedMalformedMessage(c)
+				e = ErrorCodeMessageMalformed
 			}
-			plain = MessagePlaintext(c.generatePotentialErrorMessage([]ValidMessage{ValidMessage(plain)}, ErrorCodeMessageUnreadable)[0])
+			plain = MessagePlaintext(c.generatePotentialErrorMessage([]ValidMessage{ValidMessage(plain)}, e)[0])
 		}
 	} else {
 		toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))

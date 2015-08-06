@@ -285,6 +285,26 @@ func Test_processDataMessage_signalsThatMessageIsMalformedIfSomeOtherErrorHappen
 	}, MessageEventReceivedMessageMalformed, nil, nil)
 }
 
+func Test_processDataMessage_callsErrorMessageHandlerAndReturnsTheResultAsAnOTRErrorMessageForAnError(t *testing.T) {
+	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
+	c.OurKey = bobPrivateKey
+	var msg []byte
+	msg, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("Making sure this isn't a heartbeat message")})
+	c.msgState = encrypted
+
+	c.eventHandler = emptyEventHandlerWith(
+		func() bool { return true },
+		func(error ErrorCode) []byte {
+			if error == ErrorCodeMessageMalformed {
+				return []byte("sunflower happened")
+			}
+			return []byte("dandelion happened")
+		}, nil, nil)
+
+	plain, _, _ := c.receiveDecoded(msg)
+	assertDeepEquals(t, string(plain), "?OTR Error: sunflower happened")
+}
+
 func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
