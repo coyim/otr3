@@ -12,29 +12,41 @@ func (c *Conversation) Send(m ValidMessage) ([]ValidMessage, error) {
 	if !c.Policies.isOTREnabled() {
 		return []ValidMessage{append([]byte{}, message...)}, nil
 	}
+
 	switch c.msgState {
 	case plainText:
-		if c.Policies.has(requireEncryption) {
-			messageEventEncryptionRequired(c)
-			c.updateLastSent()
-			return []ValidMessage{c.queryMessage()}, nil
-		}
-		if c.Policies.has(sendWhitespaceTag) {
-			message = c.appendWhitespaceTag(message)
-		}
-		return []ValidMessage{append([]byte{}, message...)}, nil
+		return c.sendMessageOnPlaintext(message)
 	case encrypted:
-		result, err := c.createSerializedDataMessage(message, messageFlagNormal, []tlv{})
-		if err != nil {
-			messageEventEncryptionError(c)
-		}
-		return result, err
+		return c.sendMessageOnEncrypted(message)
 	case finished:
 		messageEventConnectionEnded(c)
 		return nil, errors.New("otr: cannot send message because secure conversation has finished")
 	}
 
 	return nil, errors.New("otr: cannot send message in current state")
+}
+
+func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMessage, error) {
+	if c.Policies.has(requireEncryption) {
+		messageEventEncryptionRequired(c)
+		c.updateLastSent()
+		return []ValidMessage{c.queryMessage()}, nil
+	}
+
+	if c.Policies.has(sendWhitespaceTag) {
+		message = c.appendWhitespaceTag(message)
+	}
+
+	return []ValidMessage{append([]byte{}, message...)}, nil
+}
+
+func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMessage, error) {
+	result, err := c.createSerializedDataMessage(message, messageFlagNormal, []tlv{})
+	if err != nil {
+		messageEventEncryptionError(c)
+	}
+
+	return result, err
 }
 
 func (c *Conversation) fragEncode(msg messageWithHeader) []ValidMessage {
