@@ -16,12 +16,13 @@ type Conversation struct {
 	ourKey   *PrivateKey
 	theirKey *PublicKey
 
-	ake       *ake
-	smp       smp
-	keys      keyManagementContext
-	Policies  policies
-	heartbeat heartbeatContext
-	resend    resendContext
+	ake        *ake
+	smp        smp
+	keys       keyManagementContext
+	Policies   policies
+	heartbeat  heartbeatContext
+	resend     resendContext
+	injections injections
 
 	fragmentSize              uint16
 	fragmentationContext      fragmentationContext

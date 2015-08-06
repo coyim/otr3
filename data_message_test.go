@@ -287,7 +287,7 @@ func Test_processDataMessage_signalsThatMessageIsMalformedIfSomeOtherErrorHappen
 
 func Test_processDataMessage_callsErrorMessageHandlerAndReturnsTheResultAsAnOTRErrorMessageForAnError(t *testing.T) {
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
-	c.OurKey = bobPrivateKey
+	c.ourKey = bobPrivateKey
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("Making sure this isn't a heartbeat message")})
 	c.msgState = encrypted
