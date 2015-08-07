@@ -105,21 +105,25 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 	if msgType == msgTypeData {
 		plain, toSend, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
 		if err != nil {
-			var e ErrorCode
-			if err == ErrGPGConflict {
-				messageEventReceivedUnreadableMessage(c)
-				e = ErrorCodeMessageUnreadable
-			} else {
-				messageEventReceivedMalformedMessage(c)
-				e = ErrorCodeMessageMalformed
-			}
-			c.generatePotentialErrorMessage(e)
+			c.notifyDataMessageError(err)
 		}
 	} else {
 		toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))
 	}
 
 	return
+}
+
+func (c *Conversation) notifyDataMessageError(err error) {
+	var e ErrorCode
+	if err == ErrGPGConflict {
+		messageEventReceivedUnreadableMessage(c)
+		e = ErrorCodeMessageUnreadable
+	} else {
+		messageEventReceivedMalformedMessage(c)
+		e = ErrorCodeMessageMalformed
+	}
+	c.generatePotentialErrorMessage(e)
 }
 
 // Receive handles a message from a peer. It returns a human readable message and zero or more messages to send back to the peer.

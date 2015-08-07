@@ -121,7 +121,6 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 	p.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
 
 	plain = makeCopy(p.message)
-
 	if len(plain) == 0 {
 		plain = nil
 		messageEventHeartbeatReceived(c)
