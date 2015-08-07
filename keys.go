@@ -259,6 +259,10 @@ func (priv *PrivateKey) Serialize() []byte {
 }
 
 func (pub *PublicKey) serialize() []byte {
+	if pub.P == nil || pub.Q == nil || pub.G == nil || pub.Y == nil {
+		return nil
+	}
+
 	result := dsaKeyType
 	result = appendMPI(result, pub.P)
 	result = appendMPI(result, pub.Q)

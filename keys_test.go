@@ -801,6 +801,12 @@ func Test_PublicKey_serialize_willSerializeAPublicKeyCorrectly(t *testing.T) {
 	assertDeepEquals(t, result, serializedPublicKey)
 }
 
+func Test_PublicKey_serialize_returnsEmptyForNil(t *testing.T) {
+	var pk PublicKey
+	result := pk.serialize()
+	assertNil(t, result)
+}
+
 func Test_PrivateKey_roundTripGeneratesCorrectValue(t *testing.T) {
 	var pk PrivateKey
 	pk.Parse(serializedPrivateKey)

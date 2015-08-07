@@ -35,6 +35,7 @@ func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend [
 
 	return c.withInjectionsPlain(c.toSendEncoded(plain, messagesToSend, err))
 }
+
 func (c *Conversation) receiveWithoutOTR(message ValidMessage) (MessagePlaintext, []ValidMessage, error) {
 	return MessagePlaintext(message), nil, nil
 }
