@@ -165,7 +165,7 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *Conversation, msg []byte)
 		return s, nil, err
 	}
 
-	//TODO: Why do we change keyManagementContext during the AKE if it is supposed
+	//Why do we change keyManagementContext during the AKE if it is supposed
 	//to be used only after the AKE has finished?
 	c.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
 	c.keys.setOurCurrentDHKeys(c.ake.secretExponent, c.ake.ourPublicValue)
@@ -207,7 +207,7 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg
 		return s, nil, err
 	}
 
-	//TODO: Why do we change keyManagementContext during the AKE if it is supposed
+	//Why do we change keyManagementContext during the AKE if it is supposed
 	//to be used only after the AKE has finished?
 	c.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
 	c.keys.setOurCurrentDHKeys(c.ake.secretExponent, c.ake.ourPublicValue)
