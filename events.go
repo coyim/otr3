@@ -180,6 +180,13 @@ func (c *Conversation) getEventHandler() EventHandler {
 	return c.eventHandler
 }
 
+func (c *Conversation) generatePotentialErrorMessage(ec ErrorCode) {
+	if c.getEventHandler().WishToHandleErrorMessage() {
+		msg := c.getEventHandler().HandleErrorMessage(ec)
+		c.injectMessage(append(append(errorMarker, ' '), msg...))
+	}
+}
+
 func smpEventCheated(c *Conversation) {
 	c.getEventHandler().HandleSMPEvent(SMPEventCheated, 0, "")
 }
