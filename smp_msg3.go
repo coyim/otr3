@@ -2,9 +2,6 @@ package otr3
 
 import "math/big"
 
-// TODO should store g3b, (Pa / Pb), (Qa / Qb) and Ra
-// after generating smpMessage3
-
 type smp3State struct {
 	x              *big.Int
 	g3b            *big.Int
