@@ -21,6 +21,7 @@ func (m smp1Message) tlv() tlv {
 	if m.hasQuestion {
 		t.tlvType = tlvTypeSMP1WithQuestion
 		t.tlvValue = append(append([]byte(m.question), 0), t.tlvValue...)
+		t.tlvLength = uint16(len(t.tlvValue))
 	}
 	return t
 }
