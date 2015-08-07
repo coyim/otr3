@@ -128,14 +128,14 @@ func emptyWishToHandleErrorMessages() bool {
 	return false
 }
 
-func emptyErrorMessageHandler(_ ErrorCode) []byte {
+func emptyErrorMessageHandler(ErrorCode) []byte {
 	return nil
 }
 
-func emptySMPEventHandler(_ SMPEvent, _ int, _ string) {
+func emptySMPEventHandler(SMPEvent, int, string) {
 }
 
-func emptyMessageEventHandler(_ MessageEvent, _ []byte, _ error) {
+func emptyMessageEventHandler(MessageEvent, []byte, error) {
 }
 
 func emptyEventHandler() dynamicEventHandler {
