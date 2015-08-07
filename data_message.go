@@ -71,8 +71,7 @@ func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs [
 }
 
 func (c *Conversation) fragEncode(msg messageWithHeader) []ValidMessage {
-	bytesPerFragment := c.fragmentSize - c.version.minFragmentSize()
-	return c.fragment(c.encode(msg), bytesPerFragment)
+	return c.fragment(c.encode(msg), c.fragmentSize)
 }
 
 func (c *Conversation) encode(msg messageWithHeader) encodedMessage {

@@ -34,24 +34,28 @@ func fragmentData(data []byte, i int, fraglen, l uint16) []byte {
 }
 
 func (c *Conversation) setFragmentSize(size uint16) {
-	if size < c.version.minFragmentSize() {
-		c.fragmentSize = c.version.minFragmentSize()
-	}
 	c.fragmentSize = size
 }
 
 func (c *Conversation) fragment(data encodedMessage, fraglen uint16) []ValidMessage {
-	len := len(data)
+	l := len(data)
 
-	if len <= int(fraglen) || fraglen == 0 {
+	if l <= int(fraglen) || fraglen == 0 {
 		return []ValidMessage{ValidMessage(data)}
 	}
 
-	numFragments := (len / int(fraglen)) + 1
+	fakeHeader := c.version.fragmentPrefix(1, 1, c.ourInstanceTag, c.theirInstanceTag)
+	realFraglen := (fraglen - uint16(len(fakeHeader))) - 1
+
+	if realFraglen <= 0 {
+		return []ValidMessage{ValidMessage(data)}
+	}
+
+	numFragments := (l / int(realFraglen)) + 1
 	ret := make([]ValidMessage, numFragments)
 	for i := 0; i < numFragments; i++ {
 		prefix := c.version.fragmentPrefix(i, numFragments, c.ourInstanceTag, c.theirInstanceTag)
-		ret[i] = append(append(prefix, fragmentData(data, i, fraglen, uint16(len))...), fragmentSeparator[0])
+		ret[i] = append(append(prefix, fragmentData(data, i, realFraglen, uint16(l))...), fragmentSeparator[0])
 	}
 	return ret
 }

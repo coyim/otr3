@@ -9,7 +9,6 @@ type otrVersion interface {
 	isFragmented(data []byte) bool
 	parseFragmentPrefix(c *Conversation, data []byte) (rest []byte, ignore bool, ok bool)
 	fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte
-	minFragmentSize() uint16
 	whitespaceTag() []byte
 	messageHeader(c *Conversation, msgType byte) ([]byte, error)
 	parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error)

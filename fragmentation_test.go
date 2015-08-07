@@ -52,13 +52,19 @@ func Test_fragment_returnsFragmentsForNeededFragmentation(t *testing.T) {
 	ctx.ourInstanceTag = defaultInstanceTag
 	ctx.theirInstanceTag = defaultInstanceTag + 2
 
-	data := []byte("one two three")
-
-	assertDeepEquals(t, ctx.fragment(data, 4), []ValidMessage{
-		[]byte("?OTR|00000100|00000102,00001,00004,one ,"),
-		[]byte("?OTR|00000100|00000102,00002,00004,two ,"),
-		[]byte("?OTR|00000100|00000102,00003,00004,thre,"),
-		[]byte("?OTR|00000100|00000102,00004,00004,e,"),
+	data := []byte("one one one two two two three three three")
+	assertDeepEquals(t, ctx.fragment(data, 40), []ValidMessage{
+		[]byte("?OTR|00000100|00000102,00001,00011,one ,"),
+		[]byte("?OTR|00000100|00000102,00002,00011,one ,"),
+		[]byte("?OTR|00000100|00000102,00003,00011,one ,"),
+		[]byte("?OTR|00000100|00000102,00004,00011,two ,"),
+		[]byte("?OTR|00000100|00000102,00005,00011,two ,"),
+		[]byte("?OTR|00000100|00000102,00006,00011,two ,"),
+		[]byte("?OTR|00000100|00000102,00007,00011,thre,"),
+		[]byte("?OTR|00000100|00000102,00008,00011,e th,"),
+		[]byte("?OTR|00000100|00000102,00009,00011,ree ,"),
+		[]byte("?OTR|00000100|00000102,00010,00011,thre,"),
+		[]byte("?OTR|00000100|00000102,00011,00011,e,"),
 	})
 }
 
@@ -67,13 +73,21 @@ func Test_fragment_returnsFragmentsForNeededFragmentationForV2(t *testing.T) {
 	ctx.ourInstanceTag = defaultInstanceTag
 	ctx.theirInstanceTag = defaultInstanceTag + 1
 
-	data := []byte("one two three")
+	data := []byte("one one one two two two three three three")
 
-	assertDeepEquals(t, ctx.fragment(data, 4), []ValidMessage{
-		[]byte("?OTR,00001,00004,one ,"),
-		[]byte("?OTR,00002,00004,two ,"),
-		[]byte("?OTR,00003,00004,thre,"),
-		[]byte("?OTR,00004,00004,e,"),
+	res := ctx.fragment(data, 22)
+	assertDeepEquals(t, res, []ValidMessage{
+		[]byte("?OTR,00001,00011,one ,"),
+		[]byte("?OTR,00002,00011,one ,"),
+		[]byte("?OTR,00003,00011,one ,"),
+		[]byte("?OTR,00004,00011,two ,"),
+		[]byte("?OTR,00005,00011,two ,"),
+		[]byte("?OTR,00006,00011,two ,"),
+		[]byte("?OTR,00007,00011,thre,"),
+		[]byte("?OTR,00008,00011,e th,"),
+		[]byte("?OTR,00009,00011,ree ,"),
+		[]byte("?OTR,00010,00011,thre,"),
+		[]byte("?OTR,00011,00011,e,"),
 	})
 }
 
