@@ -40,6 +40,7 @@ func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSen
 	case smpStateWaitingForSecret:
 		toSend, err = c.ProvideAuthenticationSecret(mutualSecret)
 	default:
+		c.restart()
 		toSend, err = c.StartAuthenticate(question, mutualSecret)
 	}
 	return

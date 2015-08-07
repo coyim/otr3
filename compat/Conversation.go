@@ -50,6 +50,9 @@ type Conversation struct {
 
 func (c *Conversation) compatInit() {
 	c.Conversation.Policies.AllowV2()
+	if c.Conversation.GetTheirKey() != nil {
+		c.TheirPublicKey.PublicKey = *c.Conversation.GetTheirKey()
+	}
 	c.Conversation.SetKeys(&c.PrivateKey.PrivateKey, &c.TheirPublicKey.PublicKey)
 }
 

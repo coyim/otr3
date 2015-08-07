@@ -92,3 +92,7 @@ func (c *Conversation) SetKeys(ourKey *PrivateKey, theirKey *PublicKey) {
 	c.ourKey = ourKey
 	c.theirKey = theirKey
 }
+
+func (c Conversation) GetTheirKey() *PublicKey {
+	return c.theirKey
+}
