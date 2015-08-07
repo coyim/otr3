@@ -1,6 +1,7 @@
 package compat
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"io"
 
@@ -50,10 +51,19 @@ type Conversation struct {
 
 func (c *Conversation) compatInit() {
 	c.Conversation.Policies.AllowV2()
+}
+
+func (c *Conversation) updateValues() {
 	if c.Conversation.GetTheirKey() != nil {
 		c.TheirPublicKey.PublicKey = *c.Conversation.GetTheirKey()
 	}
+
 	c.Conversation.SetKeys(&c.PrivateKey.PrivateKey, &c.TheirPublicKey.PublicKey)
+
+	var z [8]byte
+	if bytes.Equal(c.SSID[:], z[:]) {
+		c.SSID = c.GetSSID()
+	}
 }
 
 // Receive handles a message from a peer. It returns a human readable message,
@@ -62,6 +72,7 @@ func (c *Conversation) compatInit() {
 // These messages do not need to be passed to Send before transmission.
 func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change SecurityChange, toSend [][]byte, err error) {
 	c.compatInit()
+
 	encrypted = c.IsEncrypted()
 	var ret []otr3.ValidMessage
 	out, ret, err = c.Conversation.Receive(in)
@@ -70,6 +81,7 @@ func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change Se
 		toSend = otr3.Bytes(ret)
 	}
 
+	c.updateValues()
 	return
 }
 
@@ -85,6 +97,7 @@ func (c *Conversation) Send(in []byte) (toSend [][]byte, err error) {
 		toSend = otr3.Bytes(ret)
 	}
 
+	c.updateValues()
 	return
 }
 
@@ -100,6 +113,7 @@ func (c *Conversation) End() (toSend [][]byte) {
 		toSend = otr3.Bytes(ret)
 	}
 
+	c.updateValues()
 	return
 }
 
@@ -111,6 +125,8 @@ func (c *Conversation) End() (toSend [][]byte) {
 func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend [][]byte, err error) {
 	c.compatInit()
 	ret, err := c.Conversation.Authenticate(question, mutualSecret)
+
+	c.updateValues()
 	return otr3.Bytes(ret), err
 }
 
@@ -119,6 +135,8 @@ func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSen
 func (c *Conversation) SMPQuestion() string {
 	c.compatInit()
 	question, _ := c.Conversation.SMPQuestion()
+
+	c.updateValues()
 	return question
 }
 
