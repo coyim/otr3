@@ -94,7 +94,7 @@ func (ctx fragmentationContext) appendFragment(data []byte, ix, l uint16) fragme
 }
 
 func restartFragment(data []byte, ix, l uint16) fragmentationContext {
-	return fragmentationContext{append([]byte{}, data...), ix, l}
+	return fragmentationContext{makeCopy(data), ix, l}
 }
 
 func forgetFragment() fragmentationContext {

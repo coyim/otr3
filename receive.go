@@ -61,7 +61,7 @@ func (c *Conversation) checkPlaintextPolicies(plain MessagePlaintext) {
 }
 
 func (c *Conversation) receivePlaintext(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
-	p := append([]byte{}, message...)
+	p := makeCopy(message)
 	plain = MessagePlaintext(p)
 	c.checkPlaintextPolicies(plain)
 	return

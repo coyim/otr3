@@ -223,7 +223,7 @@ func (c dataMsg) serialize() []byte {
 		c.serializeUnsignedCache = c.serializeUnsigned()
 	}
 
-	out := append([]byte{}, c.serializeUnsignedCache...)
+	out := makeCopy(c.serializeUnsignedCache)
 	out = append(out, c.authenticator[:]...)
 
 	keyLen := len(macKey{})
