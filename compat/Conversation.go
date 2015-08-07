@@ -44,7 +44,6 @@ type Conversation struct {
 	otr3.Conversation
 	TheirPublicKey PublicKey
 	PrivateKey     *PrivateKey
-	SSID           [8]byte
 	FragmentSize   int
 }
 

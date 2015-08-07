@@ -2,6 +2,18 @@ package otr3
 
 import "io"
 
+const (
+	plainText msgState = iota
+	encrypted
+	finished
+)
+
+var (
+	queryMarker = []byte("?OTR")
+	errorMarker = []byte("?OTR Error:")
+	msgMarker   = []byte("?OTR:")
+)
+
 // Conversation contains all the information for a specific connection between two peers in an IM system.
 type Conversation struct {
 	version otrVersion
@@ -32,18 +44,6 @@ type Conversation struct {
 }
 
 type msgState int
-
-const (
-	plainText msgState = iota
-	encrypted
-	finished
-)
-
-var (
-	queryMarker = []byte("?OTR")
-	errorMarker = []byte("?OTR Error:")
-	msgMarker   = []byte("?OTR:")
-)
 
 func (c *Conversation) messageHeader(msgType byte) ([]byte, error) {
 	return c.version.messageHeader(c, msgType)
@@ -88,11 +88,18 @@ func (c *Conversation) End() (toSend []ValidMessage, err error) {
 	return
 }
 
+// SetKeys assigns ourKey (private) and theirKey (public) to the Conversation
 func (c *Conversation) SetKeys(ourKey *PrivateKey, theirKey *PublicKey) {
 	c.ourKey = ourKey
 	c.theirKey = theirKey
 }
 
-func (c Conversation) GetTheirKey() *PublicKey {
+// GetTheirKey returns the public key of the other peer in this conversation
+func (c *Conversation) GetTheirKey() *PublicKey {
 	return c.theirKey
+}
+
+// GetSSID returns the SSID of this Conversation
+func (c *Conversation) GetSSID() [8]byte {
+	return c.ssid
 }
