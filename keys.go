@@ -259,6 +259,7 @@ func (priv *PrivateKey) Serialize() []byte {
 }
 
 func (pub *PublicKey) serialize() []byte {
+	//TODO: Should this be an error?
 	if pub.P == nil || pub.Q == nil || pub.G == nil || pub.Y == nil {
 		return nil
 	}
@@ -274,6 +275,10 @@ func (pub *PublicKey) serialize() []byte {
 // Fingerprint will generate a fingerprint of the serialized version of the key using the provided hash.
 func (pub *PublicKey) Fingerprint(h hash.Hash) []byte {
 	b := pub.serialize()
+	if b == nil {
+		return nil
+	}
+
 	h.Write(b[2:]) // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
 	return h.Sum(nil)
 }
