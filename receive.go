@@ -1,5 +1,40 @@
 package otr3
 
+// Receive handles a message from a peer. It returns a human readable message and zero or more messages to send back to the peer.
+func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
+	message := makeCopy(m)
+	defer wipeBytes(message)
+
+	if !c.Policies.isOTREnabled() {
+		return c.receiveWithoutOTR(message)
+	}
+
+	msgType := guessMessageType(message)
+	var messagesToSend []messageWithHeader
+	switch msgType {
+	case msgGuessError:
+		return c.withInjectionsPlain(c.receiveErrorMessage(message))
+	case msgGuessQuery:
+		messagesToSend, err = c.receiveQueryMessage(message)
+	case msgGuessTaggedPlaintext:
+		plain, messagesToSend, err = c.receiveTaggedPlaintext(message)
+	case msgGuessNotOTR:
+		plain, messagesToSend, err = c.receivePlaintext(message)
+	case msgGuessV1KeyExch:
+		return nil, nil, errUnsupportedOTRVersion
+	case msgGuessFragment:
+		c.fragmentationContext, err = c.receiveFragment(c.fragmentationContext, message)
+		if fragmentsFinished(c.fragmentationContext) {
+			return c.withInjectionsPlain(c.Receive(c.fragmentationContext.frag))
+		}
+	case msgGuessUnknown:
+		messageEventReceivedUnrecognizedMessage(c)
+	case msgGuessDHCommit, msgGuessDHKey, msgGuessRevealSig, msgGuessSignature, msgGuessData:
+		plain, messagesToSend, err = c.receiveEncoded(encodedMessage(message))
+	}
+
+	return c.withInjectionsPlain(c.toSendEncoded(plain, messagesToSend, err))
+}
 func (c *Conversation) receiveWithoutOTR(message ValidMessage) (MessagePlaintext, []ValidMessage, error) {
 	return MessagePlaintext(message), nil, nil
 }
@@ -124,40 +159,4 @@ func (c *Conversation) notifyDataMessageError(err error) {
 		e = ErrorCodeMessageMalformed
 	}
 	c.generatePotentialErrorMessage(e)
-}
-
-// Receive handles a message from a peer. It returns a human readable message and zero or more messages to send back to the peer.
-func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
-	message := makeCopy(m)
-	defer wipeBytes(message)
-
-	if !c.Policies.isOTREnabled() {
-		return c.receiveWithoutOTR(message)
-	}
-
-	msgType := guessMessageType(message)
-	var messagesToSend []messageWithHeader
-	switch msgType {
-	case msgGuessError:
-		return c.withInjectionsPlain(c.receiveErrorMessage(message))
-	case msgGuessQuery:
-		messagesToSend, err = c.receiveQueryMessage(message)
-	case msgGuessTaggedPlaintext:
-		plain, messagesToSend, err = c.receiveTaggedPlaintext(message)
-	case msgGuessNotOTR:
-		plain, messagesToSend, err = c.receivePlaintext(message)
-	case msgGuessV1KeyExch:
-		return nil, nil, errUnsupportedOTRVersion
-	case msgGuessFragment:
-		c.fragmentationContext, err = c.receiveFragment(c.fragmentationContext, message)
-		if fragmentsFinished(c.fragmentationContext) {
-			return c.withInjectionsPlain(c.Receive(c.fragmentationContext.frag))
-		}
-	case msgGuessUnknown:
-		messageEventReceivedUnrecognizedMessage(c)
-	case msgGuessDHCommit, msgGuessDHKey, msgGuessRevealSig, msgGuessSignature, msgGuessData:
-		plain, messagesToSend, err = c.receiveEncoded(encodedMessage(message))
-	}
-
-	return c.withInjectionsPlain(c.toSendEncoded(plain, messagesToSend, err))
 }
