@@ -26,18 +26,16 @@ func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
 	assertDeepEquals(t, dhMsgVersion(msg[0]), uint16(2))
 }
 
-//FIXME: Should not it be tested on sendDHCommit?
 func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 	fixture := fixtureConversation()
 	fixture.dhCommitMessage()
 
-	msg := []byte("?OTRv3?")
 	cxt := &Conversation{
-		Policies: policies(allowV3),
-		Rand:     fixtureRand(),
+		version: otrV3{},
+		Rand:    fixtureRand(),
 	}
 
-	_, err := cxt.receiveQueryMessage(msg)
+	_, err := cxt.sendDHCommit()
 
 	assertNil(t, err)
 	assertDeepEquals(t, cxt.ake.r, fixture.ake.r)
