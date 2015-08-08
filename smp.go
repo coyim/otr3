@@ -16,6 +16,14 @@ type smp struct {
 
 const smpVersion = 1
 
+func (s *smp) ensureSMP() {
+	if s.state != nil {
+		return
+	}
+
+	s.state = smpStateExpect1{}
+}
+
 // SMPQuestion returns the current SMP question and ok if there is one, and not ok if there isn't one.
 func (c *Conversation) SMPQuestion() (string, bool) {
 	if c.smp.question == nil {

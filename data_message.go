@@ -164,6 +164,8 @@ func decideFlagFrom(tlvs []tlv) byte {
 }
 
 func (c *Conversation) processSMPTLV(t tlv) (toSend *tlv, err error) {
+	c.smp.ensureSMP()
+
 	smpMessage, ok := t.smpMessage()
 	if !ok {
 		return nil, newOtrError("corrupt data message")
