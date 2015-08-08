@@ -2,6 +2,8 @@ package otr3
 
 import "io"
 
+type msgState int
+
 const (
 	plainText msgState = iota
 	encrypted
@@ -42,8 +44,6 @@ type Conversation struct {
 
 	eventHandler EventHandler
 }
-
-type msgState int
 
 func (c *Conversation) messageHeader(msgType byte) ([]byte, error) {
 	return c.version.messageHeader(c, msgType)

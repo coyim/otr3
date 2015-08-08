@@ -47,10 +47,17 @@ type Conversation struct {
 	PrivateKey     *PrivateKey
 	SSID           [8]byte
 	FragmentSize   int
+
+	initialized bool
 }
 
 func (c *Conversation) compatInit() {
+	if c.initialized {
+		return
+	}
+
 	c.Conversation.Policies.AllowV2()
+	c.initialized = true
 }
 
 func (c *Conversation) updateValues() {
@@ -73,12 +80,21 @@ func (c *Conversation) updateValues() {
 func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change SecurityChange, toSend [][]byte, err error) {
 	c.compatInit()
 
-	encrypted = c.IsEncrypted()
 	var ret []otr3.ValidMessage
+	wasEncrypted := c.IsEncrypted()
 	out, ret, err = c.Conversation.Receive(in)
+	encrypted = c.IsEncrypted()
 
 	if ret != nil {
 		toSend = otr3.Bytes(ret)
+	}
+
+	switch {
+	// There is no MessageEvent to notify the AKE completion
+	// It misses the case: when the keys are
+	// renegotiated within an encrypted conversation.
+	case wasEncrypted == false && encrypted == true:
+		change = NewKeys
 	}
 
 	c.updateValues()
