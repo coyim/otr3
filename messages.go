@@ -10,12 +10,12 @@ import (
 	"math/big"
 )
 
-const messageFlagNormal = byte(0x00)
-const messageFlagIgnoreUnreadable = byte(0x01)
-
-const messageHeaderPrefix = 3
-
 const (
+	messageFlagNormal           = byte(0x00)
+	messageFlagIgnoreUnreadable = byte(0x01)
+
+	messageHeaderPrefix = 3
+
 	msgTypeDHCommit  = byte(0x02)
 	msgTypeData      = byte(0x03)
 	msgTypeDHKey     = byte(0x0A)
