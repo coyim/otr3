@@ -203,7 +203,8 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 		return newOtrError("dataMsg.deserialize corrupted topHalfCtr")
 	}
 
-	if binary.BigEndian.Uint64(in) == 0 {
+	copy(c.topHalfCtr[:], in)
+	if binary.BigEndian.Uint64(c.topHalfCtr[:]) == 0 {
 		return newOtrError("dataMsg.deserialize invalid topHalfCtr")
 	}
 
