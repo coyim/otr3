@@ -169,8 +169,12 @@ func emptyEventHandlerWith(
 	return e
 }
 
+func (c *Conversation) SetEventHandler(h EventHandler) {
+	c.eventHandler = h
+}
+
 func (c *Conversation) setEmptyEventHandler() {
-	c.eventHandler = emptyEventHandler()
+	c.SetEventHandler(emptyEventHandler())
 }
 
 func (c *Conversation) getEventHandler() EventHandler {

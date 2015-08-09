@@ -48,7 +48,55 @@ type Conversation struct {
 	SSID           [8]byte
 	FragmentSize   int
 
+	eventHandler
 	initialized bool
+}
+
+type eventHandler struct {
+	smpQuestion    string
+	securityChange SecurityChange
+}
+
+func (eventHandler) WishToHandleErrorMessage() bool {
+	return true
+}
+
+func (eventHandler) HandleErrorMessage(error otr3.ErrorCode) []byte {
+	return nil
+}
+
+func (e eventHandler) HandleSMPEvent(event otr3.SMPEvent, progressPercent int, question string) {
+	switch event {
+	case otr3.SMPEventAskForAnswer:
+		//Why do we have both otr3.SMPEventAskForAnswer and SMPQuestion()?
+		//When should each one be used?
+		e.securityChange = SMPSecretNeeded
+		e.smpQuestion = question
+	case otr3.SMPEventSuccess:
+		if progressPercent == 100 {
+			e.securityChange = SMPComplete
+		}
+	case otr3.SMPEventFailure:
+		e.securityChange = SMPFailed
+	}
+}
+
+func (e eventHandler) HandleMessageEvent(event otr3.MessageEvent, message []byte, err error) {
+	if event == otr3.MessageEventConnectionEnded {
+		e.securityChange = ConversationEnded
+	}
+}
+
+func (e *eventHandler) consumeSecurityChange() SecurityChange {
+	ret := e.securityChange
+	e.securityChange = NoChange
+	return ret
+}
+
+// SMPQuestion returns the human readable challenge question from the peer.
+// It's only valid after Receive has returned SMPSecretNeeded.
+func (c *Conversation) SMPQuestion() string {
+	return c.eventHandler.smpQuestion
 }
 
 func (c *Conversation) compatInit() {
@@ -57,6 +105,8 @@ func (c *Conversation) compatInit() {
 	}
 
 	c.Conversation.Policies.AllowV2()
+	c.SetEventHandler(&eventHandler{})
+
 	c.initialized = true
 }
 
@@ -95,6 +145,8 @@ func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change Se
 	// renegotiated within an encrypted conversation.
 	case wasEncrypted == false && encrypted == true:
 		change = NewKeys
+	default:
+		change = c.eventHandler.consumeSecurityChange()
 	}
 
 	c.updateValues()
@@ -144,16 +196,6 @@ func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSen
 
 	c.updateValues()
 	return otr3.Bytes(ret), err
-}
-
-// SMPQuestion returns the human readable challenge question from the peer.
-// It's only valid after Receive has returned SMPSecretNeeded.
-func (c *Conversation) SMPQuestion() string {
-	c.compatInit()
-	question, _ := c.Conversation.SMPQuestion()
-
-	c.updateValues()
-	return question
 }
 
 // PublicKey represents an OTR Public Key
