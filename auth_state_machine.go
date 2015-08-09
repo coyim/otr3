@@ -196,12 +196,14 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg
 	err := c.processRevealSig(msg)
 
 	if err != nil {
-		return nil, nil, err
+		return s, nil, err
 	}
+
 	sigMsg, err := c.sigMessage()
 	if err != nil {
 		return s, nil, err
 	}
+
 	sigMsg, err = c.wrapMessageHeader(msgTypeSig, sigMsg)
 	if err != nil {
 		return s, nil, err
@@ -240,7 +242,7 @@ func (s authStateAwaitingSig) receiveSigMessage(c *Conversation, msg []byte) (au
 	err := c.processSig(msg)
 
 	if err != nil {
-		return nil, nil, err
+		return s, nil, err
 	}
 
 	//gy was stored when we receive DH-Key
