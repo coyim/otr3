@@ -26,7 +26,7 @@ type smpState interface {
 
 func (c *Conversation) restart() []byte {
 	var ret smpMessage
-	c.smp.state, ret, _ = abortStateMachine()
+	c.smp.state, ret, _ = sendSMPAbortAndRestartStateMachine()
 	return ret.tlv().serialize()
 }
 
@@ -34,7 +34,8 @@ func abortState(e error) (smpState, smpMessage, error) {
 	return smpStateExpect1{}, smpMessageAbort{}, e
 }
 
-func abortStateMachine() (smpState, smpMessage, error) {
+func sendSMPAbortAndRestartStateMachine() (smpState, smpMessage, error) {
+	//must return nil error otherwise the abort message will be ignored
 	return abortState(nil)
 }
 
@@ -73,7 +74,7 @@ func (c *Conversation) continueSMP(mutualSecret []byte) (*tlv, error) {
 
 func (smpStateBase) receiveMessage1(c *Conversation, m smp1Message) (smpState, smpMessage, error) {
 	smpEventError(c)
-	return abortStateMachine()
+	return sendSMPAbortAndRestartStateMachine()
 }
 
 func (smpStateBase) continueMessage1(c *Conversation, mutualSecret []byte) (smpState, smpMessage, error) {
@@ -82,17 +83,17 @@ func (smpStateBase) continueMessage1(c *Conversation, mutualSecret []byte) (smpS
 
 func (smpStateBase) receiveMessage2(c *Conversation, m smp2Message) (smpState, smpMessage, error) {
 	smpEventError(c)
-	return abortStateMachine()
+	return sendSMPAbortAndRestartStateMachine()
 }
 
 func (smpStateBase) receiveMessage3(c *Conversation, m smp3Message) (smpState, smpMessage, error) {
 	smpEventError(c)
-	return abortStateMachine()
+	return sendSMPAbortAndRestartStateMachine()
 }
 
 func (smpStateBase) receiveMessage4(c *Conversation, m smp4Message) (smpState, smpMessage, error) {
 	smpEventError(c)
-	return abortStateMachine()
+	return sendSMPAbortAndRestartStateMachine()
 }
 
 func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState, smpMessage, error) {
