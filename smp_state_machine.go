@@ -39,6 +39,11 @@ func sendSMPAbortAndRestartStateMachine() (smpState, smpMessage, error) {
 	return abortState(nil)
 }
 
+func (c *Conversation) abortStateMachineAndNotifyCheated() (smpState, smpMessage, error) {
+	smpEventCheated(c)
+	return sendSMPAbortAndRestartStateMachine()
+}
+
 func (c *Conversation) abortStateMachineWith(e error) (smpState, smpMessage, error) {
 	smpEventCheated(c)
 	return abortState(e)
@@ -100,7 +105,7 @@ func (smpStateBase) receiveMessage4(c *Conversation, m smp4Message) (smpState, s
 func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState, smpMessage, error) {
 	err := c.verifySMP1(m)
 	if err != nil {
-		return c.abortStateMachineWith(err)
+		return c.abortStateMachineAndNotifyCheated()
 	}
 
 	if m.hasQuestion {
@@ -133,7 +138,7 @@ func (s smpStateWaitingForSecret) continueMessage1(c *Conversation, mutualSecret
 func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState, smpMessage, error) {
 	err := c.verifySMP2(c.smp.s1, m)
 	if err != nil {
-		return c.abortStateMachineWith(err)
+		return c.abortStateMachineAndNotifyCheated()
 	}
 
 	s3, err := c.generateSMP3(c.smp.secret, *c.smp.s1, m)
@@ -151,7 +156,7 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState, smpMessage, error) {
 	err := c.verifySMP3(c.smp.s2, m)
 	if err != nil {
-		return c.abortStateMachineWith(err)
+		return c.abortStateMachineAndNotifyCheated()
 	}
 
 	err = c.verifySMP3ProtocolSuccess(c.smp.s2, m)
@@ -172,7 +177,7 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 func (smpStateExpect4) receiveMessage4(c *Conversation, m smp4Message) (smpState, smpMessage, error) {
 	err := c.verifySMP4(c.smp.s3, m)
 	if err != nil {
-		return c.abortStateMachineWith(err)
+		return c.abortStateMachineAndNotifyCheated()
 	}
 
 	err = c.verifySMP4ProtocolSuccess(c.smp.s1, c.smp.s3, m)
