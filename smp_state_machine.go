@@ -241,6 +241,7 @@ func (smpStateExpect1) startAuthenticate(c *Conversation, question string, mutua
 	}
 
 	c.smp.s1 = &s1
+	c.smp.state = smpStateExpect2{}
 
 	return []tlv{s1.msg.tlv()}, nil
 }

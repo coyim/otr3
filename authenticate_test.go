@@ -43,6 +43,8 @@ func Test_StartAuthenticate_generatesAndReturnsTheFirstSMPMessageToSend(t *testi
 
 	msg, e := c.StartAuthenticate("", []byte("hello world"))
 	assertEquals(t, e, nil)
+	assertEquals(t, c.smp.state, smpStateExpect2{})
+
 	dec, _ := c.decode(encodedMessage(msg[0]))
 	_, messageBody, _ := c.parseMessageHeader(dec)
 	assertDeepEquals(t, len(messageBody), 1361)
