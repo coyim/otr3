@@ -338,7 +338,7 @@ func Test_smp1Message_receivedMessage_abortsSMPIfFailsToVerifyMessage1(t *testin
 	assertDeepEquals(t, ret, smpMessageAbort{})
 }
 
-func Test_smpStateWaitingForSecret_continueMessage1_returnsErrorIfgenerateSMP2Fails(t *testing.T) {
+func Test_smpStateWaitingForSecret_continueMessage1_abortsSMPIfgenerateSMP2Fails(t *testing.T) {
 	c := bobContextAfterAKE()
 	c.Rand = fixedRand([]string{"ABCD"})
 	c.msgState = encrypted
@@ -347,9 +347,11 @@ func Test_smpStateWaitingForSecret_continueMessage1_returnsErrorIfgenerateSMP2Fa
 	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
-	_, _, err := smpStateWaitingForSecret{msg: fixtureMessage1()}.continueMessage1(c, []byte("hello world"))
+	s, m, err := smpStateWaitingForSecret{msg: fixtureMessage1()}.continueMessage1(c, []byte("hello world"))
 
-	assertDeepEquals(t, err, errShortRandomRead)
+	assertNil(t, err)
+	assertEquals(t, s, smpStateExpect1{})
+	assertEquals(t, m, smpMessageAbort{})
 }
 
 func Test_smpStateExpect2_receiveMessage2_abortsSMPIfVerifySMPReturnsError(t *testing.T) {
@@ -374,13 +376,15 @@ func Test_smp2Message_receivedMessage_abortsSMPIfUnderlyingPrimitiveHasErrors(t 
 	assertDeepEquals(t, ret, smpMessageAbort{})
 }
 
-func Test_smpStateExpect2_receiveMessage2_returnsErrorIfgenerateSMPFails(t *testing.T) {
+func Test_smpStateExpect2_receiveMessage2_abortsSMPIfgenerateSMPFails(t *testing.T) {
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
 	c.smp.s1 = fixtureSmp1()
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
-	_, _, err := smpStateExpect2{}.receiveMessage2(c, fixtureMessage2())
+	s, m, err := smpStateExpect2{}.receiveMessage2(c, fixtureMessage2())
 
-	assertDeepEquals(t, err, errShortRandomRead)
+	assertNil(t, err)
+	assertEquals(t, s, smpStateExpect1{})
+	assertDeepEquals(t, m, smpMessageAbort{})
 }
 
 func Test_smpStateExpect3_receiveMessage3_abortsSMPIfVerifySMPReturnsError(t *testing.T) {
@@ -429,13 +433,15 @@ func Test_smpStateExpect3_receiveMessage3_willSendAnSMPNotificationOnProtocolFai
 
 }
 
-func Test_smpStateExpect3_receiveMessage3_returnsErrorIfCantGenerateFinalParameters(t *testing.T) {
+func Test_smpStateExpect3_receiveMessage3_abortsSMPIfCantGenerateFinalParameters(t *testing.T) {
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	c.smp.s2 = fixtureSmp2()
-	_, _, err := smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
+	s, m, err := smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
 
-	assertDeepEquals(t, err, errShortRandomRead)
+	assertNil(t, err)
+	assertEquals(t, s, smpStateExpect1{})
+	assertDeepEquals(t, m, smpMessageAbort{})
 }
 
 func Test_smpStateExpect4_receiveMessage4_abortsSMPIfVerifySMPReturnsError(t *testing.T) {
@@ -490,8 +496,9 @@ func Test_receive_returnsAnyErrorThatOccurs(t *testing.T) {
 	c.smp.state = smpStateExpect2{}
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	_, err := c.receiveSMP(m)
-	assertEquals(t, err, errShortRandomRead)
+	ret, err := c.receiveSMP(m)
+	assertNil(t, err)
+	assertDeepEquals(t, *ret, smpMessageAbort{}.tlv())
 }
 
 func Test_smpStateExpect1_String_returnsTheCorrectString(t *testing.T) {

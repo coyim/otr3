@@ -163,13 +163,12 @@ func Test_ProvideAuthenticationSecret_setsTheNextMessageState(t *testing.T) {
 
 func Test_ProvideAuthenticationSecret_returnsFailureFromContinueSMP(t *testing.T) {
 	c := bobContextAfterAKE()
-	c.Rand = fixedRand([]string{"ABCD"})
-	c.msgState = encrypted
+	c.msgState = plainText
 	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
 	c.ourKey = bobPrivateKey
 	c.theirKey = &alicePrivateKey.PublicKey
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	_, e := c.ProvideAuthenticationSecret([]byte("hello world"))
-	assertEquals(t, e, errShortRandomRead)
+	assertEquals(t, e, errCantAuthenticateWithoutEncryption)
 }

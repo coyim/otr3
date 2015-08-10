@@ -127,7 +127,9 @@ func (s smpStateWaitingForSecret) continueMessage1(c *Conversation, mutualSecret
 	c.smp.secret = generateSMPSecret(c.theirKey.DefaultFingerprint(), c.ourKey.PublicKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
 	s2, err := c.generateSMP2(c.smp.secret, s.msg)
 	if err != nil {
-		return c.abortStateMachineWith(err)
+		//DISCUSS: it will only error if fails to read from Rand
+		//Is it worth sending the ABORT message?
+		return c.abortStateMachineAndNotifyCheated()
 	}
 
 	c.smp.s2 = &s2
@@ -143,7 +145,9 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 
 	s3, err := c.generateSMP3(c.smp.secret, *c.smp.s1, m)
 	if err != nil {
-		return c.abortStateMachineWith(err)
+		//DISCUSS: it will only error if fails to read from Rand
+		//Is it worth sending the ABORT message?
+		return c.abortStateMachineAndNotifyCheated()
 	}
 
 	smpEventInProgress(c)
@@ -168,7 +172,9 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 
 	ret, err := c.generateSMP4(c.smp.secret, *c.smp.s2, m)
 	if err != nil {
-		return abortState(errShortRandomRead)
+		//DISCUSS: it will only error if fails to read from Rand
+		//Is it worth sending the ABORT message?
+		return c.abortStateMachineAndNotifyCheated()
 	}
 
 	return smpStateExpect1{}, ret.msg, nil
@@ -242,8 +248,10 @@ func (smpStateExpect1) startAuthenticate(c *Conversation, question string, mutua
 	c.smp.secret = generateSMPSecret(c.ourKey.PublicKey.DefaultFingerprint(), c.theirKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
 
 	s1, err := c.generateSMP1()
-
 	if err != nil {
+		//DISCUSS: it will only error if fails to read from Rand
+		//Is it worth sending the ABORT message?
+		//Should it abortStateMachineCheated() like other similar cases?
 		return nil, errShortRandomRead
 	}
 

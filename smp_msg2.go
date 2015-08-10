@@ -69,6 +69,7 @@ func (c *Conversation) generateSMP2(secret *big.Int, s1 smp1Message) (s smp2Stat
 	if s, err = c.generateSMP2Parameters(); err != nil {
 		return s, err
 	}
+
 	s.y = secret
 	s.msg = generateSMP2Message(&s, s1)
 	s.qb = s.msg.qb
