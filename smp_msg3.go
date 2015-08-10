@@ -95,7 +95,7 @@ func (c *Conversation) verifySMP3(s2 *smp2State, msg smp3Message) error {
 }
 
 func (c *Conversation) verifySMP3ProtocolSuccess(s2 *smp2State, msg smp3Message) error {
-	papb := divMod(msg.pa, s2.msg.pb, p)
+	papb := divMod(msg.pa, s2.pb, p)
 
 	rab := modExp(msg.ra, s2.b3)
 	if !eq(rab, papb) {

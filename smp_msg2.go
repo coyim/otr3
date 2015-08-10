@@ -6,9 +6,9 @@ type smp2State struct {
 	y                  *big.Int
 	b2, b3             *big.Int
 	r2, r3, r4, r5, r6 *big.Int
-	g2, g3             *big.Int
 	g3a                *big.Int
-	qb                 *big.Int
+	g2, g3             *big.Int
+	pb, qb             *big.Int
 	msg                smp2Message
 }
 
@@ -52,8 +52,11 @@ func generateSMP2Message(s *smp2State, s1 smp1Message) smp2Message {
 	s.g2 = modExp(s1.g2a, s.b2)
 	s.g3 = modExp(s1.g3a, s.b3)
 
-	m.pb = modExp(s.g3, s.r4)
-	m.qb = mulMod(modExp(g1, s.r4), modExp(s.g2, s.y), p)
+	s.pb = modExp(s.g3, s.r4)
+	s.qb = mulMod(modExp(g1, s.r4), modExp(s.g2, s.y), p)
+
+	m.pb = s.pb
+	m.qb = s.qb
 
 	m.cp = hashMPIsBN(nil, 5,
 		modExp(s.g3, s.r5),
@@ -72,7 +75,6 @@ func (c *Conversation) generateSMP2(secret *big.Int, s1 smp1Message) (s smp2Stat
 
 	s.y = secret
 	s.msg = generateSMP2Message(&s, s1)
-	s.qb = s.msg.qb
 	return
 }
 
