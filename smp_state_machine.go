@@ -134,14 +134,16 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 		return c.abortStateMachineWith(err)
 	}
 
-	ret, err := c.generateSMP3(c.smp.secret, *c.smp.s1, m)
+	s3, err := c.generateSMP3(c.smp.secret, *c.smp.s1, m)
 	if err != nil {
 		return c.abortStateMachineWith(err)
 	}
 
 	smpEventInProgress(c)
 
-	return smpStateExpect4{}, ret.msg, nil
+	c.smp.s3 = &s3
+
+	return smpStateExpect4{}, s3.msg, nil
 }
 
 func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState, smpMessage, error) {

@@ -149,8 +149,10 @@ func Test_smpStateExpect2_goToExpectState4WhenReceivesSmpMessage2(t *testing.T) 
 	c.smp.s1 = fixtureSmp1()
 
 	msg := fixtureMessage2()
-	nextState, _, _ := smpStateExpect2{}.receiveMessage2(c, msg)
+	nextState, _, err := smpStateExpect2{}.receiveMessage2(c, msg)
 
+	assertNil(t, err)
+	assertNotNil(t, c.smp.s3)
 	assertEquals(t, nextState, smpStateExpect4{})
 }
 
