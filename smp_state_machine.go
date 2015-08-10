@@ -44,11 +44,6 @@ func (c *Conversation) abortStateMachineAndNotifyCheated() (smpState, smpMessage
 	return sendSMPAbortAndRestartStateMachine()
 }
 
-func (c *Conversation) abortStateMachineWith(e error) (smpState, smpMessage, error) {
-	smpEventCheated(c)
-	return abortState(e)
-}
-
 func (c *Conversation) receiveSMP(m smpMessage) (*tlv, error) {
 	toSend, err := m.receivedMessage(c)
 
