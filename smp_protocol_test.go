@@ -52,3 +52,66 @@ func TestFullSMPHandshake(t *testing.T) {
 	err = alice.verifySMP4ProtocolSuccess(&s1, &s3, s4.msg)
 	assertDeepEquals(t, err, nil)
 }
+
+func Test_SMP_Full(t *testing.T) {
+	alice := &Conversation{Rand: rand.Reader}
+	alice.ourKey = alicePrivateKey
+	alice.Policies = policies(allowV3)
+	alice.theirKey = &bobPrivateKey.PublicKey
+
+	bob := &Conversation{Rand: rand.Reader}
+	bob.ourKey = bobPrivateKey
+	bob.Policies = policies(allowV3)
+	bob.theirKey = &alicePrivateKey.PublicKey
+
+	var err error
+	var aliceMessages []ValidMessage
+	var bobMessages []ValidMessage
+
+	aliceMessages = append(bobMessages, alice.queryMessage())
+
+	for len(aliceMessages)+len(bobMessages) > 0 {
+		bobMessages = nil
+		for _, m := range aliceMessages {
+			_, bobMessages, err = bob.Receive(m)
+			assertNil(t, err)
+		}
+
+		aliceMessages = nil
+		for _, m := range bobMessages {
+			_, aliceMessages, err = alice.Receive(m)
+			assertNil(t, err)
+		}
+	}
+
+	assertEquals(t, bob.IsEncrypted(), true)
+	assertEquals(t, alice.IsEncrypted(), true)
+
+	bobMessages, err = bob.StartAuthenticate("", []byte("secret"))
+	assertNil(t, err)
+	assertEquals(t, bob.smp.state, smpStateExpect2{})
+
+	_, aliceMessages, err = alice.Receive(bobMessages[0])
+	assertNil(t, err)
+
+	// this is an internal state
+	_, ok := alice.smp.state.(smpStateWaitingForSecret)
+	assertEquals(t, ok, true)
+
+	aliceMessages, err = alice.ProvideAuthenticationSecret([]byte("secret"))
+	assertNil(t, err)
+	assertEquals(t, alice.smp.state, smpStateExpect3{})
+
+	_, bobMessages, err = bob.Receive(aliceMessages[0])
+	assertNil(t, err)
+	assertEquals(t, bob.smp.state, smpStateExpect4{})
+
+	_, aliceMessages, err = alice.Receive(bobMessages[0])
+	assertNil(t, err)
+	assertEquals(t, alice.smp.state, smpStateExpect1{})
+
+	_, bobMessages, err = bob.Receive(aliceMessages[0])
+	assertNil(t, err)
+	assertEquals(t, bob.smp.state, smpStateExpect1{})
+
+}

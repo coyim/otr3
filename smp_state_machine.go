@@ -214,10 +214,11 @@ func (c *Conversation) continueMessage(mutualSecret []byte) (ret smpMessage, err
 	return
 }
 
-func (smpStateExpect1) String() string { return "SMPSTATE_EXPECT1" }
-func (smpStateExpect2) String() string { return "SMPSTATE_EXPECT2" }
-func (smpStateExpect3) String() string { return "SMPSTATE_EXPECT3" }
-func (smpStateExpect4) String() string { return "SMPSTATE_EXPECT4" }
+func (smpStateExpect1) String() string          { return "SMPSTATE_EXPECT1" }
+func (smpStateExpect2) String() string          { return "SMPSTATE_EXPECT2" }
+func (smpStateExpect3) String() string          { return "SMPSTATE_EXPECT3" }
+func (smpStateExpect4) String() string          { return "SMPSTATE_EXPECT4" }
+func (smpStateWaitingForSecret) String() string { return "SMPSTATE_WAITINGFORSECRET (internal)" }
 
 func (smpStateBase) startAuthenticate(c *Conversation, question string, mutualSecret []byte) (tlvs []tlv, err error) {
 	tlvs, err = smpStateExpect1{}.startAuthenticate(c, question, mutualSecret)
