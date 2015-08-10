@@ -76,7 +76,7 @@ func (e *eventHandler) HandleSMPEvent(event otr3.SMPEvent, progressPercent int, 
 		if progressPercent == 100 {
 			e.securityChange = SMPComplete
 		}
-	case otr3.SMPEventFailure:
+	case otr3.SMPEventAbort, otr3.SMPEventFailure, otr3.SMPEventCheated:
 		e.securityChange = SMPFailed
 	}
 }
