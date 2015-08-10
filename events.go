@@ -191,94 +191,22 @@ func (c *Conversation) generatePotentialErrorMessage(ec ErrorCode) {
 	}
 }
 
-func smpEventCheated(c *Conversation) {
-	c.getEventHandler().HandleSMPEvent(SMPEventCheated, 0, "")
+func (c *Conversation) smpEvent(e SMPEvent, percent int) {
+	c.getEventHandler().HandleSMPEvent(e, percent, "")
 }
 
-func smpEventError(c *Conversation) {
-	c.getEventHandler().HandleSMPEvent(SMPEventError, 0, "")
+func (c *Conversation) smpEventWithQuestion(e SMPEvent, percent int, question string) {
+	c.getEventHandler().HandleSMPEvent(e, percent, question)
 }
 
-func smpEventAskForAnswer(c *Conversation, question string) {
-	c.getEventHandler().HandleSMPEvent(SMPEventAskForAnswer, 25, question)
+func (c *Conversation) messageEvent(e MessageEvent) {
+	c.getEventHandler().HandleMessageEvent(e, nil, nil)
 }
 
-func smpEventAskForSecret(c *Conversation) {
-	c.getEventHandler().HandleSMPEvent(SMPEventAskForSecret, 25, "")
+func (c *Conversation) messageEventWithError(e MessageEvent, err error) {
+	c.getEventHandler().HandleMessageEvent(e, nil, err)
 }
 
-func smpEventInProgress(c *Conversation) {
-	c.getEventHandler().HandleSMPEvent(SMPEventInProgress, 60, "")
-}
-
-func smpEventFailure(c *Conversation) {
-	c.getEventHandler().HandleSMPEvent(SMPEventFailure, 100, "")
-}
-
-func smpEventSuccess(c *Conversation) {
-	c.getEventHandler().HandleSMPEvent(SMPEventSuccess, 100, "")
-}
-
-func smpEventAbort(c *Conversation) {
-	c.getEventHandler().HandleSMPEvent(SMPEventAbort, 0, "")
-}
-
-func messageEventHeartbeatReceived(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventLogHeartbeatReceived, nil, nil)
-}
-
-func messageEventHeartbeatSent(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventLogHeartbeatSent, nil, nil)
-}
-
-func messageEventSetupError(c *Conversation, e error) {
-	c.getEventHandler().HandleMessageEvent(MessageEventSetupError, nil, e)
-}
-
-func messageEventReflected(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventMessageReflected, nil, nil)
-}
-
-func messageEventEncryptionRequired(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventEncryptionRequired, nil, nil)
-}
-
-func messageEventConnectionEnded(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventConnectionEnded, nil, nil)
-}
-
-func messageEventReceivedUnencryptedMessage(c *Conversation, msg []byte) {
-	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageUnencrypted, msg, nil)
-}
-
-func messageEventReceivedUnrecognizedMessage(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageUnrecognized, nil, nil)
-}
-
-func messageEventReceivedMessageForOtherInstance(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageForOtherInstance, nil, nil)
-}
-
-func messageEventEncryptionError(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventEncryptionError, nil, nil)
-}
-
-func messageEventReceivedUnreadableMessage(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageUnreadable, nil, nil)
-}
-
-func messageEventReceivedMalformedMessage(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageMalformed, nil, nil)
-}
-
-func messageEventReceivedMessageNotInPrivate(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageNotInPrivate, nil, nil)
-}
-
-func messageEventMessageResent(c *Conversation) {
-	c.getEventHandler().HandleMessageEvent(MessageEventMessageResent, nil, nil)
-}
-
-func messageEventReceivedMessageWithError(c *Conversation, msg []byte) {
-	c.getEventHandler().HandleMessageEvent(MessageEventReceivedMessageGeneralError, msg, nil)
+func (c *Conversation) messageEventWithMessage(e MessageEvent, msg []byte) {
+	c.getEventHandler().HandleMessageEvent(e, msg, nil)
 }

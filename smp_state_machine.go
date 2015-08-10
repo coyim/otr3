@@ -40,7 +40,7 @@ func sendSMPAbortAndRestartStateMachine() (smpState, smpMessage, error) {
 }
 
 func (c *Conversation) abortStateMachineAndNotifyCheated() (smpState, smpMessage, error) {
-	smpEventCheated(c)
+	c.smpEvent(SMPEventCheated, 0)
 	return sendSMPAbortAndRestartStateMachine()
 }
 
@@ -73,7 +73,7 @@ func (c *Conversation) continueSMP(mutualSecret []byte) (*tlv, error) {
 }
 
 func abortStateMachineAndNotifyError(c *Conversation) (smpState, smpMessage, error) {
-	smpEventError(c)
+	c.smpEvent(SMPEventError, 0)
 	return sendSMPAbortAndRestartStateMachine()
 }
 
@@ -105,9 +105,9 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 
 	if m.hasQuestion {
 		c.smp.question = &m.question
-		smpEventAskForAnswer(c, m.question)
+		c.smpEventWithQuestion(SMPEventAskForAnswer, 25, m.question)
 	} else {
-		smpEventAskForSecret(c)
+		c.smpEvent(SMPEventAskForSecret, 25)
 	}
 
 	return smpStateWaitingForSecret{msg: m}, nil, nil
@@ -143,7 +143,7 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 		return c.abortStateMachineAndNotifyCheated()
 	}
 
-	smpEventInProgress(c)
+	c.smpEvent(SMPEventInProgress, 60)
 
 	c.smp.s3 = &s3
 
@@ -158,10 +158,10 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 
 	err = c.verifySMP3ProtocolSuccess(c.smp.s2, m)
 	if err != nil {
-		smpEventFailure(c)
+		c.smpEvent(SMPEventFailure, 100)
 		return sendSMPAbortAndRestartStateMachine()
 	}
-	smpEventSuccess(c)
+	c.smpEvent(SMPEventSuccess, 100)
 
 	ret, err := c.generateSMP4(c.smp.secret, *c.smp.s2, m)
 	if err != nil {
@@ -181,10 +181,10 @@ func (smpStateExpect4) receiveMessage4(c *Conversation, m smp4Message) (smpState
 
 	err = c.verifySMP4ProtocolSuccess(c.smp.s1, c.smp.s3, m)
 	if err != nil {
-		smpEventFailure(c)
+		c.smpEvent(SMPEventFailure, 100)
 		return sendSMPAbortAndRestartStateMachine()
 	}
-	smpEventSuccess(c)
+	c.smpEvent(SMPEventSuccess, 100)
 
 	return smpStateExpect1{}, nil, nil
 }
@@ -211,7 +211,7 @@ func (m smp4Message) receivedMessage(c *Conversation) (ret smpMessage, err error
 
 func (m smpMessageAbort) receivedMessage(c *Conversation) (ret smpMessage, err error) {
 	c.smp.state = smpStateExpect1{}
-	smpEventAbort(c)
+	c.smpEvent(SMPEventAbort, 0)
 	return
 }
 

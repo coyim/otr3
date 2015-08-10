@@ -28,7 +28,7 @@ func (c *Conversation) ProvideAuthenticationSecret(mutualSecret []byte) ([]Valid
 
 func (c *Conversation) potentialAuthError(toSend []messageWithHeader, err error) ([]messageWithHeader, error) {
 	if err != nil {
-		messageEventSetupError(c, err)
+		c.messageEventWithError(MessageEventSetupError, err)
 	}
 
 	return toSend, err

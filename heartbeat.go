@@ -34,7 +34,7 @@ func (c *Conversation) potentialHeartbeat(plain MessagePlaintext) (toSend messag
 				return nil, err
 			}
 			c.updateLastSent()
-			messageEventHeartbeatSent(c)
+			c.messageEvent(MessageEventLogHeartbeatSent)
 		}
 	}
 	return

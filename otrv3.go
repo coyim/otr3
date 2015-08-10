@@ -124,7 +124,7 @@ func (c *Conversation) generateInstanceTag() error {
 }
 
 func malformedMessage(c *Conversation) {
-	messageEventReceivedMalformedMessage(c)
+	c.messageEvent(MessageEventReceivedMessageMalformed)
 	c.generatePotentialErrorMessage(ErrorCodeMessageMalformed)
 }
 
@@ -151,13 +151,9 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, 
 		return nil, nil, errInvalidOTRMessage
 	}
 
-	if receiverInstanceTag != 0 && c.ourInstanceTag != receiverInstanceTag {
-		messageEventReceivedMessageForOtherInstance(c)
-		return nil, nil, errReceivedMessageForOtherInstance
-	}
-
-	if senderInstanceTag >= minValidInstanceTag && c.theirInstanceTag != senderInstanceTag {
-		messageEventReceivedMessageForOtherInstance(c)
+	if (receiverInstanceTag != 0 && c.ourInstanceTag != receiverInstanceTag) ||
+		(senderInstanceTag >= minValidInstanceTag && c.theirInstanceTag != senderInstanceTag) {
+		c.messageEvent(MessageEventReceivedMessageForOtherInstance)
 		return nil, nil, errReceivedMessageForOtherInstance
 	}
 

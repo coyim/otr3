@@ -24,7 +24,7 @@ func (c *Conversation) akeHasFinished() error {
 	c.msgState = encrypted
 
 	if c.ourKey.PublicKey == *c.theirKey {
-		messageEventReflected(c)
+		c.messageEvent(MessageEventMessageReflected)
 	}
 
 	return c.generateNewDHKeyPair()

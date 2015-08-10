@@ -28,7 +28,7 @@ func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend [
 			return c.withInjectionsPlain(c.Receive(c.fragmentationContext.frag))
 		}
 	case msgGuessUnknown:
-		messageEventReceivedUnrecognizedMessage(c)
+		c.messageEvent(MessageEventReceivedMessageUnrecognized)
 	case msgGuessDHCommit, msgGuessDHKey, msgGuessRevealSig, msgGuessSignature, msgGuessData:
 		plain, messagesToSend, err = c.receiveEncoded(encodedMessage(message))
 	}
@@ -58,7 +58,7 @@ func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain MessageP
 		c.updateMayRetransmitTo(retransmitWithPrefix)
 	}
 
-	messageEventReceivedMessageWithError(c, withoutPotentialSpaceStart(msg))
+	c.messageEventWithMessage(MessageEventReceivedMessageGeneralError, withoutPotentialSpaceStart(msg))
 	return
 }
 
@@ -92,7 +92,7 @@ func (c *Conversation) checkPlaintextPolicies(plain MessagePlaintext) {
 	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
 
 	if c.msgState != plainText || c.Policies.has(requireEncryption) {
-		messageEventReceivedUnencryptedMessage(c, plain)
+		c.messageEventWithMessage(MessageEventReceivedMessageUnencrypted, plain)
 	}
 }
 
@@ -153,10 +153,10 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 func (c *Conversation) notifyDataMessageError(err error) {
 	var e ErrorCode
 	if err == ErrGPGConflict {
-		messageEventReceivedUnreadableMessage(c)
+		c.messageEvent(MessageEventReceivedMessageUnreadable)
 		e = ErrorCodeMessageUnreadable
 	} else {
-		messageEventReceivedMalformedMessage(c)
+		c.messageEvent(MessageEventReceivedMessageMalformed)
 		e = ErrorCodeMessageMalformed
 	}
 	c.generatePotentialErrorMessage(e)

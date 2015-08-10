@@ -94,7 +94,7 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 	dataMessage := dataMsg{}
 
 	if c.msgState != encrypted {
-		messageEventReceivedMessageNotInPrivate(c)
+		c.messageEvent(MessageEventReceivedMessageNotInPrivate)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 	plain = makeCopy(p.message)
 	if len(plain) == 0 {
 		plain = nil
-		messageEventHeartbeatReceived(c)
+		c.messageEvent(MessageEventLogHeartbeatReceived)
 	}
 
 	err = c.rotateKeys(dataMessage)

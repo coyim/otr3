@@ -18,7 +18,7 @@ func (c *Conversation) Send(m ValidMessage) ([]ValidMessage, error) {
 	case encrypted:
 		return c.withInjections(c.sendMessageOnEncrypted(message))
 	case finished:
-		messageEventConnectionEnded(c)
+		c.messageEvent(MessageEventConnectionEnded)
 		return c.withInjections(nil, errors.New("otr: cannot send message because secure conversation has finished"))
 	}
 
@@ -27,7 +27,7 @@ func (c *Conversation) Send(m ValidMessage) ([]ValidMessage, error) {
 
 func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMessage, error) {
 	if c.Policies.has(requireEncryption) {
-		messageEventEncryptionRequired(c)
+		c.messageEvent(MessageEventEncryptionRequired)
 		c.updateLastSent()
 		c.updateMayRetransmitTo(retransmitExact)
 		c.lastMessage(MessagePlaintext(makeCopy(message)))
@@ -44,7 +44,7 @@ func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMess
 func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMessage, error) {
 	result, err := c.createSerializedDataMessage(message, messageFlagNormal, []tlv{})
 	if err != nil {
-		messageEventEncryptionError(c)
+		c.messageEvent(MessageEventEncryptionError)
 		c.generatePotentialErrorMessage(ErrorCodeEncryptionError)
 	}
 

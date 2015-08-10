@@ -67,7 +67,7 @@ func (c *Conversation) maybeRetransmit() (messageWithHeader, error) {
 	toSend, _ := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
 
 	if resending {
-		messageEventMessageResent(c)
+		c.messageEvent(MessageEventMessageResent)
 	}
 
 	c.updateLastSent()

@@ -110,7 +110,7 @@ func (c *Conversation) receiveFragment(beforeCtx fragmentationContext, data Vali
 	resultData, ix, l, ok2 := parseFragment(fragBody)
 
 	if ignore {
-		messageEventReceivedMessageForOtherInstance(c)
+		c.messageEvent(MessageEventReceivedMessageForOtherInstance)
 		return beforeCtx, nil
 	}
 
