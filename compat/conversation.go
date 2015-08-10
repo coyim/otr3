@@ -65,7 +65,7 @@ func (eventHandler) HandleErrorMessage(error otr3.ErrorCode) []byte {
 	return nil
 }
 
-func (e eventHandler) HandleSMPEvent(event otr3.SMPEvent, progressPercent int, question string) {
+func (e *eventHandler) HandleSMPEvent(event otr3.SMPEvent, progressPercent int, question string) {
 	switch event {
 	case otr3.SMPEventAskForAnswer:
 		//Why do we have both otr3.SMPEventAskForAnswer and SMPQuestion()?
@@ -81,7 +81,7 @@ func (e eventHandler) HandleSMPEvent(event otr3.SMPEvent, progressPercent int, q
 	}
 }
 
-func (e eventHandler) HandleMessageEvent(event otr3.MessageEvent, message []byte, err error) {
+func (e *eventHandler) HandleMessageEvent(event otr3.MessageEvent, message []byte, err error) {
 	if event == otr3.MessageEventConnectionEnded {
 		e.securityChange = ConversationEnded
 	}
@@ -105,7 +105,7 @@ func (c *Conversation) compatInit() {
 	}
 
 	c.Conversation.Policies.AllowV2()
-	c.SetEventHandler(&eventHandler{})
+	c.SetEventHandler(&c.eventHandler)
 
 	c.initialized = true
 }
