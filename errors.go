@@ -49,6 +49,8 @@ func (oe OtrError) Error() string {
 	return "otr: " + oe.msg
 }
 
+//DISCUSS: this seems wrong. This encourages cascading errors instead of stopping
+//after their first occurence
 func firstError(es ...error) error {
 	for _, e := range es {
 		if e != nil {

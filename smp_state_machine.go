@@ -87,6 +87,7 @@ func (smpStateBase) receiveMessage1(c *Conversation, m smp1Message) (smpState, s
 }
 
 func (smpStateBase) continueMessage1(c *Conversation, mutualSecret []byte) (smpState, smpMessage, error) {
+	//DISCUSS: this should not return an error, otherwise the abort message will be ignored
 	return abortState(errNotWaitingForSMPSecret)
 }
 
@@ -120,6 +121,7 @@ func (smpStateExpect1) receiveMessage1(c *Conversation, m smp1Message) (smpState
 
 func (s smpStateWaitingForSecret) continueMessage1(c *Conversation, mutualSecret []byte) (smpState, smpMessage, error) {
 	if !c.IsEncrypted() {
+		//DISCUSS: this should not return an error, otherwise the abort message will be ignored
 		return abortState(errCantAuthenticateWithoutEncryption)
 	}
 
