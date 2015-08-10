@@ -162,7 +162,7 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 	err = c.verifySMP3ProtocolSuccess(c.smp.s2, m)
 	if err != nil {
 		smpEventFailure(c)
-		return smpStateExpect1{}, smpMessageAbort{}, err
+		return sendSMPAbortAndRestartStateMachine()
 	}
 	smpEventSuccess(c)
 
@@ -183,7 +183,7 @@ func (smpStateExpect4) receiveMessage4(c *Conversation, m smp4Message) (smpState
 	err = c.verifySMP4ProtocolSuccess(c.smp.s1, c.smp.s3, m)
 	if err != nil {
 		smpEventFailure(c)
-		return smpStateExpect1{}, smpMessageAbort{}, err
+		return sendSMPAbortAndRestartStateMachine()
 	}
 	smpEventSuccess(c)
 

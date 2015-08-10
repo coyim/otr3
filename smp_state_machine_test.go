@@ -405,14 +405,16 @@ func Test_smp3Message_receivedMessage_abortsSMPIfUnderlyingPrimitiveDoes(t *test
 	assertDeepEquals(t, ret, smpMessageAbort{})
 }
 
-func Test_smpStateExpect3_receiveMessage3_returnsErrorIfProtocolFails(t *testing.T) {
+func Test_smpStateExpect3_receiveMessage3_abortsSMPIfProtocolFails(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	c.smp.s2 = fixtureSmp2()
 	c.smp.s2.b3 = sub(c.smp.s2.b3, big.NewInt(1))
-	_, _, err := smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
+	s, m, err := smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
 
-	assertDeepEquals(t, err, newOtrError("protocol failed: x != y"))
+	assertNil(t, err)
+	assertEquals(t, s, smpStateExpect1{})
+	assertEquals(t, m, smpMessageAbort{})
 }
 
 func Test_smpStateExpect3_receiveMessage3_willSendAnSMPNotificationOnProtocolFailure(t *testing.T) {
@@ -447,14 +449,16 @@ func Test_smpStateExpect4_receiveMessage4_abortsSMPIfVerifySMPReturnsError(t *te
 	assertDeepEquals(t, m, smpMessageAbort{})
 }
 
-func Test_smpStateExpect4_receiveMessage4_returnsErrorIfProtocolFails(t *testing.T) {
+func Test_smpStateExpect4_receiveMessage4_abortsSMPIfProtocolFails(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.s1 = fixtureSmp1()
 	c.smp.s3 = fixtureSmp3()
 	c.smp.s3.papb = sub(c.smp.s3.papb, big.NewInt(1))
-	_, _, err := smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
+	s, m, err := smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
 
-	assertDeepEquals(t, err, newOtrError("protocol failed: x != y"))
+	assertNil(t, err)
+	assertEquals(t, s, smpStateExpect1{})
+	assertEquals(t, m, smpMessageAbort{})
 }
 
 func Test_smpStateExpect4_receiveMessage4_willSendAnSMPNotificationOnProtocolFailure(t *testing.T) {
