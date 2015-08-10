@@ -122,8 +122,6 @@ func (s smpStateWaitingForSecret) continueMessage1(c *Conversation, mutualSecret
 	c.smp.secret = generateSMPSecret(c.theirKey.DefaultFingerprint(), c.ourKey.PublicKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
 	s2, err := c.generateSMP2(c.smp.secret, s.msg)
 	if err != nil {
-		//DISCUSS: it will only error if fails to read from Rand
-		//Is it worth sending the ABORT message?
 		return c.abortStateMachineAndNotifyCheated()
 	}
 
