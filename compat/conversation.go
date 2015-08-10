@@ -67,7 +67,7 @@ func (eventHandler) HandleErrorMessage(error otr3.ErrorCode) []byte {
 
 func (e *eventHandler) HandleSMPEvent(event otr3.SMPEvent, progressPercent int, question string) {
 	switch event {
-	case otr3.SMPEventAskForAnswer:
+	case otr3.SMPEventAskForSecret, otr3.SMPEventAskForAnswer:
 		//Why do we have both otr3.SMPEventAskForAnswer and SMPQuestion()?
 		//When should each one be used?
 		e.securityChange = SMPSecretNeeded
