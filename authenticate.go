@@ -4,6 +4,8 @@ package otr3
 // The authentication uses an optional question message and a shared secret. The authentication will proceed
 // until the event handler reports that SMP is complete, that a secret is needed or that SMP has failed.
 func (c *Conversation) StartAuthenticate(question string, mutualSecret []byte) ([]ValidMessage, error) {
+	c.smp.ensureSMP()
+
 	tlvs, err := c.smp.state.startAuthenticate(c, question, mutualSecret)
 
 	if err != nil {
