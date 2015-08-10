@@ -118,12 +118,14 @@ func (s smpStateWaitingForSecret) continueMessage1(c *Conversation, mutualSecret
 
 	// Using ssid here should always be safe - we can't be in an encrypted state without having gone through the AKE
 	c.smp.secret = generateSMPSecret(c.theirKey.DefaultFingerprint(), c.ourKey.PublicKey.DefaultFingerprint(), c.ssid[:], mutualSecret)
-	ret, err := c.generateSMP2(c.smp.secret, s.msg)
+	s2, err := c.generateSMP2(c.smp.secret, s.msg)
 	if err != nil {
 		return c.abortStateMachineWith(err)
 	}
 
-	return smpStateExpect3{}, ret.msg, nil
+	c.smp.s2 = &s2
+
+	return smpStateExpect3{}, s2.msg, nil
 }
 
 func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState, smpMessage, error) {

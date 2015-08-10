@@ -40,8 +40,10 @@ func Test_smpStateWaitingForSecret_goToExpectState3WhenReceivesContinueSmpMessag
 	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
 
 	msg := fixtureMessage1()
-	nextState, _, _ := smpStateWaitingForSecret{msg: msg}.continueMessage1(c, []byte{})
+	nextState, _, err := smpStateWaitingForSecret{msg: msg}.continueMessage1(c, []byte{})
 
+	assertNil(t, err)
+	assertNotNil(t, c.smp.s2)
 	assertEquals(t, nextState, smpStateExpect3{})
 }
 
