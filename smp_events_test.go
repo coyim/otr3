@@ -11,5 +11,5 @@ func Test_SMPEvent_hasValidStringImplementation(t *testing.T) {
 	assertEquals(t, SMPEventInProgress.String(), "SMPEventInProgress")
 	assertEquals(t, SMPEventSuccess.String(), "SMPEventSuccess")
 	assertEquals(t, SMPEventFailure.String(), "SMPEventFailure")
-	assertEquals(t, SMPEvent(20000).String(), "")
+	assertEquals(t, SMPEvent(20000).String(), "SMP EVENT: (THIS SHOULD NEVER HAPPEN)")
 }

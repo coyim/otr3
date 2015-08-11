@@ -23,6 +23,6 @@ func (s ErrorCode) String() string {
 	case ErrorCodeMessageMalformed:
 		return "ErrorCodeMessageMalformed"
 	default:
-		return ""
+		return "ERROR CODE: (THIS SHOULD NEVER HAPPEN)"
 	}
 }

@@ -64,3 +64,40 @@ func (c *Conversation) messageEventWithError(e MessageEvent, err error) {
 func (c *Conversation) messageEventWithMessage(e MessageEvent, msg []byte) {
 	c.getEventHandler().HandleMessageEvent(e, msg, nil)
 }
+
+func (s MessageEvent) String() string {
+	switch s {
+	case MessageEventEncryptionRequired:
+		return "MessageEventEncryptionRequired"
+	case MessageEventEncryptionError:
+		return "MessageEventEncryptionError"
+	case MessageEventConnectionEnded:
+		return "MessageEventConnectionEnded"
+	case MessageEventSetupError:
+		return "MessageEventSetupError"
+	case MessageEventMessageReflected:
+		return "MessageEventMessageReflected"
+	case MessageEventMessageResent:
+		return "MessageEventMessageResent"
+	case MessageEventReceivedMessageNotInPrivate:
+		return "MessageEventReceivedMessageNotInPrivate"
+	case MessageEventReceivedMessageUnreadable:
+		return "MessageEventReceivedMessageUnreadable"
+	case MessageEventReceivedMessageMalformed:
+		return "MessageEventReceivedMessageMalformed"
+	case MessageEventLogHeartbeatReceived:
+		return "MessageEventLogHeartbeatReceived"
+	case MessageEventLogHeartbeatSent:
+		return "MessageEventLogHeartbeatSent"
+	case MessageEventReceivedMessageGeneralError:
+		return "MessageEventReceivedMessageGeneralError"
+	case MessageEventReceivedMessageUnencrypted:
+		return "MessageEventReceivedMessageUnencrypted"
+	case MessageEventReceivedMessageUnrecognized:
+		return "MessageEventReceivedMessageUnrecognized"
+	case MessageEventReceivedMessageForOtherInstance:
+		return "MessageEventReceivedMessageForOtherInstance"
+	default:
+		return "MESSAGE EVENT: (THIS SHOULD NEVER HAPPEN)"
+	}
+}

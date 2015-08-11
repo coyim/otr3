@@ -49,6 +49,6 @@ func (s SMPEvent) String() string {
 	case SMPEventFailure:
 		return "SMPEventFailure"
 	default:
-		return ""
+		return "SMP EVENT: (THIS SHOULD NEVER HAPPEN)"
 	}
 }
