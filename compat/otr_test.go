@@ -52,7 +52,7 @@ func TestKeySerialization(t *testing.T) {
 	}
 
 	aliceFingerprint, _ := hex.DecodeString(aliceFingerprintHex)
-	fingerprint := priv.PublicKey.Fingerprint()
+	fingerprint := priv.PublicKey.DefaultFingerprint()
 	if !bytes.Equal(aliceFingerprint, fingerprint) {
 		t.Errorf("fingerprint (%x) is not equal to expected value (%x)", fingerprint, aliceFingerprint)
 	}

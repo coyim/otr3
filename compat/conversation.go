@@ -2,8 +2,6 @@ package compat
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"io"
 
 	"github.com/twstrike/otr3"
 )
@@ -196,51 +194,4 @@ func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSen
 
 	c.updateValues()
 	return otr3.Bytes(ret), err
-}
-
-// PublicKey represents an OTR Public Key
-type PublicKey struct {
-	otr3.PublicKey
-}
-
-// PrivateKey represents an OTR Private Key
-type PrivateKey struct {
-	otr3.PrivateKey
-	PublicKey
-}
-
-// Generate will generate a new Private Key using the provided randomness
-func (priv *PrivateKey) Generate(rand io.Reader) {
-	if err := priv.PrivateKey.Generate(rand); err != nil {
-		panic(err.Error())
-	}
-}
-
-func (priv *PrivateKey) Parse(in []byte) (index []byte, ok bool) {
-	rest, ok := priv.PrivateKey.Parse(in)
-	if !ok {
-		return rest, ok
-	}
-
-	priv.PublicKey = PublicKey{priv.PrivateKey.PublicKey}
-	return rest, ok
-}
-
-// Serialize will serialize the private key
-func (priv *PrivateKey) Serialize(in []byte) []byte {
-	return append(in, priv.PrivateKey.Serialize()...)
-}
-
-func (priv *PrivateKey) Sign(rand io.Reader, hashed []byte) []byte {
-	ret, err := priv.PrivateKey.Sign(rand, hashed)
-	if err != nil {
-		panic(err)
-	}
-
-	return ret
-}
-
-// Fingerprint will generate a new SHA-1 fingerprint of the serialization of the public key
-func (pub *PublicKey) Fingerprint() []byte {
-	return pub.PublicKey.Fingerprint(sha1.New())
 }
