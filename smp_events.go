@@ -29,3 +29,26 @@ func (c *Conversation) smpEvent(e SMPEvent, percent int) {
 func (c *Conversation) smpEventWithQuestion(e SMPEvent, percent int, question string) {
 	c.getEventHandler().HandleSMPEvent(e, percent, question)
 }
+
+func (s SMPEvent) String() string {
+	switch s {
+	case SMPEventError:
+		return "SMPEventError"
+	case SMPEventAbort:
+		return "SMPEventAbort"
+	case SMPEventCheated:
+		return "SMPEventCheated"
+	case SMPEventAskForAnswer:
+		return "SMPEventAskForAnswer"
+	case SMPEventAskForSecret:
+		return "SMPEventAskForSecret"
+	case SMPEventInProgress:
+		return "SMPEventInProgress"
+	case SMPEventSuccess:
+		return "SMPEventSuccess"
+	case SMPEventFailure:
+		return "SMPEventFailure"
+	default:
+		return ""
+	}
+}
