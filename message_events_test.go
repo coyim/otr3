@@ -20,3 +20,22 @@ func Test_MessageEvent_hasValidStringImplementation(t *testing.T) {
 	assertEquals(t, MessageEventReceivedMessageForOtherInstance.String(), "MessageEventReceivedMessageForOtherInstance")
 	assertEquals(t, MessageEvent(20000).String(), "MESSAGE EVENT: (THIS SHOULD NEVER HAPPEN)")
 }
+
+func Test_combinedMessageEventHandler_callsAllErrorMessageHandlersGiven(t *testing.T) {
+	var called1, called2, called3 bool
+	f1 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error) {
+		called1 = true
+	}}
+	f2 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error) {
+		called2 = true
+	}}
+	f3 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error) {
+		called3 = true
+	}}
+	d := combineMessageEventHandlers(f1, f2, f3)
+	d.HandleMessageEvent(MessageEventSetupError, []byte("something"), nil)
+
+	assertEquals(t, called1, true)
+	assertEquals(t, called2, true)
+	assertEquals(t, called3, true)
+}

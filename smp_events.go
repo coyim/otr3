@@ -70,3 +70,17 @@ func (s SMPEvent) String() string {
 		return "SMP EVENT: (THIS SHOULD NEVER HAPPEN)"
 	}
 }
+
+type combinedSMPEventHandler struct {
+	handlers []SMPEventHandler
+}
+
+func (c combinedSMPEventHandler) HandleSMPEvent(event SMPEvent, progressPercent int, question string) {
+	for _, h := range c.handlers {
+		h.HandleSMPEvent(event, progressPercent, question)
+	}
+}
+
+func combineSMPEventHandlers(handlers ...SMPEventHandler) SMPEventHandler {
+	return combinedSMPEventHandler{handlers}
+}

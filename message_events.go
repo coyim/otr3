@@ -121,3 +121,17 @@ func (s MessageEvent) String() string {
 		return "MESSAGE EVENT: (THIS SHOULD NEVER HAPPEN)"
 	}
 }
+
+type combinedMessageEventHandler struct {
+	handlers []MessageEventHandler
+}
+
+func (c combinedMessageEventHandler) HandleMessageEvent(event MessageEvent, message []byte, err error) {
+	for _, h := range c.handlers {
+		h.HandleMessageEvent(event, message, err)
+	}
+}
+
+func combineMessageEventHandlers(handlers ...MessageEventHandler) MessageEventHandler {
+	return combinedMessageEventHandler{handlers}
+}

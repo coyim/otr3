@@ -47,3 +47,19 @@ func (s ErrorCode) String() string {
 		return "ERROR CODE: (THIS SHOULD NEVER HAPPEN)"
 	}
 }
+
+type combinedErrorMessageHandler struct {
+	handlers []ErrorMessageHandler
+}
+
+func (c combinedErrorMessageHandler) HandleErrorMessage(error ErrorCode) []byte {
+	var result []byte
+	for _, h := range c.handlers {
+		result = h.HandleErrorMessage(error)
+	}
+	return result
+}
+
+func combineErrorMessageHandlers(handlers ...ErrorMessageHandler) ErrorMessageHandler {
+	return combinedErrorMessageHandler{handlers}
+}
