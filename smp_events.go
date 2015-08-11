@@ -22,12 +22,30 @@ const (
 	SMPEventFailure
 )
 
+// SMPEventHandler handles SMPEvents
+type SMPEventHandler interface {
+	// HandleSMPEvent should update the authentication UI with respect to SMP events
+	HandleSMPEvent(event SMPEvent, progressPercent int, question string)
+}
+
+type dynamicSMPEventHandler struct {
+	eh func(event SMPEvent, progressPercent int, question string)
+}
+
+func (d dynamicSMPEventHandler) HandleSMPEvent(event SMPEvent, pp int, question string) {
+	d.eh(event, pp, question)
+}
+
 func (c *Conversation) smpEvent(e SMPEvent, percent int) {
-	c.getEventHandler().HandleSMPEvent(e, percent, "")
+	if c.smpEventHandler != nil {
+		c.smpEventHandler.HandleSMPEvent(e, percent, "")
+	}
 }
 
 func (c *Conversation) smpEventWithQuestion(e SMPEvent, percent int, question string) {
-	c.getEventHandler().HandleSMPEvent(e, percent, question)
+	if c.smpEventHandler != nil {
+		c.smpEventHandler.HandleSMPEvent(e, percent, question)
+	}
 }
 
 func (s SMPEvent) String() string {

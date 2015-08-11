@@ -261,15 +261,13 @@ func Test_Receive_returnsACustomErrorMessageIfOneIsAvailable(t *testing.T) {
 
 	c.msgState = encrypted
 
-	c.eventHandler = emptyEventHandlerWith(
-		func() bool { return true },
+	c.errorMessageHandler = dynamicErrorMessageHandler{
 		func(error ErrorCode) []byte {
 			if error == ErrorCodeMessageUnreadable {
 				return []byte("nova happened")
 			}
 			return []byte("white hole happened")
-		}, nil, nil)
-
+		}}
 	c.receiveDecoded(msg)
 	ts, _ := c.withInjections(nil, nil)
 	assertDeepEquals(t, string(ts[0]), "?OTR Error: nova happened")
@@ -293,14 +291,13 @@ func Test_processDataMessage_callsErrorMessageHandlerAndReturnsTheResultAsAnOTRE
 	msg, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("Making sure this isn't a heartbeat message")})
 	c.msgState = encrypted
 
-	c.eventHandler = emptyEventHandlerWith(
-		func() bool { return true },
+	c.errorMessageHandler = dynamicErrorMessageHandler{
 		func(error ErrorCode) []byte {
 			if error == ErrorCodeMessageMalformed {
 				return []byte("sunflower happened")
 			}
 			return []byte("dandelion happened")
-		}, nil, nil)
+		}}
 
 	c.receiveDecoded(msg)
 	ts, _ := c.withInjections(nil, nil)

@@ -78,14 +78,13 @@ func Test_Send_callsErrorMessageHandlerAndReturnsTheResultAsAnOTRErrorMessage(t 
 	c.Policies = policies(allowV3)
 	c.keys.theirKeyID = 0
 
-	c.eventHandler = emptyEventHandlerWith(
-		func() bool { return true },
+	c.errorMessageHandler = dynamicErrorMessageHandler{
 		func(error ErrorCode) []byte {
 			if error == ErrorCodeEncryptionError {
 				return []byte("snowflake happened")
 			}
 			return []byte("nova happened")
-		}, nil, nil)
+		}}
 
 	msgs, _ := c.Send(msg)
 	assertDeepEquals(t, msgs[0], ValidMessage("?OTR Error: snowflake happened"))

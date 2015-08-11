@@ -150,14 +150,13 @@ func Test_receiveFragment_sendsAnErrorMessageAboutMalformedIfHandlerExists(t *te
 
 	existingContext := fragmentationContext{frag: []byte("shouldn't change")}
 
-	c.eventHandler = emptyEventHandlerWith(
-		func() bool { return true },
+	c.errorMessageHandler = dynamicErrorMessageHandler{
 		func(error ErrorCode) []byte {
 			if error == ErrorCodeMessageMalformed {
 				return []byte("black happened")
 			}
 			return []byte("white happened")
-		}, nil, nil)
+		}}
 
 	c.receiveFragment(existingContext, []byte("?OTR|0000000A|00000103,00001,00004,one ,"))
 	ts, _ := c.withInjections(nil, nil)

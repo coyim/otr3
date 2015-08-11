@@ -103,7 +103,6 @@ func (c *Conversation) compatInit() {
 	}
 
 	c.Conversation.Policies.AllowV2()
-	c.SetEventHandler(&c.eventHandler)
 
 	c.initialized = true
 }

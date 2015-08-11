@@ -14,6 +14,27 @@ const (
 	ErrorCodeMessageMalformed
 )
 
+// ErrorMessageHandler generates error messages for error codes
+type ErrorMessageHandler interface {
+	// HandleErrorMessage should return a string according to the error event. This string will be concatenated to an OTR header to produce an OTR protocol error message
+	HandleErrorMessage(error ErrorCode) []byte
+}
+
+type dynamicErrorMessageHandler struct {
+	eh func(error ErrorCode) []byte
+}
+
+func (d dynamicErrorMessageHandler) HandleErrorMessage(error ErrorCode) []byte {
+	return d.eh(error)
+}
+
+func (c *Conversation) generatePotentialErrorMessage(ec ErrorCode) {
+	if c.errorMessageHandler != nil {
+		msg := c.errorMessageHandler.HandleErrorMessage(ec)
+		c.injectMessage(append(append(errorMarker, ' '), msg...))
+	}
+}
+
 func (s ErrorCode) String() string {
 	switch s {
 	case ErrorCodeEncryptionError:

@@ -53,16 +53,36 @@ const (
 	MessageEventReceivedMessageForOtherInstance
 )
 
+// MessageEventHandler handles MessageEvents
+type MessageEventHandler interface {
+	// HandleMessageEvent should handle and send the appropriate message(s) to the sender/recipient depending on the message events
+	HandleMessageEvent(event MessageEvent, message []byte, err error)
+}
+
+type dynamicMessageEventHandler struct {
+	eh func(event MessageEvent, message []byte, err error)
+}
+
+func (d dynamicMessageEventHandler) HandleMessageEvent(event MessageEvent, message []byte, err error) {
+	d.eh(event, message, err)
+}
+
 func (c *Conversation) messageEvent(e MessageEvent) {
-	c.getEventHandler().HandleMessageEvent(e, nil, nil)
+	if c.messageEventHandler != nil {
+		c.messageEventHandler.HandleMessageEvent(e, nil, nil)
+	}
 }
 
 func (c *Conversation) messageEventWithError(e MessageEvent, err error) {
-	c.getEventHandler().HandleMessageEvent(e, nil, err)
+	if c.messageEventHandler != nil {
+		c.messageEventHandler.HandleMessageEvent(e, nil, err)
+	}
 }
 
 func (c *Conversation) messageEventWithMessage(e MessageEvent, msg []byte) {
-	c.getEventHandler().HandleMessageEvent(e, msg, nil)
+	if c.messageEventHandler != nil {
+		c.messageEventHandler.HandleMessageEvent(e, msg, nil)
+	}
 }
 
 func (s MessageEvent) String() string {

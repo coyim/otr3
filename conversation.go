@@ -42,7 +42,9 @@ type Conversation struct {
 	fragmentationContext      fragmentationContext
 	stopSendingWhitespaceTags bool
 
-	eventHandler EventHandler
+	smpEventHandler     SMPEventHandler
+	errorMessageHandler ErrorMessageHandler
+	messageEventHandler MessageEventHandler
 }
 
 func (c *Conversation) messageHeader(msgType byte) ([]byte, error) {
