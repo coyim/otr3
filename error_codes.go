@@ -13,3 +13,16 @@ const (
 	// ErrorCodeMessageMalformed means the message sent is malformed
 	ErrorCodeMessageMalformed
 )
+
+func (s ErrorCode) String() string {
+	switch s {
+	case ErrorCodeEncryptionError:
+		return "ErrorCodeEncryptionError"
+	case ErrorCodeMessageUnreadable:
+		return "ErrorCodeMessageUnreadable"
+	case ErrorCodeMessageMalformed:
+		return "ErrorCodeMessageMalformed"
+	default:
+		return ""
+	}
+}
