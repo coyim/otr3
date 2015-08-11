@@ -29,22 +29,22 @@ func (p *policies) AllowV2() {
 	p.add(allowV2)
 }
 
-func (p *policies) allowV3() {
+func (p *policies) AllowV3() {
 	p.add(allowV3)
 }
 
-func (p *policies) requireEncryption() {
+func (p *policies) RequireEncryption() {
 	p.add(requireEncryption)
 }
 
-func (p *policies) sendWhitespaceTag() {
+func (p *policies) SendWhitespaceTag() {
 	p.add(sendWhitespaceTag)
 }
 
-func (p *policies) whitespaceStartAKE() {
+func (p *policies) WhitespaceStartAKE() {
 	p.add(whitespaceStartAKE)
 }
 
-func (p *policies) errorStartAKE() {
+func (p *policies) ErrorStartAKE() {
 	p.add(errorStartAKE)
 }
