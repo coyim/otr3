@@ -1,7 +1,6 @@
 package compat
 
 import (
-	"crypto/sha1"
 	"io"
 
 	"github.com/twstrike/otr3"
@@ -15,6 +14,7 @@ type PublicKey struct {
 // PrivateKey represents an OTR Private Key
 type PrivateKey struct {
 	otr3.PrivateKey
+	PublicKey
 }
 
 // Generate will generate a new Private Key using the provided randomness
@@ -40,5 +40,19 @@ func (priv *PrivateKey) Sign(rand io.Reader, hashed []byte) []byte {
 
 // Fingerprint will generate a new SHA-1 fingerprint of the serialization of the public key
 func (pub *PublicKey) Fingerprint() []byte {
-	return pub.PublicKey.Fingerprint(sha1.New())
+	return pub.PublicKey.DefaultFingerprint()
+}
+
+func (priv *PrivateKey) Parse(in []byte) (index []byte, ok bool) {
+	rest, ok := priv.PrivateKey.Parse(in)
+	if !ok {
+		return rest, ok
+	}
+
+	// wraps the PubKey embedded type in a compat.PubKey
+	// This is necessary because x/crypto/otr implementation uses Fingerprint()
+	// method through PrivateKey's embedded type PublicKey
+	priv.PublicKey = PublicKey{priv.PrivateKey.PublicKey}
+
+	return rest, ok
 }
