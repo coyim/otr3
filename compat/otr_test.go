@@ -108,100 +108,100 @@ func TestSignVerify(t *testing.T) {
 	}
 }
 
-//
-//func TestConversation(t *testing.T) {
-//	alicePrivateKey, _ := hex.DecodeString(alicePrivateKeyHex)
-//	bobPrivateKey, _ := hex.DecodeString(bobPrivateKeyHex)
-//
-//	var alice, bob Conversation
-//	alice.PrivateKey = new(PrivateKey)
-//	bob.PrivateKey = new(PrivateKey)
-//	alice.PrivateKey.Parse(alicePrivateKey)
-//	bob.PrivateKey.Parse(bobPrivateKey)
-//	alice.FragmentSize = 100
-//	bob.FragmentSize = 100
-//
-//	var alicesMessage, bobsMessage [][]byte
-//	var out []byte
-//	var aliceChange, bobChange SecurityChange
-//	var err error
-//	alicesMessage = append(alicesMessage, []byte(QueryMessage))
-//
-//	if alice.IsEncrypted() {
-//		t.Error("Alice believes that the conversation is secure before we've started")
-//	}
-//	if bob.IsEncrypted() {
-//		t.Error("Bob believes that the conversation is secure before we've started")
-//	}
-//
-//	for round := 0; len(alicesMessage) > 0 || len(bobsMessage) > 0; round++ {
-//		bobsMessage = nil
-//		for i, msg := range alicesMessage {
-//			out, _, bobChange, bobsMessage, err = bob.Receive(msg)
-//			if len(out) > 0 {
-//				t.Errorf("Bob generated output during key exchange, round %d, message %d", round, i)
-//			}
-//			if err != nil {
-//				t.Fatalf("Bob returned an error, round %d, message %d (%x): %s", round, i, msg, err)
-//			}
-//			if len(bobsMessage) > 0 && i != len(alicesMessage)-1 {
-//				t.Errorf("Bob produced output while processing a fragment, round %d, message %d", round, i)
-//			}
-//		}
-//
-//		alicesMessage = nil
-//		for i, msg := range bobsMessage {
-//			out, _, aliceChange, alicesMessage, err = alice.Receive(msg)
-//			if len(out) > 0 {
-//				t.Errorf("Alice generated output during key exchange, round %d, message %d", round, i)
-//			}
-//			if err != nil {
-//				t.Fatalf("Alice returned an error, round %d, message %d (%x): %s", round, i, msg, err)
-//			}
-//			if len(alicesMessage) > 0 && i != len(bobsMessage)-1 {
-//				t.Errorf("Alice produced output while processing a fragment, round %d, message %d", round, i)
-//			}
-//		}
-//	}
-//
-//	if aliceChange != NewKeys {
-//		t.Errorf("Alice terminated without signaling new keys")
-//	}
-//	if bobChange != NewKeys {
-//		t.Errorf("Bob terminated without signaling new keys")
-//	}
-//
-//	if !bytes.Equal(alice.SSID[:], bob.SSID[:]) {
-//		t.Errorf("Session identifiers don't match. Alice has %x, Bob has %x", alice.SSID[:], bob.SSID[:])
-//	}
-//
-//	if !alice.IsEncrypted() {
-//		t.Error("Alice doesn't believe that the conversation is secure")
-//	}
-//	if !bob.IsEncrypted() {
-//		t.Error("Bob doesn't believe that the conversation is secure")
-//	}
-//
-//	var testMessage = []byte("hello Bob")
-//	alicesMessage, err = alice.Send(testMessage)
-//	for i, msg := range alicesMessage {
-//		out, encrypted, _, _, err := bob.Receive(msg)
-//		if err != nil {
-//			t.Errorf("Error generated while processing test message: %s", err.Error())
-//		}
-//		if len(out) > 0 {
-//			if i != len(alicesMessage)-1 {
-//				t.Fatal("Bob produced a message while processing a fragment of Alice's")
-//			}
-//			if !encrypted {
-//				t.Errorf("Message was not marked as encrypted")
-//			}
-//			if !bytes.Equal(out, testMessage) {
-//				t.Errorf("Message corrupted: got %x, want %x", out, testMessage)
-//			}
-//		}
-//	}
-//}
+func TestConversation(t *testing.T) {
+	alicePrivateKey, _ := hex.DecodeString(alicePrivateKeyHex)
+	bobPrivateKey, _ := hex.DecodeString(bobPrivateKeyHex)
+
+	var alice, bob Conversation
+	alice.PrivateKey = new(PrivateKey)
+	bob.PrivateKey = new(PrivateKey)
+	alice.PrivateKey.Parse(alicePrivateKey)
+	bob.PrivateKey.Parse(bobPrivateKey)
+	alice.FragmentSize = 100
+	bob.FragmentSize = 100
+
+	var alicesMessage, bobsMessage [][]byte
+	var out []byte
+	var aliceChange, bobChange SecurityChange
+	var err error
+	alicesMessage = append(alicesMessage, []byte(QueryMessage))
+
+	if alice.IsEncrypted() {
+		t.Error("Alice believes that the conversation is secure before we've started")
+	}
+	if bob.IsEncrypted() {
+		t.Error("Bob believes that the conversation is secure before we've started")
+	}
+
+	for round := 0; len(alicesMessage) > 0 || len(bobsMessage) > 0; round++ {
+		bobsMessage = nil
+		for i, msg := range alicesMessage {
+			out, _, bobChange, bobsMessage, err = bob.Receive(msg)
+			if len(out) > 0 {
+				t.Errorf("Bob generated output during key exchange, round %d, message %d", round, i)
+			}
+			if err != nil {
+				t.Fatalf("Bob returned an error, round %d, message %d (%x): %s", round, i, msg, err)
+			}
+			if len(bobsMessage) > 0 && i != len(alicesMessage)-1 {
+				t.Errorf("Bob produced output while processing a fragment, round %d, message %d", round, i)
+			}
+		}
+
+		alicesMessage = nil
+		for i, msg := range bobsMessage {
+			out, _, aliceChange, alicesMessage, err = alice.Receive(msg)
+			if len(out) > 0 {
+				t.Errorf("Alice generated output during key exchange, round %d, message %d", round, i)
+			}
+			if err != nil {
+				t.Fatalf("Alice returned an error, round %d, message %d (%x): %s", round, i, msg, err)
+			}
+			if len(alicesMessage) > 0 && i != len(bobsMessage)-1 {
+				t.Errorf("Alice produced output while processing a fragment, round %d, message %d", round, i)
+			}
+		}
+	}
+
+	if aliceChange != NewKeys {
+		t.Errorf("Alice terminated without signaling new keys")
+	}
+	if bobChange != NewKeys {
+		t.Errorf("Bob terminated without signaling new keys")
+	}
+
+	if !bytes.Equal(alice.SSID[:], bob.SSID[:]) {
+		t.Errorf("Session identifiers don't match. Alice has %x, Bob has %x", alice.SSID[:], bob.SSID[:])
+	}
+
+	if !alice.IsEncrypted() {
+		t.Error("Alice doesn't believe that the conversation is secure")
+	}
+	if !bob.IsEncrypted() {
+		t.Error("Bob doesn't believe that the conversation is secure")
+	}
+
+	var testMessage = []byte("hello Bob")
+	alicesMessage, err = alice.Send(testMessage)
+	for i, msg := range alicesMessage {
+		out, encrypted, _, _, err := bob.Receive(msg)
+		if err != nil {
+			t.Errorf("Error generated while processing test message: %s", err.Error())
+		}
+		if len(out) > 0 {
+			if i != len(alicesMessage)-1 {
+				t.Fatal("Bob produced a message while processing a fragment of Alice's")
+			}
+			if !encrypted {
+				t.Errorf("Message was not marked as encrypted")
+			}
+			if !bytes.Equal(out, testMessage) {
+				t.Errorf("Message corrupted: got %x, want %x", out, testMessage)
+			}
+		}
+	}
+}
+
 //
 //func TestGoodSMP(t *testing.T) {
 //	var alice, bob Conversation
