@@ -71,7 +71,7 @@ func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	xb := c.ourKey.PublicKey.serialize()
 	xb = appendWord(xb, c.keys.ourKeyID)
 
-	sigb, err := c.ourKey.sign(c.rand(), mb)
+	sigb, err := c.ourKey.Sign(c.rand(), mb)
 	if err == io.ErrUnexpectedEOF {
 		return nil, errShortRandomRead
 	}
@@ -272,7 +272,7 @@ func (c *Conversation) processSig(msg []byte) (err error) {
 }
 
 func (c *Conversation) checkedSignatureVerification(mb, sig []byte) error {
-	rest, ok := c.theirKey.verify(mb, sig)
+	rest, ok := c.theirKey.Verify(mb, sig)
 	if !ok {
 		return newOtrError("bad signature in encrypted signature")
 	}

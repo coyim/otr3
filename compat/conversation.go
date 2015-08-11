@@ -206,6 +206,7 @@ type PublicKey struct {
 // PrivateKey represents an OTR Private Key
 type PrivateKey struct {
 	otr3.PrivateKey
+	PublicKey
 }
 
 // Generate will generate a new Private Key using the provided randomness
@@ -215,14 +216,28 @@ func (priv *PrivateKey) Generate(rand io.Reader) {
 	}
 }
 
+func (priv *PrivateKey) Parse(in []byte) (index []byte, ok bool) {
+	rest, ok := priv.PrivateKey.Parse(in)
+	if !ok {
+		return rest, ok
+	}
+
+	priv.PublicKey = PublicKey{priv.PrivateKey.PublicKey}
+	return rest, ok
+}
+
 // Serialize will serialize the private key
 func (priv *PrivateKey) Serialize(in []byte) []byte {
 	return append(in, priv.PrivateKey.Serialize()...)
 }
 
-// Fingerprint will generate a new SHA-1 fingerprint of the serialization of the public key
-func (priv *PrivateKey) Fingerprint() []byte {
-	return priv.PublicKey.Fingerprint(sha1.New())
+func (priv *PrivateKey) Sign(rand io.Reader, hashed []byte) []byte {
+	ret, err := priv.PrivateKey.Sign(rand, hashed)
+	if err != nil {
+		panic(err)
+	}
+
+	return ret
 }
 
 // Fingerprint will generate a new SHA-1 fingerprint of the serialization of the public key

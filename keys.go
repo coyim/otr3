@@ -288,7 +288,7 @@ func (pub *PublicKey) DefaultFingerprint() []byte {
 	return pub.Fingerprint(sha1.New())
 }
 
-func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
+func (priv *PrivateKey) Sign(rand io.Reader, hashed []byte) ([]byte, error) {
 	r, s, err := dsa.Sign(rand, &priv.PrivateKey, hashed)
 	if err == nil {
 		rBytes := r.Bytes()
@@ -302,7 +302,7 @@ func (priv *PrivateKey) sign(rand io.Reader, hashed []byte) ([]byte, error) {
 	return nil, err
 }
 
-func (pub *PublicKey) verify(hashed, sig []byte) (nextPoint []byte, sigOk bool) {
+func (pub *PublicKey) Verify(hashed, sig []byte) (nextPoint []byte, sigOk bool) {
 	if len(sig) < 2*20 {
 		return nil, false
 	}
