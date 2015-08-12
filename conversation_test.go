@@ -163,6 +163,48 @@ func Test_send_doesNotAppendWhitespaceTagsWhenItsNotAllowedbyThePolicy(t *testin
 	assertDeepEquals(t, toSend, []ValidMessage{m})
 }
 
+func Test_send_appendWhitespaceTagsIfReceivesNonDHCommitMsgBeforeSendingFirstMessage(t *testing.T) {
+	hello := ValidMessage("hello")
+	expectedWhitespaceTag := ValidMessage{
+		0x20, 0x09, 0x20, 0x20, 0x09, 0x09, 0x09, 0x09,
+		0x20, 0x09, 0x20, 0x09, 0x20, 0x09, 0x20, 0x20,
+		0x20, 0x20, 0x09, 0x09, 0x20, 0x20, 0x09, 0x09,
+	}
+
+	c := &Conversation{}
+	c.Policies = policies(allowV3 | sendWhitespaceTag)
+
+	_, _, err := c.Receive(ValidMessage("hi"))
+	assertNil(t, err)
+
+	m, err := c.Send(hello)
+	assertNil(t, err)
+	assertDeepEquals(t, m[0][len(hello):], expectedWhitespaceTag)
+}
+
+func Test_send_stopAppendingWhitespaceTagsIfReceivesNonDHCommitMsg(t *testing.T) {
+	hello := ValidMessage("hello")
+	expectedWhitespaceTag := ValidMessage{
+		0x20, 0x09, 0x20, 0x20, 0x09, 0x09, 0x09, 0x09,
+		0x20, 0x09, 0x20, 0x09, 0x20, 0x09, 0x20, 0x20,
+		0x20, 0x20, 0x09, 0x09, 0x20, 0x20, 0x09, 0x09,
+	}
+
+	c := &Conversation{}
+	c.Policies = policies(allowV3 | sendWhitespaceTag)
+
+	m, err := c.Send(hello)
+	assertNil(t, err)
+	assertDeepEquals(t, m[0][len(hello):], expectedWhitespaceTag)
+
+	_, _, err = c.Receive(ValidMessage("hi"))
+	assertNil(t, err)
+
+	m, err = c.Send(hello)
+	assertNil(t, err)
+	assertDeepEquals(t, m[0], hello)
+}
+
 func Test_send_dataMessageWhenItsMsgStateEncrypted(t *testing.T) {
 	m := []byte("hello")
 	c := bobContextAfterAKE()
