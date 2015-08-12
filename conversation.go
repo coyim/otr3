@@ -44,9 +44,10 @@ type Conversation struct {
 	stopSendingWhitespaceTags bool
 	hasSentWhitespaceTags     bool
 
-	smpEventHandler     SMPEventHandler
-	errorMessageHandler ErrorMessageHandler
-	messageEventHandler MessageEventHandler
+	smpEventHandler      SMPEventHandler
+	errorMessageHandler  ErrorMessageHandler
+	messageEventHandler  MessageEventHandler
+	securityEventHandler SecurityEventHandler
 }
 
 func (c *Conversation) messageHeader(msgType byte) ([]byte, error) {

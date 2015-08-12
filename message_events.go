@@ -85,6 +85,7 @@ func (c *Conversation) messageEventWithMessage(e MessageEvent, msg []byte) {
 	}
 }
 
+// String returns the string representation of the MessageEvent
 func (s MessageEvent) String() string {
 	switch s {
 	case MessageEventEncryptionRequired:
