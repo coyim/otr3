@@ -58,7 +58,7 @@ func (c *Conversation) receiveQueryMessage(msg ValidMessage) ([]messageWithHeade
 	return c.potentialAuthError(compactMessagesWithHeader(ts), err)
 }
 
-func (c Conversation) queryMessage() ValidMessage {
+func (c Conversation) QueryMessage() ValidMessage {
 	queryMessage := []byte("?OTRv")
 
 	if c.Policies.has(allowV2) {

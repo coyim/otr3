@@ -131,7 +131,7 @@ func Test_Recieve_signalsAMessageEventWhenWeReceiveADataMessageForAnotherInstanc
 	bob.theirKey = &alicePrivateKey.PublicKey
 
 	var toSend []ValidMessage
-	msg := alice.queryMessage()
+	msg := alice.QueryMessage()
 	_, toSend, _ = bob.Receive(msg)
 	encoded := toSend[0][5 : len(toSend[0])-1]
 	decoded, _ := b64decode(encoded)

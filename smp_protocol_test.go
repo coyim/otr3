@@ -68,7 +68,7 @@ func Test_SMP_Full(t *testing.T) {
 	var aliceMessages []ValidMessage
 	var bobMessages []ValidMessage
 
-	aliceMessages = append(bobMessages, alice.queryMessage())
+	aliceMessages = append(bobMessages, alice.QueryMessage())
 
 	for len(aliceMessages)+len(bobMessages) > 0 {
 		bobMessages = nil

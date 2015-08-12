@@ -31,7 +31,7 @@ func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMess
 		c.updateLastSent()
 		c.updateMayRetransmitTo(retransmitExact)
 		c.lastMessage(MessagePlaintext(makeCopy(message)))
-		return []ValidMessage{c.queryMessage()}, nil
+		return []ValidMessage{c.QueryMessage()}, nil
 	}
 
 	if c.Policies.has(sendWhitespaceTag) {

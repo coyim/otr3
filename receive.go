@@ -51,7 +51,7 @@ func (c *Conversation) receiveErrorMessage(message ValidMessage) (plain MessageP
 	msg := MessagePlaintext(makeCopy(message[len(errorMarker):]))
 
 	if c.Policies.has(errorStartAKE) {
-		toSend = []ValidMessage{c.queryMessage()}
+		toSend = []ValidMessage{c.QueryMessage()}
 	}
 
 	if c.msgState == encrypted {
