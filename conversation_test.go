@@ -257,6 +257,33 @@ func Test_End_whenStateIsEncrypted(t *testing.T) {
 	assertDeepEquals(t, msg, expectedMsg)
 }
 
+func Test_End_whenStateIsEncrypted_willSignalSecurityEvent(t *testing.T) {
+	bob := bobContextAfterAKE()
+	bob.msgState = encrypted
+
+	bob.expectSecurityEvent(t, func() {
+		bob.End()
+	}, GoneInsecure)
+}
+
+func Test_End_whenStateIsPlaintext_willNotSignalSecurityEvent(t *testing.T) {
+	bob := bobContextAfterAKE()
+	bob.msgState = plainText
+
+	bob.doesntExpectSecurityEvent(t, func() {
+		bob.End()
+	})
+}
+
+func Test_End_whenStateIsFinished_willNotSignalSecurityEvent(t *testing.T) {
+	bob := bobContextAfterAKE()
+	bob.msgState = finished
+
+	bob.doesntExpectSecurityEvent(t, func() {
+		bob.End()
+	})
+}
+
 func Test_End_wipesKeys(t *testing.T) {
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted

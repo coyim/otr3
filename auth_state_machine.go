@@ -21,8 +21,11 @@ func (c *Conversation) generateNewDHKeyPair() error {
 
 func (c *Conversation) akeHasFinished() error {
 	c.ake.wipe()
-	// TODO: security notification here
+
+	previousMsgState := c.msgState
 	c.msgState = encrypted
+	defer c.signalSecurityEventIf(previousMsgState != encrypted, GoneSecure)
+	defer c.signalSecurityEventIf(previousMsgState == encrypted, StillSecure)
 
 	if c.ourKey.PublicKey == *c.theirKey {
 		c.messageEvent(MessageEventMessageReflected)

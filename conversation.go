@@ -79,6 +79,7 @@ func (c *Conversation) IsEncrypted() bool {
 // End ends a secure conversation by generating a termination message for
 // the peer and switches to unencrypted communication.
 func (c *Conversation) End() (toSend []ValidMessage, err error) {
+	previousMsgState := c.msgState
 	switch c.msgState {
 	case plainText:
 	case encrypted:
@@ -86,8 +87,9 @@ func (c *Conversation) End() (toSend []ValidMessage, err error) {
 		toSend, err = c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
 	case finished:
 	}
-	// TODO: security notification here
 	c.msgState = plainText
+	defer c.signalSecurityEventIf(previousMsgState == encrypted, GoneInsecure)
+
 	c.keys.ourCurrentDHKeys.wipe()
 	c.keys.ourPreviousDHKeys.wipe()
 	wipeBigInt(c.keys.theirCurrentDHPubKey)

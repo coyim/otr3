@@ -596,6 +596,39 @@ func Test_akeHasFinished_willSignalThatWeAreTalkingToOurselvesIfWeAre(t *testing
 	}, MessageEventMessageReflected, nil, nil)
 }
 
+func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeHave(t *testing.T) {
+	c := bobContextAfterAKE()
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
+	c.msgState = plainText
+
+	c.expectSecurityEvent(t, func() {
+		c.akeHasFinished()
+	}, GoneSecure)
+}
+
+func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeWereFinished(t *testing.T) {
+	c := bobContextAfterAKE()
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
+	c.msgState = plainText
+
+	c.expectSecurityEvent(t, func() {
+		c.akeHasFinished()
+	}, GoneSecure)
+}
+
+func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeHaveRefreshed(t *testing.T) {
+	c := bobContextAfterAKE()
+	c.ourKey = bobPrivateKey
+	c.theirKey = &alicePrivateKey.PublicKey
+	c.msgState = encrypted
+
+	c.expectSecurityEvent(t, func() {
+		c.akeHasFinished()
+	}, StillSecure)
+}
+
 func Test_akeHasFinished_wipesAKEKeys(t *testing.T) {
 	c := &Conversation{}
 	c.ourKey = bobPrivateKey

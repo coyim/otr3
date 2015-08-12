@@ -59,3 +59,9 @@ func (c combinedSecurityEventHandler) HandleSecurityEvent(event SecurityEvent) {
 func combineSecurityEventHandlers(handlers ...SecurityEventHandler) SecurityEventHandler {
 	return combinedSecurityEventHandler{handlers}
 }
+
+func (c *Conversation) signalSecurityEventIf(cond bool, event SecurityEvent) {
+	if cond {
+		c.securityEvent(event)
+	}
+}
