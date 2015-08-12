@@ -1,5 +1,7 @@
 package otr3
 
+import "fmt"
+
 // SMPEvent define the events used to indicate status of SMP to the UI
 type SMPEvent int
 
@@ -77,10 +79,18 @@ type combinedSMPEventHandler struct {
 
 func (c combinedSMPEventHandler) HandleSMPEvent(event SMPEvent, progressPercent int, question string) {
 	for _, h := range c.handlers {
-		h.HandleSMPEvent(event, progressPercent, question)
+		if h != nil {
+			h.HandleSMPEvent(event, progressPercent, question)
+		}
 	}
 }
 
 func combineSMPEventHandlers(handlers ...SMPEventHandler) SMPEventHandler {
 	return combinedSMPEventHandler{handlers}
+}
+
+type debugSMPEventHandler struct{}
+
+func (debugSMPEventHandler) HandleSMPEvent(event SMPEvent, progressPercent int, question string) {
+	fmt.Fprintf(standardErrorOutput, "%sHandleSMPEvent(%s, %d, %#v)\n", debugPrefix, event, progressPercent, question)
 }

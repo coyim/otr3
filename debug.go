@@ -8,6 +8,7 @@ import (
 )
 
 const debugString = "?OTR!"
+const debugPrefix = "[DEBUG] "
 
 var standardErrorOutput io.Writer = os.Stderr
 

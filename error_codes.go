@@ -1,5 +1,7 @@
 package otr3
 
+import "fmt"
+
 // ErrorCode represents an error that can happen during OTR processing
 type ErrorCode int
 
@@ -55,11 +57,20 @@ type combinedErrorMessageHandler struct {
 func (c combinedErrorMessageHandler) HandleErrorMessage(error ErrorCode) []byte {
 	var result []byte
 	for _, h := range c.handlers {
-		result = h.HandleErrorMessage(error)
+		if h != nil {
+			result = h.HandleErrorMessage(error)
+		}
 	}
 	return result
 }
 
 func combineErrorMessageHandlers(handlers ...ErrorMessageHandler) ErrorMessageHandler {
 	return combinedErrorMessageHandler{handlers}
+}
+
+type debugErrorMessageHandler struct{}
+
+func (debugErrorMessageHandler) HandleErrorMessage(error ErrorCode) []byte {
+	fmt.Fprintf(standardErrorOutput, "%sHandleErrorMessage(%s)\n", debugPrefix, error)
+	return nil
 }

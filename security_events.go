@@ -1,5 +1,7 @@
 package otr3
 
+import "fmt"
+
 // SecurityEvent define the events used to indicate changes in security status. In comparison with libotr, this library does not take trust levels into concern for security events
 type SecurityEvent int
 
@@ -52,7 +54,9 @@ type combinedSecurityEventHandler struct {
 
 func (c combinedSecurityEventHandler) HandleSecurityEvent(event SecurityEvent) {
 	for _, h := range c.handlers {
-		h.HandleSecurityEvent(event)
+		if h != nil {
+			h.HandleSecurityEvent(event)
+		}
 	}
 }
 
@@ -64,4 +68,10 @@ func (c *Conversation) signalSecurityEventIf(cond bool, event SecurityEvent) {
 	if cond {
 		c.securityEvent(event)
 	}
+}
+
+type debugSecurityEventHandler struct{}
+
+func (debugSecurityEventHandler) HandleSecurityEvent(event SecurityEvent) {
+	fmt.Fprintf(standardErrorOutput, "%sHandleSecurityEvent(%s)\n", debugPrefix, event)
 }

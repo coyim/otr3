@@ -32,10 +32,17 @@ func Test_combinedMessageEventHandler_callsAllErrorMessageHandlersGiven(t *testi
 	f3 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error) {
 		called3 = true
 	}}
-	d := combineMessageEventHandlers(f1, f2, f3)
+	d := combineMessageEventHandlers(f1, f2, nil, f3)
 	d.HandleMessageEvent(MessageEventSetupError, []byte("something"), nil)
 
 	assertEquals(t, called1, true)
 	assertEquals(t, called2, true)
 	assertEquals(t, called3, true)
+}
+
+func Test_debugMessageEventHandler_writesTheEventToStderr(t *testing.T) {
+	ss := captureStderr(func() {
+		debugMessageEventHandler{}.HandleMessageEvent(MessageEventLogHeartbeatSent, []byte("A message"), newOtrError("hello world"))
+	})
+	assertEquals(t, ss, "[DEBUG] HandleMessageEvent(MessageEventLogHeartbeatSent, message: \"A message\", error: otr: hello world)\n")
 }

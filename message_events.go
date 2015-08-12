@@ -1,5 +1,7 @@
 package otr3
 
+import "fmt"
+
 // MessageEvent define the events used to indicate the messages that need to be sent
 type MessageEvent int
 
@@ -129,10 +131,18 @@ type combinedMessageEventHandler struct {
 
 func (c combinedMessageEventHandler) HandleMessageEvent(event MessageEvent, message []byte, err error) {
 	for _, h := range c.handlers {
-		h.HandleMessageEvent(event, message, err)
+		if h != nil {
+			h.HandleMessageEvent(event, message, err)
+		}
 	}
 }
 
 func combineMessageEventHandlers(handlers ...MessageEventHandler) MessageEventHandler {
 	return combinedMessageEventHandler{handlers}
+}
+
+type debugMessageEventHandler struct{}
+
+func (debugMessageEventHandler) HandleMessageEvent(event MessageEvent, message []byte, err error) {
+	fmt.Fprintf(standardErrorOutput, "%sHandleMessageEvent(%s, message: %#v, error: %v)\n", debugPrefix, event, string(message), err)
 }
