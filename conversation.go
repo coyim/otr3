@@ -38,9 +38,11 @@ type Conversation struct {
 	resend     resendContext
 	injections injections
 
-	fragmentSize              uint16
-	fragmentationContext      fragmentationContext
+	fragmentSize         uint16
+	fragmentationContext fragmentationContext
+
 	stopSendingWhitespaceTags bool
+	hasSentWhitespaceTags     bool
 
 	smpEventHandler     SMPEventHandler
 	errorMessageHandler ErrorMessageHandler

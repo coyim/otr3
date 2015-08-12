@@ -26,6 +26,7 @@ func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
 		return message
 	}
 
+	c.hasSentWhitespaceTags = true
 	return append(message, genWhitespaceTag(c.Policies)...)
 }
 

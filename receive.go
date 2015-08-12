@@ -89,8 +89,7 @@ func (c *Conversation) receiveEncoded(message encodedMessage) (MessagePlaintext,
 }
 
 func (c *Conversation) checkPlaintextPolicies(plain MessagePlaintext) {
-	c.stopSendingWhitespaceTags = c.Policies.has(sendWhitespaceTag)
-
+	c.stopSendingWhitespaceTags = c.hasSentWhitespaceTags
 	if c.msgState != plainText || c.Policies.has(requireEncryption) {
 		c.messageEventWithMessage(MessageEventReceivedMessageUnencrypted, plain)
 	}
