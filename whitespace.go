@@ -2,6 +2,13 @@ package otr3
 
 import "bytes"
 
+type whitespaceState int
+
+const (
+	whitespaceSent whitespaceState = iota + 1
+	whitespaceRejected
+)
+
 var (
 	// Maps to OTRL_MESSAGE_TAG_BASE
 	whitespaceTagHeader = []byte(" \t  \t\t\t\t \t \t \t  ")
@@ -22,11 +29,11 @@ func genWhitespaceTag(p policies) []byte {
 }
 
 func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
-	if !c.Policies.has(sendWhitespaceTag) || c.stopSendingWhitespaceTags {
+	if !c.Policies.has(sendWhitespaceTag) || c.whitespaceState == whitespaceRejected {
 		return message
 	}
 
-	c.hasSentWhitespaceTags = true
+	c.whitespaceState = whitespaceSent
 	return append(message, genWhitespaceTag(c.Policies)...)
 }
 

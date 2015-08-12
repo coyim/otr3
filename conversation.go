@@ -21,7 +21,8 @@ type Conversation struct {
 	version otrVersion
 	Rand    io.Reader
 
-	msgState msgState
+	msgState        msgState
+	whitespaceState whitespaceState
 
 	ourInstanceTag   uint32
 	theirInstanceTag uint32
@@ -40,9 +41,6 @@ type Conversation struct {
 
 	fragmentSize         uint16
 	fragmentationContext fragmentationContext
-
-	stopSendingWhitespaceTags bool
-	hasSentWhitespaceTags     bool
 
 	smpEventHandler      SMPEventHandler
 	errorMessageHandler  ErrorMessageHandler
