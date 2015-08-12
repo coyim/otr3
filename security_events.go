@@ -26,6 +26,12 @@ func (d dynamicSecurityEventHandler) HandleSecurityEvent(event SecurityEvent) {
 	d.eh(event)
 }
 
+func (c *Conversation) securityEvent(e SecurityEvent) {
+	if c.securityEventHandler != nil {
+		c.securityEventHandler.HandleSecurityEvent(e)
+	}
+}
+
 // String returns the string representation of the SecurityEvent
 func (s SecurityEvent) String() string {
 	switch s {

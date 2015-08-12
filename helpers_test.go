@@ -128,7 +128,7 @@ func (c *Conversation) expectMessageEvent(t *testing.T, f func(), expectedEvent 
 
 func (c *Conversation) doesntExpectMessageEvent(t *testing.T, f func()) {
 	c.messageEventHandler = dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error) {
-		t.Errorf("Didn't expect a message event, but got: %#v with msg %v and error %#v", event, message, err)
+		t.Errorf("Didn't expect a message event, but got: %v with msg %v and error %#v", event, message, err)
 	}}
 
 	f()
@@ -147,4 +147,25 @@ func (c *Conversation) expectSMPEvent(t *testing.T, f func(), expectedEvent SMPE
 	f()
 
 	assertEquals(t, called, true)
+}
+
+func (c *Conversation) expectSecurityEvent(t *testing.T, f func(), expectedEvent SecurityEvent) {
+	called := false
+
+	c.securityEventHandler = dynamicSecurityEventHandler{func(event SecurityEvent) {
+		assertEquals(t, event, expectedEvent)
+		called = true
+	}}
+
+	f()
+
+	assertEquals(t, called, true)
+}
+
+func (c *Conversation) doesntExpectSecurityEvent(t *testing.T, f func()) {
+	c.securityEventHandler = dynamicSecurityEventHandler{func(event SecurityEvent) {
+		t.Errorf("Didn't expect a security event, but got: %v", event)
+	}}
+
+	f()
 }

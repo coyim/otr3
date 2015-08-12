@@ -86,6 +86,7 @@ func (c *Conversation) End() (toSend []ValidMessage, err error) {
 		toSend, err = c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
 	case finished:
 	}
+	// TODO: security notification here
 	c.msgState = plainText
 	c.keys.ourCurrentDHKeys.wipe()
 	c.keys.ourPreviousDHKeys.wipe()
