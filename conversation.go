@@ -109,3 +109,23 @@ func (c *Conversation) GetTheirKey() *PublicKey {
 func (c *Conversation) GetSSID() [8]byte {
 	return c.ssid
 }
+
+// SetSmpEventHandler assigns handler for SMPEvent
+func (c *Conversation) SetSmpEventHandler(handler SMPEventHandler) {
+	c.smpEventHandler = handler
+}
+
+// SetErrorMessageHandler assigns handler for ErrorMessage
+func (c *Conversation) SetErrorMessageHandler(handler ErrorMessageHandler) {
+	c.errorMessageHandler = handler
+}
+
+// SetMessageEventHandler assigns handler for MessageEvent
+func (c *Conversation) SetMessageEventHandler(handler MessageEventHandler) {
+	c.messageEventHandler = handler
+}
+
+// SetSecurityEventHandler assigns handler for SecurityEvent
+func (c *Conversation) SetSecurityEventHandler(handler SecurityEventHandler) {
+	c.securityEventHandler = handler
+}

@@ -63,6 +63,13 @@ func (eventHandler) HandleErrorMessage(error otr3.ErrorCode) []byte {
 	return nil
 }
 
+func (e *eventHandler) HandleSecurityEvent(event otr3.SecurityEvent) {
+	switch event {
+	case otr3.GoneSecure, otr3.StillSecure:
+		e.securityChange = NewKeys
+	}
+}
+
 func (e *eventHandler) HandleSMPEvent(event otr3.SMPEvent, progressPercent int, question string) {
 	switch event {
 	case otr3.SMPEventAskForSecret, otr3.SMPEventAskForAnswer:
@@ -103,6 +110,10 @@ func (c *Conversation) compatInit() {
 	}
 
 	c.Conversation.Policies.AllowV2()
+	c.SetSmpEventHandler(&c.eventHandler)
+	c.SetErrorMessageHandler(&c.eventHandler)
+	c.SetMessageEventHandler(&c.eventHandler)
+	c.SetSecurityEventHandler(&c.eventHandler)
 
 	c.initialized = true
 }
@@ -128,7 +139,6 @@ func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change Se
 	c.compatInit()
 
 	var ret []otr3.ValidMessage
-	wasEncrypted := c.IsEncrypted()
 	out, ret, err = c.Conversation.Receive(in)
 	encrypted = c.IsEncrypted()
 
@@ -136,15 +146,7 @@ func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change Se
 		toSend = otr3.Bytes(ret)
 	}
 
-	switch {
-	// There is no MessageEvent to notify the AKE completion
-	// It misses the case: when the keys are
-	// renegotiated within an encrypted conversation.
-	case wasEncrypted == false && encrypted == true:
-		change = NewKeys
-	default:
-		change = c.eventHandler.consumeSecurityChange()
-	}
+	change = c.eventHandler.consumeSecurityChange()
 
 	c.updateValues()
 	return
