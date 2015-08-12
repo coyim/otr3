@@ -5,7 +5,8 @@ import "bytes"
 type whitespaceState int
 
 const (
-	whitespaceSent whitespaceState = iota + 1
+	whitespaceNotSent whitespaceState = iota
+	whitespaceSent
 	whitespaceRejected
 )
 

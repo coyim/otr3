@@ -22,6 +22,8 @@ type smpState interface {
 	receiveMessage2(*Conversation, smp2Message) (smpState, smpMessage, error)
 	receiveMessage3(*Conversation, smp3Message) (smpState, smpMessage, error)
 	receiveMessage4(*Conversation, smp4Message) (smpState, smpMessage, error)
+	identity() int
+	identityString() string
 }
 
 func (c *Conversation) restart() []byte {
@@ -244,7 +246,6 @@ func (smpStateExpect1) startAuthenticate(c *Conversation, question string, mutua
 	if err != nil {
 		//DISCUSS: it will only error if fails to read from Rand
 		//Is it worth sending the ABORT message?
-		//Should it abortStateMachineCheated() like other similar cases?
 		return nil, errShortRandomRead
 	}
 

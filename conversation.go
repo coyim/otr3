@@ -46,6 +46,8 @@ type Conversation struct {
 	errorMessageHandler  ErrorMessageHandler
 	messageEventHandler  MessageEventHandler
 	securityEventHandler SecurityEventHandler
+
+	debug bool
 }
 
 func (c *Conversation) messageHeader(msgType byte) ([]byte, error) {

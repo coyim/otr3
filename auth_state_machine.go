@@ -73,6 +73,8 @@ type authState interface {
 	receiveDHKeyMessage(*Conversation, []byte) (authState, messageWithHeader, error)
 	receiveRevealSigMessage(*Conversation, []byte) (authState, messageWithHeader, error)
 	receiveSigMessage(*Conversation, []byte) (authState, messageWithHeader, error)
+	identity() int
+	identityString() string
 }
 
 func (authStateBase) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {

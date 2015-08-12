@@ -1,6 +1,9 @@
 package otr3
 
-import "errors"
+import (
+	"bufio"
+	"bytes"
+)
 
 // Send takes a human readable message from the local user, possibly encrypts
 // it and returns zero or more messages to send to the peer.
@@ -12,6 +15,11 @@ func (c *Conversation) Send(m ValidMessage) ([]ValidMessage, error) {
 		return []ValidMessage{makeCopy(message)}, nil
 	}
 
+	if c.debug && bytes.Index(message, []byte(debugString)) != -1 {
+		c.dump(bufio.NewWriter(standardErrorOutput))
+		return nil, nil
+	}
+
 	switch c.msgState {
 	case plainText:
 		return c.withInjections(c.sendMessageOnPlaintext(message))
@@ -19,10 +27,10 @@ func (c *Conversation) Send(m ValidMessage) ([]ValidMessage, error) {
 		return c.withInjections(c.sendMessageOnEncrypted(message))
 	case finished:
 		c.messageEvent(MessageEventConnectionEnded)
-		return c.withInjections(nil, errors.New("otr: cannot send message because secure conversation has finished"))
+		return c.withInjections(nil, newOtrError("cannot send message because secure conversation has finished"))
 	}
 
-	return c.withInjections(nil, errors.New("otr: cannot send message in current state"))
+	return c.withInjections(nil, newOtrError("cannot send message in current state"))
 }
 
 func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMessage, error) {
