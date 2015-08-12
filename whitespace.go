@@ -30,21 +30,36 @@ func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
 	return append(message, genWhitespaceTag(c.Policies)...)
 }
 
-func (c *Conversation) processWhitespaceTag(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
+// By the spec "this tag may occur anywhere in the message"
+func extractWhitespaceTag(message ValidMessage) (plain MessagePlaintext, versions int) {
 	wsPos := bytes.Index(message, whitespaceTagHeader)
+	currentData := message[wsPos+len(whitespaceTagHeader):]
 
-	plain = MessagePlaintext(message[:wsPos])
+	for {
+		aw, r, has := nextAllWhite(currentData)
+		if !has {
+			break
+		}
+		currentData = r
+		if bytes.Equal(aw, otrV3{}.whitespaceTag()) {
+			versions |= (1 << 3)
+		} else if bytes.Equal(aw, otrV2{}.whitespaceTag()) {
+			versions |= (1 << 2)
+		}
+	}
 
-	var restPlain MessagePlaintext
-	restPlain, toSend, err = c.startAKEFromWhitespaceTag(message[(wsPos + len(whitespaceTagHeader)):])
+	plain = makeCopy(append(message[:wsPos], currentData...))
+	return
+}
 
-	plain = append(plain, restPlain...)
+func (c *Conversation) processWhitespaceTag(message ValidMessage) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
+	plain, versions := extractWhitespaceTag(message)
 
 	if !c.Policies.has(whitespaceStartAKE) {
-		toSend = nil
-		err = nil
 		return
 	}
+
+	toSend, err = c.startAKEFromWhitespaceTag(versions)
 	return
 }
 
@@ -62,24 +77,7 @@ func nextAllWhite(data []byte) (allwhite []byte, rest []byte, hasAllWhite bool) 
 	return data[0:8], data[8:], true
 }
 
-func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (restPlain MessagePlaintext, toSend []messageWithHeader, err error) {
-	versions := 0
-
-	currentData := tag
-	for {
-		aw, r, has := nextAllWhite(currentData)
-		if !has {
-			break
-		}
-		currentData = r
-		if bytes.Equal(aw, otrV3{}.whitespaceTag()) {
-			versions |= (1 << 3)
-		} else if bytes.Equal(aw, otrV2{}.whitespaceTag()) {
-			versions |= (1 << 2)
-		}
-	}
-
-	restPlain = currentData
+func (c *Conversation) startAKEFromWhitespaceTag(versions int) (toSend []messageWithHeader, err error) {
 	switch {
 	case c.Policies.has(allowV3) && versions&(1<<3) > 0:
 		c.version = otrV3{}
@@ -89,6 +87,7 @@ func (c *Conversation) startAKEFromWhitespaceTag(tag []byte) (restPlain MessageP
 		err = errInvalidVersion
 		return
 	}
+
 	ts, e := c.sendDHCommit()
 	toSend, err = c.potentialAuthError(compactMessagesWithHeader(ts), e)
 	return

@@ -60,6 +60,7 @@ func (c *Conversation) sendDHCommit() (toSend messageWithHeader, err error) {
 	if err != nil {
 		return
 	}
+
 	toSend, err = c.wrapMessageHeader(msgTypeDHCommit, toSend)
 	if err != nil {
 		return nil, err

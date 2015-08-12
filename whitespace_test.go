@@ -5,6 +5,24 @@ import (
 	"testing"
 )
 
+func Test_extractWhitespaceTag_removesTagFromMessage(t *testing.T) {
+	p := policies(allowV2)
+	expectedTag := genWhitespaceTag(p)
+
+	messages := []ValidMessage{
+		ValidMessage(string(expectedTag) + "hi there"),
+		ValidMessage("hi" + string(expectedTag) + " there"),
+		ValidMessage("hi there" + string(expectedTag)),
+	}
+
+	for _, m := range messages {
+		plain, versions := extractWhitespaceTag(m)
+
+		assertDeepEquals(t, plain, MessagePlaintext("hi there"))
+		assertEquals(t, versions, 1<<2)
+	}
+}
+
 func Test_processWhitespaceTag_shouldNotStartAKEIfPolicyDoesNotAllow(t *testing.T) {
 	c := &Conversation{}
 	// the policy explicity is missing whitespaceStartAKE
