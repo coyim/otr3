@@ -5,6 +5,24 @@ import (
 	"testing"
 )
 
+func Test_processWhitespaceTag_shouldNotStartAKEIfPolicyDoesNotAllow(t *testing.T) {
+	c := &Conversation{}
+	// the policy explicity is missing whitespaceStartAKE
+	c.Policies = policies(allowV2)
+	c.ensureAKE()
+	assertEquals(t, c.ake.state, authStateNone{})
+
+	expectedTag := genWhitespaceTag(c.Policies)
+	m := ValidMessage("hi" + string(expectedTag) + " there")
+
+	plain, toSend, err := c.processWhitespaceTag(m)
+
+	assertNil(t, err)
+	assertNil(t, toSend)
+	assertDeepEquals(t, plain, MessagePlaintext("hi there"))
+	assertEquals(t, c.ake.state, authStateNone{})
+}
+
 func Test_genWhitespace_forV2(t *testing.T) {
 	hLen := len(whitespaceTagHeader)
 	p := policies(allowV2)
