@@ -33,7 +33,7 @@ func fragmentData(data []byte, i int, fraglen, l uint16) []byte {
 	return data[fragmentStart(uint16(i), fraglen):fragmentEnd(uint16(i), fraglen, l)]
 }
 
-func (c *Conversation) setFragmentSize(size uint16) {
+func (c *Conversation) SetFragmentSize(size uint16) {
 	c.fragmentSize = size
 }
 

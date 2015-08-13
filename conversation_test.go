@@ -223,7 +223,7 @@ func Test_send_dataMessageWhenItsMsgStateEncrypted(t *testing.T) {
 func Test_encodeWithoutFragment(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
-	c.setFragmentSize(64)
+	c.SetFragmentSize(64)
 
 	msg := c.fragEncode([]byte("one two three"))
 
@@ -236,7 +236,7 @@ func Test_encodeWithoutFragment(t *testing.T) {
 func Test_encodeWithoutFragmentTooSmall(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
-	c.setFragmentSize(18)
+	c.SetFragmentSize(18)
 
 	msg := c.fragEncode([]byte("one two three"))
 
@@ -249,7 +249,7 @@ func Test_encodeWithoutFragmentTooSmall(t *testing.T) {
 func Test_encodeWithFragment(t *testing.T) {
 	c := newConversation(otrV2{}, fixtureRand())
 	c.Policies = policies(allowV2 | allowV3 | whitespaceStartAKE)
-	c.setFragmentSize(22)
+	c.SetFragmentSize(22)
 
 	msg := c.fragEncode([]byte("one two three"))
 

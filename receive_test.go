@@ -167,7 +167,7 @@ func Test_Receive_Fragments(t *testing.T) {
 	alice := aliceContextAfterAKE()
 	alice.msgState = encrypted
 	alice.keys.ourCounter = 1
-	alice.setFragmentSize(200)
+	alice.SetFragmentSize(200)
 
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted
