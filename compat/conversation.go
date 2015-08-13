@@ -6,12 +6,16 @@ import (
 	"github.com/twstrike/otr3"
 )
 
-// QueryMessage can be sent to a peer to start an OTR conversation.
-var QueryMessage = "?OTRv2?"
+var (
+	// QueryMessage can be sent to a peer to start an OTR conversation.
+	QueryMessage = "?OTRv2?"
 
-// ErrorPrefix can be used to make an OTR error by appending an error message
-// to it.
-var ErrorPrefix = "?OTR Error:"
+	// ErrorPrefix can be used to make an OTR error by appending an error message
+	// to it.
+	ErrorPrefix = "?OTR Error:"
+
+	minFragmentSize = 18
+)
 
 // SecurityChange describes a change in the security state of a Conversation.
 type SecurityChange int
@@ -114,6 +118,11 @@ func (c *Conversation) compatInit() {
 	c.SetErrorMessageHandler(&c.eventHandler)
 	c.SetMessageEventHandler(&c.eventHandler)
 	c.SetSecurityEventHandler(&c.eventHandler)
+
+	// x/crypto/otr has a minimum size for fragmentation
+	if c.FragmentSize >= minFragmentSize {
+		c.SetFragmentSize(uint16(c.FragmentSize))
+	}
 
 	c.initialized = true
 }
