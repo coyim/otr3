@@ -244,8 +244,6 @@ func (smpStateExpect1) startAuthenticate(c *Conversation, question string, mutua
 
 	s1, err := c.generateSMP1()
 	if err != nil {
-		//DISCUSS: it will only error if fails to read from Rand
-		//Is it worth sending the ABORT message?
 		return nil, errShortRandomRead
 	}
 

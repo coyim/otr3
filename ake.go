@@ -111,8 +111,8 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 
 func (c *Conversation) serializeDHCommit(public *big.Int) []byte {
 	dhCommitMsg := dhCommit{
-		hashedGx:    sha256.Sum256(appendMPI(nil, public)),
 		encryptedGx: c.ake.encryptedGx,
+		hashedGx:    sha256.Sum256(appendMPI(nil, public)),
 	}
 	return dhCommitMsg.serialize()
 }

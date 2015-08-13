@@ -42,11 +42,7 @@ func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMess
 		return []ValidMessage{c.QueryMessage()}, nil
 	}
 
-	if c.Policies.has(sendWhitespaceTag) {
-		message = c.appendWhitespaceTag(message)
-	}
-
-	return []ValidMessage{makeCopy(message)}, nil
+	return []ValidMessage{makeCopy(c.appendWhitespaceTag(message))}, nil
 }
 
 func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMessage, error) {

@@ -260,7 +260,6 @@ func (priv *PrivateKey) Serialize() []byte {
 }
 
 func (pub *PublicKey) serialize() []byte {
-	//Should this be an error?
 	if pub.P == nil || pub.Q == nil || pub.G == nil || pub.Y == nil {
 		return nil
 	}
