@@ -1,5 +1,5 @@
 package otr3
 
-func (c *Conversation) processPaddingTLV(t tlv) (toSend *tlv, err error) {
+func (c *Conversation) processPaddingTLV(tlv, dataMessageExtra) (toSend *tlv, err error) {
 	return nil, nil
 }

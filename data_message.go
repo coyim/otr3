@@ -2,6 +2,10 @@ package otr3
 
 import "encoding/binary"
 
+type dataMessageExtra struct {
+	key []byte
+}
+
 func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) (dataMsg, error) {
 	return c.genDataMsgWithFlag(message, messageFlagNormal, tlvs...)
 }
@@ -131,7 +135,8 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 	}
 
 	var tlvs []tlv
-	tlvs, err = c.processTLVs(p.tlvs)
+	// TODO: add the dataMessageExtra here
+	tlvs, err = c.processTLVs(p.tlvs, dataMessageExtra{})
 	if err != nil {
 		return
 	}
@@ -163,7 +168,7 @@ func decideFlagFrom(tlvs []tlv) byte {
 	return flag
 }
 
-func (c *Conversation) processSMPTLV(t tlv) (toSend *tlv, err error) {
+func (c *Conversation) processSMPTLV(t tlv, x dataMessageExtra) (toSend *tlv, err error) {
 	c.smp.ensureSMP()
 
 	smpMessage, ok := t.smpMessage()
@@ -174,7 +179,7 @@ func (c *Conversation) processSMPTLV(t tlv) (toSend *tlv, err error) {
 	return c.receiveSMP(smpMessage)
 }
 
-func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
+func (c *Conversation) processTLVs(tlvs []tlv, x dataMessageExtra) ([]tlv, error) {
 	var retTLVs []tlv
 
 	for _, t := range tlvs {
@@ -183,7 +188,7 @@ func (c *Conversation) processTLVs(tlvs []tlv) ([]tlv, error) {
 			continue
 		}
 
-		toSend, err := mh(c, t)
+		toSend, err := mh(c, t, x)
 		if err != nil {
 			//We assume this will only happen if the message was sent by a
 			//malicious/broken client and it's reasonable to stop processing the

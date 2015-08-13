@@ -46,6 +46,7 @@ type Conversation struct {
 	errorMessageHandler  ErrorMessageHandler
 	messageEventHandler  MessageEventHandler
 	securityEventHandler SecurityEventHandler
+	receivedKeyHandler   ReceivedKeyHandler
 
 	debug bool
 }

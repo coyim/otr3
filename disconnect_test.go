@@ -10,7 +10,7 @@ func Test_processDisconnectedTLV_forgetAllKeysAndTransitionToFinished(t *testing
 	c.msgState = encrypted
 	c.keys.theirCurrentDHPubKey = big.NewInt(99)
 
-	c.processDisconnectedTLV(tlv{})
+	c.processDisconnectedTLV(tlv{}, dataMessageExtra{})
 
 	assertEquals(t, c.msgState, finished)
 	assertDeepEquals(t, c.keys, keyManagementContext{})
@@ -22,7 +22,7 @@ func Test_processDisconnectedTLV_signalsASecurityEvent(t *testing.T) {
 	c.keys.theirCurrentDHPubKey = big.NewInt(99)
 
 	c.expectSecurityEvent(t, func() {
-		c.processDisconnectedTLV(tlv{})
+		c.processDisconnectedTLV(tlv{}, dataMessageExtra{})
 	}, GoneInsecure)
 }
 
@@ -35,7 +35,7 @@ func Test_processDisconnectedTLV_isActuallyInsecureWhenTheEventIsSignalled(t *te
 		assertEquals(t, c.msgState, finished)
 	}}
 
-	c.processDisconnectedTLV(tlv{})
+	c.processDisconnectedTLV(tlv{}, dataMessageExtra{})
 }
 
 func Test_processDisconnectedTLV_doesntSignalsASecurityEventIfWeWereInPlaintext(t *testing.T) {
@@ -44,7 +44,7 @@ func Test_processDisconnectedTLV_doesntSignalsASecurityEventIfWeWereInPlaintext(
 	c.keys.theirCurrentDHPubKey = big.NewInt(99)
 
 	c.doesntExpectSecurityEvent(t, func() {
-		c.processDisconnectedTLV(tlv{})
+		c.processDisconnectedTLV(tlv{}, dataMessageExtra{})
 	})
 }
 
@@ -54,6 +54,6 @@ func Test_processDisconnectedTLV_doesntSignalsASecurityEventIfWeAreInFinished(t 
 	c.keys.theirCurrentDHPubKey = big.NewInt(99)
 
 	c.doesntExpectSecurityEvent(t, func() {
-		c.processDisconnectedTLV(tlv{})
+		c.processDisconnectedTLV(tlv{}, dataMessageExtra{})
 	})
 }

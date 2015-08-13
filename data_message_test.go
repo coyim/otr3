@@ -20,7 +20,7 @@ func Test_processTLVs_ignoresInvalidTLVMessageTypes(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.msgState = encrypted
 
-	toSend, err := c.processTLVs(tlvs)
+	toSend, err := c.processTLVs(tlvs, dataMessageExtra{})
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, toSend, nilT)
 }
@@ -37,7 +37,7 @@ func Test_processTLVs_ignoresPaddingTLV(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.msgState = encrypted
 
-	tlvs, err := c.processTLVs([]tlv{aTLV})
+	tlvs, err := c.processTLVs([]tlv{aTLV}, dataMessageExtra{})
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, tlvs, nilB)
 }

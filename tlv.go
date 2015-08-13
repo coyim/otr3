@@ -16,20 +16,38 @@ const (
 	tlvTypeExtraSymmetricKey = uint16(0x08)
 )
 
-type tlvHandler func(*Conversation, tlv) (*tlv, error)
+type tlvHandler func(*Conversation, tlv, dataMessageExtra) (*tlv, error)
 
 var tlvHandlers = make([]tlvHandler, 9)
 
 func initTLVHandlers() {
-	tlvHandlers[tlvTypePadding] = func(c *Conversation, t tlv) (*tlv, error) { return c.processPaddingTLV(t) }
-	tlvHandlers[tlvTypeDisconnected] = func(c *Conversation, t tlv) (*tlv, error) { return c.processDisconnectedTLV(t) }
-	tlvHandlers[tlvTypeSMP1] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
-	tlvHandlers[tlvTypeSMP2] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
-	tlvHandlers[tlvTypeSMP3] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
-	tlvHandlers[tlvTypeSMP4] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
-	tlvHandlers[tlvTypeSMPAbort] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
-	tlvHandlers[tlvTypeSMP1WithQuestion] = func(c *Conversation, t tlv) (*tlv, error) { return c.processSMPTLV(t) }
-	tlvHandlers[tlvTypeExtraSymmetricKey] = func(c *Conversation, t tlv) (*tlv, error) { return c.processExtraSymmetricKeyTLV(t) }
+	tlvHandlers[tlvTypePadding] = func(c *Conversation, t tlv, x dataMessageExtra) (*tlv, error) {
+		return c.processPaddingTLV(t, x)
+	}
+	tlvHandlers[tlvTypeDisconnected] = func(c *Conversation, t tlv, x dataMessageExtra) (*tlv, error) {
+		return c.processDisconnectedTLV(t, x)
+	}
+	tlvHandlers[tlvTypeSMP1] = func(c *Conversation, t tlv, x dataMessageExtra) (*tlv, error) {
+		return c.processSMPTLV(t, x)
+	}
+	tlvHandlers[tlvTypeSMP2] = func(c *Conversation, t tlv, x dataMessageExtra) (*tlv, error) {
+		return c.processSMPTLV(t, x)
+	}
+	tlvHandlers[tlvTypeSMP3] = func(c *Conversation, t tlv, x dataMessageExtra) (*tlv, error) {
+		return c.processSMPTLV(t, x)
+	}
+	tlvHandlers[tlvTypeSMP4] = func(c *Conversation, t tlv, x dataMessageExtra) (*tlv, error) {
+		return c.processSMPTLV(t, x)
+	}
+	tlvHandlers[tlvTypeSMPAbort] = func(c *Conversation, t tlv, x dataMessageExtra) (*tlv, error) {
+		return c.processSMPTLV(t, x)
+	}
+	tlvHandlers[tlvTypeSMP1WithQuestion] = func(c *Conversation, t tlv, x dataMessageExtra) (*tlv, error) {
+		return c.processSMPTLV(t, x)
+	}
+	tlvHandlers[tlvTypeExtraSymmetricKey] = func(c *Conversation, t tlv, x dataMessageExtra) (*tlv, error) {
+		return c.processExtraSymmetricKeyTLV(t, x)
+	}
 }
 
 func messageHandlerForTLV(t tlv) (tlvHandler, error) {
