@@ -92,6 +92,7 @@ func fixtureRevealSigMsgBody(v otrVersion) []byte {
 
 func fixtureSigMsg(v otrVersion) []byte {
 	c := aliceContextAtReceiveRevealSig()
+	c.calcAKEKeys(c.calcDHSharedSecret())
 	c.version = v
 
 	msg, _ := c.sigMessage()

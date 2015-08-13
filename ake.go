@@ -166,7 +166,6 @@ func (c *Conversation) revealSigMessage() ([]byte, error) {
 // sigMessage = alice = y
 // Alice -- Signature -----------> Bob
 func (c *Conversation) sigMessage() ([]byte, error) {
-	c.calcAKEKeys(c.calcDHSharedSecret())
 	c.keys.ourKeyID++
 
 	encryptedSig, err := c.generateEncryptedSignature(&c.ake.sigKey)
@@ -347,7 +346,7 @@ func extractGx(decryptedGx []byte) (*big.Int, error) {
 		return gx, newOtrError("gx corrupt after decryption")
 	}
 
-	if lt(gx, g1) || gt(gx, pMinusTwo) {
+	if !isGroupElement(gx) {
 		return gx, newOtrError("DH value out of range")
 	}
 

@@ -254,6 +254,7 @@ func Test_sigMessage(t *testing.T) {
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 
+	c.calcAKEKeys(c.calcDHSharedSecret())
 	result, err := c.sigMessage()
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, result, out)
