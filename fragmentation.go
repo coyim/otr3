@@ -33,6 +33,9 @@ func fragmentData(data []byte, i int, fraglen, l uint16) []byte {
 	return data[fragmentStart(uint16(i), fraglen):fragmentEnd(uint16(i), fraglen, l)]
 }
 
+// SetFragmentSize sets the maximum size for a message fragment.
+// If specified, all messages produced by Receive and Send
+// will be fragmented into messages of, at most, this number of bytes.
 func (c *Conversation) SetFragmentSize(size uint16) {
 	c.fragmentSize = size
 }
