@@ -139,14 +139,24 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 		return
 	}
 
-	msgType := message[2]
-	if msgType == msgTypeData {
-		plain, toSend, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
-		if err != nil {
-			c.notifyDataMessageError(err)
-		}
-	} else {
-		toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))
+	msgType := messageHeader[2]
+	switch msgType {
+	case msgTypeData:
+		return c.receiveDataMessage(messageHeader, messageBody)
+	default:
+		return c.receiveAKEMessage(msgType, messageBody)
+	}
+}
+
+func (c *Conversation) receiveAKEMessage(msgType byte, messageBody []byte) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
+	toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))
+	return
+}
+
+func (c *Conversation) receiveDataMessage(messageHeader, messageBody []byte) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
+	plain, toSend, err = c.maybeHeartbeat(c.processDataMessage(messageHeader, messageBody))
+	if err != nil {
+		c.notifyDataMessageError(err)
 	}
 
 	return
