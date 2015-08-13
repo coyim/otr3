@@ -72,6 +72,7 @@ func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs [
 	if err != nil {
 		return nil, dataMessageExtra{}, err
 	}
+
 	c.updateLastSent()
 	return c.fragEncode(res), x, nil
 }

@@ -22,20 +22,26 @@ func (c *Conversation) maybeHeartbeat(plain MessagePlaintext, toSend messageWith
 }
 
 func (c *Conversation) potentialHeartbeat(plain MessagePlaintext) (toSend messageWithHeader, err error) {
-	if plain != nil {
-		now := time.Now()
-		if c.heartbeat.lastSent.Before(now.Add(-heartbeatInterval)) {
-			dataMsg, _, err := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable)
-			if err != nil {
-				return nil, err
-			}
-			toSend, err = c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
-			if err != nil {
-				return nil, err
-			}
-			c.updateLastSent()
-			c.messageEvent(MessageEventLogHeartbeatSent)
-		}
+	if plain == nil {
+		return
 	}
+
+	now := time.Now()
+	if !c.heartbeat.lastSent.Before(now.Add(-heartbeatInterval)) {
+		return
+	}
+
+	dataMsg, _, err := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable)
+	if err != nil {
+		return nil, err
+	}
+
+	toSend, err = c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+	if err != nil {
+		return nil, err
+	}
+
+	c.updateLastSent()
+	c.messageEvent(MessageEventLogHeartbeatSent)
 	return
 }
