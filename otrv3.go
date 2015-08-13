@@ -50,27 +50,23 @@ func (v otrV3) parseFragmentPrefix(c *Conversation, data []byte) (rest []byte, i
 		return data, false, false
 	}
 
-	dataItags, err1 := parseItag(itagParts[1])
+	senderInstanceTag, err1 := parseItag(itagParts[1])
 	if err1 != nil {
 		return data, false, false
 	}
 
-	if dataItags < minValidInstanceTag {
-		malformedMessage(c)
-		return data, false, false
-	}
-
-	if dataItags != c.theirInstanceTag {
-		return data, true, true
-	}
-
-	dataItagr, err2 := parseItag(itagParts[2])
+	receiverInstanceTag, err2 := parseItag(itagParts[2])
 	if err2 != nil {
 		return data, false, false
 	}
 
-	if dataItagr != c.ourInstanceTag {
-		return data, true, true
+	if err := v.verifyInstanceTags(c, senderInstanceTag, receiverInstanceTag); err != nil {
+		switch err {
+		case errInvalidOTRMessage:
+			return data, false, false
+		case errReceivedMessageForOtherInstance:
+			return data, true, true
+		}
 	}
 
 	return data[23:], false, true
@@ -128,6 +124,30 @@ func malformedMessage(c *Conversation) {
 	c.generatePotentialErrorMessage(ErrorCodeMessageMalformed)
 }
 
+func (v otrV3) verifyInstanceTags(c *Conversation, their, our uint32) error {
+	if c.theirInstanceTag == 0 {
+		c.theirInstanceTag = their
+	}
+
+	if our > 0 && our < minValidInstanceTag {
+		malformedMessage(c)
+		return errInvalidOTRMessage
+	}
+
+	if their < minValidInstanceTag {
+		malformedMessage(c)
+		return errInvalidOTRMessage
+	}
+
+	if (our != 0 && c.ourInstanceTag != our) ||
+		(c.theirInstanceTag != their) {
+		c.messageEvent(MessageEventReceivedMessageForOtherInstance)
+		return errReceivedMessageForOtherInstance
+	}
+
+	return nil
+}
+
 func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error) {
 	if len(msg) < otrv3HeaderLen {
 		malformedMessage(c)
@@ -138,23 +158,8 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, 
 	msg, senderInstanceTag, _ := extractWord(msg[messageHeaderPrefix:])
 	msg, receiverInstanceTag, _ := extractWord(msg)
 
-	if c.theirInstanceTag == 0 {
-		c.theirInstanceTag = senderInstanceTag
-	}
-
-	if receiverInstanceTag > 0 && receiverInstanceTag < minValidInstanceTag {
-		return nil, nil, errInvalidOTRMessage
-	}
-
-	if senderInstanceTag < minValidInstanceTag {
-		malformedMessage(c)
-		return nil, nil, errInvalidOTRMessage
-	}
-
-	if (receiverInstanceTag != 0 && c.ourInstanceTag != receiverInstanceTag) ||
-		(senderInstanceTag >= minValidInstanceTag && c.theirInstanceTag != senderInstanceTag) {
-		c.messageEvent(MessageEventReceivedMessageForOtherInstance)
-		return nil, nil, errReceivedMessageForOtherInstance
+	if err := v.verifyInstanceTags(c, senderInstanceTag, receiverInstanceTag); err != nil {
+		return nil, nil, err
 	}
 
 	return header, msg, nil

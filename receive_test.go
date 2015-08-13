@@ -115,7 +115,7 @@ func Test_Receive_signalsAMessageEventWhenWeReceiveAMessageThatLooksLikeAnOTRMes
 	}, MessageEventReceivedMessageUnrecognized, nil, nil)
 }
 
-func Test_Recieve_signalsAMessageEventWhenWeReceiveADataMessageForAnotherInstance(t *testing.T) {
+func Test_Receive_signalsAMessageEventWhenWeReceiveADataMessageForAnotherInstance(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
 	alice.ourInstanceTag = 0x201
 	alice.theirInstanceTag = 0x301
