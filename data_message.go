@@ -135,8 +135,8 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 	}
 
 	var tlvs []tlv
-	// TODO: add the dataMessageExtra here
-	tlvs, err = c.processTLVs(p.tlvs, dataMessageExtra{})
+
+	tlvs, err = c.processTLVs(p.tlvs, dataMessageExtra{sessionKeys.extraKey[:]})
 	if err != nil {
 		return
 	}

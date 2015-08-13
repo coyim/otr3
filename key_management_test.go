@@ -20,6 +20,7 @@ func Test_calculateDHSessionKeys(t *testing.T) {
 	sendingMACKey := bytesFromHex("a45e2b122f58bbe2042f73f092329ad9b5dfe23e")
 	receivingAESKey := bytesFromHex("c778c71cb63161e8e06d245e77ff6430")
 	receivingMACKey := bytesFromHex("03f8034b891b1e843db5bba9a41ec68a1f5f8bbf")
+	extraKey := bytesFromHex("0e1810c7c62c3bace6450dcbef16af8a271b5ac93030b83e9d0d80e0641e3c18")
 
 	keys, err := c.calculateDHSessionKeys(1, 1)
 
@@ -28,6 +29,7 @@ func Test_calculateDHSessionKeys(t *testing.T) {
 	assertDeepEquals(t, keys.sendingMACKey[:], sendingMACKey)
 	assertDeepEquals(t, keys.receivingAESKey[:], receivingAESKey)
 	assertDeepEquals(t, keys.receivingMACKey[:], receivingMACKey)
+	assertDeepEquals(t, keys.extraKey[:], extraKey)
 }
 
 func Test_calculateDHSessionKeys_storesGeneratedMACKeys(t *testing.T) {

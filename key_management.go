@@ -24,6 +24,7 @@ type macKey [sha1.Size]byte
 type sessionKeys struct {
 	sendingAESKey, receivingAESKey [aes.BlockSize]byte
 	sendingMACKey, receivingMACKey macKey
+	extraKey                       [sha256.Size]byte
 }
 
 type macKeyUsage struct {
@@ -215,6 +216,8 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int) session
 
 	ret.sendingMACKey = sha1.Sum(ret.sendingAESKey[:])
 	ret.receivingMACKey = sha1.Sum(ret.receivingAESKey[:])
+
+	copy(ret.extraKey[:], h(0xFF, secbytes, sha256.New()))
 
 	return ret
 }
