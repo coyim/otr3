@@ -149,7 +149,7 @@ func (c *Conversation) receiveDecoded(message messageWithHeader) (plain MessageP
 }
 
 func (c *Conversation) receiveAKEMessage(msgType byte, messageBody []byte) (plain MessagePlaintext, toSend []messageWithHeader, err error) {
-	toSend, err = c.potentialAuthError(c.receiveAKE(msgType, messageBody))
+	toSend, err = c.potentialAuthError(c.processAKE(msgType, messageBody))
 	return
 }
 

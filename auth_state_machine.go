@@ -34,7 +34,7 @@ func (c *Conversation) akeHasFinished() error {
 	return c.generateNewDHKeyPair()
 }
 
-func (c *Conversation) receiveAKE(msgType byte, msg []byte) (toSend []messageWithHeader, err error) {
+func (c *Conversation) processAKE(msgType byte, msg []byte) (toSend []messageWithHeader, err error) {
 	c.ensureAKE()
 
 	var toSendSingle messageWithHeader
