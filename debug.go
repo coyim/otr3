@@ -50,7 +50,11 @@ func (c *Conversation) dump(w *bufio.Writer) {
 // Will only be called if AKE is valid
 func (c *Conversation) dumpAKE(w *bufio.Writer) {
 	w.WriteString("  Auth info:\n")
-	w.WriteString(fmt.Sprintf("    State: %d (%s)\n", c.ake.state.identity(), c.ake.state.identityString()))
+
+	if c.ake != nil {
+		w.WriteString(fmt.Sprintf("    State: %d (%s)\n", c.ake.state.identity(), c.ake.state.identityString()))
+	}
+
 	w.WriteString(fmt.Sprintf("    Our keyid:   %d\n", c.keys.ourKeyID))
 	w.WriteString(fmt.Sprintf("    Their keyid: %d\n", c.keys.theirKeyID))
 	w.WriteString(fmt.Sprintf("    Their fingerprint: %X\n", c.theirKey.DefaultFingerprint()))
@@ -60,7 +64,11 @@ func (c *Conversation) dumpAKE(w *bufio.Writer) {
 
 func (c *Conversation) dumpSMP(w *bufio.Writer) {
 	w.WriteString("  SM state:\n")
-	w.WriteString(fmt.Sprintf("    Next expected: %d (%s)\n", c.smp.state.identity(), c.smp.state.identityString()))
+
+	if c.smp.state != nil {
+		w.WriteString(fmt.Sprintf("    Next expected: %d (%s)\n", c.smp.state.identity(), c.smp.state.identityString()))
+	}
+
 	receivedQ := 0
 	if c.smp.question != nil {
 		receivedQ = 1
