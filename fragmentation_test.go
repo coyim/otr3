@@ -263,3 +263,45 @@ func Test_receiveFragment_returnsErrorIfTheFragmentIsNotCorrect(t *testing.T) {
 	_, e := c.receiveFragment(fragmentationContext{}, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x30, 0x30, 0x30, 0x29, 0x2C, 0x30, 0x30, 0x30, 0x30, 0x31, 0x2C, 0x01, 0x2C})
 	assertDeepEquals(t, e, newOtrError("invalid OTR fragment"))
 }
+
+func Test_parseFragmentPrefix_resolveVersion2IfNotDefined(t *testing.T) {
+	fragment := []byte("?OTR,00001,00004,?OTR:AAICAAAAxJh7YMX8vCry1O+3ewL88,")
+
+	c := &Conversation{Policies: policies(allowV2)}
+	c.parseFragmentPrefix(fragment)
+
+	assertEquals(t, c.version, otrV2{})
+
+}
+
+func Test_parseFragmentPrefix_rejectsVersion2IfNotAllowedByThePolice(t *testing.T) {
+	fragment := []byte("?OTR,00001,00004,?OTR:AAICAAAAxJh7YMX8vCry1O+3ewL88,")
+
+	c := &Conversation{Policies: policies(allowV3)}
+	_, ok1, ok2 := c.parseFragmentPrefix(fragment)
+
+	assertEquals(t, ok1, false)
+	assertEquals(t, ok2, false)
+	assertEquals(t, c.version, nil)
+
+}
+
+func Test_parseFragmentPrefix_resolveVersion3IfNotDefined(t *testing.T) {
+	fragment := []byte("?OTR|5a73a599|27e31597,00001,00003,?OTR:AAMDJ+MVmSfjF,")
+
+	c := &Conversation{Policies: policies(allowV3)}
+	c.parseFragmentPrefix(fragment)
+
+	assertEquals(t, c.version, otrV3{})
+}
+
+func Test_parseFragmentPrefix_rejectsVersion3IfNotAllowedByThePolice(t *testing.T) {
+	fragment := []byte("?OTR|5a73a599|27e31597,00001,00003,?OTR:AAMDJ+MVmSfjF,")
+
+	c := &Conversation{Policies: policies(allowV2)}
+	_, ok1, ok2 := c.parseFragmentPrefix(fragment)
+
+	assertEquals(t, ok1, false)
+	assertEquals(t, ok2, false)
+	assertEquals(t, c.version, nil)
+}

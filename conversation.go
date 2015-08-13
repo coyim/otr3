@@ -60,6 +60,14 @@ func (c *Conversation) parseMessageHeader(msg messageWithHeader) ([]byte, []byte
 }
 
 func (c *Conversation) parseFragmentPrefix(data []byte) ([]byte, bool, bool) {
+	if c.version == nil {
+		var err error
+		messageVersion := versionFromFragment(data)
+		if c.version, err = newOtrVersion(messageVersion, c.Policies); err != nil {
+			return data, false, false
+		}
+	}
+
 	return c.version.parseFragmentPrefix(c, data)
 }
 

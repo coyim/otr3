@@ -1,6 +1,9 @@
 package otr3
 
-import "math/big"
+import (
+	"bytes"
+	"math/big"
+)
 
 type otrVersion interface {
 	protocolVersion() uint16
@@ -30,6 +33,19 @@ func newOtrVersion(v uint16, p policies) (version otrVersion, err error) {
 		return nil, errInvalidVersion
 	}
 	return
+}
+
+func versionFromFragment(fragment []byte) uint16 {
+	var messageVersion uint16
+
+	switch {
+	case bytes.HasPrefix(fragment, otrv3FragmentationPrefix):
+		messageVersion = 3
+	case bytes.HasPrefix(fragment, otrv2FragmentationPrefix):
+		messageVersion = 2
+	}
+
+	return messageVersion
 }
 
 func (c *Conversation) checkVersion(message []byte) (err error) {
