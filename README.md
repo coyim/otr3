@@ -2,6 +2,10 @@
 
 Implements version 3 of the OTR standard. Implements feature parity with libotr 4.1.0.
 
+## API Documentation
+
+[godoc](http://godoc.org/github.com/twstrike/otr3)
+
 ## Developing
 
 Before doing any work, if you want to separate out your GOPATH from other projects, install direnv
