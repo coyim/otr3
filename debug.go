@@ -12,6 +12,10 @@ const debugPrefix = "[DEBUG] "
 
 var standardErrorOutput io.Writer = os.Stderr
 
+func (c *Conversation) SetDebug(d bool) {
+	c.debug = d
+}
+
 func (c *Conversation) otrOffer() string {
 	switch c.whitespaceState {
 	case whitespaceNotSent:
