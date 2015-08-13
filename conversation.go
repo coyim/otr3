@@ -64,7 +64,7 @@ func (c *Conversation) parseFragmentPrefix(data []byte) ([]byte, bool, bool) {
 		var err error
 		messageVersion := versionFromFragment(data)
 		if c.version, err = newOtrVersion(messageVersion, c.Policies); err != nil {
-			return data, false, false
+			return data, true, false
 		}
 	}
 

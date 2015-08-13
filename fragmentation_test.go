@@ -274,14 +274,14 @@ func Test_parseFragmentPrefix_resolveVersion2IfNotDefined(t *testing.T) {
 
 }
 
-func Test_parseFragmentPrefix_rejectsVersion2IfNotAllowedByThePolice(t *testing.T) {
+func Test_parseFragmentPrefix_rejectsVersion2IfNotAllowedByThePolicy(t *testing.T) {
 	fragment := []byte("?OTR,00001,00004,?OTR:AAICAAAAxJh7YMX8vCry1O+3ewL88,")
 
 	c := &Conversation{Policies: policies(allowV3)}
-	_, ok1, ok2 := c.parseFragmentPrefix(fragment)
+	_, ignore, ok := c.parseFragmentPrefix(fragment)
 
-	assertEquals(t, ok1, false)
-	assertEquals(t, ok2, false)
+	assertEquals(t, ok, false)
+	assertEquals(t, ignore, true)
 	assertEquals(t, c.version, nil)
 
 }
@@ -295,13 +295,13 @@ func Test_parseFragmentPrefix_resolveVersion3IfNotDefined(t *testing.T) {
 	assertEquals(t, c.version, otrV3{})
 }
 
-func Test_parseFragmentPrefix_rejectsVersion3IfNotAllowedByThePolice(t *testing.T) {
+func Test_parseFragmentPrefix_rejectsVersion3IfNotAllowedByThePolicy(t *testing.T) {
 	fragment := []byte("?OTR|5a73a599|27e31597,00001,00003,?OTR:AAMDJ+MVmSfjF,")
 
 	c := &Conversation{Policies: policies(allowV2)}
-	_, ok1, ok2 := c.parseFragmentPrefix(fragment)
+	_, ignore, ok := c.parseFragmentPrefix(fragment)
 
-	assertEquals(t, ok1, false)
-	assertEquals(t, ok2, false)
+	assertEquals(t, ok, false)
+	assertEquals(t, ignore, true)
 	assertEquals(t, c.version, nil)
 }
