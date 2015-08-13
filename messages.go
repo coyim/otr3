@@ -29,19 +29,13 @@ type message interface {
 }
 
 type dhCommit struct {
-	gx          *big.Int
 	encryptedGx []byte
 	hashedGx    [sha256.Size]byte
 }
 
 func (c dhCommit) serialize() []byte {
-	var out []byte
-	out = appendData(out, c.encryptedGx)
-	if c.hashedGx == [sha256.Size]byte{} {
-		c.hashedGx = sha256.Sum256(appendMPI(nil, c.gx))
-	}
+	out := appendData(nil, c.encryptedGx)
 	out = appendData(out, c.hashedGx[:])
-
 	return out
 }
 
