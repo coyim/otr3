@@ -29,6 +29,7 @@ type PrivateKey struct {
 }
 
 // Account is a holder for the private key associated with an account
+// It contains name, protocol and otr private key of an otr Account
 type Account struct {
 	name     string
 	protocol string
@@ -288,6 +289,7 @@ func (pub *PublicKey) DefaultFingerprint() []byte {
 	return pub.Fingerprint(sha1.New())
 }
 
+// Sign will generate a signature of a hashed data using dsa Sign.
 func (priv *PrivateKey) Sign(rand io.Reader, hashed []byte) ([]byte, error) {
 	r, s, err := dsa.Sign(rand, &priv.PrivateKey, hashed)
 	if err == nil {
@@ -302,6 +304,7 @@ func (priv *PrivateKey) Sign(rand io.Reader, hashed []byte) ([]byte, error) {
 	return nil, err
 }
 
+// Verify will verify a signature of a hashed data using dsa Verify.
 func (pub *PublicKey) Verify(hashed, sig []byte) (nextPoint []byte, sigOk bool) {
 	if len(sig) < 2*20 {
 		return nil, false

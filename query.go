@@ -58,6 +58,7 @@ func (c *Conversation) receiveQueryMessage(msg ValidMessage) ([]messageWithHeade
 	return c.potentialAuthError(compactMessagesWithHeader(ts), err)
 }
 
+//QueryMessage will return a QueryMessage determined by Conversation Policies
 func (c Conversation) QueryMessage() ValidMessage {
 	queryMessage := []byte("?OTRv")
 

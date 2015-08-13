@@ -29,6 +29,7 @@ func (priv *PrivateKey) Serialize(in []byte) []byte {
 	return append(in, priv.PrivateKey.Serialize()...)
 }
 
+// Sign will generate a signature of a hashed data using dsa Sign.
 func (priv *PrivateKey) Sign(rand io.Reader, hashed []byte) []byte {
 	ret, err := priv.PrivateKey.Sign(rand, hashed)
 	if err != nil {
@@ -43,6 +44,7 @@ func (pub *PublicKey) Fingerprint() []byte {
 	return pub.PublicKey.DefaultFingerprint()
 }
 
+// Parse will parse a Private Key from the given data, by first parsing the public key components and then the private key component. It returns not ok for the same reasons as PublicKey.Parse.
 func (priv *PrivateKey) Parse(in []byte) (index []byte, ok bool) {
 	rest, ok := priv.PrivateKey.Parse(in)
 	if !ok {
