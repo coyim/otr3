@@ -25,7 +25,7 @@ func (c *Conversation) potentialHeartbeat(plain MessagePlaintext) (toSend messag
 	if plain != nil {
 		now := time.Now()
 		if c.heartbeat.lastSent.Before(now.Add(-heartbeatInterval)) {
-			dataMsg, err := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable)
+			dataMsg, _, err := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable)
 			if err != nil {
 				return nil, err
 			}

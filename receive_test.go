@@ -157,7 +157,7 @@ func Test_Receive_NoFragments(t *testing.T) {
 	alice.keys.ourCounter = 1
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted
-	fragments, _ := alice.createSerializedDataMessage(MessagePlaintext("hello!"), messageFlagNormal, []tlv{})
+	fragments, _, _ := alice.createSerializedDataMessage(MessagePlaintext("hello!"), messageFlagNormal, []tlv{})
 	plain, _, err := bob.Receive(fragments[0])
 	assertNil(t, err)
 	assertDeepEquals(t, plain, MessagePlaintext("hello!"))
@@ -171,7 +171,7 @@ func Test_Receive_Fragments(t *testing.T) {
 
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted
-	fragments, _ := alice.createSerializedDataMessage(MessagePlaintext("hello!"), messageFlagNormal, []tlv{})
+	fragments, _, _ := alice.createSerializedDataMessage(MessagePlaintext("hello!"), messageFlagNormal, []tlv{})
 
 	var err error
 	var plain MessagePlaintext

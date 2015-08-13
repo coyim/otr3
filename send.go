@@ -50,7 +50,7 @@ func (c *Conversation) sendMessageOnPlaintext(message ValidMessage) ([]ValidMess
 }
 
 func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMessage, error) {
-	result, err := c.createSerializedDataMessage(message, messageFlagNormal, []tlv{})
+	result, _, err := c.createSerializedDataMessage(message, messageFlagNormal, []tlv{})
 	if err != nil {
 		c.messageEvent(MessageEventEncryptionError)
 		c.generatePotentialErrorMessage(ErrorCodeEncryptionError)

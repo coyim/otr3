@@ -214,7 +214,7 @@ func Test_send_dataMessageWhenItsMsgStateEncrypted(t *testing.T) {
 
 	stub := bobContextAfterAKE()
 	stub.msgState = encrypted
-	expected, err := stub.createSerializedDataMessage(m, messageFlagNormal, []tlv{})
+	expected, _, err := stub.createSerializedDataMessage(m, messageFlagNormal, []tlv{})
 
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, toSend, expected)
@@ -292,7 +292,7 @@ func Test_End_whenStateIsEncrypted(t *testing.T) {
 
 	stub := bobContextAfterAKE()
 	stub.msgState = encrypted
-	expectedMsg, err := stub.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
+	expectedMsg, _, err := stub.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
 
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, bob.msgState, plainText)

@@ -57,7 +57,7 @@ func (c *Conversation) maybeRetransmit() (messageWithHeader, error) {
 		msg = c.resendMessageTransformer()(msg)
 	}
 
-	dataMsg, err := c.genDataMsg(msg)
+	dataMsg, _, err := c.genDataMsg(msg)
 	if err != nil {
 		return nil, err
 	}

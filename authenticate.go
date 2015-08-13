@@ -12,7 +12,8 @@ func (c *Conversation) StartAuthenticate(question string, mutualSecret []byte) (
 		return nil, err
 	}
 
-	return c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, tlvs)
+	msgs, _, err := c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, tlvs)
+	return msgs, err
 }
 
 // ProvideAuthenticationSecret should be called when the peer has started an authentication request, and the UI has been notified that a secret is needed
@@ -23,7 +24,8 @@ func (c *Conversation) ProvideAuthenticationSecret(mutualSecret []byte) ([]Valid
 		return nil, err
 	}
 
-	return c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{*t})
+	msgs, _, err := c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{*t})
+	return msgs, err
 }
 
 func (c *Conversation) potentialAuthError(toSend []messageWithHeader, err error) ([]messageWithHeader, error) {

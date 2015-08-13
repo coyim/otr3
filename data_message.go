@@ -6,18 +6,18 @@ type dataMessageExtra struct {
 	key []byte
 }
 
-func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) (dataMsg, error) {
+func (c *Conversation) genDataMsg(message []byte, tlvs ...tlv) (dataMsg, dataMessageExtra, error) {
 	return c.genDataMsgWithFlag(message, messageFlagNormal, tlvs...)
 }
 
-func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv) (dataMsg, error) {
+func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv) (dataMsg, dataMessageExtra, error) {
 	if c.msgState != encrypted {
-		return dataMsg{}, ErrGPGConflict
+		return dataMsg{}, dataMessageExtra{}, ErrGPGConflict
 	}
 
 	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	if err != nil {
-		return dataMsg{}, err
+		return dataMsg{}, dataMessageExtra{}, err
 	}
 
 	topHalfCtr := [8]byte{}
@@ -33,7 +33,7 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 
 	header, err := c.messageHeader(msgTypeData)
 	if err != nil {
-		return dataMsg{}, err
+		return dataMsg{}, dataMessageExtra{}, err
 	}
 
 	dataMessage := dataMsg{
@@ -50,7 +50,9 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 	c.updateMayRetransmitTo(noRetransmit)
 	c.lastMessage(message)
 
-	return dataMessage, nil
+	x := dataMessageExtra{keys.extraKey[:]}
+
+	return dataMessage, x, nil
 }
 
 func extractDataMessageFlag(msg []byte) byte {
@@ -60,18 +62,18 @@ func extractDataMessageFlag(msg []byte) byte {
 	return msg[0]
 }
 
-func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs []tlv) ([]ValidMessage, error) {
-	dataMsg, err := c.genDataMsgWithFlag(msg, flag, tlvs...)
+func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs []tlv) ([]ValidMessage, dataMessageExtra, error) {
+	dataMsg, x, err := c.genDataMsgWithFlag(msg, flag, tlvs...)
 	if err != nil {
-		return nil, err
+		return nil, dataMessageExtra{}, err
 	}
 
 	res, err := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
 	if err != nil {
-		return nil, err
+		return nil, dataMessageExtra{}, err
 	}
 	c.updateLastSent()
-	return c.fragEncode(res), nil
+	return c.fragEncode(res), x, nil
 }
 
 func (c *Conversation) fragEncode(msg messageWithHeader) []ValidMessage {
@@ -143,7 +145,7 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 
 	if len(tlvs) > 0 {
 		var reply dataMsg
-		reply, err = c.genDataMsgWithFlag(nil, decideFlagFrom(tlvs), tlvs...)
+		reply, _, err = c.genDataMsgWithFlag(nil, decideFlagFrom(tlvs), tlvs...)
 		if err != nil {
 			return
 		}

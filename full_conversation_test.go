@@ -17,7 +17,7 @@ func Test_receive_generatesErrorIfDoesNotHaveASecureChannel(t *testing.T) {
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	smpMsg := fixtureMessage1()
-	dataMsg, _ := c.genDataMsg(nil, smpMsg.tlv())
+	dataMsg, _, _ := c.genDataMsg(nil, smpMsg.tlv())
 	m := dataMsg.serialize()
 	m, _ = c.wrapMessageHeader(msgTypeData, m)
 	for _, s := range states {
@@ -36,7 +36,7 @@ func Test_receive_doesntGenerateErrorIfThereIsNoSecureChannelButTheMessageIsIGNO
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 	smpMsg := fixtureMessage1()
-	dataMsg, _ := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable, smpMsg.tlv())
+	dataMsg, _, _ := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable, smpMsg.tlv())
 	m, _ := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
 
 	for _, s := range states {
@@ -201,7 +201,7 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 
 	// Alice sends a message to bob
 	msg = []byte("hello")
-	dataMsg, _ := alice.genDataMsg(msg)
+	dataMsg, _, _ := alice.genDataMsg(msg)
 	m, _ = alice.wrapMessageHeader(msgTypeData, dataMsg.serialize())
 
 	bob.updateLastSent()

@@ -1,6 +1,9 @@
 package otr3
 
-import "testing"
+import (
+	"crypto/rand"
+	"testing"
+)
 
 func Test_processExtraSymmetricKeyTLV_signalsAReceivedKeyEventWithTheExtraKey(t *testing.T) {
 	c := &Conversation{}
@@ -76,4 +79,64 @@ func Test_processExtraSymmetricKeyTLV_alwaysReturnsNilAndNil(t *testing.T) {
 
 	assertNil(t, res)
 	assertNil(t, err)
+}
+
+func Test_UseExtraSymmetricKey_returnsErrorIfWeAreNotInEncryptedMode(t *testing.T) {
+	c := aliceContextAfterAKE()
+	c.msgState = plainText
+
+	_, _, err := c.UseExtraSymmetricKey(0, nil)
+	assertDeepEquals(t, err, newOtrError("cannot send message in current state"))
+}
+
+func Test_UseExtraSymmetricKey_returnsErrorIfTheirKeyIDIsZero(t *testing.T) {
+	c := aliceContextAfterAKE()
+	c.msgState = encrypted
+	c.keys.theirKeyID = 0
+
+	_, _, err := c.UseExtraSymmetricKey(0, nil)
+	assertDeepEquals(t, err, newOtrError("cannot send message in current state"))
+}
+
+func Test_UseExtraSymmetricKey_generatesADataMessageWithTheDataProvided(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.Policies.add(allowV3)
+	c.ourKey = bobPrivateKey
+
+	_, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("something")})
+	c.msgState = encrypted
+
+	_, msg, err := c.UseExtraSymmetricKey(0x1234, []byte{0xAB, 0xCD, 0xEE})
+	decodedMsg, _ := c.decode(encodedMessage(msg[0]))
+	assertNil(t, err)
+	_, exp, e := fixtureDecryptDataMsgBase(decodedMsg)
+	assertNil(t, e)
+
+	assertEquals(t, len(exp.tlvs), 2)
+	assertDeepEquals(t, exp.tlvs[0].tlvType, uint16(tlvTypeExtraSymmetricKey))
+	assertDeepEquals(t, exp.tlvs[0].tlvLength, uint16(7))
+	assertDeepEquals(t, exp.tlvs[0].tlvValue, []byte{0x00, 0x00, 0x12, 0x34, 0xAB, 0xCD, 0xEE})
+}
+
+func Test_UseExtraSymmetricKey_generatesADataMessageWithIgnoreUnreadableSet(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.Policies.add(allowV3)
+	c.ourKey = bobPrivateKey
+
+	_, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("something")})
+	c.msgState = encrypted
+	_, msg, _ := c.UseExtraSymmetricKey(0x1234, []byte{0xAB, 0xCD, 0xEE})
+	decodedMsg, _ := c.decode(encodedMessage(msg[0]))
+	assertEquals(t, decodedMsg[11], messageFlagIgnoreUnreadable)
+}
+
+func Test_UseExtraSymmetricKey_returnsTheGeneratedSymmetricKey(t *testing.T) {
+	c := newConversation(otrV3{}, rand.Reader)
+	c.Policies.add(allowV3)
+	c.ourKey = bobPrivateKey
+
+	_, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("something")})
+	c.msgState = encrypted
+	k, _, _ := c.UseExtraSymmetricKey(0x1234, []byte{0xAB, 0xCD, 0xEE})
+	assertDeepEquals(t, k, bytesFromHex("0e1810c7c62c3bace6450dcbef16af8a271b5ac93030b83e9d0d80e0641e3c18"))
 }

@@ -85,7 +85,7 @@ func (c *Conversation) End() (toSend []ValidMessage, err error) {
 	case plainText:
 	case encrypted:
 		// Error can only happen when Rand reader is broken
-		toSend, err = c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
+		toSend, _, err = c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
 	case finished:
 	}
 	c.msgState = plainText
