@@ -55,8 +55,7 @@ type dhKey struct {
 }
 
 func (c dhKey) serialize() []byte {
-	var out []byte
-	return appendMPI(out, c.gy)
+	return appendMPI(nil, c.gy)
 }
 
 func (c *dhKey) deserialize(msg []byte) error {
@@ -64,10 +63,6 @@ func (c *dhKey) deserialize(msg []byte) error {
 
 	if !ok {
 		return newOtrError("corrupt DH key message")
-	}
-
-	if lt(gy, g1) || gt(gy, pMinusTwo) {
-		return newOtrError("DH value out of range")
 	}
 
 	c.gy = gy

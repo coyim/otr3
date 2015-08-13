@@ -207,6 +207,10 @@ func (c *Conversation) processDHKey(msg []byte) (isSame bool, err error) {
 		return false, err
 	}
 
+	if !isGroupElement(dhKeyMsg.gy) {
+		return false, newOtrError("DH value out of range")
+	}
+
 	//If receive same public key twice, just retransmit the previous Reveal Signature
 	if c.ake.theirPublicValue != nil {
 		isSame = eq(c.ake.theirPublicValue, dhKeyMsg.gy)
