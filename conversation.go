@@ -90,12 +90,10 @@ func (c *Conversation) IsEncrypted() bool {
 // the peer and switches to unencrypted communication.
 func (c *Conversation) End() (toSend []ValidMessage, err error) {
 	previousMsgState := c.msgState
-	switch c.msgState {
-	case plainText:
-	case encrypted:
+	if c.msgState == encrypted {
+		c.smp.wipe()
 		// Error can only happen when Rand reader is broken
 		toSend, _, err = c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
-	case finished:
 	}
 	c.msgState = plainText
 	defer c.signalSecurityEventIf(previousMsgState == encrypted, GoneInsecure)

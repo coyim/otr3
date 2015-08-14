@@ -16,6 +16,16 @@ type smp struct {
 
 const smpVersion = 1
 
+func (s *smp) wipe() {
+	s.state = nil
+	s.question = nil
+	wipeBigInt(s.secret)
+	s.secret = nil
+	s.s1 = nil
+	s.s2 = nil
+	s.s3 = nil
+}
+
 func (s *smp) ensureSMP() {
 	if s.state != nil {
 		return
