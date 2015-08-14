@@ -228,9 +228,9 @@ func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing
 
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{})
-	c.keys.keyPairCounters[0].theirCounter++ // force a bigger counter
-	c.keys.keyPairCounters[0].theirKeyID = 1
-	c.keys.keyPairCounters[0].ourKeyID = 1
+
+	ctr := c.keys.counterHistory.findCounterFor(1, 1)
+	ctr.theirCounter = 2 // force a bigger counter
 
 	c.msgState = encrypted
 	_, _, err := c.receiveDecoded(msg)
@@ -244,9 +244,9 @@ func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(
 
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{})
-	c.keys.keyPairCounters[0].theirCounter++ // force a bigger counter
-	c.keys.keyPairCounters[0].theirKeyID = 1
-	c.keys.keyPairCounters[0].ourKeyID = 1
+
+	ctr := c.keys.counterHistory.findCounterFor(1, 1)
+	ctr.theirCounter = 2 // force a bigger counter
 
 	c.msgState = encrypted
 
@@ -261,9 +261,9 @@ func Test_Receive_returnsACustomErrorMessageIfOneIsAvailable(t *testing.T) {
 
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{})
-	c.keys.keyPairCounters[0].theirCounter++ // force a bigger counter
-	c.keys.keyPairCounters[0].theirKeyID = 1
-	c.keys.keyPairCounters[0].ourKeyID = 1
+
+	ctr := c.keys.counterHistory.findCounterFor(1, 1)
+	ctr.theirCounter = 2 // force a bigger counter
 
 	c.msgState = encrypted
 

@@ -33,25 +33,6 @@ type macKeyUsage struct {
 	receivingKey         macKey
 }
 
-type keyPairCounter struct {
-	ourKeyID, theirKeyID     uint32
-	ourCounter, theirCounter uint64
-}
-
-func (k *keyManagementContext) findKeyPairCounter(ourKeyID, theirKeyID uint32) (int, keyPairCounter) {
-	for i := range k.keyPairCounters {
-		if k.keyPairCounters[i].ourKeyID == ourKeyID && k.keyPairCounters[i].theirKeyID == theirKeyID {
-			return i, k.keyPairCounters[i]
-		}
-	}
-	newKeyPairCounter := keyPairCounter{
-		ourKeyID:   ourKeyID,
-		theirKeyID: theirKeyID,
-	}
-	k.keyPairCounters = append(k.keyPairCounters, newKeyPairCounter)
-	return len(k.keyPairCounters) - 1, newKeyPairCounter
-}
-
 type macKeyHistory struct {
 	items []macKeyUsage
 }
@@ -104,6 +85,31 @@ func (h *macKeyHistory) forgetMACKeysForTheirKey(theirKeyID uint32) []macKey {
 	return ret
 }
 
+type keyPairCounter struct {
+	ourKeyID, theirKeyID     uint32
+	ourCounter, theirCounter uint64
+}
+
+type counterHistory struct {
+	counters []*keyPairCounter
+}
+
+func (h *counterHistory) findCounterFor(ourKeyID, theirKeyID uint32) *keyPairCounter {
+	for _, c := range h.counters {
+		if c.ourKeyID == ourKeyID && c.theirKeyID == theirKeyID {
+			return c
+		}
+	}
+
+	c := &keyPairCounter{
+		ourKeyID:   ourKeyID,
+		theirKeyID: theirKeyID,
+	}
+
+	h.counters = append(h.counters, c)
+	return c
+}
+
 type keyManagementContext struct {
 	ourKeyID, theirKeyID                        uint32
 	ourCurrentDHKeys, ourPreviousDHKeys         dhKeyPair
@@ -111,9 +117,9 @@ type keyManagementContext struct {
 
 	ourCounter uint64
 
-	macKeyHistory   macKeyHistory
-	oldMACKeys      []macKey
-	keyPairCounters []keyPairCounter
+	counterHistory counterHistory
+	macKeyHistory  macKeyHistory
+	oldMACKeys     []macKey
 }
 
 func (k *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {
@@ -126,14 +132,14 @@ func (k *keyManagementContext) setOurCurrentDHKeys(priv *big.Int, pub *big.Int) 
 }
 
 func (k *keyManagementContext) checkMessageCounter(message dataMsg) error {
-	index, counter := k.findKeyPairCounter(message.recipientKeyID, message.senderKeyID)
+	counter := k.counterHistory.findCounterFor(message.recipientKeyID, message.senderKeyID)
 	theirNextCounter := binary.BigEndian.Uint64(message.topHalfCtr[:])
 
 	if theirNextCounter <= counter.theirCounter {
 		return ErrGPGConflict
 	}
 
-	k.keyPairCounters[index].theirCounter = theirNextCounter
+	counter.theirCounter = theirNextCounter
 	return nil
 }
 

@@ -78,9 +78,6 @@ func (c *keyManagementContext) wipe() {
 	c.ourCounter = 0
 	c.ourKeyID = 0
 	c.theirKeyID = 0
-	keyPairCounters := make([]keyPairCounter, len(c.keyPairCounters))
-	copy(c.keyPairCounters, keyPairCounters)
-	c.keyPairCounters = nil
 
 	for i := range c.oldMACKeys {
 		c.oldMACKeys[i].wipe()
@@ -88,6 +85,7 @@ func (c *keyManagementContext) wipe() {
 	}
 	c.oldMACKeys = nil
 
+	c.counterHistory.wipe()
 	c.macKeyHistory.wipe()
 }
 
@@ -99,6 +97,30 @@ func (c *keyManagementContext) wipeAndKeepRevealKeys() keyManagementContext {
 	c.wipe()
 
 	return ret
+}
+
+func (h *counterHistory) wipe() {
+	if h == nil {
+		return
+	}
+
+	for i := range h.counters {
+		h.counters[i].wipe()
+		h.counters[i] = nil
+	}
+
+	h.counters = nil
+}
+
+func (c *keyPairCounter) wipe() {
+	if c == nil {
+		return
+	}
+
+	c.ourKeyID = 0
+	c.theirKeyID = 0
+	c.ourCounter = 0
+	c.theirCounter = 0
 }
 
 func (h *macKeyHistory) wipe() {

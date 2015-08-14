@@ -272,16 +272,9 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 }
 
 func Test_checkMessageCounter_messageIsInvalidWhenCounterIsNotLargerThanTheLastReceived(t *testing.T) {
-	keyPairCounters := []keyPairCounter{
-		keyPairCounter{
-			ourKeyID:     1,
-			theirKeyID:   1,
-			theirCounter: 2,
-		},
-	}
-	c := keyManagementContext{
-		keyPairCounters: keyPairCounters,
-	}
+	c := keyManagementContext{}
+	ctr := c.counterHistory.findCounterFor(1, 1)
+	ctr.theirCounter = 2
 
 	msg := dataMsg{
 		senderKeyID:    1,
@@ -291,25 +284,19 @@ func Test_checkMessageCounter_messageIsInvalidWhenCounterIsNotLargerThanTheLastR
 
 	err := c.checkMessageCounter(msg)
 	assertEquals(t, err, ErrGPGConflict)
-	assertEquals(t, c.keyPairCounters[0].theirCounter, uint64(2))
+	assertEquals(t, ctr.theirCounter, uint64(2))
 
 	msg.topHalfCtr[7] = 1
 	err = c.checkMessageCounter(msg)
 	assertEquals(t, err, ErrGPGConflict)
-	assertEquals(t, c.keyPairCounters[0].theirCounter, uint64(2))
+	assertEquals(t, ctr.theirCounter, uint64(2))
 }
 
 func Test_checkMessageCounter_messageIsValidWhenCounterIsLargerThanTheLastReceived(t *testing.T) {
-	keyPairCounters := []keyPairCounter{
-		keyPairCounter{
-			ourKeyID:     1,
-			theirKeyID:   1,
-			theirCounter: 2,
-		},
-	}
-	c := keyManagementContext{
-		keyPairCounters: keyPairCounters,
-	}
+	c := keyManagementContext{}
+
+	ctr := c.counterHistory.findCounterFor(1, 1)
+	ctr.theirCounter = 2
 
 	msg := dataMsg{
 		senderKeyID:    1,
@@ -318,16 +305,19 @@ func Test_checkMessageCounter_messageIsValidWhenCounterIsLargerThanTheLastReceiv
 	msg.topHalfCtr[7] = 3
 	err := c.checkMessageCounter(msg)
 	assertEquals(t, err, nil)
-	assertEquals(t, c.keyPairCounters[0].theirCounter, uint64(3))
+	assertEquals(t, ctr.theirCounter, uint64(3))
+
+	ctr = c.counterHistory.findCounterFor(2, 1)
 
 	msg = dataMsg{
 		senderKeyID:    1,
 		recipientKeyID: 2,
 	}
+
 	msg.topHalfCtr[7] = 1
 	err = c.checkMessageCounter(msg)
 	assertEquals(t, err, nil)
-	assertEquals(t, c.keyPairCounters[1].theirCounter, uint64(1))
+	assertEquals(t, ctr.theirCounter, uint64(1))
 }
 
 func Test_generateNewDHKeypair_wipesPreviousDHKeysBeforePointingToCurrentDHKeys(t *testing.T) {

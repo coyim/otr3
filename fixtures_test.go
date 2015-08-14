@@ -227,7 +227,9 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 		theirCurrentDHPubKey:  fixedGX(),
 		theirPreviousDHPubKey: fixedGX(),
 	}
-	receiverContext.keyPairCounters = []keyPairCounter{keyPairCounter{receiverContext.ourKeyID, receiverContext.theirKeyID, 1, 1}}
+
+	c1 := receiverContext.counterHistory.findCounterFor(recipientKeyID, senderKeyID)
+	c1.theirKeyID = 1
 
 	keys := calculateDHSessionKeys(fixedX(), fixedGX(), fixedGY())
 
