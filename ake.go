@@ -233,7 +233,6 @@ func (c *Conversation) processRevealSig(msg []byte) (err error) {
 	theirMAC := revealSigMsg.macSig
 	encryptedSig := revealSigMsg.encryptedSig
 
-	//check Decrypted Gx and signature
 	decryptedGx := make([]byte, len(c.ake.encryptedGx))
 	if err = decrypt(r, decryptedGx, c.ake.encryptedGx); err != nil {
 		return

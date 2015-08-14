@@ -147,9 +147,6 @@ func (c *keyManagementContext) revealMACKeysForOurPreviousKeyID() {
 
 func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
 	if err := c.keys.rotateOurKeys(dataMessage.recipientKeyID, c.rand()); err != nil {
-		//What should we do?
-		//This is one kind of error that breaks the encrypted channel. I believe we
-		//should change the msgState to != encrypted
 		return err
 	}
 	c.keys.rotateTheirKey(dataMessage.senderKeyID, dataMessage.y)

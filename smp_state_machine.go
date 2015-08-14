@@ -140,8 +140,6 @@ func (smpStateExpect2) receiveMessage2(c *Conversation, m smp2Message) (smpState
 
 	s3, err := c.generateSMP3(c.smp.secret, *c.smp.s1, m)
 	if err != nil {
-		//DISCUSS: it will only error if fails to read from Rand
-		//Is it worth sending the ABORT message?
 		return c.abortStateMachineAndNotifyCheated()
 	}
 
@@ -167,8 +165,6 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 
 	ret, err := c.generateSMP4(c.smp.secret, *c.smp.s2, m)
 	if err != nil {
-		//DISCUSS: it will only error if fails to read from Rand
-		//Is it worth sending the ABORT message?
 		return c.abortStateMachineAndNotifyCheated()
 	}
 
