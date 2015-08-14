@@ -2,6 +2,11 @@ package otr3
 
 // Receive handles a message from a peer. It returns a human readable message and zero or more messages to send back to the peer.
 func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend []ValidMessage, err error) {
+	return c.receiveUnit(m, true)
+}
+
+// Receive handles a message from a peer. It returns a human readable message and zero or more messages to send back to the peer.
+func (c *Conversation) receiveUnit(m ValidMessage, forgetFragments bool) (plain MessagePlaintext, toSend []ValidMessage, err error) {
 	message := makeCopy(m)
 	defer wipeBytes(message)
 
@@ -11,6 +16,7 @@ func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend [
 
 	msgType := guessMessageType(message)
 	var messagesToSend []messageWithHeader
+	shouldForgetFragment := true
 	switch msgType {
 	case msgGuessError:
 		return c.withInjectionsPlain(c.receiveErrorMessage(message))
@@ -23,14 +29,19 @@ func (c *Conversation) Receive(m ValidMessage) (plain MessagePlaintext, toSend [
 	case msgGuessV1KeyExch:
 		return nil, nil, errUnsupportedOTRVersion
 	case msgGuessFragment:
+		shouldForgetFragment = false
 		c.fragmentationContext, err = c.receiveFragment(c.fragmentationContext, message)
 		if fragmentsFinished(c.fragmentationContext) {
-			return c.withInjectionsPlain(c.Receive(c.fragmentationContext.frag))
+			return c.withInjectionsPlain(c.receiveUnit(c.fragmentationContext.frag, false))
 		}
 	case msgGuessUnknown:
 		c.messageEvent(MessageEventReceivedMessageUnrecognized)
 	case msgGuessDHCommit, msgGuessDHKey, msgGuessRevealSig, msgGuessSignature, msgGuessData:
 		plain, messagesToSend, err = c.receiveEncoded(encodedMessage(message))
+	}
+
+	if shouldForgetFragment && forgetFragments {
+		c.fragmentationContext = forgetFragment()
 	}
 
 	return c.withInjectionsPlain(c.toSendEncoded(plain, messagesToSend, err))

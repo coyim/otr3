@@ -221,3 +221,13 @@ func Test_Receive_returnsAnErrorIfWeReceiveARequestToStartAVersion1KeyExchange(t
 
 	assertEquals(t, err, errUnsupportedOTRVersion)
 }
+
+func Test_Receive_willResetFragmentationContextIfWeReceiveAnUnfragmentedMessage(t *testing.T) {
+	c := aliceContextAfterAKE()
+	c.fragmentationContext = fragmentationContext{[]byte("hello"), 2, 5}
+	c.Receive(ValidMessage("Hello World"))
+
+	assertNil(t, c.fragmentationContext.frag)
+	assertEquals(t, c.fragmentationContext.currentIndex, uint16(0))
+	assertEquals(t, c.fragmentationContext.currentLen, uint16(0))
+}
