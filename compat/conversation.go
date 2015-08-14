@@ -55,8 +55,9 @@ type Conversation struct {
 }
 
 type eventHandler struct {
-	smpQuestion    string
-	securityChange SecurityChange
+	smpQuestion      string
+	securityChange   SecurityChange
+	waitingForSecret bool
 }
 
 func (eventHandler) WishToHandleErrorMessage() bool {
@@ -77,10 +78,9 @@ func (e *eventHandler) HandleSecurityEvent(event otr3.SecurityEvent) {
 func (e *eventHandler) HandleSMPEvent(event otr3.SMPEvent, progressPercent int, question string) {
 	switch event {
 	case otr3.SMPEventAskForSecret, otr3.SMPEventAskForAnswer:
-		//Why do we have both otr3.SMPEventAskForAnswer and SMPQuestion()?
-		//When should each one be used?
 		e.securityChange = SMPSecretNeeded
 		e.smpQuestion = question
+		e.waitingForSecret = true
 	case otr3.SMPEventSuccess:
 		if progressPercent == 100 {
 			e.securityChange = SMPComplete
@@ -200,7 +200,14 @@ func (c *Conversation) End() (toSend [][]byte) {
 // aborted) or SMPFailed.
 func (c *Conversation) Authenticate(question string, mutualSecret []byte) (toSend [][]byte, err error) {
 	c.compatInit()
-	ret, err := c.Conversation.Authenticate(question, mutualSecret)
+
+	var ret []otr3.ValidMessage
+	if c.eventHandler.waitingForSecret {
+		c.eventHandler.waitingForSecret = false
+		ret, err = c.ProvideAuthenticationSecret(mutualSecret)
+	} else {
+		ret, err = c.StartAuthenticate(question, mutualSecret)
+	}
 
 	c.updateValues()
 	return otr3.Bytes(ret), err
