@@ -1,10 +1,6 @@
 package compat
 
-import (
-	"bytes"
-
-	"github.com/twstrike/otr3"
-)
+import "github.com/twstrike/otr3"
 
 var (
 	// QueryMessage can be sent to a peer to start an OTR conversation.
@@ -134,8 +130,7 @@ func (c *Conversation) updateValues() {
 
 	c.Conversation.SetKeys(&c.PrivateKey.PrivateKey, &c.TheirPublicKey.PublicKey)
 
-	var z [8]byte
-	if bytes.Equal(c.SSID[:], z[:]) {
+	if c.SSID[:] == nil {
 		c.SSID = c.GetSSID()
 	}
 }
@@ -182,8 +177,7 @@ func (c *Conversation) Send(in []byte) (toSend [][]byte, err error) {
 func (c *Conversation) End() (toSend [][]byte) {
 	c.compatInit()
 
-	var ret []otr3.ValidMessage
-	ret, _ = c.Conversation.End()
+	ret, _ := c.Conversation.End()
 
 	if ret != nil {
 		toSend = otr3.Bytes(ret)
