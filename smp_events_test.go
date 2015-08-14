@@ -25,7 +25,7 @@ func Test_combinedSMPEventHandler_callsAllErrorMessageHandlersGiven(t *testing.T
 	f3 := dynamicSMPEventHandler{func(event SMPEvent, progressPercent int, question string) {
 		called3 = true
 	}}
-	d := combineSMPEventHandlers(f1, nil, f2, f3)
+	d := CombineSMPEventHandlers(f1, nil, f2, f3)
 	d.HandleSMPEvent(SMPEventError, 61, "")
 
 	assertEquals(t, called1, true)
@@ -35,7 +35,7 @@ func Test_combinedSMPEventHandler_callsAllErrorMessageHandlersGiven(t *testing.T
 
 func Test_debugSMPEventHandler_writesTheEventToStderr(t *testing.T) {
 	ss := captureStderr(func() {
-		debugSMPEventHandler{}.HandleSMPEvent(SMPEventInProgress, 43, "Maybe now?")
+		DebugSMPEventHandler{}.HandleSMPEvent(SMPEventInProgress, 43, "Maybe now?")
 	})
 	assertEquals(t, ss, "[DEBUG] HandleSMPEvent(SMPEventInProgress, 43, \"Maybe now?\")\n")
 }

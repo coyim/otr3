@@ -85,12 +85,16 @@ func (c combinedSMPEventHandler) HandleSMPEvent(event SMPEvent, progressPercent 
 	}
 }
 
-func combineSMPEventHandlers(handlers ...SMPEventHandler) SMPEventHandler {
+// CombineSMPEventHandlers creates a SMPEventHandler that will call all handlers
+// given to this function. It ignores nil entries.
+func CombineSMPEventHandlers(handlers ...SMPEventHandler) SMPEventHandler {
 	return combinedSMPEventHandler{handlers}
 }
 
-type debugSMPEventHandler struct{}
+// DebugSMPEventHandler is an SMPEventHandler that dumps all SMPEvents to standard error
+type DebugSMPEventHandler struct{}
 
-func (debugSMPEventHandler) HandleSMPEvent(event SMPEvent, progressPercent int, question string) {
+// HandleSMPEvent dumps all SMP events
+func (DebugSMPEventHandler) HandleSMPEvent(event SMPEvent, progressPercent int, question string) {
 	fmt.Fprintf(standardErrorOutput, "%sHandleSMPEvent(%s, %d, %#v)\n", debugPrefix, event, progressPercent, question)
 }

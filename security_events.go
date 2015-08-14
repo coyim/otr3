@@ -60,7 +60,9 @@ func (c combinedSecurityEventHandler) HandleSecurityEvent(event SecurityEvent) {
 	}
 }
 
-func combineSecurityEventHandlers(handlers ...SecurityEventHandler) SecurityEventHandler {
+// CombineSecurityEventHandlers creates a SecurityEventHandler that will call all handlers
+// given to this function. It ignores nil entries.
+func CombineSecurityEventHandlers(handlers ...SecurityEventHandler) SecurityEventHandler {
 	return combinedSecurityEventHandler{handlers}
 }
 
@@ -70,8 +72,10 @@ func (c *Conversation) signalSecurityEventIf(cond bool, event SecurityEvent) {
 	}
 }
 
-type debugSecurityEventHandler struct{}
+// DebugSecurityEventHandler is a SecurityEventHandler that dumps all SecurityEvents to standard error
+type DebugSecurityEventHandler struct{}
 
-func (debugSecurityEventHandler) HandleSecurityEvent(event SecurityEvent) {
+// HandleSecurityEvent dumps all security events
+func (DebugSecurityEventHandler) HandleSecurityEvent(event SecurityEvent) {
 	fmt.Fprintf(standardErrorOutput, "%sHandleSecurityEvent(%s)\n", debugPrefix, event)
 }

@@ -137,12 +137,16 @@ func (c combinedMessageEventHandler) HandleMessageEvent(event MessageEvent, mess
 	}
 }
 
-func combineMessageEventHandlers(handlers ...MessageEventHandler) MessageEventHandler {
+// CombineMessageEventHandlers creates a MessageEventHandler that will call all handlers
+// given to this function. It ignores nil entries.
+func CombineMessageEventHandlers(handlers ...MessageEventHandler) MessageEventHandler {
 	return combinedMessageEventHandler{handlers}
 }
 
-type debugMessageEventHandler struct{}
+// DebugMessageEventHandler is a MessageEventHandler that dumps all MessageEvents to standard error
+type DebugMessageEventHandler struct{}
 
-func (debugMessageEventHandler) HandleMessageEvent(event MessageEvent, message []byte, err error) {
+// HandleMessageEvent dumps all message events
+func (DebugMessageEventHandler) HandleMessageEvent(event MessageEvent, message []byte, err error) {
 	fmt.Fprintf(standardErrorOutput, "%sHandleMessageEvent(%s, message: %#v, error: %v)\n", debugPrefix, event, string(message), err)
 }

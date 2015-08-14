@@ -20,7 +20,7 @@ func Test_combinedSecurityEventHandler_callsAllSecurityEventHandlersGiven(t *tes
 	f3 := dynamicSecurityEventHandler{func(event SecurityEvent) {
 		called3 = true
 	}}
-	d := combineSecurityEventHandlers(f1, nil, f2, f3)
+	d := CombineSecurityEventHandlers(f1, nil, f2, f3)
 	d.HandleSecurityEvent(GoneSecure)
 
 	assertEquals(t, called1, true)
@@ -30,7 +30,7 @@ func Test_combinedSecurityEventHandler_callsAllSecurityEventHandlersGiven(t *tes
 
 func Test_debugSecurityEventHandler_writesTheEventToStderr(t *testing.T) {
 	ss := captureStderr(func() {
-		debugSecurityEventHandler{}.HandleSecurityEvent(StillSecure)
+		DebugSecurityEventHandler{}.HandleSecurityEvent(StillSecure)
 	})
 	assertEquals(t, ss, "[DEBUG] HandleSecurityEvent(StillSecure)\n")
 }

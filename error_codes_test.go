@@ -23,7 +23,7 @@ func Test_combinedErrorMessageHandler_callsAllErrorMessageHandlersGiven(t *testi
 		called3 = true
 		return nil
 	}}
-	d := combineErrorMessageHandlers(nil, f1, f2, f3)
+	d := CombineErrorMessageHandlers(nil, f1, f2, f3)
 	d.HandleErrorMessage(ErrorCodeMessageMalformed)
 
 	assertEquals(t, called1, true)
@@ -38,7 +38,7 @@ func Test_combinedErrorMessageHandler_returnsTheLastResult(t *testing.T) {
 	f2 := dynamicErrorMessageHandler{func(error ErrorCode) []byte {
 		return []byte("result2")
 	}}
-	d := combineErrorMessageHandlers(f1, f2)
+	d := CombineErrorMessageHandlers(f1, f2)
 	res := d.HandleErrorMessage(ErrorCodeMessageMalformed)
 
 	assertEquals(t, string(res), "result2")
@@ -46,7 +46,7 @@ func Test_combinedErrorMessageHandler_returnsTheLastResult(t *testing.T) {
 
 func Test_debugErrorMessageHandler_writesTheErrorCodeToStderr(t *testing.T) {
 	ss := captureStderr(func() {
-		debugErrorMessageHandler{}.HandleErrorMessage(ErrorCodeMessageMalformed)
+		DebugErrorMessageHandler{}.HandleErrorMessage(ErrorCodeMessageMalformed)
 	})
 	assertEquals(t, ss, "[DEBUG] HandleErrorMessage(ErrorCodeMessageMalformed)\n")
 }

@@ -64,13 +64,17 @@ func (c combinedErrorMessageHandler) HandleErrorMessage(error ErrorCode) []byte 
 	return result
 }
 
-func combineErrorMessageHandlers(handlers ...ErrorMessageHandler) ErrorMessageHandler {
+// CombineErrorMessageHandlers creates an ErrorMessageHandler that will call all handlers
+// given to this function. It returns the result of the final handler called
+func CombineErrorMessageHandlers(handlers ...ErrorMessageHandler) ErrorMessageHandler {
 	return combinedErrorMessageHandler{handlers}
 }
 
-type debugErrorMessageHandler struct{}
+// DebugErrorMessageHandler is an ErrorMessageHandler that dumps all error message requests to standard error. It returns nil
+type DebugErrorMessageHandler struct{}
 
-func (debugErrorMessageHandler) HandleErrorMessage(error ErrorCode) []byte {
+// HandleErrorMessage dumps all error messages and returns nil
+func (DebugErrorMessageHandler) HandleErrorMessage(error ErrorCode) []byte {
 	fmt.Fprintf(standardErrorOutput, "%sHandleErrorMessage(%s)\n", debugPrefix, error)
 	return nil
 }
