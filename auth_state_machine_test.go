@@ -149,6 +149,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 	ourDHCommitAKE.dhCommitMessage()
 
 	c := bobContextAtAwaitingDHKey()
+	c.sentRevealSig = false
 
 	state, msg, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, fixtureDHKeyMsg(otrV3{})[otrv3HeaderLen:])
 
@@ -157,6 +158,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 	assertEquals(t, ok, true)
 	assertEquals(t, dhMsgType(msg), msgTypeRevealSig)
 	assertEquals(t, dhMsgVersion(msg), uint16(3))
+	assertEquals(t, c.sentRevealSig, true)
 }
 
 func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
@@ -236,12 +238,14 @@ func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *te
 	revealSignMsg := fixtureRevealSigMsgBody(otrV2{})
 
 	c := aliceContextAtAwaitingRevealSig()
+	c.sentRevealSig = true
 
 	state, msg, err := authStateAwaitingRevealSig{}.receiveRevealSigMessage(c, revealSignMsg)
 
 	assertEquals(t, err, nil)
 	assertEquals(t, state, authStateNone{})
 	assertEquals(t, dhMsgType(msg), msgTypeSig)
+	assertEquals(t, c.sentRevealSig, false)
 }
 
 func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeysAndIncreaseCounter(t *testing.T) {

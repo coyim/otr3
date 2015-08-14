@@ -48,7 +48,8 @@ type Conversation struct {
 	securityEventHandler SecurityEventHandler
 	receivedKeyHandler   ReceivedKeyHandler
 
-	debug bool
+	debug         bool
+	sentRevealSig bool
 }
 
 func (c *Conversation) messageHeader(msgType byte) ([]byte, error) {
