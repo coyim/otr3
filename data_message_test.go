@@ -279,6 +279,7 @@ func Test_processDataMessage_signalsThatMessageIsMalformedIfSomeOtherErrorHappen
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("Making sure this isn't a heartbeat message")})
 	c.msgState = encrypted
+	c.keys.ourKeyID = 1
 	c.expectMessageEvent(t, func() {
 		c.receiveDecoded(msg)
 	}, MessageEventReceivedMessageMalformed, nil, nil)
@@ -299,6 +300,7 @@ func Test_processDataMessage_callsErrorMessageHandlerAndReturnsTheResultAsAnOTRE
 			return []byte("dandelion happened")
 		}}
 
+	c.keys.ourKeyID = 1
 	c.receiveDecoded(msg)
 	ts, _ := c.withInjections(nil, nil)
 	assertDeepEquals(t, string(ts[0]), "?OTR Error: sunflower happened")
@@ -416,6 +418,7 @@ func Test_processDataMessage_ignoresTLVsWhenFailsToRotateKeys(t *testing.T) {
 
 	bob.msgState = encrypted
 	bob.smp.state = smpStateExpect1{}
+	bob.keys.ourKeyID = 1
 	_, toSend, err := bob.receiveDecoded(msg)
 
 	assertDeepEquals(t, err, errShortRandomRead)

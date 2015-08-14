@@ -8,15 +8,7 @@ import (
 const minimumMessageLength = 3 // length of protocol version (SHORT) and message type (BYTE)
 
 func (c *Conversation) generateNewDHKeyPair() error {
-	x, err := c.randMPI(make([]byte, 40))
-	if err != nil {
-		return err
-	}
-
-	c.keys.generateNewDHKeyPair(x)
-	wipeBigInt(x)
-
-	return nil
+	return c.keys.generateNewDHKeyPair(c.rand())
 }
 
 func (c *Conversation) akeHasFinished() error {

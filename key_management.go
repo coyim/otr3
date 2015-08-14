@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"hash"
+	"io"
 	"math/big"
 )
 
@@ -122,15 +123,21 @@ func (c *keyManagementContext) revealMACKeys() []macKey {
 	return ret
 }
 
-func (c *keyManagementContext) generateNewDHKeyPair(newPrivKey *big.Int) {
+func (c *keyManagementContext) generateNewDHKeyPair(randomness io.Reader) error {
+	newPrivKey, err := randSizedMPI(randomness, 40)
+	if err != nil {
+		return err
+	}
+
 	c.ourPreviousDHKeys.wipe()
 	c.ourPreviousDHKeys = c.ourCurrentDHKeys
 
 	c.ourCurrentDHKeys = dhKeyPair{
-		priv: new(big.Int).Set(newPrivKey),
+		priv: newPrivKey,
 		pub:  modExp(g1, newPrivKey),
 	}
 	c.ourKeyID++
+	return nil
 }
 
 func (c *keyManagementContext) revealMACKeysForOurPreviousKeyID() {
@@ -139,26 +146,23 @@ func (c *keyManagementContext) revealMACKeysForOurPreviousKeyID() {
 }
 
 func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
-	x, err := c.randMPI(make([]byte, 40))
-	if err != nil {
+	if err := c.keys.rotateOurKeys(dataMessage.recipientKeyID, c.rand()); err != nil {
 		//What should we do?
 		//This is one kind of error that breaks the encrypted channel. I believe we
 		//should change the msgState to != encrypted
 		return err
 	}
-
-	c.keys.rotateOurKeys(dataMessage.recipientKeyID, x)
 	c.keys.rotateTheirKey(dataMessage.senderKeyID, dataMessage.y)
-	wipeBigInt(x)
 
 	return nil
 }
 
-func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, newPrivKey *big.Int) {
+func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, randomness io.Reader) error {
 	if recipientKeyID == c.ourKeyID {
 		c.revealMACKeysForOurPreviousKeyID()
-		c.generateNewDHKeyPair(newPrivKey)
+		return c.generateNewDHKeyPair(randomness)
 	}
+	return nil
 }
 
 func (c *keyManagementContext) revealMACKeysForTheirPreviousKeyID() {
