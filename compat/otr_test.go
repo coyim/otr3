@@ -65,8 +65,8 @@ const libOTRPrivateKey = `(privkeys
  (account
 (name "foo@example.com")
 (protocol prpl-jabber)
-(private-key 
- (dsa 
+(private-key
+ (dsa
   (p #00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857#)
   (q #00997BD266EF7B1F60A5C23F3A741F2AEFD07A2081#)
   (g #535E360E8A95EBA46A4F7DE50AD6E9B2A6DB785A66B64EB9F20338D2A3E8FB0E94725848F1AA6CC567CB83A1CC517EC806F2E92EAE71457E80B2210A189B91250779434B41FC8A8873F6DB94BEA7D177F5D59E7E114EE10A49CFD9CEF88AE43387023B672927BA74B04EB6BBB5E57597766A2F9CE3857D7ACE3E1E3BC1FC6F26#)
@@ -204,88 +204,6 @@ func TestConversation(t *testing.T) {
 		}
 	}
 }
-
-//
-//func TestGoodSMP(t *testing.T) {
-//	var alice, bob Conversation
-//
-//	alice.smp.secret = new(big.Int).SetInt64(42)
-//	bob.smp.secret = alice.smp.secret
-//
-//	var alicesMessages, bobsMessages []tlv
-//	var aliceComplete, bobComplete bool
-//	var err error
-//	var out tlv
-//
-//	alicesMessages = alice.startSMP("")
-//	for round := 0; len(alicesMessages) > 0 || len(bobsMessages) > 0; round++ {
-//		bobsMessages = bobsMessages[:0]
-//		for i, msg := range alicesMessages {
-//			out, bobComplete, err = bob.processSMP(msg)
-//			if err != nil {
-//				t.Errorf("Error from Bob in round %d: %s", round, err)
-//			}
-//			if bobComplete && i != len(alicesMessages)-1 {
-//				t.Errorf("Bob returned a completed signal before processing all of Alice's messages in round %d", round)
-//			}
-//			if out.typ != 0 {
-//				bobsMessages = append(bobsMessages, out)
-//			}
-//		}
-//
-//		alicesMessages = alicesMessages[:0]
-//		for i, msg := range bobsMessages {
-//			out, aliceComplete, err = alice.processSMP(msg)
-//			if err != nil {
-//				t.Errorf("Error from Alice in round %d: %s", round, err)
-//			}
-//			if aliceComplete && i != len(bobsMessages)-1 {
-//				t.Errorf("Alice returned a completed signal before processing all of Bob's messages in round %d", round)
-//			}
-//			if out.typ != 0 {
-//				alicesMessages = append(alicesMessages, out)
-//			}
-//		}
-//	}
-//
-//	if !aliceComplete || !bobComplete {
-//		t.Errorf("SMP completed without both sides reporting success: alice: %v, bob: %v\n", aliceComplete, bobComplete)
-//	}
-//}
-//
-//func TestBadSMP(t *testing.T) {
-//	var alice, bob Conversation
-//
-//	alice.smp.secret = new(big.Int).SetInt64(42)
-//	bob.smp.secret = new(big.Int).SetInt64(43)
-//
-//	var alicesMessages, bobsMessages []tlv
-//
-//	alicesMessages = alice.startSMP("")
-//	for round := 0; len(alicesMessages) > 0 || len(bobsMessages) > 0; round++ {
-//		bobsMessages = bobsMessages[:0]
-//		for _, msg := range alicesMessages {
-//			out, complete, _ := bob.processSMP(msg)
-//			if complete {
-//				t.Errorf("Bob signaled completion in round %d", round)
-//			}
-//			if out.typ != 0 {
-//				bobsMessages = append(bobsMessages, out)
-//			}
-//		}
-//
-//		alicesMessages = alicesMessages[:0]
-//		for _, msg := range bobsMessages {
-//			out, complete, _ := alice.processSMP(msg)
-//			if complete {
-//				t.Errorf("Alice signaled completion in round %d", round)
-//			}
-//			if out.typ != 0 {
-//				alicesMessages = append(alicesMessages, out)
-//			}
-//		}
-//	}
-//}
 
 func TestAgainstLibOTR(t *testing.T) {
 	// This test requires otr.c.test to be built as /tmp/a.out.
