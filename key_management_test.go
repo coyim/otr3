@@ -272,32 +272,62 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 }
 
 func Test_checkMessageCounter_messageIsInvalidWhenCounterIsNotLargerThanTheLastReceived(t *testing.T) {
+	keyPairCounters := []keyPairCounter{
+		keyPairCounter{
+			ourKeyID:     1,
+			theirKeyID:   1,
+			theirCounter: 2,
+		},
+	}
 	c := keyManagementContext{
-		theirCounter: 1,
+		keyPairCounters: keyPairCounters,
 	}
 
-	msg := dataMsg{}
+	msg := dataMsg{
+		senderKeyID:    1,
+		recipientKeyID: 1,
+	}
+	msg.topHalfCtr[7] = 2
 
 	err := c.checkMessageCounter(msg)
 	assertEquals(t, err, ErrGPGConflict)
-	assertEquals(t, c.theirCounter, uint64(1))
+	assertEquals(t, c.keyPairCounters[0].theirCounter, uint64(2))
 
 	msg.topHalfCtr[7] = 1
 	err = c.checkMessageCounter(msg)
 	assertEquals(t, err, ErrGPGConflict)
-	assertEquals(t, c.theirCounter, uint64(1))
+	assertEquals(t, c.keyPairCounters[0].theirCounter, uint64(2))
 }
 
 func Test_checkMessageCounter_messageIsValidWhenCounterIsLargerThanTheLastReceived(t *testing.T) {
+	keyPairCounters := []keyPairCounter{
+		keyPairCounter{
+			ourKeyID:     1,
+			theirKeyID:   1,
+			theirCounter: 2,
+		},
+	}
 	c := keyManagementContext{
-		theirCounter: 1,
+		keyPairCounters: keyPairCounters,
 	}
 
-	msg := dataMsg{}
-	msg.topHalfCtr[7] = 2
+	msg := dataMsg{
+		senderKeyID:    1,
+		recipientKeyID: 1,
+	}
+	msg.topHalfCtr[7] = 3
 	err := c.checkMessageCounter(msg)
 	assertEquals(t, err, nil)
-	assertEquals(t, c.theirCounter, uint64(2))
+	assertEquals(t, c.keyPairCounters[0].theirCounter, uint64(3))
+
+	msg = dataMsg{
+		senderKeyID:    1,
+		recipientKeyID: 2,
+	}
+	msg.topHalfCtr[7] = 1
+	err = c.checkMessageCounter(msg)
+	assertEquals(t, err, nil)
+	assertEquals(t, c.keyPairCounters[1].theirCounter, uint64(1))
 }
 
 func Test_generateNewDHKeypair_wipesPreviousDHKeysBeforePointingToCurrentDHKeys(t *testing.T) {

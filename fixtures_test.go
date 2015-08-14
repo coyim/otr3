@@ -212,8 +212,7 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	//We use a combination of ourKeyId, theirKeyID, senderKeyID and recipientKeyID
 	//to make sure both sender and receiver will use the same DH session keys
 	receiverContext := keyManagementContext{
-		ourCounter:   1,
-		theirCounter: 1,
+		ourCounter: 1,
 
 		ourKeyID:   senderKeyID + 1,
 		theirKeyID: recipientKeyID + 1,
@@ -228,6 +227,7 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 		theirCurrentDHPubKey:  fixedGX(),
 		theirPreviousDHPubKey: fixedGX(),
 	}
+	receiverContext.keyPairCounters = []keyPairCounter{keyPairCounter{receiverContext.ourKeyID, receiverContext.theirKeyID, 1, 1}}
 
 	keys := calculateDHSessionKeys(fixedX(), fixedGX(), fixedGY())
 

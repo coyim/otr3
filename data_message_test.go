@@ -222,27 +222,15 @@ func Test_processDataMessage_returnsErrorIfSomethingGoesWrongWithDeserialize(t *
 	assertEquals(t, err.Error(), "otr: dataMsg.deserialize empty message")
 }
 
-func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing.T) {
-	c := newConversation(otrV3{}, rand.Reader)
-	c.ourKey = bobPrivateKey
-
-	var msg []byte
-	msg, c.keys = fixtureDataMsg(plainDataMsg{})
-	c.keys.theirCounter++ // force a bigger counter
-
-	c.msgState = encrypted
-	_, _, err := c.receiveDecoded(msg)
-
-	assertEquals(t, err, ErrGPGConflict)
-}
-
 func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.ourKey = bobPrivateKey
 
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{})
-	c.keys.theirCounter++ // force a bigger counter
+	c.keys.keyPairCounters[0].theirCounter++ // force a bigger counter
+	c.keys.keyPairCounters[0].theirKeyID = 1
+	c.keys.keyPairCounters[0].ourKeyID = 1
 
 	c.msgState = encrypted
 
@@ -257,7 +245,9 @@ func Test_Receive_returnsACustomErrorMessageIfOneIsAvailable(t *testing.T) {
 
 	var msg []byte
 	msg, c.keys = fixtureDataMsg(plainDataMsg{})
-	c.keys.theirCounter++ // force a bigger counter
+	c.keys.keyPairCounters[0].theirCounter++ // force a bigger counter
+	c.keys.keyPairCounters[0].theirKeyID = 1
+	c.keys.keyPairCounters[0].ourKeyID = 1
 
 	c.msgState = encrypted
 

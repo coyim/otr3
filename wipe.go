@@ -78,7 +78,9 @@ func (c *keyManagementContext) wipe() {
 	c.ourCounter = 0
 	c.ourKeyID = 0
 	c.theirKeyID = 0
-	c.theirCounter = 0
+	keyPairCounters := make([]keyPairCounter, len(c.keyPairCounters))
+	copy(c.keyPairCounters, keyPairCounters)
+	c.keyPairCounters = nil
 
 	for i := range c.oldMACKeys {
 		c.oldMACKeys[i].wipe()

@@ -33,6 +33,22 @@ type macKeyUsage struct {
 	receivingKey         macKey
 }
 
+type keyPairCounter struct {
+	ourKeyID, theirKeyID     uint32
+	ourCounter, theirCounter uint64
+}
+
+func (k *keyManagementContext) findKeyPairCounter(ourKeyID, theirKeyID uint32) (int, keyPairCounter) {
+	for i := range k.keyPairCounters {
+		if k.keyPairCounters[i].ourKeyID == ourKeyID && k.keyPairCounters[i].theirKeyID == theirKeyID {
+			return i, k.keyPairCounters[i]
+		}
+	}
+	newKeyPairCounter := keyPairCounter{}
+	k.keyPairCounters = append(k.keyPairCounters, newKeyPairCounter)
+	return len(k.keyPairCounters) - 1, newKeyPairCounter
+}
+
 type macKeyHistory struct {
 	items []macKeyUsage
 }
@@ -90,11 +106,11 @@ type keyManagementContext struct {
 	ourCurrentDHKeys, ourPreviousDHKeys         dhKeyPair
 	theirCurrentDHPubKey, theirPreviousDHPubKey *big.Int
 
-	ourCounter   uint64
-	theirCounter uint64
+	ourCounter uint64
 
-	macKeyHistory macKeyHistory
-	oldMACKeys    []macKey
+	macKeyHistory   macKeyHistory
+	oldMACKeys      []macKey
+	keyPairCounters []keyPairCounter
 }
 
 func (c *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {
@@ -107,13 +123,14 @@ func (c *keyManagementContext) setOurCurrentDHKeys(priv *big.Int, pub *big.Int) 
 }
 
 func (c *keyManagementContext) checkMessageCounter(message dataMsg) error {
+	index, counter := c.findKeyPairCounter(message.recipientKeyID, message.senderKeyID)
 	theirNextCounter := binary.BigEndian.Uint64(message.topHalfCtr[:])
 
-	if theirNextCounter <= c.theirCounter {
+	if theirNextCounter <= counter.theirCounter {
 		return ErrGPGConflict
 	}
 
-	c.theirCounter = theirNextCounter
+	c.keyPairCounters[index].theirCounter = theirNextCounter
 	return nil
 }
 
