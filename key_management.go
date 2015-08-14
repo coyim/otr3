@@ -44,7 +44,10 @@ func (k *keyManagementContext) findKeyPairCounter(ourKeyID, theirKeyID uint32) (
 			return i, k.keyPairCounters[i]
 		}
 	}
-	newKeyPairCounter := keyPairCounter{}
+	newKeyPairCounter := keyPairCounter{
+		ourKeyID:   ourKeyID,
+		theirKeyID: theirKeyID,
+	}
 	k.keyPairCounters = append(k.keyPairCounters, newKeyPairCounter)
 	return len(k.keyPairCounters) - 1, newKeyPairCounter
 }
