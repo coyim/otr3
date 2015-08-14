@@ -116,53 +116,53 @@ type keyManagementContext struct {
 	keyPairCounters []keyPairCounter
 }
 
-func (c *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {
-	c.theirCurrentDHPubKey = setBigInt(c.theirCurrentDHPubKey, key)
+func (k *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {
+	k.theirCurrentDHPubKey = setBigInt(k.theirCurrentDHPubKey, key)
 }
 
-func (c *keyManagementContext) setOurCurrentDHKeys(priv *big.Int, pub *big.Int) {
-	c.ourCurrentDHKeys.priv = setBigInt(c.ourCurrentDHKeys.priv, priv)
-	c.ourCurrentDHKeys.pub = setBigInt(c.ourCurrentDHKeys.pub, pub)
+func (k *keyManagementContext) setOurCurrentDHKeys(priv *big.Int, pub *big.Int) {
+	k.ourCurrentDHKeys.priv = setBigInt(k.ourCurrentDHKeys.priv, priv)
+	k.ourCurrentDHKeys.pub = setBigInt(k.ourCurrentDHKeys.pub, pub)
 }
 
-func (c *keyManagementContext) checkMessageCounter(message dataMsg) error {
-	index, counter := c.findKeyPairCounter(message.recipientKeyID, message.senderKeyID)
+func (k *keyManagementContext) checkMessageCounter(message dataMsg) error {
+	index, counter := k.findKeyPairCounter(message.recipientKeyID, message.senderKeyID)
 	theirNextCounter := binary.BigEndian.Uint64(message.topHalfCtr[:])
 
 	if theirNextCounter <= counter.theirCounter {
 		return ErrGPGConflict
 	}
 
-	c.keyPairCounters[index].theirCounter = theirNextCounter
+	k.keyPairCounters[index].theirCounter = theirNextCounter
 	return nil
 }
 
-func (c *keyManagementContext) revealMACKeys() []macKey {
-	ret := c.oldMACKeys
-	c.oldMACKeys = []macKey{}
+func (k *keyManagementContext) revealMACKeys() []macKey {
+	ret := k.oldMACKeys
+	k.oldMACKeys = []macKey{}
 	return ret
 }
 
-func (c *keyManagementContext) generateNewDHKeyPair(randomness io.Reader) error {
+func (k *keyManagementContext) generateNewDHKeyPair(randomness io.Reader) error {
 	newPrivKey, err := randSizedMPI(randomness, 40)
 	if err != nil {
 		return err
 	}
 
-	c.ourPreviousDHKeys.wipe()
-	c.ourPreviousDHKeys = c.ourCurrentDHKeys
+	k.ourPreviousDHKeys.wipe()
+	k.ourPreviousDHKeys = k.ourCurrentDHKeys
 
-	c.ourCurrentDHKeys = dhKeyPair{
+	k.ourCurrentDHKeys = dhKeyPair{
 		priv: newPrivKey,
 		pub:  modExp(g1, newPrivKey),
 	}
-	c.ourKeyID++
+	k.ourKeyID++
 	return nil
 }
 
-func (c *keyManagementContext) revealMACKeysForOurPreviousKeyID() {
-	keys := c.macKeyHistory.forgetMACKeysForOurKey(c.ourKeyID - 1)
-	c.oldMACKeys = append(c.oldMACKeys, keys...)
+func (k *keyManagementContext) revealMACKeysForOurPreviousKeyID() {
+	keys := k.macKeyHistory.forgetMACKeysForOurKey(k.ourKeyID - 1)
+	k.oldMACKeys = append(k.oldMACKeys, keys...)
 }
 
 func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
@@ -174,44 +174,44 @@ func (c *Conversation) rotateKeys(dataMessage dataMsg) error {
 	return nil
 }
 
-func (c *keyManagementContext) rotateOurKeys(recipientKeyID uint32, randomness io.Reader) error {
-	if recipientKeyID == c.ourKeyID {
-		c.revealMACKeysForOurPreviousKeyID()
-		return c.generateNewDHKeyPair(randomness)
+func (k *keyManagementContext) rotateOurKeys(recipientKeyID uint32, randomness io.Reader) error {
+	if recipientKeyID == k.ourKeyID {
+		k.revealMACKeysForOurPreviousKeyID()
+		return k.generateNewDHKeyPair(randomness)
 	}
 	return nil
 }
 
-func (c *keyManagementContext) revealMACKeysForTheirPreviousKeyID() {
-	keys := c.macKeyHistory.forgetMACKeysForTheirKey(c.theirKeyID - 1)
-	c.oldMACKeys = append(c.oldMACKeys, keys...)
+func (k *keyManagementContext) revealMACKeysForTheirPreviousKeyID() {
+	keys := k.macKeyHistory.forgetMACKeysForTheirKey(k.theirKeyID - 1)
+	k.oldMACKeys = append(k.oldMACKeys, keys...)
 }
 
-func (c *keyManagementContext) rotateTheirKey(senderKeyID uint32, pubDHKey *big.Int) {
-	if senderKeyID == c.theirKeyID {
-		c.revealMACKeysForTheirPreviousKeyID()
+func (k *keyManagementContext) rotateTheirKey(senderKeyID uint32, pubDHKey *big.Int) {
+	if senderKeyID == k.theirKeyID {
+		k.revealMACKeysForTheirPreviousKeyID()
 
-		c.theirPreviousDHPubKey = c.theirCurrentDHPubKey
-		c.theirCurrentDHPubKey = pubDHKey
-		c.theirKeyID++
+		k.theirPreviousDHPubKey = k.theirCurrentDHPubKey
+		k.theirCurrentDHPubKey = pubDHKey
+		k.theirKeyID++
 	}
 }
 
-func (c *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint32) (sessionKeys, error) {
+func (k *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint32) (sessionKeys, error) {
 	var ret sessionKeys
 
-	ourPrivKey, ourPubKey, err := c.pickOurKeys(ourKeyID)
+	ourPrivKey, ourPubKey, err := k.pickOurKeys(ourKeyID)
 	if err != nil {
 		return ret, err
 	}
 
-	theirPubKey, err := c.pickTheirKey(theirKeyID)
+	theirPubKey, err := k.pickTheirKey(theirKeyID)
 	if err != nil {
 		return ret, err
 	}
 
 	ret = calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey)
-	c.macKeyHistory.addKeys(ourKeyID, theirKeyID, ret.receivingMACKey)
+	k.macKeyHistory.addKeys(ourKeyID, theirKeyID, ret.receivingMACKey)
 
 	return ret, nil
 }
@@ -243,16 +243,16 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int) session
 	return ret
 }
 
-func (c *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *big.Int, err error) {
-	if ourKeyID == 0 || c.ourKeyID == 0 {
+func (k *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *big.Int, err error) {
+	if ourKeyID == 0 || k.ourKeyID == 0 {
 		return nil, nil, ErrGPGConflict
 	}
 
 	switch ourKeyID {
-	case c.ourKeyID:
-		privKey, pubKey = c.ourCurrentDHKeys.priv, c.ourCurrentDHKeys.pub
-	case c.ourKeyID - 1:
-		privKey, pubKey = c.ourPreviousDHKeys.priv, c.ourPreviousDHKeys.pub
+	case k.ourKeyID:
+		privKey, pubKey = k.ourCurrentDHKeys.priv, k.ourCurrentDHKeys.pub
+	case k.ourKeyID - 1:
+		privKey, pubKey = k.ourPreviousDHKeys.priv, k.ourPreviousDHKeys.pub
 	default:
 		err = ErrGPGConflict
 	}
@@ -260,19 +260,19 @@ func (c *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *bi
 	return privKey, pubKey, err
 }
 
-func (c *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int, err error) {
-	if theirKeyID == 0 || c.theirKeyID == 0 {
+func (k *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int, err error) {
+	if theirKeyID == 0 || k.theirKeyID == 0 {
 		return nil, ErrGPGConflict
 	}
 
 	switch theirKeyID {
-	case c.theirKeyID:
-		pubKey = c.theirCurrentDHPubKey
-	case c.theirKeyID - 1:
-		if c.theirPreviousDHPubKey == nil {
+	case k.theirKeyID:
+		pubKey = k.theirCurrentDHPubKey
+	case k.theirKeyID - 1:
+		if k.theirPreviousDHPubKey == nil {
 			err = ErrGPGConflict
 		} else {
-			pubKey = c.theirPreviousDHPubKey
+			pubKey = k.theirPreviousDHPubKey
 		}
 	default:
 		err = ErrGPGConflict
