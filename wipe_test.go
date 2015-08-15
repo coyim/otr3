@@ -79,3 +79,47 @@ func Test_wipe_keyManagementContext(t *testing.T) {
 
 	assertDeepEquals(t, keys, keyManagementContext{})
 }
+
+func Test_dhKeyPair_wipe_HandlesNilWell(t *testing.T) {
+	(*dhKeyPair)(nil).wipe()
+}
+
+func Test_akeKeys_wipe_HandlesNilWell(t *testing.T) {
+	(*akeKeys)(nil).wipe()
+}
+
+func Test_ake_wipe_HandlesNilWell(t *testing.T) {
+	(*ake)(nil).wipe()
+}
+
+func Test_ake_wipeGX_HandlesNilWell(t *testing.T) {
+	(*ake)(nil).wipeGX()
+}
+
+func Test_keyManagementContext_wipeKeys_HandlesNilWell(t *testing.T) {
+	(*keyManagementContext)(nil).wipeKeys()
+}
+
+func Test_keyManagementContext_wipe_HandlesNilWell(t *testing.T) {
+	(*keyManagementContext)(nil).wipe()
+}
+
+func Test_counterHistory_wipe_HandlesNilWell(t *testing.T) {
+	(*counterHistory)(nil).wipe()
+}
+
+func Test_keyPairCounter_wipe_HandlesNilWell(t *testing.T) {
+	(*keyPairCounter)(nil).wipe()
+}
+
+func Test_macKeyHistory_wipe_HandlesNilWell(t *testing.T) {
+	(*macKeyHistory)(nil).wipe()
+}
+
+func Test_macKeyUsage_wipe_HandlesNilWell(t *testing.T) {
+	(*macKeyUsage)(nil).wipe()
+}
+
+func Test_macKey_wipe_HandlesNilWell(t *testing.T) {
+	(*macKey)(nil).wipe()
+}
