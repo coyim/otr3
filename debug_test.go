@@ -11,6 +11,22 @@ func Test_dumpSMP_dumpsTheCurrentSMPState(t *testing.T) {
 	c.smp.state = smpStateExpect2{}
 	c.smp.s1 = fixtureSmp1()
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
+	q := "Blarg"
+	c.smp.question = &q
+
+	bt := bytes.NewBuffer(make([]byte, 0, 200))
+	c.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 2 (EXPECT2)
+    Received_Q: 1
+`)
+}
+
+func Test_dumpSMP_dumpsTheCurrentSMPStateWithQuestion(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.smp.state = smpStateExpect2{}
+	c.smp.s1 = fixtureSmp1()
+	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
 	bt := bytes.NewBuffer(make([]byte, 0, 200))
 	c.dumpSMP(bufio.NewWriter(bt))
@@ -89,4 +105,36 @@ func Test_dump_dumpsAllKindsOfConversationState(t *testing.T) {
     Next expected: 0 (EXPECT1)
     Received_Q: 0
 `)
+}
+
+func Test_identityString_isCorrectForAllMessageStates(t *testing.T) {
+	assertEquals(t, plainText.identityString(), "PLAINTEXT")
+	assertEquals(t, encrypted.identityString(), "ENCRYPTED")
+	assertEquals(t, finished.identityString(), "FINISHED")
+	assertEquals(t, msgState(99).identityString(), "INVALID")
+}
+
+func Test_otrOffer_isCorrectForNotSent(t *testing.T) {
+	c := &Conversation{whitespaceState: whitespaceNotSent}
+	assertEquals(t, c.otrOffer(), "NOT")
+}
+
+func Test_otrOffer_isCorrectForRejected(t *testing.T) {
+	c := &Conversation{whitespaceState: whitespaceRejected}
+	assertEquals(t, c.otrOffer(), "REJECTED")
+}
+
+func Test_otrOffer_isCorrectForInvalid(t *testing.T) {
+	c := &Conversation{whitespaceState: whitespaceState(99)}
+	assertEquals(t, c.otrOffer(), "INVALID")
+}
+
+func Test_otrOffer_isCorrectForSentAndAccepted(t *testing.T) {
+	c := &Conversation{whitespaceState: whitespaceSent, msgState: encrypted}
+	assertEquals(t, c.otrOffer(), "ACCEPTED")
+}
+
+func Test_otrOffer_isCorrectForSentAndNotAcceptedYet(t *testing.T) {
+	c := &Conversation{whitespaceState: whitespaceSent, msgState: plainText}
+	assertEquals(t, c.otrOffer(), "SENT")
 }
