@@ -120,6 +120,11 @@ type keyManagementContext struct {
 	oldMACKeys     []macKey
 }
 
+func (k *keyManagementContext) incrementOurCounter(ourKeyID, theirKeyID uint32) {
+	counter := k.counterHistory.findCounterFor(ourKeyID, theirKeyID)
+	counter.ourCounter++
+}
+
 func (k *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {
 	k.theirCurrentDHPubKey = setBigInt(k.theirCurrentDHPubKey, key)
 }
@@ -127,6 +132,7 @@ func (k *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {
 func (k *keyManagementContext) setOurCurrentDHKeys(priv *big.Int, pub *big.Int) {
 	k.ourCurrentDHKeys.priv = setBigInt(k.ourCurrentDHKeys.priv, priv)
 	k.ourCurrentDHKeys.pub = setBigInt(k.ourCurrentDHKeys.pub, pub)
+	k.incrementOurCounter(k.ourKeyID, k.theirKeyID)
 }
 
 func (k *keyManagementContext) checkMessageCounter(message dataMsg) error {
