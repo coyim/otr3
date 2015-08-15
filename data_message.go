@@ -21,8 +21,13 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 	}
 
 	topHalfCtr := [8]byte{}
-	binary.BigEndian.PutUint64(topHalfCtr[:], c.keys.ourCounter)
-	c.keys.ourCounter++
+	counter := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID-1, c.keys.theirKeyID)
+	if counter.ourCounter == 0 {
+		counter.ourCounter = 1
+	}
+
+	binary.BigEndian.PutUint64(topHalfCtr[:], counter.ourCounter)
+	counter.ourCounter++
 
 	plain := plainDataMsg{
 		message: message,

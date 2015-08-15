@@ -47,7 +47,8 @@ func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
 	c.msgState = encrypted
 	c.keys.ourKeyID = 2
 	c.keys.theirKeyID = 3
-	c.keys.ourCounter = 0x1011121314
+	counter := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID-1, c.keys.theirKeyID)
+	counter.ourCounter = 0x1011121314
 
 	dataMsg, _, err := c.genDataMsg(nil)
 
@@ -58,7 +59,7 @@ func Test_genDataMsg_withKeyExchangeData(t *testing.T) {
 	assertDeepEquals(t, dataMsg.topHalfCtr, [8]byte{
 		0x00, 0x00, 0x00, 0x10, 0x11, 0x12, 0x13, 0x14,
 	})
-	assertEquals(t, c.keys.ourCounter, uint64(0x1011121314+1))
+	assertEquals(t, counter.ourCounter, uint64(0x1011121314+1))
 }
 
 func Test_genDataMsg_willResetMayRetransmit(t *testing.T) {
@@ -66,7 +67,10 @@ func Test_genDataMsg_willResetMayRetransmit(t *testing.T) {
 	c.msgState = encrypted
 	c.keys.ourKeyID = 2
 	c.keys.theirKeyID = 3
-	c.keys.ourCounter = 0x1011121314
+
+	counter := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID-1, c.keys.theirKeyID)
+	counter.ourCounter = 0x1011121314
+
 	c.resend.mayRetransmit = retransmitExact
 
 	c.genDataMsg(nil)
@@ -92,7 +96,9 @@ func Test_genDataMsg_setsLastMessageWhenNewMessageIsPlaintext(t *testing.T) {
 	c.msgState = encrypted
 	c.keys.ourKeyID = 2
 	c.keys.theirKeyID = 3
-	c.keys.ourCounter = 0x1011121314
+
+	counter := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID-1, c.keys.theirKeyID)
+	counter.ourCounter = 0x1011121314
 
 	c.genDataMsg(msg)
 
@@ -103,7 +109,7 @@ func Test_genDataMsg_hasEncryptedMessage(t *testing.T) {
 	c := bobContextAfterAKE()
 	c.msgState = encrypted
 
-	expected := bytesFromHex("4f0de18011633ed0264ccc1840d64f4cf8f0c91ef78890ab82edef36cb38210bb80760585ff43d736a9ff3e4bb05fc088fa34c2f21012988d539ebc839e9bc97633f4c42de15ea5c3c55a2b9940ca35015ded14205b9df78f936cb1521aedbea98df7dc03c116570ba8d034abc8e2d23185d2ce225845f38c08cb2aae192d66d601c1bc86149c98e8874705ae365b31cda76d274429de5e07b93f0ff29152716980a63c31b7bda150b222ba1d373f786d5f59f580d4f690a71d7fc620e0a3b05d692221ddeebac98d6ed16272e7c4596de27fb104ad747aa9a3ad9d3bc4f988af0beb21760df06047e267af0109baceb0f363bcaff7b205f2c42b3cb67a942f2")
+	expected := bytesFromHex("a9a31c32ce6e7ae3c3956401ddc6aed6da24cb75dc16c3c473f2b14c2dda1cd52bfd20559eedf51d275b049fdefd93af2325d28d5d2f0fb05e8524842e32d4275c69a621e5fa133977563345055fded5511a78337a6d9a213bc5319de11a578818c2edb21b510595157feea3ed93a1178021571aa21765fd974c89cdcbda8ec0afce0c0ea5901021657b959f842df47224edd5dd50d9e736ed8982580373dcd0e2f06a5421472ae2bc58cc4ea7cb2b054e22c1781b72595909b37640e28f435df98b16410c76969fa9112a114b4ab7fb5b3265aa5efa0a99b9c47097d6d42a232a223d03b7d4a8fd5e57a748d1e06ef106e265f70421b708ca85b89e92f02082")
 	dataMsg, _, err := c.genDataMsg([]byte("we are awesome"))
 
 	assertEquals(t, err, nil)

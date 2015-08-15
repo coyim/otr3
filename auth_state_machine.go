@@ -167,7 +167,9 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *Conversation, msg []byte)
 	//to be used only after the AKE has finished?
 	c.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
 	c.keys.setOurCurrentDHKeys(c.ake.secretExponent, c.ake.ourPublicValue)
-	c.keys.ourCounter++
+
+	counter := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID, c.keys.theirKeyID)
+	counter.ourCounter++
 
 	c.sentRevealSig = true
 
@@ -213,7 +215,9 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg
 	//to be used only after the AKE has finished?
 	c.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
 	c.keys.setOurCurrentDHKeys(c.ake.secretExponent, c.ake.ourPublicValue)
-	c.keys.ourCounter++
+
+	counter := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID, c.keys.theirKeyID)
+	counter.ourCounter++
 
 	c.sentRevealSig = false
 

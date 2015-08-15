@@ -75,7 +75,6 @@ func (c *keyManagementContext) wipe() {
 	}
 
 	c.wipeKeys()
-	c.ourCounter = 0
 	c.ourKeyID = 0
 	c.theirKeyID = 0
 

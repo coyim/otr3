@@ -154,7 +154,6 @@ func Test_Receive_signalsAMessageEventWhenWeReceiveADataMessageForAnotherInstanc
 func Test_Receive_NoFragments(t *testing.T) {
 	alice := aliceContextAfterAKE()
 	alice.msgState = encrypted
-	alice.keys.ourCounter = 1
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted
 	fragments, _, _ := alice.createSerializedDataMessage(MessagePlaintext("hello!"), messageFlagNormal, []tlv{})
@@ -166,7 +165,6 @@ func Test_Receive_NoFragments(t *testing.T) {
 func Test_Receive_Fragments(t *testing.T) {
 	alice := aliceContextAfterAKE()
 	alice.msgState = encrypted
-	alice.keys.ourCounter = 1
 	alice.SetFragmentSize(200)
 
 	bob := bobContextAfterAKE()

@@ -115,8 +115,6 @@ type keyManagementContext struct {
 	ourCurrentDHKeys, ourPreviousDHKeys         dhKeyPair
 	theirCurrentDHPubKey, theirPreviousDHPubKey *big.Int
 
-	ourCounter uint64
-
 	counterHistory counterHistory
 	macKeyHistory  macKeyHistory
 	oldMACKeys     []macKey

@@ -188,7 +188,9 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeysAndIncreaseCounter
 	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedGY())
 	assertDeepEquals(t, c.keys.ourCurrentDHKeys.pub, fixedGX())
 	assertDeepEquals(t, c.keys.ourCurrentDHKeys.priv, fixedX())
-	assertEquals(t, c.keys.ourCounter, uint64(1))
+
+	ctr := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID, c.keys.theirKeyID)
+	assertEquals(t, ctr.ourCounter, uint64(1))
 	assertEquals(t, c.keys.ourKeyID, uint32(1))
 	assertEquals(t, c.keys.theirKeyID, uint32(0))
 }
@@ -260,7 +262,9 @@ func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeysAndIncreas
 	assertNil(t, c.keys.theirPreviousDHPubKey)
 	assertDeepEquals(t, c.keys.ourPreviousDHKeys.pub, fixedGY())
 	assertDeepEquals(t, c.keys.ourPreviousDHKeys.priv, fixedY())
-	assertEquals(t, c.keys.ourCounter, uint64(1))
+
+	ctr := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID-1, c.keys.theirKeyID)
+	assertEquals(t, ctr.ourCounter, uint64(1))
 	assertEquals(t, c.keys.ourKeyID, uint32(2))
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
 }

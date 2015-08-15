@@ -20,7 +20,6 @@ func Test_sendDHCommit_resetsTheKeyManagementContext(t *testing.T) {
 	}
 	c.keys.theirCurrentDHPubKey = big.NewInt(5)
 	c.keys.theirPreviousDHPubKey = big.NewInt(6)
-	c.keys.ourCounter = 1
 	c.keys.macKeyHistory.addKeys(2, 3, macKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4})
 
 	k1 := macKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 7, 8}

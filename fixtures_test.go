@@ -103,15 +103,13 @@ func fixtureSigMsg(v otrVersion) []byte {
 
 func bobContextAfterAKE() *Conversation {
 	c := newConversation(otrV3{}, fixtureRand())
-	c.keys.ourKeyID = 1
+	c.keys.ourKeyID = 2
 	c.keys.ourCurrentDHKeys.pub = fixedGX()
 	c.keys.ourPreviousDHKeys.priv = fixedX()
 	c.keys.ourPreviousDHKeys.pub = fixedGX()
 
 	c.keys.theirKeyID = 1
 	c.keys.theirCurrentDHPubKey = fixedGY()
-
-	c.keys.ourKeyID = 2
 
 	return c
 }
@@ -212,7 +210,6 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	//We use a combination of ourKeyId, theirKeyID, senderKeyID and recipientKeyID
 	//to make sure both sender and receiver will use the same DH session keys
 	receiverContext := keyManagementContext{
-		ourCounter: 1,
 
 		ourKeyID:   senderKeyID + 1,
 		theirKeyID: recipientKeyID + 1,
