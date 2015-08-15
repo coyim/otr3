@@ -138,3 +138,11 @@ func Test_otrOffer_isCorrectForSentAndNotAcceptedYet(t *testing.T) {
 	c := &Conversation{whitespaceState: whitespaceSent, msgState: plainText}
 	assertEquals(t, c.otrOffer(), "SENT")
 }
+
+func Test_setDebug_setsTheDebugFlag(t *testing.T) {
+	c := &Conversation{}
+	c.SetDebug(true)
+	assertTrue(t, c.debug)
+	c.SetDebug(false)
+	assertFalse(t, c.debug)
+}
