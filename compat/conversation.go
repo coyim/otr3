@@ -130,7 +130,7 @@ func (c *Conversation) updateValues() {
 
 	c.Conversation.SetKeys(&c.PrivateKey.PrivateKey, &c.TheirPublicKey.PublicKey)
 
-	if c.SSID[:] == nil {
+	if c.eventHandler.securityChange == NewKeys {
 		c.SSID = c.GetSSID()
 	}
 }
@@ -150,9 +150,8 @@ func (c *Conversation) Receive(in []byte) (out []byte, encrypted bool, change Se
 		toSend = otr3.Bytes(ret)
 	}
 
-	change = c.eventHandler.consumeSecurityChange()
-
 	c.updateValues()
+	change = c.eventHandler.consumeSecurityChange()
 	return
 }
 
