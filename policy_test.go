@@ -25,3 +25,17 @@ func Test_policies_errorStartAKE_addsErrorStartAKEPolicy(t *testing.T) {
 	p.ErrorStartAKE()
 	assertEquals(t, p.has(errorStartAKE), true)
 }
+
+func Test_policies_Allowv2_addsV2Policy(t *testing.T) {
+	p := policies(allowV3)
+	p.AllowV2()
+	assertEquals(t, p.has(allowV2), true)
+	assertEquals(t, p.has(allowV3), true)
+}
+
+func Test_policies_Allowv3_addsV3Policy(t *testing.T) {
+	p := policies(allowV2)
+	p.AllowV3()
+	assertEquals(t, p.has(allowV3), true)
+	assertEquals(t, p.has(allowV2), true)
+}

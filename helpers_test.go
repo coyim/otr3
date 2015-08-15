@@ -46,6 +46,18 @@ func assertNil(t *testing.T, actual interface{}) {
 	}
 }
 
+func assertTrue(t *testing.T, actual bool) {
+	if !actual {
+		t.Errorf("Expected: %#v to be true\n", actual)
+	}
+}
+
+func assertFalse(t *testing.T, actual bool) {
+	if actual {
+		t.Errorf("Expected: %#v to be false\n", actual)
+	}
+}
+
 func assertNotNil(t *testing.T, actual interface{}) {
 	if isNil(actual) {
 		t.Errorf("Expected:\n%#v \nto not be nil\n", actual)
