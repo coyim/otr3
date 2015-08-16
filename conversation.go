@@ -120,8 +120,8 @@ func (c *Conversation) GetSSID() [8]byte {
 	return c.ssid
 }
 
-// SetSmpEventHandler assigns handler for SMPEvent
-func (c *Conversation) SetSmpEventHandler(handler SMPEventHandler) {
+// SetSMPEventHandler assigns handler for SMPEvent
+func (c *Conversation) SetSMPEventHandler(handler SMPEventHandler) {
 	c.smpEventHandler = handler
 }
 

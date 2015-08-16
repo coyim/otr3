@@ -410,3 +410,49 @@ func Test_receive_doesntDisplayErrorMessageToTheUserAndStartAKE(t *testing.T) {
 	assertNil(t, plain)
 	assertDeepEquals(t, toSend[0], ValidMessage("?OTRv3?"))
 }
+
+func Test_Conversation_SetKeys_setsTheKeys(t *testing.T) {
+	c := &Conversation{}
+	c.SetKeys(bobPrivateKey, &alicePrivateKey.PublicKey)
+
+	assertEquals(t, c.ourKey, bobPrivateKey)
+	assertEquals(t, c.theirKey, &alicePrivateKey.PublicKey)
+}
+
+func Test_Conversation_GetTheirKey_getsTheirKey(t *testing.T) {
+	c := &Conversation{theirKey: &bobPrivateKey.PublicKey}
+	assertEquals(t, c.GetTheirKey(), &bobPrivateKey.PublicKey)
+}
+
+func Test_Conversation_GetSSID_getsTheSSID(t *testing.T) {
+	c := &Conversation{ssid: [8]byte{0xAB, 0xCD, 0xAB, 0xCD, 0xDD, 0xDD, 0xCC, 0xC0}}
+	assertEquals(t, c.GetSSID(), [8]byte{0xAB, 0xCD, 0xAB, 0xCD, 0xDD, 0xDD, 0xCC, 0xC0})
+}
+
+func Test_Conversation_SetSMPEventHandler_setSMPEventHandler(t *testing.T) {
+	c := &Conversation{}
+	ev := CombineSMPEventHandlers()
+	c.SetSMPEventHandler(ev)
+	assertDeepEquals(t, c.smpEventHandler, ev)
+}
+
+func Test_Conversation_SetErrorMessageHandler_setsErrorMessageHandler(t *testing.T) {
+	c := &Conversation{}
+	ev := CombineErrorMessageHandlers()
+	c.SetErrorMessageHandler(ev)
+	assertDeepEquals(t, c.errorMessageHandler, ev)
+}
+
+func Test_Conversation_SetMessageEventHandler_setsMessageEventHandler(t *testing.T) {
+	c := &Conversation{}
+	ev := CombineMessageEventHandlers()
+	c.SetMessageEventHandler(ev)
+	assertDeepEquals(t, c.messageEventHandler, ev)
+}
+
+func Test_Conversation_SetSecurityEventHandler_setsSecurityEventHandler(t *testing.T) {
+	c := &Conversation{}
+	ev := CombineSecurityEventHandlers()
+	c.SetSecurityEventHandler(ev)
+	assertDeepEquals(t, c.securityEventHandler, ev)
+}

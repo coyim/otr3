@@ -110,7 +110,7 @@ func (c *Conversation) compatInit() {
 	}
 
 	c.Conversation.Policies.AllowV2()
-	c.SetSmpEventHandler(&c.eventHandler)
+	c.SetSMPEventHandler(&c.eventHandler)
 	c.SetErrorMessageHandler(&c.eventHandler)
 	c.SetMessageEventHandler(&c.eventHandler)
 	c.SetSecurityEventHandler(&c.eventHandler)
