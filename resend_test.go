@@ -185,7 +185,7 @@ func Test_maybeRetransmit_returnsErrorIfWeFailAtGeneratingDataMsg(t *testing.T) 
 	c.keys.ourKeyID = 0
 	_, err := c.maybeRetransmit()
 
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("invalid key id for local peer"))
 }
 
 func Test_maybeRetransmit_signalsMessageEventWhenResendingMessage(t *testing.T) {

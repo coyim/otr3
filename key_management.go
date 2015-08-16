@@ -140,7 +140,7 @@ func (k *keyManagementContext) checkMessageCounter(message dataMsg) error {
 	theirNextCounter := binary.BigEndian.Uint64(message.topHalfCtr[:])
 
 	if theirNextCounter <= counter.theirCounter {
-		return ErrGPGConflict
+		return newOtrConflictError("counter regressed")
 	}
 
 	counter.theirCounter = theirNextCounter
@@ -255,7 +255,7 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int) session
 
 func (k *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *big.Int, err error) {
 	if ourKeyID == 0 || k.ourKeyID == 0 {
-		return nil, nil, ErrGPGConflict
+		return nil, nil, newOtrConflictError("invalid key id for local peer")
 	}
 
 	switch ourKeyID {
@@ -264,7 +264,7 @@ func (k *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *bi
 	case k.ourKeyID - 1:
 		privKey, pubKey = k.ourPreviousDHKeys.priv, k.ourPreviousDHKeys.pub
 	default:
-		err = ErrGPGConflict
+		err = newOtrConflictError("mismatched key id for local peer")
 	}
 
 	return privKey, pubKey, err
@@ -272,7 +272,7 @@ func (k *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *bi
 
 func (k *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int, err error) {
 	if theirKeyID == 0 || k.theirKeyID == 0 {
-		return nil, ErrGPGConflict
+		return nil, newOtrConflictError("invalid key id for remote peer")
 	}
 
 	switch theirKeyID {
@@ -280,12 +280,12 @@ func (k *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int,
 		pubKey = k.theirCurrentDHPubKey
 	case k.theirKeyID - 1:
 		if k.theirPreviousDHPubKey == nil {
-			err = ErrGPGConflict
+			err = newOtrConflictError("no previous key for remote peer found")
 		} else {
 			pubKey = k.theirPreviousDHPubKey
 		}
 	default:
-		err = ErrGPGConflict
+		err = newOtrConflictError("mismatched key id for remote peer")
 	}
 
 	return pubKey, err

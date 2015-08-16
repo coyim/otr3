@@ -136,7 +136,7 @@ func Test_genDataMsg_returnsErrorIfFailsToCalculateDHSessionKey(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.msgState = encrypted
 	_, _, err := c.genDataMsg(nil)
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("invalid key id for local peer"))
 }
 
 func Test_genDataMsg_returnsErrorIfFailsToGenerateInstanceTag(t *testing.T) {
@@ -241,7 +241,7 @@ func Test_processDataMessage_returnsErrorIfDataMessageHasWrongCounter(t *testing
 	c.msgState = encrypted
 	_, _, err := c.receiveDecoded(msg)
 
-	assertEquals(t, err, ErrGPGConflict)
+	assertDeepEquals(t, err, newOtrConflictError("counter regressed"))
 }
 
 func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(t *testing.T) {
@@ -336,7 +336,7 @@ func Test_processDataMessage_shouldNotRotateKeysWhenDecryptFails(t *testing.T) {
 	bob.msgState = encrypted
 	_, _, err := bob.receiveDecoded(msg)
 
-	assertDeepEquals(t, err, ErrGPGConflict)
+	assertDeepEquals(t, err, newOtrConflictError("bad signature MAC in encrypted signature"))
 	assertDeepEquals(t, bobCurrentDHKeys, bob.keys.ourCurrentDHKeys)
 	assertDeepEquals(t, bobPreviousDHKeys, bob.keys.ourPreviousDHKeys)
 
@@ -454,5 +454,5 @@ func Test_processDataMessage_returnErrorWhenOurKeyIDUnexpected(t *testing.T) {
 	bob.msgState = encrypted
 	_, _, err := bob.receiveDecoded(datamsg)
 
-	assertDeepEquals(t, err, ErrGPGConflict)
+	assertDeepEquals(t, err, newOtrConflictError("mismatched key id for local peer"))
 }

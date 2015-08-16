@@ -136,7 +136,7 @@ func Test_Send_returnsErrorIfFaislToGenerateDataMsg(t *testing.T) {
 	s, err := c.Send(msg)
 
 	assertNil(t, s)
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("invalid key id for remote peer"))
 }
 
 func Test_send_appendWhitespaceTagsWhenAllowedbyThePolicy(t *testing.T) {

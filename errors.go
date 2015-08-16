@@ -1,23 +1,6 @@
 package otr3
 
-import (
-	"errors"
-	"fmt"
-)
-
-var (
-	// GPG_ERR_NO_ERROR is matched to nil
-	// GPG_ERR_ENOMEM doesn't make any sense in golang
-
-	// ErrGPGUnusableSecretKey maps to GPG_ERR_UNUSABLE_SECKEY in libotr
-	ErrGPGUnusableSecretKey = errors.New("GPG Error: Unusable secret key (54)")
-	// ErrGPGInvalidValue maps to GPG_ERR_INV_VALUE in libotr
-	ErrGPGInvalidValue = errors.New("GPG Error: Invalid value (55)")
-	// ErrGPGConflict maps to GPG_ERR_CONFLICT in libotr
-	ErrGPGConflict = errors.New("GPG Error: Conflict (70)")
-	// ErrGPGEntityExist maps to GPG_ERR_EEXIST in libotr
-	ErrGPGEntityExist = errors.New("GPG Error: Entity exist (32803)")
-)
+import "fmt"
 
 var errCantAuthenticateWithoutEncryption = newOtrError("can't authenticate a peer without a secure conversation established")
 var errCorruptEncryptedSignature = newOtrError("corrupt encrypted signature")
@@ -34,15 +17,20 @@ var errWrongProtocolVersion = newOtrError("wrong protocol version")
 
 // OtrError is an error in the OTR library
 type OtrError struct {
-	msg string
+	msg      string
+	conflict bool
 }
 
 func newOtrError(s string) error {
-	return OtrError{s}
+	return OtrError{msg: s, conflict: false}
+}
+
+func newOtrConflictError(s string) error {
+	return OtrError{msg: s, conflict: true}
 }
 
 func newOtrErrorf(format string, a ...interface{}) error {
-	return OtrError{fmt.Sprintf(format, a...)}
+	return OtrError{msg: fmt.Sprintf(format, a...), conflict: false}
 }
 
 func (oe OtrError) Error() string {
@@ -56,4 +44,11 @@ func firstError(es ...error) error {
 		}
 	}
 	return nil
+}
+
+func isConflict(e error) bool {
+	if oe, ok := e.(OtrError); ok {
+		return oe.conflict
+	}
+	return false
 }

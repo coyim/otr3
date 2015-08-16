@@ -64,10 +64,10 @@ func Test_calculateDHSessionKeys_failsWhenOurOrTheyKeyIsUnknown(t *testing.T) {
 	}
 
 	_, err := c.calculateDHSessionKeys(2, 1)
-	assertDeepEquals(t, err, ErrGPGConflict)
+	assertDeepEquals(t, err, newOtrConflictError("mismatched key id for local peer"))
 
 	_, err = c.calculateDHSessionKeys(1, 3)
-	assertDeepEquals(t, err, ErrGPGConflict)
+	assertDeepEquals(t, err, newOtrConflictError("mismatched key id for remote peer"))
 }
 
 func Test_calculateDHSessionKeys_failsWhenTheirPreviousPubliKeyIsNull(t *testing.T) {
@@ -77,7 +77,7 @@ func Test_calculateDHSessionKeys_failsWhenTheirPreviousPubliKeyIsNull(t *testing
 	}
 	_, err := c.calculateDHSessionKeys(2, 1)
 
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("no previous key for remote peer found"))
 }
 
 func Test_pickTheirKey_shouldFailsForInvalidSenderID(t *testing.T) {
@@ -85,16 +85,16 @@ func Test_pickTheirKey_shouldFailsForInvalidSenderID(t *testing.T) {
 
 	c.theirKeyID = uint32(0)
 	_, err := c.pickTheirKey(uint32(0x00000000))
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("invalid key id for remote peer"))
 
 	c.theirKeyID = uint32(2)
 	_, err = c.pickTheirKey(uint32(0x00000000))
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("invalid key id for remote peer"))
 
 	c.theirKeyID = uint32(1)
 	c.theirPreviousDHPubKey = nil
 	_, err = c.pickTheirKey(uint32(0x00000000))
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("invalid key id for remote peer"))
 }
 
 func Test_pickOurKeys_shouldFailsForInvalidRecipientID(t *testing.T) {
@@ -102,11 +102,11 @@ func Test_pickOurKeys_shouldFailsForInvalidRecipientID(t *testing.T) {
 
 	c.ourKeyID = uint32(0x00000000)
 	_, _, err := c.pickOurKeys(uint32(0x00000000))
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("invalid key id for local peer"))
 
 	c.ourKeyID = uint32(3)
 	_, _, err = c.pickOurKeys(uint32(0x00000001))
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("mismatched key id for local peer"))
 }
 
 func Test_calculateAKEKeys(t *testing.T) {
@@ -283,12 +283,12 @@ func Test_checkMessageCounter_messageIsInvalidWhenCounterIsNotLargerThanTheLastR
 	msg.topHalfCtr[7] = 2
 
 	err := c.checkMessageCounter(msg)
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("counter regressed"))
 	assertEquals(t, ctr.theirCounter, uint64(2))
 
 	msg.topHalfCtr[7] = 1
 	err = c.checkMessageCounter(msg)
-	assertEquals(t, err, ErrGPGConflict)
+	assertEquals(t, err, newOtrConflictError("counter regressed"))
 	assertEquals(t, ctr.theirCounter, uint64(2))
 }
 

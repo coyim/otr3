@@ -79,5 +79,5 @@ func Test_potentialHeartbeat_returnsAnErrorIfWeCantPutTogetherAMessage(t *testin
 	plain := []byte("Foo plain")
 
 	_, err := c.potentialHeartbeat(plain)
-	assertDeepEquals(t, err, ErrGPGConflict)
+	assertDeepEquals(t, err, newOtrConflictError("invalid key id for local peer"))
 }
