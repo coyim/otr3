@@ -1,4 +1,4 @@
-// Package otr implements the Off The Record protocol as specified in:
+// Package otr3 implements the Off The Record protocol as specified in:
 //  https://otr.cypherpunks.ca/Protocol-v3-4.0.0.html
 //
 // Introduction
