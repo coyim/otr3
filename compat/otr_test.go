@@ -206,7 +206,7 @@ func TestConversation(t *testing.T) {
 }
 
 func TestAgainstLibOTR(t *testing.T) {
-	// This test requires otr.c.test to be built as /tmp/a.out.
+	// This test requires libotr_test_helper.c to be built as /tmp/a.out.
 	// If enabled, this tests runs forever performing OTR handshakes in a
 	// loop.
 	return
