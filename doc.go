@@ -28,4 +28,14 @@
 //
 //  // You can also setup a debug mode
 //  c.SetDebug(true)
+//  c.Policies.SendWhitespaceTag()
+//  c.Policies.WhitespaceStartAKE()
+//
+//  // Use Send and Receive for messages exchange
+//  toSend, err := c.Send([]byte{"hello"})
+//  toSend, err := c.Receive(toSend)
+//
+//  // Use Authenticate to start a SMP process
+//  toSend, err := c.Authenticate([]byte{"My pet's name?"},[]byte{"Gopher"})
+
 package otr3
