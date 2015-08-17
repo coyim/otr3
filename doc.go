@@ -37,5 +37,4 @@
 //
 //  // Use Authenticate to start a SMP process
 //  toSend, err := c.Authenticate([]byte{"My pet's name?"},[]byte{"Gopher"})
-
 package otr3
