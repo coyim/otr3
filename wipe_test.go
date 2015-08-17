@@ -89,7 +89,7 @@ func Test_akeKeys_wipe_HandlesNilWell(t *testing.T) {
 }
 
 func Test_ake_wipe_HandlesNilWell(t *testing.T) {
-	(*ake)(nil).wipe()
+	(*ake)(nil).wipe(true)
 }
 
 func Test_ake_wipeGX_HandlesNilWell(t *testing.T) {

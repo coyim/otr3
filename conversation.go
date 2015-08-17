@@ -17,6 +17,7 @@ var (
 )
 
 // Conversation contains all the information for a specific connection between two peers in an IM system.
+// Policies are not supposed to change once a conversation has been used
 type Conversation struct {
 	version otrVersion
 	Rand    io.Reader

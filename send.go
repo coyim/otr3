@@ -56,9 +56,8 @@ func (c *Conversation) sendMessageOnEncrypted(message ValidMessage) ([]ValidMess
 }
 
 func (c *Conversation) sendDHCommit() (toSend messageWithHeader, err error) {
-	//We have engaged in a new AKE so we forget all previous keys
-	c.keys = c.keys.wipeAndKeepRevealKeys()
-	c.ake.wipe()
+	c.ake.wipe(true)
+	c.ake = nil
 
 	toSend, err = c.dhCommitMessage()
 	if err != nil {

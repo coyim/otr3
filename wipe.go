@@ -23,7 +23,7 @@ func (k *akeKeys) wipe() {
 	wipeBytes(k.m2[:])
 }
 
-func (a *ake) wipe() {
+func (a *ake) wipe(wipeKeys bool) {
 	if a == nil {
 		return
 	}
@@ -42,6 +42,12 @@ func (a *ake) wipe() {
 	a.wipeGX()
 	a.revealKey.wipe()
 	a.sigKey.wipe()
+
+	if wipeKeys {
+		a.keys.wipe()
+	} else {
+		a.keys = keyManagementContext{}
+	}
 }
 
 func (a *ake) wipeGX() {

@@ -22,6 +22,7 @@ type ake struct {
 	sigKey    akeKeys
 
 	state authState
+	keys  keyManagementContext
 }
 
 func (c *Conversation) ensureAKE() {
@@ -52,7 +53,7 @@ func (c *Conversation) calcDHSharedSecret() *big.Int {
 }
 
 func (c *Conversation) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
-	verifyData := appendAll(c.ake.ourPublicValue, c.ake.theirPublicValue, &c.ourKey.PublicKey, c.keys.ourKeyID)
+	verifyData := appendAll(c.ake.ourPublicValue, c.ake.theirPublicValue, &c.ourKey.PublicKey, c.ake.keys.ourKeyID)
 
 	mb := sumHMAC(key.m1[:], verifyData)
 	xb, err := c.calcXb(key, mb)
@@ -69,7 +70,7 @@ func appendAll(one, two *big.Int, publicKey *PublicKey, keyID uint32) []byte {
 
 func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	xb := c.ourKey.PublicKey.serialize()
-	xb = appendWord(xb, c.keys.ourKeyID)
+	xb = appendWord(xb, c.ake.keys.ourKeyID)
 
 	sigb, err := c.ourKey.Sign(c.rand(), mb)
 	if err == io.ErrUnexpectedEOF {
@@ -90,7 +91,7 @@ func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 // Bob ---- DH Commit -----------> Alice
 func (c *Conversation) dhCommitMessage() ([]byte, error) {
 	c.initAKE()
-	c.keys.ourKeyID = 0
+	c.ake.keys.ourKeyID = 0
 
 	x, err := c.randMPI(make([]byte, 40))
 	if err != nil {
@@ -146,7 +147,7 @@ func (c *Conversation) serializeDHKey() []byte {
 // Bob ---- Reveal Signature ----> Alice
 func (c *Conversation) revealSigMessage() ([]byte, error) {
 	c.calcAKEKeys(c.calcDHSharedSecret())
-	c.keys.ourKeyID++
+	c.ake.keys.ourKeyID++
 
 	encryptedSig, err := c.generateEncryptedSignature(&c.ake.revealKey)
 	if err != nil {
@@ -166,7 +167,7 @@ func (c *Conversation) revealSigMessage() ([]byte, error) {
 // sigMessage = alice = y
 // Alice -- Signature -----------> Bob
 func (c *Conversation) sigMessage() ([]byte, error) {
-	c.keys.ourKeyID++
+	c.ake.keys.ourKeyID++
 
 	encryptedSig, err := c.generateEncryptedSignature(&c.ake.sigKey)
 	if err != nil {
@@ -334,7 +335,7 @@ func (c *Conversation) processEncryptedSig(encryptedSig []byte, theirMAC []byte,
 		return err
 	}
 
-	c.keys.theirKeyID = keyID
+	c.ake.keys.theirKeyID = keyID
 
 	return nil
 }

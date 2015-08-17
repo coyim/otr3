@@ -12,7 +12,9 @@ func (c *Conversation) generateNewDHKeyPair() error {
 }
 
 func (c *Conversation) akeHasFinished() error {
-	c.ake.wipe()
+	c.keys.wipe()
+	c.keys = c.ake.keys
+	c.ake.wipe(false)
 
 	previousMsgState := c.msgState
 	c.msgState = encrypted
@@ -74,9 +76,7 @@ func (authStateBase) receiveDHCommitMessage(c *Conversation, msg []byte) (authSt
 }
 
 func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
-	//We have engaged in a new AKE so we forget all previous keys
-	c.keys = c.keys.wipeAndKeepRevealKeys()
-	c.ake.wipe()
+	c.ake.wipe(true)
 
 	dhKeyMsg, err := c.dhKeyMessage()
 	if err != nil {
@@ -98,7 +98,7 @@ func (s authStateNone) receiveDHCommitMessage(c *Conversation, msg []byte) (auth
 func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	//As per spec, we forget the old DH-commit (received before we sent the DH-Key)
 	//and use this one, so we forget all the keys
-	c.keys = c.keys.wipeAndKeepRevealKeys()
+	c.ake.keys = c.ake.keys.wipeAndKeepRevealKeys()
 	c.ake.wipeGX()
 
 	if err := c.processDHCommit(msg); err != nil {
@@ -163,10 +163,8 @@ func (s authStateAwaitingDHKey) receiveDHKeyMessage(c *Conversation, msg []byte)
 		return s, nil, err
 	}
 
-	//Why do we change keyManagementContext during the AKE if it is supposed
-	//to be used only after the AKE has finished?
-	c.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
-	c.keys.setOurCurrentDHKeys(c.ake.secretExponent, c.ake.ourPublicValue)
+	c.ake.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
+	c.ake.keys.setOurCurrentDHKeys(c.ake.secretExponent, c.ake.ourPublicValue)
 
 	c.sentRevealSig = true
 
@@ -208,10 +206,8 @@ func (s authStateAwaitingRevealSig) receiveRevealSigMessage(c *Conversation, msg
 		return s, nil, err
 	}
 
-	//Why do we change keyManagementContext during the AKE if it is supposed
-	//to be used only after the AKE has finished?
-	c.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
-	c.keys.setOurCurrentDHKeys(c.ake.secretExponent, c.ake.ourPublicValue)
+	c.ake.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
+	c.ake.keys.setOurCurrentDHKeys(c.ake.secretExponent, c.ake.ourPublicValue)
 
 	c.sentRevealSig = false
 
@@ -246,7 +242,7 @@ func (s authStateAwaitingSig) receiveSigMessage(c *Conversation, msg []byte) (au
 	}
 
 	//gy was stored when we receive DH-Key
-	c.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
+	c.ake.keys.setTheirCurrentDHPubKey(c.ake.theirPublicValue)
 
 	return authStateNone{}, nil, c.akeHasFinished()
 }

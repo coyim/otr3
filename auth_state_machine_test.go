@@ -176,7 +176,7 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 	assertDeepEquals(t, c.ake.sigKey.m2[:], expectedM2)
 }
 
-func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeysAndIncreaseCounter(t *testing.T) {
+func Test_receiveDHKey_AtAwaitingDHKey_storesOursAndTheirDHKeys(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
 	ourDHCommitAKE.dhCommitMessage()
 
@@ -185,14 +185,12 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresOursAndTheirDHKeysAndIncreaseCounter
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, fixtureDHKeyMsg(otrV3{})[otrv3HeaderLen:])
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedGY())
-	assertDeepEquals(t, c.keys.ourCurrentDHKeys.pub, fixedGX())
-	assertDeepEquals(t, c.keys.ourCurrentDHKeys.priv, fixedX())
+	assertDeepEquals(t, c.ake.keys.theirCurrentDHPubKey, fixedGY())
+	assertDeepEquals(t, c.ake.keys.ourCurrentDHKeys.pub, fixedGX())
+	assertDeepEquals(t, c.ake.keys.ourCurrentDHKeys.priv, fixedX())
 
-	ctr := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID, c.keys.theirKeyID)
-	assertEquals(t, ctr.ourCounter, uint64(1))
-	assertEquals(t, c.keys.ourKeyID, uint32(1))
-	assertEquals(t, c.keys.theirKeyID, uint32(0))
+	assertEquals(t, c.ake.keys.ourKeyID, uint32(1))
+	assertEquals(t, c.ake.keys.theirKeyID, uint32(0))
 }
 
 func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSigMsg(t *testing.T) {
@@ -250,7 +248,7 @@ func Test_receiveRevealSig_TransitionsFromAwaitingRevealSigToNoneOnSuccess(t *te
 	assertEquals(t, c.sentRevealSig, false)
 }
 
-func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeysAndIncreaseCounter(t *testing.T) {
+func Test_receiveRevealSig_AtAwaitingRevealSig_savesAKEKeysToConversationAndGenerateANewPairOfKeys(t *testing.T) {
 	revealSignMsg := fixtureRevealSigMsgBody(otrV2{})
 
 	c := aliceContextAtAwaitingRevealSig()
@@ -263,8 +261,9 @@ func Test_receiveRevealSig_AtAwaitingRevealSigStoresOursAndTheirDHKeysAndIncreas
 	assertDeepEquals(t, c.keys.ourPreviousDHKeys.pub, fixedGY())
 	assertDeepEquals(t, c.keys.ourPreviousDHKeys.priv, fixedY())
 
-	ctr := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID-1, c.keys.theirKeyID)
-	assertEquals(t, ctr.ourCounter, uint64(1))
+	//should wipe
+	assertDeepEquals(t, c.ake, &ake{state: c.ake.state})
+
 	assertEquals(t, c.keys.ourKeyID, uint32(2))
 	assertEquals(t, c.keys.theirKeyID, uint32(1))
 }

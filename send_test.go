@@ -2,36 +2,16 @@ package otr3
 
 import (
 	"bytes"
-	"math/big"
 	"testing"
 )
 
-func Test_sendDHCommit_resetsTheKeyManagementContext(t *testing.T) {
+func Test_sendDHCommit_resetsAKEKeyContext(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	c.keys.ourKeyID = 2
-	c.keys.theirKeyID = 3
-	c.keys.ourCurrentDHKeys = dhKeyPair{
-		priv: big.NewInt(1),
-		pub:  big.NewInt(2),
-	}
-	c.keys.ourPreviousDHKeys = dhKeyPair{
-		priv: big.NewInt(3),
-		pub:  big.NewInt(4),
-	}
-	c.keys.theirCurrentDHPubKey = big.NewInt(5)
-	c.keys.theirPreviousDHPubKey = big.NewInt(6)
-	c.keys.macKeyHistory.addKeys(2, 3, macKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4})
 
-	k1 := macKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6, 7, 8}
-	k2 := macKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 7, 6, 5}
-	c.keys.oldMACKeys = []macKey{k1, k2}
-
-	expectedKeyContext := keyManagementContext{
-		oldMACKeys: []macKey{k1, k2},
-	}
 	_, err := c.sendDHCommit()
-	assertEquals(t, err, nil)
-	assertDeepEquals(t, c.keys, expectedKeyContext)
+
+	assertNil(t, err)
+	assertDeepEquals(t, c.ake.keys, keyManagementContext{})
 }
 
 func Test_Send_signalsMessageEventIfTryingToSendWithoutEncryptedChannel(t *testing.T) {

@@ -211,3 +211,73 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	assertDeepEquals(t, plain, MessagePlaintext(msg))
 	assertNil(t, ret)
 }
+
+func Test_startingAKE_shouldNotBreakTheEncryptedChannel(t *testing.T) {
+	var hello = []byte("hello")
+	var toSend []ValidMessage
+	var err error
+
+	alice := &Conversation{Rand: rand.Reader}
+	alice.Policies = policies(allowV2 | allowV3)
+	alice.ourKey = alicePrivateKey
+
+	bob := &Conversation{Rand: rand.Reader}
+	bob.Policies = policies(allowV2 | allowV3)
+	bob.ourKey = bobPrivateKey
+
+	//Alice send Bob queryMsg
+	_, toSend, err = bob.Receive(alice.QueryMessage())
+	assertNil(t, err)
+	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
+	assertEquals(t, bob.version, otrV3{})
+
+	//Bob send Alice DHCommit
+	_, toSend, err = alice.Receive(toSend[0])
+	assertEquals(t, alice.ake.state, authStateAwaitingRevealSig{})
+	assertNil(t, err)
+
+	//Alice send Bob DHKey
+	_, toSend, err = bob.Receive(toSend[0])
+	dec, _ := bob.decode(encodedMessage(toSend[0]))
+	assertNil(t, err)
+	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: dec})
+
+	//Bob send Alice RevealSig
+	_, toSend, err = alice.Receive(toSend[0])
+	assertNil(t, err)
+	assertEquals(t, alice.ake.state, authStateNone{})
+
+	//Alice send Bob Sig
+	_, toSend, err = bob.Receive(toSend[0])
+	assertNil(t, err)
+	assertEquals(t, bob.ake.state, authStateNone{})
+
+	// Alice sends a message to bob
+	m, err := alice.Send(hello)
+
+	bob.updateLastSent()
+	plain, ret, err := bob.Receive(m[0])
+
+	assertNil(t, err)
+	assertDeepEquals(t, plain, MessagePlaintext(hello))
+	assertNil(t, ret)
+
+	//
+	// Restarts the AKE
+	//
+
+	//Alice send Bob queryMsg
+	_, toSend, err = bob.Receive(alice.QueryMessage())
+	assertNil(t, err)
+	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
+	assertEquals(t, bob.version, otrV3{})
+
+	//Alice sends Bob a data message
+	m, err = alice.Send(hello)
+	assertNil(t, err)
+
+	plain, ret, err = bob.Receive(m[0])
+	assertNil(t, err)
+	assertDeepEquals(t, plain, MessagePlaintext(hello))
+	assertNil(t, ret)
+}

@@ -132,11 +132,11 @@ func aliceContextAfterAKE() *Conversation {
 
 func bobContextAtAwaitingSig() *Conversation {
 	c := bobContextAtReceiveDHKey()
-	c.keys.ourKeyID = 1
-	c.keys.ourCurrentDHKeys.priv = fixedX()
-	c.keys.ourCurrentDHKeys.pub = fixedGX()
-	c.keys.theirKeyID = 1
-	c.keys.theirCurrentDHPubKey = fixedGY()
+	c.ake.keys.ourKeyID = 1
+	c.ake.keys.ourCurrentDHKeys.priv = fixedX()
+	c.ake.keys.ourCurrentDHKeys.pub = fixedGX()
+	c.ake.keys.theirKeyID = 1
+	c.ake.keys.theirCurrentDHPubKey = fixedGY()
 
 	c.version = otrV2{}
 	c.Policies.add(allowV2)
