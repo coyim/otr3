@@ -86,7 +86,7 @@ func nextAllWhite(data []byte) (allwhite []byte, rest []byte, hasAllWhite bool) 
 }
 
 func (c *Conversation) startAKEFromWhitespaceTag(versions int) (toSend []messageWithHeader, err error) {
-	if err = c.resolveVersion(versions); err != nil {
+	if err = c.commitToVersionFrom(versions); err != nil {
 		return
 	}
 

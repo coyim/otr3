@@ -62,8 +62,8 @@ func (c *Conversation) parseMessageHeader(msg messageWithHeader) ([]byte, []byte
 }
 
 func (c *Conversation) resolveVersionFromFragment(fragment []byte) error {
-	messageVersion := versionFromFragment(fragment)
-	return c.resolveVersion(1 << messageVersion)
+	versions := 1 << versionFromFragment(fragment)
+	return c.commitToVersionFrom(versions)
 }
 
 func (c *Conversation) parseFragmentPrefix(data []byte) ([]byte, bool, bool) {

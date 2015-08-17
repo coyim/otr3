@@ -54,7 +54,8 @@ func (c *Conversation) checkVersion(message []byte) (err error) {
 		return errInvalidOTRMessage
 	}
 
-	if err := c.resolveVersion(1 << messageVersion); err != nil {
+	versions := 1 << messageVersion
+	if err := c.commitToVersionFrom(versions); err != nil {
 		return err
 	}
 
@@ -65,7 +66,8 @@ func (c *Conversation) checkVersion(message []byte) (err error) {
 	return nil
 }
 
-func (c *Conversation) resolveVersion(versions int) error {
+// Based on the policy, commit to a version given a set of versions offered by the other peer unless the conversation has already commited to a version.
+func (c *Conversation) commitToVersionFrom(versions int) error {
 	if c.version != nil {
 		return nil
 	}

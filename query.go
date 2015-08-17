@@ -48,7 +48,7 @@ func extractVersionsFromQueryMessage(p policies, msg ValidMessage) int {
 
 func (c *Conversation) receiveQueryMessage(msg ValidMessage) ([]messageWithHeader, error) {
 	versions := extractVersionsFromQueryMessage(c.Policies, msg)
-	err := c.resolveVersion(versions)
+	err := c.commitToVersionFrom(versions)
 	if err != nil {
 		return nil, err
 	}
