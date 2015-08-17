@@ -104,7 +104,7 @@ func Test_receive_failsWhenReceivesV2WhitespaceTagIfV2IsNotInThePolicy(t *testin
 
 	_, toSend, err := c.Receive(msg)
 
-	assertEquals(t, err, errInvalidVersion)
+	assertEquals(t, err, errUnsupportedOTRVersion)
 	assertNil(t, toSend)
 }
 
@@ -151,7 +151,7 @@ func Test_receive_failsWhenReceivesV3WhitespaceTagIfV3IsNotInThePolicy(t *testin
 	msg := genWhitespaceTag(policies(allowV3))
 	_, toSend, err := c.Receive(msg)
 
-	assertEquals(t, err, errInvalidVersion)
+	assertEquals(t, err, errUnsupportedOTRVersion)
 	assertNil(t, toSend)
 }
 

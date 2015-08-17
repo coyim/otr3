@@ -72,14 +72,24 @@ func (c *Conversation) commitToVersionFrom(versions int) error {
 		return nil
 	}
 
+	var version otrVersion
+	var toCheck policy
+
 	switch {
 	case c.Policies.has(allowV3) && versions&(1<<3) > 0:
-		c.version = otrV3{}
+		version = otrV3{}
+		toCheck = allowV3
 	case c.Policies.has(allowV2) && versions&(1<<2) > 0:
-		c.version = otrV2{}
+		version = otrV2{}
+		toCheck = allowV2
 	default:
+		return errUnsupportedOTRVersion
+	}
+
+	if !c.Policies.has(toCheck) {
 		return errInvalidVersion
 	}
 
+	c.version = version
 	return nil
 }

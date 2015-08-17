@@ -68,7 +68,7 @@ func Test_receiveQueryMessage_signalsMessageEventOnFailure(t *testing.T) {
 func Test_receiveQueryMessage_returnsErrorIfNoCompatibleVersionCouldBeFound(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV3)}
 	_, err := c.receiveQueryMessage([]byte("?OTRv?2?"))
-	assertEquals(t, err, errInvalidVersion)
+	assertEquals(t, err, errUnsupportedOTRVersion)
 }
 
 func Test_receiveQueryMessage_returnsErrorIfDhCommitMessageGeneratesError(t *testing.T) {

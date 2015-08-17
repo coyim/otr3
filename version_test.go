@@ -41,7 +41,7 @@ func Test_checkVersion_setsTheConversationVersionIfWeHaveTheCorrectPolicy(t *tes
 func Test_checkVersion_returnsTheErrorFromNewOtrVersion(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV2)}
 	e := c.checkVersion([]byte{0x00, 0x03})
-	assertEquals(t, e, errInvalidVersion)
+	assertEquals(t, e, errUnsupportedOTRVersion)
 }
 
 func Test_checkVersion_doesNotSetConversationVersionIfOneIsAlreadySet(t *testing.T) {
