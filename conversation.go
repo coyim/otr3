@@ -61,13 +61,14 @@ func (c *Conversation) parseMessageHeader(msg messageWithHeader) ([]byte, []byte
 	return c.version.parseMessageHeader(c, msg)
 }
 
+func (c *Conversation) resolveVersionFromFragment(fragment []byte) error {
+	messageVersion := versionFromFragment(fragment)
+	return c.resolveVersion(1 << messageVersion)
+}
+
 func (c *Conversation) parseFragmentPrefix(data []byte) ([]byte, bool, bool) {
-	if c.version == nil {
-		var err error
-		messageVersion := versionFromFragment(data)
-		if c.version, err = newOtrVersion(messageVersion, c.Policies); err != nil {
-			return data, true, false
-		}
+	if err := c.resolveVersionFromFragment(data); err != nil {
+		return data, true, false
 	}
 
 	return c.version.parseFragmentPrefix(c, data)

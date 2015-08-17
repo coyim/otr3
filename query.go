@@ -50,7 +50,7 @@ func (c *Conversation) receiveQueryMessage(msg ValidMessage) ([]messageWithHeade
 	versions := extractVersionsFromQueryMessage(c.Policies, msg)
 	err := c.resolveVersion(versions)
 	if err != nil {
-		return nil, errInvalidVersion
+		return nil, err
 	}
 
 	ts, err := c.sendDHCommit()

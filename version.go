@@ -54,10 +54,8 @@ func (c *Conversation) checkVersion(message []byte) (err error) {
 		return errInvalidOTRMessage
 	}
 
-	if c.version == nil {
-		if c.version, err = newOtrVersion(messageVersion, c.Policies); err != nil {
-			return err
-		}
+	if err := c.resolveVersion(1 << messageVersion); err != nil {
+		return err
 	}
 
 	if c.version.protocolVersion() != messageVersion {
@@ -68,6 +66,10 @@ func (c *Conversation) checkVersion(message []byte) (err error) {
 }
 
 func (c *Conversation) resolveVersion(versions int) error {
+	if c.version != nil {
+		return nil
+	}
+
 	switch {
 	case c.Policies.has(allowV3) && versions&(1<<3) > 0:
 		c.version = otrV3{}
