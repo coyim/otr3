@@ -86,13 +86,7 @@ func nextAllWhite(data []byte) (allwhite []byte, rest []byte, hasAllWhite bool) 
 }
 
 func (c *Conversation) startAKEFromWhitespaceTag(versions int) (toSend []messageWithHeader, err error) {
-	switch {
-	case c.Policies.has(allowV3) && versions&(1<<3) > 0:
-		c.version = otrV3{}
-	case c.Policies.has(allowV2) && versions&(1<<2) > 0:
-		c.version = otrV2{}
-	default:
-		err = errInvalidVersion
+	if err = c.resolveVersion(versions); err != nil {
 		return
 	}
 

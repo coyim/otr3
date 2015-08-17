@@ -66,3 +66,16 @@ func (c *Conversation) checkVersion(message []byte) (err error) {
 
 	return nil
 }
+
+func (c *Conversation) resolveVersion(versions int) error {
+	switch {
+	case c.Policies.has(allowV3) && versions&(1<<3) > 0:
+		c.version = otrV3{}
+	case c.Policies.has(allowV2) && versions&(1<<2) > 0:
+		c.version = otrV2{}
+	default:
+		return errInvalidVersion
+	}
+
+	return nil
+}

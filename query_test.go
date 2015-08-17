@@ -26,6 +26,18 @@ func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
 	assertDeepEquals(t, dhMsgVersion(msg[0]), uint16(2))
 }
 
+func Test_receiveQueryMessageV2V3_sendDHCommitv3WhenV2AndV3AreAllowed(t *testing.T) {
+	queryMsg := []byte("?OTRv?23?")
+
+	c := &Conversation{Policies: policies(allowV2 | allowV3)}
+	msg, err := c.receiveQueryMessage(queryMsg)
+
+	assertNil(t, err)
+	assertEquals(t, c.ake.state, authStateAwaitingDHKey{})
+	assertDeepEquals(t, dhMsgType(msg[0]), msgTypeDHCommit)
+	assertDeepEquals(t, dhMsgVersion(msg[0]), uint16(3))
+}
+
 func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 	fixture := fixtureConversation()
 	fixture.dhCommitMessage()
@@ -85,29 +97,26 @@ func Test_parseOTRQueryMessage(t *testing.T) {
 	}
 }
 
-func Test_acceptOTRRequest_returnsNilForUnsupportedVersions(t *testing.T) {
+func Test_extractVersionsFromQueryMessage_returnsNilForUnsupportedVersions(t *testing.T) {
 	p := policies(0)
 	msg := []byte("?OTR?")
-	v, ok := acceptOTRRequest(p, msg)
+	versions := extractVersionsFromQueryMessage(p, msg)
 
-	assertEquals(t, v, nil)
-	assertEquals(t, ok, false)
+	assertEquals(t, versions, 0)
 }
 
-func Test_acceptOTRRequest_acceptsOTRV3IfHasAllowV3Policy(t *testing.T) {
+func Test_extractVersionsFromQueryMessage_acceptsBothV2AndV3IfThePolicyAllows(t *testing.T) {
 	msg := []byte("?OTRv32?")
 	p := policies(allowV2 | allowV3)
-	v, ok := acceptOTRRequest(p, msg)
+	versions := extractVersionsFromQueryMessage(p, msg)
 
-	assertEquals(t, v, otrV3{})
-	assertEquals(t, ok, true)
+	assertEquals(t, versions, 1<<2|1<<3)
 }
 
-func Test_acceptOTRRequest_acceptsOTRV2IfHasOnlyAllowV2Policy(t *testing.T) {
+func Test_extractVersionsFromQueryMessage_acceptsOTRV2IfHasOnlyAllowV2Policy(t *testing.T) {
 	msg := []byte("?OTRv32?")
 	p := policies(allowV2)
-	v, ok := acceptOTRRequest(p, msg)
+	versions := extractVersionsFromQueryMessage(p, msg)
 
-	assertEquals(t, v, otrV2{})
-	assertEquals(t, ok, true)
+	assertEquals(t, versions, 1<<2)
 }

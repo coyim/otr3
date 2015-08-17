@@ -32,27 +32,26 @@ func parseOTRQueryMessage(msg ValidMessage) []int {
 	return ret
 }
 
-func acceptOTRRequest(p policies, msg ValidMessage) (otrVersion, bool) {
-	versions := parseOTRQueryMessage(msg)
-
-	for _, v := range versions {
+func extractVersionsFromQueryMessage(p policies, msg ValidMessage) int {
+	versions := 0
+	for _, v := range parseOTRQueryMessage(msg) {
 		switch {
 		case v == 3 && p.has(allowV3):
-			return otrV3{}, true
+			versions |= (1 << 3)
 		case v == 2 && p.has(allowV2):
-			return otrV2{}, true
+			versions |= (1 << 2)
 		}
 	}
 
-	return nil, false
+	return versions
 }
 
 func (c *Conversation) receiveQueryMessage(msg ValidMessage) ([]messageWithHeader, error) {
-	v, ok := acceptOTRRequest(c.Policies, msg)
-	if !ok {
+	versions := extractVersionsFromQueryMessage(c.Policies, msg)
+	err := c.resolveVersion(versions)
+	if err != nil {
 		return nil, errInvalidVersion
 	}
-	c.version = v
 
 	ts, err := c.sendDHCommit()
 	return c.potentialAuthError(compactMessagesWithHeader(ts), err)
