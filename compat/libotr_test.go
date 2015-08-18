@@ -1,6 +1,7 @@
-package compat
+// +build linux darwin
+// +build libotr2
 
-// +build LIBOTR2-v3.0.0
+package compat
 
 import (
 	"bufio"

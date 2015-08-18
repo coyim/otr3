@@ -3,4 +3,4 @@
 set -x
 
 go get github.com/golang/lint/golint
-go get -d golang.org/x/tools/cmd/cover
+go get golang.org/x/tools/cmd/cover

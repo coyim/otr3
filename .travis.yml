@@ -2,3 +2,19 @@ language: go
 
 go:
   - tip
+  - 1.5
+  - 1.4.2
+
+addons:
+  apt:
+    packages:
+      - automake
+      - libtool
+      - libgcrypt11-dev
+      - libgpg-error-dev
+
+install: make deps
+script: make ci
+
+cache:
+  apt:

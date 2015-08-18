@@ -1,0 +1,6 @@
+#/bin/bash
+
+set -xeu
+
+brew update
+brew install automake libtool libgcrypt libgpg-error
