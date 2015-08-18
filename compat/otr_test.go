@@ -5,12 +5,9 @@
 package compat
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"os"
-	"os/exec"
 	"testing"
 )
 
@@ -200,77 +197,6 @@ func TestConversation(t *testing.T) {
 			}
 			if !bytes.Equal(out, testMessage) {
 				t.Errorf("Message corrupted: got %x, want %x", out, testMessage)
-			}
-		}
-	}
-}
-
-func TestAgainstLibOTR(t *testing.T) {
-	// This test requires libotr_test_helper.c to be built as /tmp/a.out.
-	// If enabled, this tests runs forever performing OTR handshakes in a
-	// loop.
-	return
-
-	alicePrivateKey, _ := hex.DecodeString(alicePrivateKeyHex)
-	var alice Conversation
-	alice.PrivateKey = new(PrivateKey)
-	alice.PrivateKey.Parse(alicePrivateKey)
-
-	cmd := exec.Command("/tmp/a.out")
-	cmd.Stderr = os.Stderr
-
-	out, err := cmd.StdinPipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer out.Close()
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	in := bufio.NewReader(stdout)
-
-	if err := cmd.Start(); err != nil {
-		t.Fatal(err)
-	}
-
-	out.Write([]byte(QueryMessage))
-	out.Write([]byte("\n"))
-	var expectedText = []byte("test message")
-
-	for {
-		line, isPrefix, err := in.ReadLine()
-		if isPrefix {
-			t.Fatal("line from subprocess too long")
-		}
-		if err != nil {
-			t.Fatal(err)
-		}
-		text, encrypted, change, alicesMessage, err := alice.Receive(line)
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, msg := range alicesMessage {
-			out.Write(msg)
-			out.Write([]byte("\n"))
-		}
-		if change == NewKeys {
-			alicesMessage, err := alice.Send([]byte("Go -> libotr test message"))
-			if err != nil {
-				t.Errorf("error sending message: %s", err.Error())
-			} else {
-				for _, msg := range alicesMessage {
-					out.Write(msg)
-					out.Write([]byte("\n"))
-				}
-			}
-		}
-		if len(text) > 0 {
-			if !bytes.Equal(text, expectedText) {
-				t.Errorf("expected %x, but got %x", expectedText, text)
-			}
-			if !encrypted {
-				t.Error("message wasn't encrypted")
 			}
 		}
 	}

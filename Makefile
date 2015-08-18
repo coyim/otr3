@@ -6,6 +6,9 @@ lint:
 test:
 	go test -v ./... -cover
 
+test-slow:
+	make -C ./compat libotr-compat
+
 deps:
 	./deps.sh
 
