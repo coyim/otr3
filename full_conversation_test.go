@@ -50,12 +50,10 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
 	alice.ourKey = alicePrivateKey
 	alice.Policies = policies(allowV2 | allowV3)
-	alice.theirKey = &bobPrivateKey.PublicKey
 
 	bob := &Conversation{Rand: rand.Reader}
 	bob.ourKey = bobPrivateKey
 	bob.Policies = policies(allowV2 | allowV3)
-	bob.theirKey = &alicePrivateKey.PublicKey
 
 	var toSend []ValidMessage
 	var err error
@@ -106,12 +104,10 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
 	alice.ourKey = alicePrivateKey
 	alice.Policies = policies(allowV3)
-	alice.theirKey = &bobPrivateKey.PublicKey
 
 	bob := &Conversation{Rand: rand.Reader}
 	bob.ourKey = bobPrivateKey
 	bob.Policies = policies(allowV3)
-	bob.theirKey = &alicePrivateKey.PublicKey
 
 	var toSend []ValidMessage
 	var err error

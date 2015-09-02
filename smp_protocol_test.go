@@ -57,12 +57,10 @@ func Test_SMP_Full(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
 	alice.ourKey = alicePrivateKey
 	alice.Policies = policies(allowV3)
-	alice.theirKey = &bobPrivateKey.PublicKey
 
 	bob := &Conversation{Rand: rand.Reader}
 	bob.ourKey = bobPrivateKey
 	bob.Policies = policies(allowV3)
-	bob.theirKey = &alicePrivateKey.PublicKey
 
 	var err error
 	var aliceMessages []ValidMessage
