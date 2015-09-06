@@ -16,7 +16,7 @@ type ValidMessage []byte
 // Bytes will turn a slice of valid messages into a slice of byte slices
 func Bytes(m []ValidMessage) [][]byte {
 	ret := make([][]byte, len(m))
-	//copy because we dont want to hold references to m's fragments
+	//copy because we don't want to hold references to m's fragments
 	for i, f := range m {
 		ret[i] = make([]byte, len(f))
 		copy(ret[i], []byte(f))

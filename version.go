@@ -66,7 +66,7 @@ func (c *Conversation) checkVersion(message []byte) (err error) {
 	return nil
 }
 
-// Based on the policy, commit to a version given a set of versions offered by the other peer unless the conversation has already commited to a version.
+// Based on the policy, commit to a version given a set of versions offered by the other peer unless the conversation has already committed to a version.
 func (c *Conversation) commitToVersionFrom(versions int) error {
 	if c.version != nil {
 		return nil

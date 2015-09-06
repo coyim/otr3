@@ -14,7 +14,7 @@ var standardErrorOutput io.Writer = os.Stderr
 
 // SetDebug sets the debug mode for this conversation.
 // If debug mode is enabled, calls to Send with a message equals to "?OTR!"
-// will dump debug informaton about the current conversation state to stderr
+// will dump debug information about the current conversation state to stderr
 func (c *Conversation) SetDebug(d bool) {
 	c.debug = d
 }

@@ -25,7 +25,7 @@ func Test_extractWhitespaceTag_removesTagFromMessage(t *testing.T) {
 
 func Test_processWhitespaceTag_shouldNotStartAKEIfPolicyDoesNotAllow(t *testing.T) {
 	c := &Conversation{}
-	// the policy explicity is missing whitespaceStartAKE
+	// the policy explicitly is missing whitespaceStartAKE
 	c.Policies = policies(allowV2)
 	c.ensureAKE()
 	assertEquals(t, c.ake.state, authStateNone{})
