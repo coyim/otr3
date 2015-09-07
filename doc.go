@@ -23,17 +23,18 @@
 //  c.SetKeys(priv, nil)
 //
 //  // set the Policies.
+//  c.Policies.RequireEncryption()
 //  c.Policies.AllowV2()
 //  c.Policies.AllowV3()
-//
-//  // You can also setup a debug mode
-//  c.SetDebug(true)
 //  c.Policies.SendWhitespaceTag()
 //  c.Policies.WhitespaceStartAKE()
 //
+//  // You can also setup a debug mode
+//  c.SetDebug(true)
+//
 //  // Use Send and Receive for messages exchange
-//  toSend, err := c.Send([]byte{"hello"})
-//  toSend, err := c.Receive(toSend)
+//  toSend, err := c.Send(otr3.ValidMessage("hello"))
+//  plain, toSend, err := c.Receive(toSend)
 //
 //  // Use Authenticate to start a SMP process
 //  toSend, err := c.StartAuthenticate([]byte{"My pet's name?"},[]byte{"Gopher"})
