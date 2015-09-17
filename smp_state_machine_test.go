@@ -193,6 +193,20 @@ func Test_smpStateExpect3_goToExpectState1WhenReceivesSmpMessage3(t *testing.T) 
 	assertEquals(t, nextState, smpStateExpect1{})
 }
 
+func Test_smpStateExpect3_wipesSMPWhenReceivesSmpMessage3(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.smp.s2 = fixtureSmp2()
+	msg := fixtureMessage3()
+
+	nextState, _, _ := smpStateExpect3{}.receiveMessage3(c, msg)
+
+	assertEquals(t, nextState, smpStateExpect1{})
+	assertNil(t, c.smp.secret)
+	assertNil(t, c.smp.s1)
+	assertNil(t, c.smp.s2)
+	assertNil(t, c.smp.s3)
+}
+
 func Test_smpStateExpect3_willSendAnSMPNotificationOnProtocolSuccess(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
@@ -238,6 +252,21 @@ func Test_smpStateExpect4_willSendAnSMPNotificationOnProtocolSuccess(t *testing.
 	c.expectSMPEvent(t, func() {
 		smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
 	}, SMPEventSuccess, 100, "")
+}
+
+func Test_smpStateExpect4_wipesSMPWhenReceivesSmpMessage4(t *testing.T) {
+	c := newConversation(otrV3{}, fixtureRand())
+	c.smp.s1 = fixtureSmp1()
+	c.smp.s3 = fixtureSmp3()
+	msg := fixtureMessage4()
+
+	nextState, _, _ := smpStateExpect4{}.receiveMessage4(c, msg)
+
+	assertEquals(t, nextState, smpStateExpect1{})
+	assertNil(t, c.smp.secret)
+	assertNil(t, c.smp.s1)
+	assertNil(t, c.smp.s2)
+	assertNil(t, c.smp.s3)
 }
 
 func Test_smpStateExpect4_returnsSmpMessageAbortIfReceivesUnexpectedMessage(t *testing.T) {

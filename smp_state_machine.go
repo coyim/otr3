@@ -168,6 +168,7 @@ func (smpStateExpect3) receiveMessage3(c *Conversation, m smp3Message) (smpState
 		return c.abortStateMachineAndNotifyCheated()
 	}
 
+	c.smp.wipe()
 	return smpStateExpect1{}, ret.msg, nil
 }
 
@@ -184,6 +185,7 @@ func (smpStateExpect4) receiveMessage4(c *Conversation, m smp4Message) (smpState
 	}
 	c.smpEvent(SMPEventSuccess, 100)
 
+	c.smp.wipe()
 	return smpStateExpect1{}, nil, nil
 }
 
