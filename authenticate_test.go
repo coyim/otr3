@@ -62,6 +62,7 @@ func Test_StartAuthenticate_generatesAndSetsTheFirstMessageOnTheConversation(t *
 
 	assertNotNil(t, c.smp.s1)
 	assertEquals(t, c.smp.s1.msg.hasQuestion, false)
+	assertEquals(t, c.smp.s1.msg.tlv().tlvType, tlvTypeSMP1)
 }
 
 func Test_StartAuthenticate_generatesAn1QMessageIfAQuestionIsGiven(t *testing.T) {
@@ -74,6 +75,7 @@ func Test_StartAuthenticate_generatesAn1QMessageIfAQuestionIsGiven(t *testing.T)
 
 	c.StartAuthenticate("Where did we meet?", []byte("hello world"))
 
+	assertNotNil(t, c.smp.s1)
 	assertEquals(t, c.smp.s1.msg.hasQuestion, true)
 	assertEquals(t, c.smp.s1.msg.question, "Where did we meet?")
 	assertEquals(t, c.smp.s1.msg.tlv().tlvType, tlvTypeSMP1WithQuestion)
