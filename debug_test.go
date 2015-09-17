@@ -3,6 +3,7 @@ package otr3
 import (
 	"bufio"
 	"bytes"
+	"crypto/rand"
 	"testing"
 )
 
@@ -145,4 +146,201 @@ func Test_setDebug_setsTheDebugFlag(t *testing.T) {
 	assertTrue(t, c.debug)
 	c.SetDebug(false)
 	assertFalse(t, c.debug)
+}
+
+func Test_SMP_CompleteDebug(t *testing.T) {
+	alice := &Conversation{Rand: rand.Reader}
+	alice.ourKey = alicePrivateKey
+	alice.Policies = policies(allowV3)
+
+	bob := &Conversation{Rand: rand.Reader}
+	bob.ourKey = bobPrivateKey
+	bob.Policies = policies(allowV3)
+
+	var err error
+	var aliceMessages []ValidMessage
+	var bobMessages []ValidMessage
+
+	aliceMessages = append(bobMessages, alice.QueryMessage())
+
+	for len(aliceMessages)+len(bobMessages) > 0 {
+		bobMessages = nil
+		for _, m := range aliceMessages {
+			_, bobMessages, err = bob.Receive(m)
+			assertNil(t, err)
+		}
+
+		aliceMessages = nil
+		for _, m := range bobMessages {
+			_, aliceMessages, err = alice.Receive(m)
+			assertNil(t, err)
+		}
+	}
+
+	assertEquals(t, bob.IsEncrypted(), true)
+	assertEquals(t, alice.IsEncrypted(), true)
+
+	bt := bytes.NewBuffer(make([]byte, 0, 200))
+
+	// Should not they all be "Next expected: 0 (EXPECT1)" ?
+	// The spec says: This is the default state when SMP has not yet begun
+	// This is probably a consequence of needing ensureSMP() to initialize
+
+	bt.Reset()
+	alice.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Received_Q: 0
+`)
+
+	bt.Reset()
+	bob.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Received_Q: 0
+`)
+
+	bobMessages, err = bob.StartAuthenticate("", []byte("secret"))
+	assertNil(t, err)
+	assertEquals(t, bob.smp.state, smpStateExpect2{})
+
+	bt.Reset()
+	bob.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 2 (EXPECT2)
+    Received_Q: 0
+`)
+
+	_, aliceMessages, err = alice.Receive(bobMessages[0])
+	assertNil(t, err)
+
+	// this is an internal state
+	_, ok := alice.smp.state.(smpStateWaitingForSecret)
+	assertEquals(t, ok, true)
+
+	bt.Reset()
+	alice.dumpSMP(bufio.NewWriter(bt))
+
+	// This feels wrong.
+	// I read "Alice is expecting a SMP1Q" which is not true because she has already received a SMP1Q
+	// BTW, libotr otrl_sm_dump() does not have it
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 1 (EXPECT1_WQ)
+    Received_Q: 0
+`)
+
+	aliceMessages, err = alice.ProvideAuthenticationSecret([]byte("secret"))
+	assertNil(t, err)
+	assertEquals(t, alice.smp.state, smpStateExpect3{})
+
+	bt.Reset()
+	alice.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 3 (EXPECT3)
+    Received_Q: 0
+`)
+
+	_, bobMessages, err = bob.Receive(aliceMessages[0])
+	assertNil(t, err)
+	assertEquals(t, bob.smp.state, smpStateExpect4{})
+
+	bt.Reset()
+	bob.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 4 (EXPECT4)
+    Received_Q: 0
+`)
+
+	_, aliceMessages, err = alice.Receive(bobMessages[0])
+	assertNil(t, err)
+	assertEquals(t, alice.smp.state, smpStateExpect1{})
+
+	bt.Reset()
+	alice.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 0 (EXPECT1)
+    Received_Q: 0
+`)
+
+	_, bobMessages, err = bob.Receive(aliceMessages[0])
+	assertNil(t, err)
+	assertEquals(t, bob.smp.state, smpStateExpect1{})
+
+	bt.Reset()
+	alice.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 0 (EXPECT1)
+    Received_Q: 0
+`)
+
+	bobMessages, err = bob.StartAuthenticate("What is the secret?", []byte("secret"))
+	assertNil(t, err)
+	assertEquals(t, bob.smp.state, smpStateExpect2{})
+
+	bt.Reset()
+	bob.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 2 (EXPECT2)
+    Received_Q: 0
+`)
+
+	_, aliceMessages, err = alice.Receive(bobMessages[0])
+	assertNil(t, err)
+
+	// this is an internal state
+	_, ok = alice.smp.state.(smpStateWaitingForSecret)
+	assertEquals(t, ok, true)
+
+	bt.Reset()
+	alice.dumpSMP(bufio.NewWriter(bt))
+
+	// This feels wrong.
+	// I read "Alice is expecting a SMP1Q" which is not true because she has already received a SMP1Q
+	// BTW, libotr otrl_sm_dump() does not have it
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 1 (EXPECT1_WQ)
+    Received_Q: 1
+`)
+
+	aliceMessages, err = alice.ProvideAuthenticationSecret([]byte("secret"))
+	assertNil(t, err)
+	assertEquals(t, alice.smp.state, smpStateExpect3{})
+
+	bt.Reset()
+	alice.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 3 (EXPECT3)
+    Received_Q: 1
+`)
+
+	_, bobMessages, err = bob.Receive(aliceMessages[0])
+	assertNil(t, err)
+	assertEquals(t, bob.smp.state, smpStateExpect4{})
+
+	bt.Reset()
+	bob.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 4 (EXPECT4)
+    Received_Q: 0
+`)
+
+	_, aliceMessages, err = alice.Receive(bobMessages[0])
+	assertNil(t, err)
+	assertEquals(t, alice.smp.state, smpStateExpect1{})
+
+	bt.Reset()
+	alice.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 0 (EXPECT1)
+    Received_Q: 0
+`)
+
+	_, bobMessages, err = bob.Receive(aliceMessages[0])
+	assertNil(t, err)
+	assertEquals(t, bob.smp.state, smpStateExpect1{})
+
+	bt.Reset()
+	alice.dumpSMP(bufio.NewWriter(bt))
+	assertDeepEquals(t, bt.String(), `  SM state:
+    Next expected: 0 (EXPECT1)
+    Received_Q: 0
+`)
 }
