@@ -411,6 +411,7 @@ func Test_receive_doesntDisplayErrorMessageToTheUserAndStartAKE(t *testing.T) {
 	assertDeepEquals(t, toSend[0], ValidMessage("?OTRv3?"))
 }
 
+//TODO: remove me
 func Test_Conversation_SetKeys_setsTheKeys(t *testing.T) {
 	c := &Conversation{}
 	c.SetKeys(bobPrivateKey, &alicePrivateKey.PublicKey)
