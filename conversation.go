@@ -147,3 +147,14 @@ func (c *Conversation) SetMessageEventHandler(handler MessageEventHandler) {
 func (c *Conversation) SetSecurityEventHandler(handler SecurityEventHandler) {
 	c.securityEventHandler = handler
 }
+
+// InitializeInstanceTag sets our instance tag for this conversation. If the argument is zero we will create a new instance tag and return it
+// The instance tag created or set will be returned
+func (c *Conversation) InitializeInstanceTag(tag uint32) uint32 {
+	if tag == 0 {
+		c.generateInstanceTag()
+	} else {
+		c.ourInstanceTag = tag
+	}
+	return c.ourInstanceTag
+}

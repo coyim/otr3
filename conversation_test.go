@@ -457,3 +457,19 @@ func Test_Conversation_SetSecurityEventHandler_setsSecurityEventHandler(t *testi
 	c.SetSecurityEventHandler(ev)
 	assertDeepEquals(t, c.securityEventHandler, ev)
 }
+
+func Test_Conversation_InitializeInstanceTag_initializesTheInstanceTag(t *testing.T) {
+	c := &Conversation{}
+	ret := c.InitializeInstanceTag(42)
+	assertEquals(t, c.ourInstanceTag, uint32(42))
+	assertEquals(t, ret, uint32(42))
+}
+
+func Test_Conversation_InitializeInstanceTag_initializesTheInstanceTagFromRandomnessIfNoneProvided(t *testing.T) {
+	c := &Conversation{
+		Rand: fixtureRand(),
+	}
+	ret := c.InitializeInstanceTag(0)
+	assertEquals(t, c.ourInstanceTag, uint32(0xabcdabcd))
+	assertEquals(t, ret, uint32(0xabcdabcd))
+}
