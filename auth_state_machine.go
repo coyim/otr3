@@ -121,12 +121,12 @@ func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []by
 		return s, nil, errInvalidOTRMessage
 	}
 
-	gxMPI := appendMPI(nil, c.ake.theirPublicValue)
+	gxMPI := appendMPI(nil, c.ake.ourPublicValue)
 	hashedGx := sha256.Sum256(gxMPI)
 	//If yours is the higher hash value:
 	//Ignore the incoming D-H Commit message, but resend your D-H Commit message.
 	if bytes.Compare(hashedGx[:], theirHashedGx) == 1 {
-		dhCommitMsg, err := c.wrapMessageHeader(msgTypeDHCommit, c.serializeDHCommit(c.ake.theirPublicValue))
+		dhCommitMsg, err := c.wrapMessageHeader(msgTypeDHCommit, c.serializeDHCommit(c.ake.ourPublicValue))
 		if err != nil {
 			return s, nil, err
 		}

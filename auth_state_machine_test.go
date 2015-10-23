@@ -91,7 +91,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
 	c.ake.encryptedGx = ourDHCommitAKE.ake.encryptedGx
-	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
+	c.ake.ourPublicValue = ourDHCommitAKE.ake.ourPublicValue
 
 	// force their hashedGx to be lower than ours
 	msg := fixtureDHCommitMsgBody()
@@ -111,7 +111,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 	//make sure we store the same values when creating the DH commit
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
-	c.ake.theirPublicValue = ourDHCommitAKE.ake.ourPublicValue
+	c.ake.ourPublicValue = ourDHCommitAKE.ake.ourPublicValue
 
 	// force their hashedGx to be higher than ours
 	msg := fixtureDHCommitMsgBody()
