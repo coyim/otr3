@@ -14,6 +14,7 @@ var errShortRandomRead = newOtrError("short read from random source")
 var errUnexpectedMessage = newOtrError("unexpected SMP message")
 var errUnsupportedOTRVersion = newOtrError("unsupported OTR version")
 var errWrongProtocolVersion = newOtrError("wrong protocol version")
+var errMessageNotInPrivate = newOtrError("message not in private")
 
 // OtrError is an error in the OTR library
 type OtrError struct {

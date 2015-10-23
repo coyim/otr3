@@ -65,7 +65,7 @@ func Test_receive_ignoresAMessageWhenNoEncryptionIsActive(t *testing.T) {
 	a, b, err := c.receiveDecoded(m)
 	assertNil(t, a)
 	assertNil(t, b)
-	assertNil(t, err)
+	assertEquals(t, err, errMessageNotInPrivate)
 }
 
 func Test_receiveDecoded_signalsAMessageEventForADataMessageWhenNoEncryptionIsActive(t *testing.T) {

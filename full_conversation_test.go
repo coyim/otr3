@@ -24,7 +24,7 @@ func Test_receive_generatesErrorIfDoesNotHaveASecureChannel(t *testing.T) {
 		c.msgState = s
 		c.expectMessageEvent(t, func() {
 			_, _, err := c.receiveDecoded(m)
-			assertNil(t, err)
+			assertEquals(t, err, errMessageNotInPrivate)
 		}, MessageEventReceivedMessageNotInPrivate, nil, nil)
 	}
 }

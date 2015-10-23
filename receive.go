@@ -175,7 +175,10 @@ func (c *Conversation) receiveDataMessage(messageHeader, messageBody []byte) (pl
 
 func (c *Conversation) notifyDataMessageError(err error) {
 	var e ErrorCode
-	if isConflict(err) {
+
+	if err == errMessageNotInPrivate {
+		e = ErrorCodeMessageNotInPrivate
+	} else if isConflict(err) {
 		c.messageEvent(MessageEventReceivedMessageUnreadable)
 		e = ErrorCodeMessageUnreadable
 	} else {

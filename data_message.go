@@ -106,6 +106,7 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 	dataMessage := dataMsg{}
 
 	if c.msgState != encrypted {
+		err = errMessageNotInPrivate
 		c.messageEvent(MessageEventReceivedMessageNotInPrivate)
 		return
 	}

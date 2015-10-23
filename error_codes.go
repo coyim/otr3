@@ -14,6 +14,9 @@ const (
 
 	// ErrorCodeMessageMalformed means the message sent is malformed
 	ErrorCodeMessageMalformed
+
+	// ErrorCodeMessageNotInPrivate means we received an encrypted message when not expecting it
+	ErrorCodeMessageNotInPrivate
 )
 
 // ErrorMessageHandler generates error messages for error codes
@@ -45,6 +48,8 @@ func (s ErrorCode) String() string {
 		return "ErrorCodeMessageUnreadable"
 	case ErrorCodeMessageMalformed:
 		return "ErrorCodeMessageMalformed"
+	case ErrorCodeMessageNotInPrivate:
+		return "ErrorCodeMessageNotInPrivate"
 	default:
 		return "ERROR CODE: (THIS SHOULD NEVER HAPPEN)"
 	}
