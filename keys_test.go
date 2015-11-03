@@ -314,9 +314,9 @@ func Test_readAccount_willReturnAnAccount(t *testing.T) {
   (p #00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857#)
   )))`)
 	k, ok, _ := readAccount(from)
-	assertDeepEquals(t, k.name, "foo")
-	assertDeepEquals(t, k.protocol, "libpurple-Jabber")
-	assertDeepEquals(t, k.key.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857"))
+	assertDeepEquals(t, k.Name, "foo")
+	assertDeepEquals(t, k.Protocol, "libpurple-Jabber")
+	assertDeepEquals(t, k.Key.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857"))
 	assertDeepEquals(t, ok, true)
 }
 
@@ -432,9 +432,9 @@ func Test_readAccounts_willReturnTheAccountRead(t *testing.T) {
   (p #00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858#)
   ))))`)
 	k, ok := readAccounts(from)
-	assertDeepEquals(t, k[0].name, "foo2")
-	assertDeepEquals(t, k[0].protocol, "libpurple-Jabberx")
-	assertDeepEquals(t, k[0].key.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858"))
+	assertDeepEquals(t, k[0].Name, "foo2")
+	assertDeepEquals(t, k[0].Protocol, "libpurple-Jabberx")
+	assertDeepEquals(t, k[0].Key.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858"))
 	assertDeepEquals(t, ok, true)
 }
 
@@ -510,12 +510,12 @@ func Test_readAccounts_willReturnMoreThanOneAccount(t *testing.T) {
 	 )
 	)`)
 	k, ok := readAccounts(from)
-	assertDeepEquals(t, k[0].name, "foo2")
-	assertDeepEquals(t, k[0].protocol, "libpurple-Jabberx")
-	assertDeepEquals(t, k[0].key.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858"))
-	assertDeepEquals(t, k[1].name, "2")
-	assertDeepEquals(t, k[1].protocol, "libpurple-jabber-gtalk")
-	assertDeepEquals(t, k[1].key.PrivateKey.Q, bnFromHex("00D16B2607FCBC0EDC639F763A54F34475B1CC8473"))
+	assertDeepEquals(t, k[0].Name, "foo2")
+	assertDeepEquals(t, k[0].Protocol, "libpurple-Jabberx")
+	assertDeepEquals(t, k[0].Key.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858"))
+	assertDeepEquals(t, k[1].Name, "2")
+	assertDeepEquals(t, k[1].Protocol, "libpurple-jabber-gtalk")
+	assertDeepEquals(t, k[1].Key.PrivateKey.Q, bnFromHex("00D16B2607FCBC0EDC639F763A54F34475B1CC8473"))
 	assertDeepEquals(t, ok, true)
 }
 
@@ -1029,7 +1029,7 @@ func Test_notHex(t *testing.T) {
 func Test_exportAccounts_exportsAccounts(t *testing.T) {
 	var priv PrivateKey
 	priv.Parse(serializedPrivateKey)
-	acc := Account{name: "hello", protocol: "go-xmpp", key: &priv}
+	acc := Account{Name: "hello", Protocol: "go-xmpp", Key: &priv}
 	bt := bytes.NewBuffer(make([]byte, 0, 200))
 	exportAccounts([]*Account{&acc}, bt)
 	assertDeepEquals(t, bt.String(),
@@ -1054,7 +1054,7 @@ func Test_exportAccounts_exportsAccounts(t *testing.T) {
 func Test_ExportKeysToFile_exportsKeysToAFile(t *testing.T) {
 	var priv PrivateKey
 	priv.Parse(serializedPrivateKey)
-	acc := &Account{name: "hello", protocol: "go-xmpp", key: &priv}
+	acc := &Account{Name: "hello", Protocol: "go-xmpp", Key: &priv}
 
 	err := ExportKeysToFile([]*Account{acc}, "test_resources/test_export_of_keys.blah")
 	assertNil(t, err)
@@ -1064,13 +1064,13 @@ func Test_ExportKeysToFile_exportsKeysToAFile(t *testing.T) {
 	defer os.Remove("test_resources/test_export_of_keys.blah")
 
 	assertNil(t, err2)
-	assertDeepEquals(t, res[0].key, acc.key)
+	assertDeepEquals(t, res[0].Key, acc.Key)
 }
 
 func Test_ExportKeysToFile_returnsAnErrorIfSomethingGoesWrong(t *testing.T) {
 	var priv PrivateKey
 	priv.Parse(serializedPrivateKey)
-	acc := &Account{name: "hello", protocol: "go-xmpp", key: &priv}
+	acc := &Account{Name: "hello", Protocol: "go-xmpp", Key: &priv}
 
 	err := ExportKeysToFile([]*Account{acc}, "non_existing_directory/test_export_of_keys.blah")
 	assertDeepEquals(t, err.Error(), "open non_existing_directory/test_export_of_keys.blah: no such file or directory")

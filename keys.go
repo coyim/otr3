@@ -31,9 +31,9 @@ type PrivateKey struct {
 // Account is a holder for the private key associated with an account
 // It contains name, protocol and otr private key of an otr Account
 type Account struct {
-	name     string
-	protocol string
-	key      *PrivateKey
+	Name     string
+	Protocol string
+	Key      *PrivateKey
 }
 
 func readSymbolAndExpect(r *bufio.Reader, s string) bool {
@@ -159,9 +159,9 @@ func readAccount(r *bufio.Reader) (a *Account, ok bool, atEnd bool) {
 	ok1 := readSymbolAndExpect(r, "account")
 	a = new(Account)
 	var ok2, ok3, ok4 bool
-	a.name, ok2 = readAccountName(r)
-	a.protocol, ok3 = readAccountProtocol(r)
-	a.key, ok4 = readPrivateKey(r)
+	a.Name, ok2 = readAccountName(r)
+	a.Protocol, ok3 = readAccountProtocol(r)
+	a.Key, ok4 = readPrivateKey(r)
 	ok5 := sexp.ReadListEnd(r)
 	return a, ok1 && ok2 && ok3 && ok4 && ok5, false
 }
@@ -449,9 +449,9 @@ func exportAccount(a *Account, w *bufio.Writer) {
 	indent := "  "
 	w.WriteString(indent)
 	w.WriteString("(account\n")
-	exportName(a.name, w)
-	exportProtocol(a.protocol, w)
-	exportPrivateKey(a.key, w)
+	exportName(a.Name, w)
+	exportProtocol(a.Protocol, w)
+	exportPrivateKey(a.Key, w)
 	w.WriteString(indent)
 	w.WriteString(")\n")
 }
