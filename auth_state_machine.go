@@ -32,7 +32,7 @@ func (c *Conversation) processAKE(msgType byte, msg []byte) (toSend []messageWit
 	c.ensureAKE()
 
 	var toSendSingle messageWithHeader
-	var toSendExtra messageWithHeader
+	var toSendExtra []messageWithHeader
 
 	switch msgType {
 	case msgTypeDHCommit:
@@ -48,7 +48,10 @@ func (c *Conversation) processAKE(msgType byte, msg []byte) (toSend []messageWit
 	default:
 		err = newOtrErrorf("unknown message type 0x%X", msgType)
 	}
-	toSend = compactMessagesWithHeader(toSendSingle, toSendExtra)
+
+	messages := append([]messageWithHeader{toSendSingle}, toSendExtra...)
+	toSend = compactMessagesWithHeader(messages...)
+
 	return
 }
 

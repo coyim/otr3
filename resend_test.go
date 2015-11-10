@@ -7,7 +7,7 @@ import (
 )
 
 func fixtureCorrectResend(c *Conversation) {
-	c.resend.lastMessage = MessagePlaintext("hello")
+	c.resend.later(MessagePlaintext("hello"))
 	c.resend.mayRetransmit = retransmitExact
 	c.updateLastSent()
 }
@@ -15,7 +15,7 @@ func fixtureCorrectResend(c *Conversation) {
 func Test_shouldRetransmit_returnsFalseIfThereIsNoLastMessage(t *testing.T) {
 	c := &Conversation{}
 	fixtureCorrectResend(c)
-	c.resend.lastMessage = nil
+	c.resend.clear()
 
 	assertEquals(t, c.shouldRetransmit(), false)
 }
@@ -54,7 +54,7 @@ func Test_shouldRetransmit_returnFalseWhenFlagIsNoRetransmit(t *testing.T) {
 func Test_maybeRetransmit_returnsNothingWhenShouldntRetransmit(t *testing.T) {
 	c := &Conversation{}
 	fixtureCorrectResend(c)
-	c.resend.lastMessage = nil
+	c.resend.clear()
 
 	res, err := c.maybeRetransmit()
 
@@ -77,11 +77,12 @@ func Test_maybeRetransmit_createsADataMessageWithTheExactMessageWhenAskedToRetra
 	c.msgState = encrypted
 
 	fixtureCorrectResend(c)
-	c.resend.lastMessage = MessagePlaintext("Something else to think about")
+	c.resend.clear()
+	c.resend.later(MessagePlaintext("Something else to think about"))
 
 	res, err := c.maybeRetransmit()
 	assertNil(t, err)
-	dec := fixtureDecryptDataMsg(res)
+	dec := fixtureDecryptDataMsg(res[0])
 
 	assertDeepEquals(t, MessagePlaintext(dec.message), MessagePlaintext("Something else to think about"))
 	assertEquals(t, len(dec.tlvs), 1)
@@ -103,11 +104,12 @@ func Test_maybeRetransmit_createsADataMessageWithTheResendPrefixAndMessageWhenAs
 	c.msgState = encrypted
 
 	fixtureCorrectResend(c)
+	c.resend.clear()
 	c.resend.mayRetransmit = retransmitWithPrefix
-	c.resend.lastMessage = MessagePlaintext("Something else to think about")
+	c.resend.later(MessagePlaintext("Something else to think about"))
 
 	res, err := c.maybeRetransmit()
-	dec := fixtureDecryptDataMsg(res)
+	dec := fixtureDecryptDataMsg(res[0])
 
 	assertNil(t, err)
 	assertDeepEquals(t, MessagePlaintext(dec.message), MessagePlaintext("[resent] Something else to think about"))
@@ -130,14 +132,15 @@ func Test_maybeRetransmit_createsADataMessageWithTheCustomResendPrefixAndMessage
 	c.msgState = encrypted
 
 	fixtureCorrectResend(c)
+	c.resend.clear()
 	c.resend.mayRetransmit = retransmitWithPrefix
-	c.resend.lastMessage = MessagePlaintext("Something much more to think about")
+	c.resend.later(MessagePlaintext("Something much more to think about"))
 	c.resend.messageTransform = func(msg []byte) []byte {
 		return append(append([]byte("<resend>"), msg...), []byte("</resend>")...)
 	}
 
 	res, err := c.maybeRetransmit()
-	dec := fixtureDecryptDataMsg(res)
+	dec := fixtureDecryptDataMsg(res[0])
 
 	assertNil(t, err)
 	assertDeepEquals(t, MessagePlaintext(dec.message), MessagePlaintext("<resend>Something much more to think about</resend>"))

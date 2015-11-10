@@ -338,14 +338,15 @@ func Test_receiveDecoded_receiveRevealSigMessageAndSetMessageStateToEncrypted(t 
 
 func Test_receiveDecoded_receiveRevealSigMessageWillResendPotentialLastMessage(t *testing.T) {
 	c := aliceContextAtAwaitingRevealSig()
-	c.resend.lastMessage = MessagePlaintext("what do you think turn 2")
+	c.resend.later(MessagePlaintext("what do you think turn 2"))
+	c.resend.later(MessagePlaintext("I mean, about that thing"))
 	c.resend.mayRetransmit = retransmitWithPrefix
 	c.updateLastSent()
 	msg := fixtureRevealSigMsg(otrV2{})
 
 	c.expectMessageEvent(t, func() {
 		_, toSends, _ := c.receiveDecoded(msg)
-		assertEquals(t, len(toSends), 2)
+		assertEquals(t, len(toSends), 3)
 	}, MessageEventMessageResent, nil, nil)
 }
 
@@ -404,7 +405,8 @@ func Test_receiveDecoded_receiveSigMessageAndSetMessageStateToEncrypted(t *testi
 
 func Test_receiveDecoded_receiveSigMessageWillResendTheLastPotentialMessage(t *testing.T) {
 	c := bobContextAtAwaitingSig()
-	c.resend.lastMessage = MessagePlaintext("what do you think")
+	c.resend.later(MessagePlaintext("what do you think"))
+	c.resend.later(MessagePlaintext("you think, dont you?"))
 	c.resend.mayRetransmit = retransmitWithPrefix
 	c.updateLastSent()
 
@@ -412,7 +414,7 @@ func Test_receiveDecoded_receiveSigMessageWillResendTheLastPotentialMessage(t *t
 
 	c.expectMessageEvent(t, func() {
 		_, toSends, _ := c.receiveDecoded(msg)
-		assertEquals(t, len(toSends), 1) // Only a retransmit message, nothing else
+		assertEquals(t, len(toSends), 2) // Only the retransmit messages, nothing else
 	}, MessageEventMessageResent, nil, nil)
 }
 

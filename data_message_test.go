@@ -102,7 +102,10 @@ func Test_genDataMsg_setsLastMessageWhenNewMessageIsPlaintext(t *testing.T) {
 
 	c.genDataMsg(msg)
 
-	assertDeepEquals(t, c.resend.lastMessage, MessagePlaintext(msg))
+	assertDeepEquals(t, c.resend.pending(),
+		[]MessagePlaintext{
+			MessagePlaintext(msg),
+		})
 }
 
 func Test_genDataMsg_hasEncryptedMessage(t *testing.T) {
