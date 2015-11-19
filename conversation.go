@@ -54,7 +54,7 @@ type Conversation struct {
 	sentRevealSig bool
 }
 
-func (c *Conversation) NewConversationWithVersion(v int) *Conversation {
+func NewConversationWithVersion(v int) *Conversation {
 	var vv otrVersion
 
 	switch v {
