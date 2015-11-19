@@ -9,7 +9,7 @@ test:
 test-slow:
 	make -C ./compat libotr-compat
 
-ci: lint test
+ci: lint test test-slow
 
 deps:
 	./deps.sh
