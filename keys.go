@@ -57,6 +57,21 @@ type Account struct {
 	Key      PrivateKey
 }
 
+// GetName is a getter for Account.name
+func (a Account) GetName() string {
+	return a.name
+}
+
+// GetProtocol is a getter for Account.protocol
+func (a Account) GetProtocol() string {
+	return a.protocol
+}
+
+// GetKey is a getter for Account.key
+func (a Account) GetKey() PrivateKey {
+	return a.key
+}
+
 func readSymbolAndExpect(r *bufio.Reader, s string) bool {
 	res, ok := readPotentialSymbol(r)
 	return ok && res == s
