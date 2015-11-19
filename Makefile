@@ -4,7 +4,7 @@ lint:
 	golint ./...
 
 test:
-	go test -v ./... -cover
+	go test -cover -v ./...
 
 test-slow:
 	make -C ./compat libotr-compat

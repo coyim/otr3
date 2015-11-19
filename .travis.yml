@@ -5,6 +5,10 @@ go:
   - 1.5
   - 1.4.2
 
+matrix:
+  allow_failures:
+    - go: tip
+
 addons:
   apt:
     packages:
