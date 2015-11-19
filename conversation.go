@@ -54,6 +54,18 @@ type Conversation struct {
 	sentRevealSig bool
 }
 
+func (c *Conversation) NewConversationWithVersoin(v int) *Conversation {
+	var vv otrVersion
+
+	switch v {
+	case 2:
+		vv = otrV2{}
+	case 3:
+		vv = otrV3{}
+	}
+	return &Conversation{version: vv}
+}
+
 func (c *Conversation) messageHeader(msgType byte) ([]byte, error) {
 	return c.version.messageHeader(c, msgType)
 }
