@@ -55,7 +55,7 @@ func Test_identityString_isCorrectForAllSMPStates(t *testing.T) {
 
 func Test_dumpAKE_dumpsTheCurrentAKEState(t *testing.T) {
 	c := aliceContextAtAwaitingRevealSig()
-	c.theirKey = &bobPrivateKey.PublicKey
+	c.theirKey = bobPrivateKey.PublicKey()
 	bt := bytes.NewBuffer(make([]byte, 0, 200))
 	c.dumpAKE(bufio.NewWriter(bt))
 	assertDeepEquals(t, bt.String(), `  Auth info:
@@ -150,11 +150,14 @@ func Test_setDebug_setsTheDebugFlag(t *testing.T) {
 
 func Test_SMP_CompleteDebug(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
-	alice.ourKey = alicePrivateKey
+	alice.ourCurrentKey = alicePrivateKey
+	alice.SetOurKeys([]PrivateKey{alicePrivateKey})
+
 	alice.Policies = policies(allowV3)
 
 	bob := &Conversation{Rand: rand.Reader}
-	bob.ourKey = bobPrivateKey
+	bob.ourCurrentKey = bobPrivateKey
+	bob.SetOurKeys([]PrivateKey{bobPrivateKey})
 	bob.Policies = policies(allowV3)
 
 	var err error

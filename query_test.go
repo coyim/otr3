@@ -6,6 +6,7 @@ func Test_receiveQueryMessage_sendDHCommitv3AndTransitToStateAwaitingDHKey(t *te
 	queryMsg := []byte("?OTRv?23?")
 
 	c := &Conversation{Policies: policies(allowV3)}
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 	msg, err := c.receiveQueryMessage(queryMsg)
 
 	assertNil(t, err)
@@ -18,6 +19,7 @@ func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
 	queryMsg := []byte("?OTRv?23?")
 
 	c := &Conversation{Policies: policies(allowV2)}
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 	msg, err := c.receiveQueryMessage(queryMsg)
 
 	assertNil(t, err)
@@ -30,6 +32,7 @@ func Test_receiveQueryMessageV2V3_sendDHCommitv3WhenV2AndV3AreAllowed(t *testing
 	queryMsg := []byte("?OTRv?23?")
 
 	c := &Conversation{Policies: policies(allowV2 | allowV3)}
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 	msg, err := c.receiveQueryMessage(queryMsg)
 
 	assertNil(t, err)
@@ -46,6 +49,7 @@ func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 		version: otrV3{},
 		Rand:    fixtureRand(),
 	}
+	cxt.SetOurKeys([]PrivateKey{bobPrivateKey})
 
 	_, err := cxt.sendDHCommit()
 
@@ -59,6 +63,7 @@ func Test_receiveQueryMessage_signalsMessageEventOnFailure(t *testing.T) {
 	queryMsg := []byte("?OTRv3?")
 
 	c := newConversation(nil, fixedRand([]string{"ABCD"}))
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 	c.Policies.add(allowV3)
 	c.expectMessageEvent(t, func() {
 		c.receiveQueryMessage(queryMsg)
@@ -67,6 +72,7 @@ func Test_receiveQueryMessage_signalsMessageEventOnFailure(t *testing.T) {
 
 func Test_receiveQueryMessage_returnsErrorIfNoCompatibleVersionCouldBeFound(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV3)}
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 	_, err := c.receiveQueryMessage([]byte("?OTRv?2?"))
 	assertEquals(t, err, errUnsupportedOTRVersion)
 }
@@ -76,6 +82,7 @@ func Test_receiveQueryMessage_returnsErrorIfDhCommitMessageGeneratesError(t *tes
 		Policies: policies(allowV2),
 		Rand:     fixedRand([]string{"ABCDABCD"}),
 	}
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 	_, err := c.receiveQueryMessage([]byte("?OTRv2?"))
 	assertEquals(t, err, errShortRandomRead)
 }

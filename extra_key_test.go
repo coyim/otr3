@@ -101,7 +101,7 @@ func Test_UseExtraSymmetricKey_returnsErrorIfTheirKeyIDIsZero(t *testing.T) {
 func Test_UseExtraSymmetricKey_generatesADataMessageWithTheDataProvided(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.ourKey = bobPrivateKey
+	c.ourCurrentKey = bobPrivateKey
 
 	_, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("something")})
 	c.msgState = encrypted
@@ -121,7 +121,7 @@ func Test_UseExtraSymmetricKey_generatesADataMessageWithTheDataProvided(t *testi
 func Test_UseExtraSymmetricKey_generatesADataMessageWithIgnoreUnreadableSet(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.ourKey = bobPrivateKey
+	c.ourCurrentKey = bobPrivateKey
 
 	_, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("something")})
 	c.msgState = encrypted
@@ -133,7 +133,7 @@ func Test_UseExtraSymmetricKey_generatesADataMessageWithIgnoreUnreadableSet(t *t
 func Test_UseExtraSymmetricKey_returnsTheGeneratedSymmetricKey(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
-	c.ourKey = bobPrivateKey
+	c.ourCurrentKey = bobPrivateKey
 
 	_, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("something")})
 	c.msgState = encrypted

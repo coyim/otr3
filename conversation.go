@@ -28,9 +28,10 @@ type Conversation struct {
 	ourInstanceTag   uint32
 	theirInstanceTag uint32
 
-	ssid     [8]byte
-	ourKey   *PrivateKey
-	theirKey *PublicKey
+	ssid          [8]byte
+	ourKeys       []PrivateKey
+	ourCurrentKey PrivateKey
+	theirKey      PublicKey
 
 	ake        *ake
 	smp        smp
@@ -106,20 +107,13 @@ func (c *Conversation) End() (toSend []ValidMessage, err error) {
 	return
 }
 
-// SetKeys assigns ourKey (private) and theirKey (public) to the Conversation
-//TODO: remove me. This is only here for the compat package
-func (c *Conversation) SetKeys(ourKey *PrivateKey, theirKey *PublicKey) {
-	c.ourKey = ourKey
-	c.theirKey = theirKey
-}
-
-// SetOurKey assigns our private key to the conversation
-func (c *Conversation) SetOurKey(ourKey *PrivateKey) {
-	c.ourKey = ourKey
+// SetOurKeys assigns our private key to the conversation
+func (c *Conversation) SetOurKeys(ourKeys []PrivateKey) {
+	c.ourKeys = ourKeys
 }
 
 // GetTheirKey returns the public key of the other peer in this conversation
-func (c *Conversation) GetTheirKey() *PublicKey {
+func (c *Conversation) GetTheirKey() PublicKey {
 	return c.theirKey
 }
 

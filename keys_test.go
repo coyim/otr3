@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/rand"
-	"crypto/sha1"
 	"os"
 	"syscall"
 	"testing"
@@ -232,11 +231,11 @@ func Test_readPrivateKey_willReturnAPrivateKey(t *testing.T) {
   (x #14D0345A3562C480A039E3C72764F72D79043217#)
   ))`)
 	k, ok := readPrivateKey(from)
-	assertDeepEquals(t, k.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857"))
-	assertDeepEquals(t, k.PrivateKey.Q, bnFromHex("00997BD266EF7B1F60A5C23F3A741F2AEFD07A2081"))
-	assertDeepEquals(t, k.PrivateKey.G, bnFromHex("535E360E8A95EBA46A4F7DE50AD6E9B2A6DB785A66B64EB9F20338D2A3E8FB0E94725848F1AA6CC567CB83A1CC517EC806F2E92EAE71457E80B2210A189B91250779434B41FC8A8873F6DB94BEA7D177F5D59E7E114EE10A49CFD9CEF88AE43387023B672927BA74B04EB6BBB5E57597766A2F9CE3857D7ACE3E1E3BC1FC6F26"))
-	assertDeepEquals(t, k.PrivateKey.X, bnFromHex("14D0345A3562C480A039E3C72764F72D79043217"))
-	assertDeepEquals(t, k.PrivateKey.Y, bnFromHex("0AC8670AD767D7A8D9D14CC1AC6744CD7D76F993B77FFD9E39DF01E5A6536EF65E775FCEF2A983E2A19BD6415500F6979715D9FD1257E1FE2B6F5E1E74B333079E7C880D39868462A93454B41877BE62E5EF0A041C2EE9C9E76BD1E12AE25D9628DECB097025DD625EF49C3258A1A3C0FF501E3DC673B76D7BABF349009B6ECF"))
+	assertDeepEquals(t, k.(*DSAPrivateKey).PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857"))
+	assertDeepEquals(t, k.(*DSAPrivateKey).PrivateKey.Q, bnFromHex("00997BD266EF7B1F60A5C23F3A741F2AEFD07A2081"))
+	assertDeepEquals(t, k.(*DSAPrivateKey).PrivateKey.G, bnFromHex("535E360E8A95EBA46A4F7DE50AD6E9B2A6DB785A66B64EB9F20338D2A3E8FB0E94725848F1AA6CC567CB83A1CC517EC806F2E92EAE71457E80B2210A189B91250779434B41FC8A8873F6DB94BEA7D177F5D59E7E114EE10A49CFD9CEF88AE43387023B672927BA74B04EB6BBB5E57597766A2F9CE3857D7ACE3E1E3BC1FC6F26"))
+	assertDeepEquals(t, k.(*DSAPrivateKey).PrivateKey.X, bnFromHex("14D0345A3562C480A039E3C72764F72D79043217"))
+	assertDeepEquals(t, k.(*DSAPrivateKey).PrivateKey.Y, bnFromHex("0AC8670AD767D7A8D9D14CC1AC6744CD7D76F993B77FFD9E39DF01E5A6536EF65E775FCEF2A983E2A19BD6415500F6979715D9FD1257E1FE2B6F5E1E74B333079E7C880D39868462A93454B41877BE62E5EF0A041C2EE9C9E76BD1E12AE25D9628DECB097025DD625EF49C3258A1A3C0FF501E3DC673B76D7BABF349009B6ECF"))
 	assertDeepEquals(t, ok, true)
 }
 
@@ -314,9 +313,9 @@ func Test_readAccount_willReturnAnAccount(t *testing.T) {
   (p #00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857#)
   )))`)
 	k, ok, _ := readAccount(from)
-	assertDeepEquals(t, k.Name, "foo")
-	assertDeepEquals(t, k.Protocol, "libpurple-Jabber")
-	assertDeepEquals(t, k.Key.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857"))
+	assertDeepEquals(t, k.name, "foo")
+	assertDeepEquals(t, k.protocol, "libpurple-Jabber")
+	assertDeepEquals(t, k.key.(*DSAPrivateKey).PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A857"))
 	assertDeepEquals(t, ok, true)
 }
 
@@ -432,9 +431,9 @@ func Test_readAccounts_willReturnTheAccountRead(t *testing.T) {
   (p #00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858#)
   ))))`)
 	k, ok := readAccounts(from)
-	assertDeepEquals(t, k[0].Name, "foo2")
-	assertDeepEquals(t, k[0].Protocol, "libpurple-Jabberx")
-	assertDeepEquals(t, k[0].Key.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858"))
+	assertDeepEquals(t, k[0].name, "foo2")
+	assertDeepEquals(t, k[0].protocol, "libpurple-Jabberx")
+	assertDeepEquals(t, k[0].key.(*DSAPrivateKey).PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858"))
 	assertDeepEquals(t, ok, true)
 }
 
@@ -510,17 +509,17 @@ func Test_readAccounts_willReturnMoreThanOneAccount(t *testing.T) {
 	 )
 	)`)
 	k, ok := readAccounts(from)
-	assertDeepEquals(t, k[0].Name, "foo2")
-	assertDeepEquals(t, k[0].Protocol, "libpurple-Jabberx")
-	assertDeepEquals(t, k[0].Key.PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858"))
-	assertDeepEquals(t, k[1].Name, "2")
-	assertDeepEquals(t, k[1].Protocol, "libpurple-jabber-gtalk")
-	assertDeepEquals(t, k[1].Key.PrivateKey.Q, bnFromHex("00D16B2607FCBC0EDC639F763A54F34475B1CC8473"))
+	assertDeepEquals(t, k[0].name, "foo2")
+	assertDeepEquals(t, k[0].protocol, "libpurple-Jabberx")
+	assertDeepEquals(t, k[0].key.(*DSAPrivateKey).PrivateKey.P, bnFromHex("00FC07ABCF0DC916AFF6E9AE47BEF60C7AB9B4D6B2469E436630E36F8A489BE812486A09F30B71224508654940A835301ACC525A4FF133FC152CC53DCC59D65C30A54F1993FE13FE63E5823D4C746DB21B90F9B9C00B49EC7404AB1D929BA7FBA12F2E45C6E0A651689750E8528AB8C031D3561FECEE72EBB4A090D450A9B7A858"))
+	assertDeepEquals(t, k[1].name, "2")
+	assertDeepEquals(t, k[1].protocol, "libpurple-jabber-gtalk")
+	assertDeepEquals(t, k[1].key.(*DSAPrivateKey).PrivateKey.Q, bnFromHex("00D16B2607FCBC0EDC639F763A54F34475B1CC8473"))
 	assertDeepEquals(t, ok, true)
 }
 
 func Test_PublicKey_parse_ParsePofAPublicKeyCorrectly(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	_, ok := pk.Parse(serializedPublicKey)
 
 	assertDeepEquals(t, pk.P, bnFromHex("00F24843F9447B62138AE49BF83188D1353ADA5CAC118890CFDEC01BF349D75E887B19C221665C7857CAD583AF656C67FB04A99FD8F8D69D09C9529C6C14D426F1E3924DC9243AF2970E3E4B04A23489A09E8A90E7E81EBA763AD4F0636B8A43415B6FC16A02C3624CE76272FA00783C8DB850D3A996B58136F7A0EB80AE0BC613"))
@@ -528,14 +527,14 @@ func Test_PublicKey_parse_ParsePofAPublicKeyCorrectly(t *testing.T) {
 }
 
 func Test_PublicKey_parse_ReturnsNotOKIfThereIsTooLittleDataForTheKeyTypeTag(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	_, ok := pk.Parse([]byte{0x00})
 
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_PublicKey_parse_ReturnsNotOKIfTheTypeTagIsNotCorrect(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	_, ok := pk.Parse([]byte{
 		// key type for something else
 		0x00, 0x01,
@@ -565,7 +564,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfTheTypeTagIsNotCorrect(t *testing.T) {
 }
 
 func Test_PublicKey_parse_ReturnsNotOKIfPCannotBeParsedCorrectly(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
@@ -595,7 +594,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfPCannotBeParsedCorrectly(t *testing.T) {
 }
 
 func Test_PublicKey_parse_ReturnsNotOKIfQCannotBeParsedCorrectly(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
@@ -625,7 +624,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfQCannotBeParsedCorrectly(t *testing.T) {
 }
 
 func Test_PublicKey_parse_ReturnsNotOKIfGCannotBeParsedCorrectly(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
@@ -655,7 +654,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfGCannotBeParsedCorrectly(t *testing.T) {
 }
 
 func Test_PublicKey_parse_ReturnsNotOKIfYCannotBeParsedCorrectly(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
@@ -685,7 +684,7 @@ func Test_PublicKey_parse_ReturnsNotOKIfYCannotBeParsedCorrectly(t *testing.T) {
 }
 
 func Test_PublicKey_parse_ReturnsNotOKIfParametersAreMissing(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	_, ok := pk.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
@@ -705,44 +704,44 @@ func Test_PublicKey_parse_ReturnsNotOKIfParametersAreMissing(t *testing.T) {
 }
 
 func Test_PublicKey_parse_ParseQofAPublicKeyCorrectly(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	pk.Parse(serializedPublicKey)
 
 	assertDeepEquals(t, pk.Q, bnFromHex("00D16B2607FCBC0EDC639F763A54F34475B1CC8473"))
 }
 
 func Test_PublicKey_parse_ParseGofAPublicKeyCorrectly(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	pk.Parse(serializedPublicKey)
 
 	assertDeepEquals(t, pk.G, bnFromHex("00B15AFEF5F96EFEE41006F136C23A18849DA8133069A879D083F7C7AA362E187DAE3ED0C4F372D0D4E3AAE567008A1872A6E85D8F84E53A3FE1B352AF0B4E2F0CB033A6D34285ECD3E4A93653BDE99C3A8D840D9D35F82AC2FA8539DB6C7F7A1DAD77FEECD62803757FF1E2DE4CEC4A5A2AD643271514DDEEEF3D008F66FBF9DB"))
 }
 
 func Test_PublicKey_parse_ParseYofAPublicKeyCorrectly(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	pk.Parse(serializedPublicKey)
 
 	assertDeepEquals(t, pk.Y, bnFromHex("01F9BE7DA0E4E84774048058B53202B2704BF688A306092ED533A55E68EABA814C8D62F45AAD8FF30C3055DCA461B7DBA6B78938FC4D69780A830C6457CC107F3D275C21D00E53147C14162176C77169D3BCA586DC30F15F4B482160E276869AA336F38AF7FC3686A764AB5A02C751D921A42B8B9AE8E06918059CD73C424154"))
 }
 
 func Test_PrivateKey_parse_ParsePublicKeyofAPrivateKeyCorrectly(t *testing.T) {
-	var priv PrivateKey
-	var pk PublicKey
+	priv := &DSAPrivateKey{}
+	pk := &DSAPublicKey{}
 	priv.Parse(serializedPrivateKey)
 	pk.Parse(serializedPublicKey)
 
-	assertDeepEquals(t, priv.PublicKey, pk)
+	assertDeepEquals(t, priv.PublicKey(), pk)
 }
 
 func Test_PrivateKey_parse_ParseXofAPrivateKeyCorrectly(t *testing.T) {
-	var priv PrivateKey
+	priv := &DSAPrivateKey{}
 	_, ok := priv.Parse(serializedPrivateKey)
 	assertDeepEquals(t, priv.X, bnFromHex("14D0345A3562C480A039E3C72764F72D79043216"))
 	assertDeepEquals(t, ok, true)
 }
 
 func Test_PrivateKey_parse_ReturnsNotOKIfPublicKeyIsNotOK(t *testing.T) {
-	var priv PrivateKey
+	priv := &DSAPrivateKey{}
 	_, ok := priv.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
@@ -761,7 +760,7 @@ func Test_PrivateKey_parse_ReturnsNotOKIfPublicKeyIsNotOK(t *testing.T) {
 }
 
 func Test_PrivateKey_parse_ReturnsNotOKIfPrivateKeyIsNotOK(t *testing.T) {
-	var priv PrivateKey
+	priv := &DSAPrivateKey{}
 	_, ok := priv.Parse([]byte{
 		// key type for DSA
 		0x00, 0x00,
@@ -795,20 +794,20 @@ func Test_PrivateKey_parse_ReturnsNotOKIfPrivateKeyIsNotOK(t *testing.T) {
 }
 
 func Test_PublicKey_serialize_willSerializeAPublicKeyCorrectly(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	pk.Parse(serializedPublicKey)
 	result := pk.serialize()
 	assertDeepEquals(t, result, serializedPublicKey)
 }
 
 func Test_PublicKey_serialize_returnsEmptyForNil(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	result := pk.serialize()
 	assertNil(t, result)
 }
 
 func Test_PrivateKey_roundTripGeneratesCorrectValue(t *testing.T) {
-	var pk PrivateKey
+	pk := &DSAPrivateKey{}
 	pk.Parse(serializedPrivateKey)
 	result := pk.serialize()
 	assertDeepEquals(t, result, serializedPrivateKey)
@@ -817,17 +816,17 @@ func Test_PrivateKey_roundTripGeneratesCorrectValue(t *testing.T) {
 func Test_PublicKey_fingerprint_willGenerateACorrectFingerprint(t *testing.T) {
 	priv := parseIntoPrivateKey("000000000080c81c2cb2eb729b7e6fd48e975a932c638b3a9055478583afa46755683e30102447f6da2d8bec9f386bbb5da6403b0040fee8650b6ab2d7f32c55ab017ae9b6aec8c324ab5844784e9a80e194830d548fb7f09a0410df2c4d5c8bc2b3e9ad484e65412be689cf0834694e0839fb2954021521ffdffb8f5c32c14dbf2020b3ce7500000014da4591d58def96de61aea7b04a8405fe1609308d000000808ddd5cb0b9d66956e3dea5a915d9aba9d8a6e7053b74dadb2fc52f9fe4e5bcc487d2305485ed95fed026ad93f06ebb8c9e8baf693b7887132c7ffdd3b0f72f4002ff4ed56583ca7c54458f8c068ca3e8a4dfa309d1dd5d34e2a4b68e6f4338835e5e0fb4317c9e4c7e4806dafda3ef459cd563775a586dd91b1319f72621bf3f00000080b8147e74d8c45e6318c37731b8b33b984a795b3653c2cd1d65cc99efe097cb7eb2fa49569bab5aab6e8a1c261a27d0f7840a5e80b317e6683042b59b6dceca2879c6ffc877a465be690c15e4a42f9a7588e79b10faac11b1ce3741fcef7aba8ce05327a2c16d279ee1b3d77eb783fb10e3356caa25635331e26dd42b8396c4d00000001420bec691fea37ecea58a5c717142f0b804452f57")
 	expectedFingerprint := bytesFromHex("0bb01c360424522e94ee9c346ce877a1a4288b2f")
-	assertDeepEquals(t, priv.PublicKey.Fingerprint(sha1.New()), expectedFingerprint)
+	assertDeepEquals(t, priv.PublicKey().Fingerprint(otrV3{}.hashInstance()), expectedFingerprint)
 }
 
 func Test_PublicKey_fingerprint_generatesForEmpty(t *testing.T) {
-	var pk PublicKey
-	result := pk.Fingerprint(sha1.New())
+	pk := &DSAPublicKey{}
+	result := pk.Fingerprint(otrV3{}.hashInstance())
 	assertNil(t, result)
 }
 
 func Test_PublicKey_Verify_willReturnOK(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	pk.Parse(bytesFromHex("000000000080a5138eb3d3eb9c1d85716faecadb718f87d31aaed1157671d7fee7e488f95e8e0ba60ad449ec732710a7dec5190f7182af2e2f98312d98497221dff160fd68033dd4f3a33b7c078d0d9f66e26847e76ca7447d4bab35486045090572863d9e4454777f24d6706f63e02548dfec2d0a620af37bbc1d24f884708a212c343b480d00000014e9c58f0ea21a5e4dfd9f44b6a9f7f6a9961a8fa9000000803c4d111aebd62d3c50c2889d420a32cdf1e98b70affcc1fcf44d59cca2eb019f6b774ef88153fb9b9615441a5fe25ea2d11b74ce922ca0232bd81b3c0fcac2a95b20cb6e6c0c5c1ace2e26f65dc43c751af0edbb10d669890e8ab6beea91410b8b2187af1a8347627a06ecea7e0f772c28aae9461301e83884860c9b656c722f0000008065af8625a555ea0e008cd04743671a3cda21162e83af045725db2eb2bb52712708dc0cc1a84c08b3649b88a966974bde27d8612c2861792ec9f08786a246fcadd6d8d3a81a32287745f309238f47618c2bd7612cb8b02d940571e0f30b96420bcd462ff542901b46109b1e5ad6423744448d20a57818a8cbb1647d0fea3b664e"))
 	hashed := bytesFromHex("122773a99f5eafbaaa04b419b5c417b9949ce11bf199ea1bee3586619b94bb29")
 	sig := bytesFromHex("2e9e1c92773e6e51541f47f674f17e24138c48af2c86aea3e5689bd9116b5d6d28562c0aeb84a989")
@@ -837,7 +836,7 @@ func Test_PublicKey_Verify_willReturnOK(t *testing.T) {
 }
 
 func Test_PublicKey_Verify_willReturnNotOK(t *testing.T) {
-	var pk PublicKey
+	pk := &DSAPublicKey{}
 	pk.Parse(serializedPublicKey)
 	hashed := bytesFromHex("122773a99f5eafbaaa04b419b5c417b9949ce11bf199ea1bee3586619b94bb29")
 	sig := bytesFromHex("2e9e1c92773e6e51541f47f674f17e24138c48af2c86aea3e5689bd9116b5d6d28562c0aeb84a989")
@@ -1000,19 +999,19 @@ func Test_PrivateKey_ImportWithoutError(t *testing.T) {
  )
  )
 )`
-	priv := PrivateKey{}
+	priv := &DSAPrivateKey{}
 	ok := priv.Import([]byte(libOTRPrivateKey))
 	assertEquals(t, ok, true)
 }
 
 func Test_PrivateKey_GenerateWithoutError(t *testing.T) {
-	priv := PrivateKey{}
+	priv := &DSAPrivateKey{}
 	err := priv.Generate(rand.Reader)
 	assertEquals(t, err, nil)
 }
 
 func Test_PrivateKey_GenerateErrorWhenGenerateParams(t *testing.T) {
-	priv := PrivateKey{}
+	priv := &DSAPrivateKey{}
 	err := priv.Generate(fixedRand([]string{"ABCDEF"}))
 	assertEquals(t, err.Error(), "unexpected EOF")
 }
@@ -1027,9 +1026,9 @@ func Test_notHex(t *testing.T) {
 }
 
 func Test_exportAccounts_exportsAccounts(t *testing.T) {
-	var priv PrivateKey
+	priv := &DSAPrivateKey{}
 	priv.Parse(serializedPrivateKey)
-	acc := Account{Name: "hello", Protocol: "go-xmpp", Key: &priv}
+	acc := Account{name: "hello", protocol: "go-xmpp", key: priv}
 	bt := bytes.NewBuffer(make([]byte, 0, 200))
 	exportAccounts([]*Account{&acc}, bt)
 	assertDeepEquals(t, bt.String(),
@@ -1052,9 +1051,9 @@ func Test_exportAccounts_exportsAccounts(t *testing.T) {
 }
 
 func Test_ExportKeysToFile_exportsKeysToAFile(t *testing.T) {
-	var priv PrivateKey
+	priv := &DSAPrivateKey{}
 	priv.Parse(serializedPrivateKey)
-	acc := &Account{Name: "hello", Protocol: "go-xmpp", Key: &priv}
+	acc := &Account{name: "hello", protocol: "go-xmpp", key: priv}
 
 	err := ExportKeysToFile([]*Account{acc}, "test_resources/test_export_of_keys.blah")
 	assertNil(t, err)
@@ -1064,13 +1063,13 @@ func Test_ExportKeysToFile_exportsKeysToAFile(t *testing.T) {
 	defer os.Remove("test_resources/test_export_of_keys.blah")
 
 	assertNil(t, err2)
-	assertDeepEquals(t, res[0].Key, acc.Key)
+	assertDeepEquals(t, res[0].key, acc.key)
 }
 
 func Test_ExportKeysToFile_returnsAnErrorIfSomethingGoesWrong(t *testing.T) {
-	var priv PrivateKey
+	priv := &DSAPrivateKey{}
 	priv.Parse(serializedPrivateKey)
-	acc := &Account{Name: "hello", Protocol: "go-xmpp", Key: &priv}
+	acc := &Account{name: "hello", protocol: "go-xmpp", key: priv}
 
 	err := ExportKeysToFile([]*Account{acc}, "non_existing_directory/test_export_of_keys.blah")
 	assertDeepEquals(t, err.Error(), "open non_existing_directory/test_export_of_keys.blah: no such file or directory")

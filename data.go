@@ -1,7 +1,6 @@
 package otr3
 
 import (
-	"crypto/sha256"
 	"hash"
 	"math/big"
 	"strconv"
@@ -31,12 +30,7 @@ func appendMPIs(l []byte, r ...*big.Int) []byte {
 }
 
 func hashMPIs(h hash.Hash, magic byte, mpis ...*big.Int) []byte {
-	if h != nil {
-		h.Reset()
-	} else {
-		h = sha256.New()
-	}
-
+	h.Reset()
 	h.Write([]byte{magic})
 	for _, mpi := range mpis {
 		h.Write(appendMPI(nil, mpi))

@@ -58,7 +58,7 @@ func fixtureDHCommitMsgV2() []byte {
 
 func fixtureDHKeyMsg(v otrVersion) []byte {
 	c := fixtureConversationWithVersion(v)
-	c.ourKey = alicePrivateKey
+	c.ourCurrentKey = alicePrivateKey
 	msg, _ := c.dhKeyMessage()
 	msg, _ = c.wrapMessageHeader(msgTypeDHKey, msg)
 	return msg
@@ -149,9 +149,9 @@ func bobContextAtReceiveDHKey() *Conversation {
 	c := bobContextAtAwaitingDHKey()
 	c.ake.theirPublicValue = fixedGY() // stored at receiveDHKey
 
-	copy(c.ake.sigKey.c[:], bytesFromHex("d942cc80b66503414c05e3752d9ba5c4"))
-	copy(c.ake.sigKey.m1[:], bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
-	copy(c.ake.sigKey.m2[:], bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5"))
+	c.ake.sigKey.c = bytesFromHex("d942cc80b66503414c05e3752d9ba5c4")
+	c.ake.sigKey.m1 = bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c")
+	c.ake.sigKey.m2 = bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5")
 
 	return c
 }
@@ -161,7 +161,7 @@ func bobContextAtAwaitingDHKey() *Conversation {
 	c.initAKE()
 	c.Policies.add(allowV3)
 	c.ake.state = authStateAwaitingDHKey{}
-	c.ourKey = bobPrivateKey
+	c.ourCurrentKey = bobPrivateKey
 
 	copy(c.ake.r[:], fixedr)      // stored at sendDHCommit
 	c.setSecretExponent(fixedX()) // stored at sendDHCommit
@@ -181,7 +181,7 @@ func aliceContextAtAwaitingDHCommit() *Conversation {
 	c.initAKE()
 	c.Policies.add(allowV2)
 	c.ake.state = authStateNone{}
-	c.ourKey = alicePrivateKey
+	c.ourCurrentKey = alicePrivateKey
 	return c
 }
 
@@ -190,10 +190,10 @@ func aliceContextAtAwaitingRevealSig() *Conversation {
 	c.initAKE()
 	c.Policies.add(allowV2)
 	c.ake.state = authStateAwaitingRevealSig{}
-	c.ourKey = alicePrivateKey
+	c.ourCurrentKey = alicePrivateKey
 
-	copy(c.ake.hashedGx[:], hashedFixedGX()) //stored at receiveDHCommit
-	c.ake.encryptedGx = encryptedFixedGX()   //stored at receiveDHCommit
+	c.ake.xhashedGx = hashedFixedGX()      //stored at receiveDHCommit
+	c.ake.encryptedGx = encryptedFixedGX() //stored at receiveDHCommit
 
 	c.setSecretExponent(fixedY()) //stored at sendDHKey
 
@@ -210,7 +210,6 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	//We use a combination of ourKeyId, theirKeyID, senderKeyID and recipientKeyID
 	//to make sure both sender and receiver will use the same DH session keys
 	receiverContext := keyManagementContext{
-
 		ourKeyID:   senderKeyID + 1,
 		theirKeyID: recipientKeyID + 1,
 		ourCurrentDHKeys: dhKeyPair{
@@ -228,7 +227,7 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	c1 := receiverContext.counterHistory.findCounterFor(recipientKeyID, senderKeyID)
 	c1.theirKeyID = 1
 
-	keys := calculateDHSessionKeys(fixedX(), fixedGX(), fixedGY())
+	keys := calculateDHSessionKeys(fixedX(), fixedGX(), fixedGY(), conv.version)
 
 	h, _ := conv.messageHeader(msgTypeData)
 	m := dataMsg{
@@ -238,9 +237,11 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 		y:          fixedGY(), //this is alices current Pub
 		topHalfCtr: [8]byte{0, 0, 0, 0, 0, 0, 0, 2},
 	}
-	m.encryptedMsg = plain.encrypt(keys.sendingAESKey, m.topHalfCtr)
-	m.sign(keys.sendingMACKey, h)
-	msg := append(h, m.serialize()...)
+	m.encryptedMsg = plain.encrypt(keys.sendingAESKey[:], m.topHalfCtr)
+
+	// fmt.Printf("sendingMACKey2: len: %d %X\n", len(keys.sendingMACKey), keys.sendingMACKey)
+	m.sign(keys.sendingMACKey, h, conv.version)
+	msg := append(h, m.serialize(conv.version)...)
 
 	return msg, receiverContext
 }
@@ -264,20 +265,20 @@ func fixtureDecryptDataMsgBase(encryptedDataMsg []byte) ([]byte, plainDataMsg, e
 	}
 
 	m := dataMsg{}
-	err = m.deserialize(withoutHeader)
+	err = m.deserialize(withoutHeader, c.version)
 	if err != nil {
 		return nil, plainDataMsg{}, err
 	}
 
-	keys := calculateDHSessionKeys(fixedX(), fixedGX(), fixedGY())
+	keys := calculateDHSessionKeys(fixedX(), fixedGX(), fixedGY(), c.version)
 
 	exp := plainDataMsg{}
-	err = m.checkSign(keys.receivingMACKey, header)
+	err = m.checkSign(keys.receivingMACKey, header, c.version)
 	if err != nil {
 		return nil, plainDataMsg{}, err
 	}
 
-	exp.decrypt(keys.receivingAESKey, m.topHalfCtr, m.encryptedMsg)
+	exp.decrypt(keys.receivingAESKey[:], m.topHalfCtr, m.encryptedMsg)
 
 	return header, exp, nil
 }

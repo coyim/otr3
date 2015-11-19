@@ -26,6 +26,7 @@ func Test_checkVersion_returnsErrorIfTheMessageIsCorrupt(t *testing.T) {
 
 func Test_checkVersion_setsTheConversationVersionIfWeHaveNoExistingVersion(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV3)}
+	c.ourKeys = []PrivateKey{alicePrivateKey}
 	e := c.checkVersion([]byte{0x00, 0x03})
 	assertEquals(t, e, nil)
 	assertDeepEquals(t, c.version, otrV3{})
@@ -33,6 +34,7 @@ func Test_checkVersion_setsTheConversationVersionIfWeHaveNoExistingVersion(t *te
 
 func Test_checkVersion_setsTheConversationVersionIfWeHaveTheCorrectPolicy(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV2)}
+	c.ourKeys = []PrivateKey{alicePrivateKey}
 	e := c.checkVersion([]byte{0x00, 0x02})
 	assertEquals(t, e, nil)
 	assertDeepEquals(t, c.version, otrV2{})
@@ -40,18 +42,21 @@ func Test_checkVersion_setsTheConversationVersionIfWeHaveTheCorrectPolicy(t *tes
 
 func Test_checkVersion_returnsTheErrorFromNewOtrVersion(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV2)}
+	c.ourKeys = []PrivateKey{alicePrivateKey}
 	e := c.checkVersion([]byte{0x00, 0x03})
 	assertEquals(t, e, errUnsupportedOTRVersion)
 }
 
 func Test_checkVersion_doesNotSetConversationVersionIfOneIsAlreadySet(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV2 | allowV3), version: otrV3{}}
+	c.ourKeys = []PrivateKey{alicePrivateKey}
 	c.checkVersion([]byte{0x00, 0x02})
 	assertEquals(t, otrV3{}, c.version)
 }
 
 func Test_checkVersion_returnsErrorIfCurrentVersionIsDifferentFromMessageVersion(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV2 | allowV3), version: otrV3{}}
+	c.ourKeys = []PrivateKey{alicePrivateKey}
 	e := c.checkVersion([]byte{0x00, 0x02})
 	assertEquals(t, e, errWrongProtocolVersion)
 }

@@ -2,6 +2,8 @@ package otr3
 
 import (
 	"bytes"
+	"errors"
+	"hash"
 	"math/big"
 )
 
@@ -15,6 +17,14 @@ type otrVersion interface {
 	whitespaceTag() []byte
 	messageHeader(c *Conversation, msgType byte) ([]byte, error)
 	parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error)
+	hash([]byte) []byte
+	hashInstance() hash.Hash
+	hashLength() int
+	hash2([]byte) []byte
+	hash2Instance() hash.Hash
+	hash2Length() int
+	truncateLength() int
+	keyLength() int
 }
 
 func newOtrVersion(v uint16, p policies) (version otrVersion, err error) {
@@ -73,23 +83,28 @@ func (c *Conversation) commitToVersionFrom(versions int) error {
 	}
 
 	var version otrVersion
-	var toCheck policy
 
 	switch {
 	case c.Policies.has(allowV3) && versions&(1<<3) > 0:
 		version = otrV3{}
-		toCheck = allowV3
 	case c.Policies.has(allowV2) && versions&(1<<2) > 0:
 		version = otrV2{}
-		toCheck = allowV2
 	default:
 		return errUnsupportedOTRVersion
 	}
 
-	if !c.Policies.has(toCheck) {
-		return errInvalidVersion
+	c.version = version
+
+	return c.setKeyMatchingVersion()
+}
+
+func (c *Conversation) setKeyMatchingVersion() error {
+	for _, k := range c.ourKeys {
+		if k.IsAvailableForVersion(c.version.protocolVersion()) {
+			c.ourCurrentKey = k
+			return nil
+		}
 	}
 
-	c.version = version
-	return nil
+	return errors.New("no possible key for current version")
 }

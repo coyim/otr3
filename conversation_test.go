@@ -9,6 +9,7 @@ import (
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	c := newConversation(nil, fixtureRand())
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 	c.Policies.add(allowV3)
 
 	exp := messageWithHeader{
@@ -17,15 +18,17 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	}
 
 	_, enc, err := c.Receive(msg)
+	assertEquals(t, err, nil)
+
 	toSend, _ := c.decode(encodedMessage(enc[0]))
 
-	assertEquals(t, err, nil)
 	assertDeepEquals(t, toSend[:3], exp)
 }
 
 func Test_receive_OTRQueryMsgChangesContextProtocolVersion(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	c := newConversation(nil, fixtureRand())
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 	c.Policies.add(allowV3)
 
 	_, _, err := c.Receive(msg)
@@ -38,6 +41,7 @@ func Test_receive_verifiesMessageProtocolVersion(t *testing.T) {
 	// protocol version
 	msg := []byte{0x00, 0x02, 0x00, msgTypeDHKey}
 	c := newConversation(otrV3{}, fixtureRand())
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 
 	_, _, err := c.receiveDecoded(msg)
 
@@ -47,6 +51,7 @@ func Test_receive_verifiesMessageProtocolVersion(t *testing.T) {
 func Test_receive_returnsAnErrorForAnInvalidOTRMessageWithoutVersionData(t *testing.T) {
 	msg := []byte{0x00}
 	c := newConversation(otrV3{}, fixtureRand())
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 
 	_, _, err := c.receiveDecoded(msg)
 
@@ -61,6 +66,7 @@ func Test_receive_ignoresAMessageWhenNoEncryptionIsActive(t *testing.T) {
 		0x00, 0x00, 0x01, 0x01,
 	}
 	c := newConversation(otrV3{}, fixtureRand())
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 
 	a, b, err := c.receiveDecoded(m)
 	assertNil(t, a)
@@ -76,6 +82,7 @@ func Test_receiveDecoded_signalsAMessageEventForADataMessageWhenNoEncryptionIsAc
 		0x00, 0x00, 0x01, 0x01,
 	}
 	c := newConversation(otrV3{}, fixtureRand())
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 
 	c.expectMessageEvent(t, func() {
 		c.receiveDecoded(m)
@@ -375,7 +382,7 @@ func Test_receive_canDecodeOTRMessagesWithoutFragments(t *testing.T) {
 func Test_receive_ignoresMessagesWithWrongInstanceTags(t *testing.T) {
 	bob := newConversation(otrV3{}, rand.Reader)
 	bob.Policies.add(allowV3)
-	bob.ourKey = bobPrivateKey
+	bob.ourCurrentKey = bobPrivateKey
 
 	var msg []byte
 	msg, bob.keys = fixtureDataMsg(plainDataMsg{})
@@ -411,18 +418,9 @@ func Test_receive_doesntDisplayErrorMessageToTheUserAndStartAKE(t *testing.T) {
 	assertDeepEquals(t, toSend[0], ValidMessage("?OTRv3?"))
 }
 
-//TODO: remove me
-func Test_Conversation_SetKeys_setsTheKeys(t *testing.T) {
-	c := &Conversation{}
-	c.SetKeys(bobPrivateKey, &alicePrivateKey.PublicKey)
-
-	assertEquals(t, c.ourKey, bobPrivateKey)
-	assertEquals(t, c.theirKey, &alicePrivateKey.PublicKey)
-}
-
 func Test_Conversation_GetTheirKey_getsTheirKey(t *testing.T) {
-	c := &Conversation{theirKey: &bobPrivateKey.PublicKey}
-	assertEquals(t, c.GetTheirKey(), &bobPrivateKey.PublicKey)
+	c := &Conversation{theirKey: bobPrivateKey.PublicKey()}
+	assertEquals(t, c.GetTheirKey(), bobPrivateKey.PublicKey())
 }
 
 func Test_Conversation_GetSSID_getsTheSSID(t *testing.T) {

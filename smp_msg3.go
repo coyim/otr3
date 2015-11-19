@@ -34,7 +34,7 @@ func (c *Conversation) generateSMP3Parameters() (s smp3State, err error) {
 	return s, firstError(err1, err2, err3, err4)
 }
 
-func generateSMP3Message(s *smp3State, s1 smp1State, m2 smp2Message) smp3Message {
+func generateSMP3Message(s *smp3State, s1 smp1State, m2 smp2Message, v otrVersion) smp3Message {
 	var m smp3Message
 
 	g2 := modExp(m2.g2b, s1.a2)
@@ -47,13 +47,13 @@ func generateSMP3Message(s *smp3State, s1 smp1State, m2 smp2Message) smp3Message
 	s.qaqb = divMod(m.qa, m2.qb, p)
 	s.papb = divMod(m.pa, m2.pb, p)
 
-	m.cp = hashMPIsBN(nil, 6, modExp(g3, s.r5), mulMod(modExp(g1, s.r5), modExp(g2, s.r6), p))
+	m.cp = hashMPIsBN(v.hash2Instance(), 6, modExp(g3, s.r5), mulMod(modExp(g1, s.r5), modExp(g2, s.r6), p))
 	m.d5 = generateDZKP(s.r5, s.r4, m.cp)
 	m.d6 = generateDZKP(s.r6, s.x, m.cp)
 
 	m.ra = modExp(s.qaqb, s1.a3)
 
-	m.cr = hashMPIsBN(nil, 7, modExp(g1, s.r7), modExp(s.qaqb, s.r7))
+	m.cr = hashMPIsBN(v.hash2Instance(), 7, modExp(g1, s.r7), modExp(s.qaqb, s.r7))
 	m.d7 = subMod(s.r7, mul(s1.a3, m.cr), q)
 
 	return m
@@ -64,7 +64,7 @@ func (c *Conversation) generateSMP3(secret *big.Int, s1 smp1State, m2 smp2Messag
 		return s, err
 	}
 	s.x = secret
-	s.msg = generateSMP3Message(&s, s1, m2)
+	s.msg = generateSMP3Message(&s, s1, m2, c.version)
 	return
 }
 
@@ -81,13 +81,13 @@ func (c *Conversation) verifySMP3(s2 *smp2State, msg smp3Message) error {
 		return newOtrError("Ra is an invalid group element")
 	}
 
-	if !verifyZKP3(msg.cp, s2.g2, s2.g3, msg.d5, msg.d6, msg.pa, msg.qa, 6) {
+	if !verifyZKP3(msg.cp, s2.g2, s2.g3, msg.d5, msg.d6, msg.pa, msg.qa, 6, c.version) {
 		return newOtrError("cP is not a valid zero knowledge proof")
 	}
 
 	qaqb := divMod(msg.qa, s2.qb, p)
 
-	if !verifyZKP4(msg.cr, s2.g3a, msg.d7, qaqb, msg.ra, 7) {
+	if !verifyZKP4(msg.cr, s2.g3a, msg.d7, qaqb, msg.ra, 7, c.version) {
 		return newOtrError("cR is not a valid zero knowledge proof")
 	}
 

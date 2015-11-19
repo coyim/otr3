@@ -39,14 +39,14 @@ func (c *Conversation) generateSMP2Parameters() (s smp2State, err error) {
 	return s, firstError(err1, err2, err3, err4, err5, err6, err7)
 }
 
-func generateSMP2Message(s *smp2State, s1 smp1Message) smp2Message {
+func generateSMP2Message(s *smp2State, s1 smp1Message, v otrVersion) smp2Message {
 	var m smp2Message
 
 	m.g2b = modExp(g1, s.b2)
 	m.g3b = modExp(g1, s.b3)
 
-	m.c2, m.d2 = generateZKP(s.r2, s.b2, 3)
-	m.c3, m.d3 = generateZKP(s.r3, s.b3, 4)
+	m.c2, m.d2 = generateZKP(s.r2, s.b2, 3, v)
+	m.c3, m.d3 = generateZKP(s.r3, s.b3, 4, v)
 
 	s.g3a = s1.g3a
 	s.g2 = modExp(s1.g2a, s.b2)
@@ -58,7 +58,7 @@ func generateSMP2Message(s *smp2State, s1 smp1Message) smp2Message {
 	m.pb = s.pb
 	m.qb = s.qb
 
-	m.cp = hashMPIsBN(nil, 5,
+	m.cp = hashMPIsBN(v.hash2Instance(), 5,
 		modExp(s.g3, s.r5),
 		mulMod(modExp(g1, s.r5), modExp(s.g2, s.r6), p))
 
@@ -74,7 +74,7 @@ func (c *Conversation) generateSMP2(secret *big.Int, s1 smp1Message) (s smp2Stat
 	}
 
 	s.y = secret
-	s.msg = generateSMP2Message(&s, s1)
+	s.msg = generateSMP2Message(&s, s1, c.version)
 	return
 }
 
@@ -95,18 +95,18 @@ func (c *Conversation) verifySMP2(s1 *smp1State, msg smp2Message) error {
 		return newOtrError("Qb is an invalid group element")
 	}
 
-	if !verifyZKP(msg.d2, msg.g2b, msg.c2, 3) {
+	if !verifyZKP(msg.d2, msg.g2b, msg.c2, 3, c.version) {
 		return newOtrError("c2 is not a valid zero knowledge proof")
 	}
 
-	if !verifyZKP(msg.d3, msg.g3b, msg.c3, 4) {
+	if !verifyZKP(msg.d3, msg.g3b, msg.c3, 4, c.version) {
 		return newOtrError("c3 is not a valid zero knowledge proof")
 	}
 
 	g2 := modExp(msg.g2b, s1.a2)
 	g3 := modExp(msg.g3b, s1.a3)
 
-	if !verifyZKP2(g2, g3, msg.d5, msg.d6, msg.pb, msg.qb, msg.cp, 5) {
+	if !verifyZKP2(g2, g3, msg.d5, msg.d6, msg.pb, msg.qb, msg.cp, 5, c.version) {
 		return newOtrError("cP is not a valid zero knowledge proof")
 	}
 

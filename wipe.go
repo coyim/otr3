@@ -17,10 +17,12 @@ func (k *akeKeys) wipe() {
 	if k == nil {
 		return
 	}
-
-	wipeBytes(k.c[:])
-	wipeBytes(k.m1[:])
-	wipeBytes(k.m2[:])
+	wipeBytes(k.c)
+	k.c = nil
+	wipeBytes(k.m1)
+	k.m1 = nil
+	wipeBytes(k.m2)
+	k.m2 = nil
 }
 
 func (a *ake) wipe(wipeKeys bool) {
@@ -55,8 +57,9 @@ func (a *ake) wipeGX() {
 		return
 	}
 
-	wipeBytes(a.hashedGx[:])
+	wipeBytes(a.xhashedGx)
 	wipeBytes(a.encryptedGx[:])
+	a.xhashedGx = nil
 	a.encryptedGx = nil
 }
 
@@ -86,7 +89,7 @@ func (c *keyManagementContext) wipe() {
 
 	for i := range c.oldMACKeys {
 		c.oldMACKeys[i].wipe()
-		c.oldMACKeys[i] = macKey{}
+		c.oldMACKeys[i] = []byte{}
 	}
 	c.oldMACKeys = nil
 
@@ -154,7 +157,8 @@ func (k *macKey) wipe() {
 		return
 	}
 
-	wipeBytes(k[:])
+	wipeBytes(*k)
+	*k = []byte{}
 }
 
 func zeroes(n int) []byte {

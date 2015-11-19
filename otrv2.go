@@ -2,7 +2,11 @@ package otr3
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
+	"hash"
 	"math/big"
 )
 
@@ -57,4 +61,46 @@ func (v otrV2) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, 
 		return nil, nil, errInvalidOTRMessage
 	}
 	return msg[:otrv2HeaderLen], msg[otrv2HeaderLen:], nil
+}
+
+func (v otrV2) hashInstance() hash.Hash {
+	return sha1.New()
+	// return sha3.New256()
+}
+
+func (v otrV2) hash(val []byte) []byte {
+	ret := sha1.Sum(val)
+	return ret[:]
+	// ret := sha3.Sum256(val)
+	// return ret[:]
+}
+
+func (v otrV2) hashLength() int {
+	return sha1.Size
+	// return 32
+}
+
+func (v otrV2) hash2Instance() hash.Hash {
+	return sha256.New()
+	// return sha3.New256()
+}
+
+func (v otrV2) hash2(val []byte) []byte {
+	ret := sha256.Sum256(val)
+	return ret[:]
+	// ret := sha3.Sum256(val)
+	// return ret[:]
+}
+
+func (v otrV2) hash2Length() int {
+	return sha256.Size
+	// return 32
+}
+
+func (v otrV2) truncateLength() int {
+	return 20
+}
+
+func (v otrV2) keyLength() int {
+	return aes.BlockSize
 }

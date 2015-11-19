@@ -1,8 +1,6 @@
 package otr3
 
 import (
-	"crypto/aes"
-	"crypto/sha256"
 	"math/big"
 	"testing"
 )
@@ -38,7 +36,7 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing
 
 	authStateNone{}.receiveDHCommitMessage(c, dhCommitMsg)
 
-	assertDeepEquals(t, c.ake.hashedGx[:], hashedGx)
+	assertDeepEquals(t, c.ake.xhashedGx, hashedGx)
 	assertDeepEquals(t, c.ake.encryptedGx, encryptedGx)
 }
 
@@ -59,8 +57,8 @@ func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing
 
 func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedGx(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	c.ake.encryptedGx = []byte{0x02}         //some encryptedGx
-	c.ake.hashedGx = [sha256.Size]byte{0x05} //some hashedGx
+	c.ake.encryptedGx = []byte{0x02}                                 //some encryptedGx
+	c.ake.xhashedGx = fixedSize(otrV3{}.hash2Length(), []byte{0x05}) //some hashedGx
 
 	newDHCommitMsg := fixtureDHCommitMsgBody()
 	newMsg, newEncryptedGx, _ := extractData(newDHCommitMsg)
@@ -70,7 +68,7 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 
 	authStateAwaitingRevealSig{}.receiveDHCommitMessage(c, newDHCommitMsg)
 	assertDeepEquals(t, c.ake.encryptedGx, newEncryptedGx)
-	assertDeepEquals(t, c.ake.hashedGx[:], newHashedGx)
+	assertDeepEquals(t, c.ake.xhashedGx, newHashedGx)
 }
 
 func Test_receiveDHCommit_AtAuthAwaitingSigTransitionsToAwaitingRevSigAndSendsNewDHKeyMsg(t *testing.T) {
@@ -171,9 +169,9 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, c.ake.theirPublicValue, fixedGY())
-	assertDeepEquals(t, c.ake.sigKey.c[:], expectedC)
-	assertDeepEquals(t, c.ake.sigKey.m1[:], expectedM1)
-	assertDeepEquals(t, c.ake.sigKey.m2[:], expectedM2)
+	assertDeepEquals(t, c.ake.sigKey.c, expectedC)
+	assertDeepEquals(t, c.ake.sigKey.m1, expectedM1)
+	assertDeepEquals(t, c.ake.sigKey.m2, expectedM2)
 }
 
 func Test_receiveDHKey_AtAwaitingDHKey_storesOursAndTheirDHKeys(t *testing.T) {
@@ -202,7 +200,7 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
 	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-	c.ourKey = bobPrivateKey
+	c.ourCurrentKey = bobPrivateKey
 
 	assertDeepEquals(t, c.ake.theirPublicValue, nilB)
 
@@ -338,15 +336,14 @@ func Test_receiveDecoded_receiveRevealSigMessageAndSetMessageStateToEncrypted(t 
 
 func Test_receiveDecoded_receiveRevealSigMessageWillResendPotentialLastMessage(t *testing.T) {
 	c := aliceContextAtAwaitingRevealSig()
-	c.resend.later(MessagePlaintext("what do you think turn 2"))
-	c.resend.later(MessagePlaintext("I mean, about that thing"))
+	c.resend.lastMessage = MessagePlaintext("what do you think turn 2")
 	c.resend.mayRetransmit = retransmitWithPrefix
 	c.updateLastSent()
 	msg := fixtureRevealSigMsg(otrV2{})
 
 	c.expectMessageEvent(t, func() {
 		_, toSends, _ := c.receiveDecoded(msg)
-		assertEquals(t, len(toSends), 3)
+		assertEquals(t, len(toSends), 2)
 	}, MessageEventMessageResent, nil, nil)
 }
 
@@ -405,8 +402,7 @@ func Test_receiveDecoded_receiveSigMessageAndSetMessageStateToEncrypted(t *testi
 
 func Test_receiveDecoded_receiveSigMessageWillResendTheLastPotentialMessage(t *testing.T) {
 	c := bobContextAtAwaitingSig()
-	c.resend.later(MessagePlaintext("what do you think"))
-	c.resend.later(MessagePlaintext("you think, dont you?"))
+	c.resend.lastMessage = MessagePlaintext("what do you think")
 	c.resend.mayRetransmit = retransmitWithPrefix
 	c.updateLastSent()
 
@@ -414,7 +410,7 @@ func Test_receiveDecoded_receiveSigMessageWillResendTheLastPotentialMessage(t *t
 
 	c.expectMessageEvent(t, func() {
 		_, toSends, _ := c.receiveDecoded(msg)
-		assertEquals(t, len(toSends), 2) // Only the retransmit messages, nothing else
+		assertEquals(t, len(toSends), 1) // Only a retransmit message, nothing else
 	}, MessageEventMessageResent, nil, nil)
 }
 
@@ -452,7 +448,7 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyR
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
 	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-	c.ourKey = bobPrivateKey
+	c.ourCurrentKey = bobPrivateKey
 
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, []byte{0x00, 0x02})
 
@@ -466,7 +462,7 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMess
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
 	c.initAKE()
 	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-	c.ourKey = bobPrivateKey
+	c.ourCurrentKey = bobPrivateKey
 
 	sameDHKeyMsg := fixtureDHKeyMsgBody(otrV3{})
 	_, _, err := authStateAwaitingDHKey{}.receiveDHKeyMessage(c, sameDHKeyMsg)
@@ -481,7 +477,7 @@ func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyRet
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
 	c.setSecretExponent(ourDHCommitAKE.ake.secretExponent)
-	c.ourKey = bobPrivateKey
+	c.ourCurrentKey = bobPrivateKey
 
 	_, _, err := authStateAwaitingSig{}.receiveDHKeyMessage(c, []byte{0x01, 0x02})
 
@@ -597,8 +593,8 @@ func Test_authStateAwaitingSig_String_returnsTheCorrectString(t *testing.T) {
 
 func Test_akeHasFinished_willSignalThatWeAreTalkingToOurselvesIfWeAre(t *testing.T) {
 	c := bobContextAfterAKE()
-	c.ourKey = bobPrivateKey
-	c.theirKey = &bobPrivateKey.PublicKey
+	c.ourCurrentKey = bobPrivateKey
+	c.theirKey = bobPrivateKey.PublicKey()
 
 	c.expectMessageEvent(t, func() {
 		c.akeHasFinished()
@@ -607,8 +603,8 @@ func Test_akeHasFinished_willSignalThatWeAreTalkingToOurselvesIfWeAre(t *testing
 
 func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeHave(t *testing.T) {
 	c := bobContextAfterAKE()
-	c.ourKey = bobPrivateKey
-	c.theirKey = &alicePrivateKey.PublicKey
+	c.ourCurrentKey = bobPrivateKey
+	c.theirKey = alicePrivateKey.PublicKey()
 	c.msgState = plainText
 
 	c.expectSecurityEvent(t, func() {
@@ -618,8 +614,8 @@ func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeHave(t *testing.T) {
 
 func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeWereFinished(t *testing.T) {
 	c := bobContextAfterAKE()
-	c.ourKey = bobPrivateKey
-	c.theirKey = &alicePrivateKey.PublicKey
+	c.ourCurrentKey = bobPrivateKey
+	c.theirKey = alicePrivateKey.PublicKey()
 	c.msgState = plainText
 
 	c.expectSecurityEvent(t, func() {
@@ -629,8 +625,8 @@ func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeWereFinished(t *testi
 
 func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeHaveRefreshed(t *testing.T) {
 	c := bobContextAfterAKE()
-	c.ourKey = bobPrivateKey
-	c.theirKey = &alicePrivateKey.PublicKey
+	c.ourCurrentKey = bobPrivateKey
+	c.theirKey = alicePrivateKey.PublicKey()
 	c.msgState = encrypted
 
 	c.expectSecurityEvent(t, func() {
@@ -640,19 +636,19 @@ func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeHaveRefreshed(t *test
 
 func Test_akeHasFinished_wipesAKEKeys(t *testing.T) {
 	c := &Conversation{}
-	c.ourKey = bobPrivateKey
-	c.theirKey = &bobPrivateKey.PublicKey
+	c.ourCurrentKey = bobPrivateKey
+	c.theirKey = bobPrivateKey.PublicKey()
 
 	revKey := akeKeys{
-		c:  [aes.BlockSize]byte{1, 2, 3},
-		m1: [sha256.Size]byte{4, 5, 6},
-		m2: [sha256.Size]byte{7, 8, 9},
+		c:  fixedSize(16, []byte{1, 2, 3}),
+		m1: fixedSize(32, []byte{4, 5, 6}),
+		m2: fixedSize(32, []byte{7, 8, 9}),
 	}
 
 	sigKey := akeKeys{
-		c:  [aes.BlockSize]byte{3, 2, 1},
-		m1: [sha256.Size]byte{6, 5, 4},
-		m2: [sha256.Size]byte{9, 8, 7},
+		c:  fixedSize(16, []byte{3, 2, 1}),
+		m1: fixedSize(32, []byte{6, 5, 4}),
+		m2: fixedSize(32, []byte{9, 8, 7}),
 	}
 
 	c.ake = &ake{
@@ -663,7 +659,7 @@ func Test_akeHasFinished_wipesAKEKeys(t *testing.T) {
 		sigKey:           sigKey,
 		r:                [16]byte{1, 2, 3},
 		encryptedGx:      []byte{1, 2, 3},
-		hashedGx:         [sha256.Size]byte{1, 2, 3},
+		xhashedGx:        fixedSize(otrV3{}.hash2Length(), []byte{1, 2, 3}),
 		state:            authStateNone{},
 	}
 

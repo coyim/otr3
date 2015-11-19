@@ -3,8 +3,6 @@ package otr3
 import (
 	"crypto/aes"
 	"crypto/hmac"
-	"crypto/sha1"
-	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/binary"
 	"math/big"
@@ -30,12 +28,14 @@ type message interface {
 
 type dhCommit struct {
 	encryptedGx []byte
-	hashedGx    [sha256.Size]byte
+
+	// SIZE: this should always be version.hash2Length
+	yhashedGx []byte
 }
 
 func (c dhCommit) serialize() []byte {
 	out := appendData(nil, c.encryptedGx)
-	out = appendData(out, c.hashedGx[:])
+	out = appendData(out, c.yhashedGx)
 	return out
 }
 
@@ -46,7 +46,7 @@ func (c *dhCommit) deserialize(msg []byte) error {
 	if !ok1 || !ok2 {
 		return newOtrError("corrupt DH commit message")
 	}
-	copy(c.hashedGx[:], h)
+	c.yhashedGx = h
 	return nil
 }
 
@@ -70,22 +70,23 @@ func (c *dhKey) deserialize(msg []byte) error {
 }
 
 type revealSig struct {
+	// TODO: why this number here?
 	r            [16]byte
 	encryptedSig []byte
 	macSig       []byte
 }
 
-func (c revealSig) serialize() []byte {
+func (c revealSig) serialize(v otrVersion) []byte {
 	var out []byte
 	out = appendData(out, c.r[:])
 	out = append(out, c.encryptedSig...)
-	return append(out, c.macSig[:20]...)
+	return append(out, c.macSig[:v.truncateLength()]...)
 }
 
-func (c *revealSig) deserialize(msg []byte) error {
+func (c *revealSig) deserialize(msg []byte, v otrVersion) error {
 	in, r, ok1 := extractData(msg)
 	macSig, encryptedSig, ok2 := extractData(in)
-	if !ok1 || !ok2 || len(macSig) != 20 {
+	if !ok1 || !ok2 || len(macSig) != v.truncateLength() {
 		return newOtrError("corrupt reveal signature message")
 	}
 
@@ -100,10 +101,10 @@ type sig struct {
 	macSig       []byte
 }
 
-func (c sig) serialize() []byte {
+func (c sig) serialize(v otrVersion) []byte {
 	var out []byte
 	out = append(out, c.encryptedSig...)
-	return append(out, c.macSig[:20]...)
+	return append(out, c.macSig[:v.truncateLength()]...)
 }
 
 func (c *sig) deserialize(msg []byte) error {
@@ -121,31 +122,31 @@ type dataMsg struct {
 	flag                        byte
 	senderKeyID, recipientKeyID uint32
 	y                           *big.Int
-	topHalfCtr                  [8]byte
-	encryptedMsg                []byte
-	authenticator               [20]byte
-	oldMACKeys                  []macKey
-	serializeUnsignedCache      []byte
+	// SIZE: 8 is half of the AES block size used
+	topHalfCtr             [8]byte
+	encryptedMsg           []byte
+	authenticator          []byte
+	oldMACKeys             []macKey
+	serializeUnsignedCache []byte
 }
 
-func (c *dataMsg) sign(key macKey, header []byte) {
+func (c *dataMsg) sign(key []byte, header []byte, v otrVersion) {
 	if c.serializeUnsignedCache == nil {
 		c.serializeUnsignedCache = c.serializeUnsigned()
 	}
-	mac := hmac.New(sha1.New, key[:])
+	mac := hmac.New(v.hashInstance, key)
 	mac.Write(header)
 	mac.Write(c.serializeUnsignedCache)
-	copy(c.authenticator[:], mac.Sum(nil))
+	c.authenticator = mac.Sum(nil)
 }
 
-func (c dataMsg) checkSign(key macKey, header []byte) error {
-	var authenticatorCalculated [20]byte
-	mac := hmac.New(sha1.New, key[:])
+func (c dataMsg) checkSign(key []byte, header []byte, v otrVersion) error {
+	mac := hmac.New(v.hashInstance, key[:])
 	mac.Write(header)
 	mac.Write(c.serializeUnsignedCache)
-	copy(authenticatorCalculated[:], mac.Sum(nil))
+	authenticatorCalculated := mac.Sum(nil)
 
-	if subtle.ConstantTimeCompare(c.authenticator[:], authenticatorCalculated[:]) == 0 {
+	if subtle.ConstantTimeCompare(c.authenticator, authenticatorCalculated) == 0 {
 		return newOtrConflictError("bad signature MAC in encrypted signature")
 	}
 	return nil
@@ -208,15 +209,15 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	return nil
 }
 
-func (c dataMsg) serialize() []byte {
+func (c dataMsg) serialize(v otrVersion) []byte {
 	if c.serializeUnsignedCache == nil {
 		c.serializeUnsignedCache = c.serializeUnsigned()
 	}
 
 	out := makeCopy(c.serializeUnsignedCache)
-	out = append(out, c.authenticator[:]...)
+	out = append(out, c.authenticator...)
 
-	keyLen := len(macKey{})
+	keyLen := v.hashLength()
 	revKeys := make([]byte, 0, len(c.oldMACKeys)*keyLen)
 	for _, k := range c.oldMACKeys {
 		revKeys = append(revKeys, k[:]...)
@@ -226,13 +227,13 @@ func (c dataMsg) serialize() []byte {
 	return out
 }
 
-func (c *dataMsg) deserialize(msg []byte) error {
+func (c *dataMsg) deserialize(msg []byte, v otrVersion) error {
 	if err := c.deserializeUnsigned(msg); err != nil {
 		return err
 	}
 
 	msg = msg[len(c.serializeUnsignedCache):]
-	copy(c.authenticator[:], msg)
+	c.authenticator = msg[0:v.hashLength()]
 	msg = msg[len(c.authenticator):]
 
 	var revKeysBytes []byte
@@ -241,11 +242,11 @@ func (c *dataMsg) deserialize(msg []byte) error {
 		return newOtrError("dataMsg.deserialize corrupted revealMACKeys")
 	}
 	for len(revKeysBytes) > 0 {
-		var revKey macKey
-		if len(revKeysBytes) < sha1.Size {
+		if len(revKeysBytes) < v.hashLength() {
 			return newOtrError("dataMsg.deserialize corrupted revealMACKeys")
 		}
-		copy(revKey[:], revKeysBytes)
+		revKey := make([]byte, v.hashLength())
+		copy(revKey, revKeysBytes)
 		c.oldMACKeys = append(c.oldMACKeys, revKey)
 		revKeysBytes = revKeysBytes[len(revKey):]
 	}
@@ -317,7 +318,7 @@ func (c plainDataMsg) pad() plainDataMsg {
 	return c
 }
 
-func (c plainDataMsg) encrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte) []byte {
+func (c plainDataMsg) encrypt(key []byte, topHalfCtr [8]byte) []byte {
 	var iv [aes.BlockSize]byte
 	copy(iv[:], topHalfCtr[:])
 
@@ -327,7 +328,7 @@ func (c plainDataMsg) encrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte) []byt
 	return dst
 }
 
-func (c *plainDataMsg) decrypt(key [aes.BlockSize]byte, topHalfCtr [8]byte, src []byte) error {
+func (c *plainDataMsg) decrypt(key []byte, topHalfCtr [8]byte, src []byte) error {
 	var iv [aes.BlockSize]byte
 	copy(iv[:], topHalfCtr[:])
 

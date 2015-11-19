@@ -36,11 +36,11 @@ func (c *Conversation) generateSMP1Parameters() (s smp1State, err error) {
 	return s, firstError(err1, err2, err3, err4)
 }
 
-func generateSMP1Message(s smp1State) (m smp1Message) {
+func generateSMP1Message(s smp1State, v otrVersion) (m smp1Message) {
 	m.g2a = modExp(g1, s.a2)
 	m.g3a = modExp(g1, s.a3)
-	m.c2, m.d2 = generateZKP(s.r2, s.a2, 1)
-	m.c3, m.d3 = generateZKP(s.r3, s.a3, 2)
+	m.c2, m.d2 = generateZKP(s.r2, s.a2, 1, v)
+	m.c3, m.d3 = generateZKP(s.r3, s.a3, 2, v)
 	return
 }
 
@@ -48,7 +48,7 @@ func (c *Conversation) generateSMP1() (s smp1State, err error) {
 	if s, err = c.generateSMP1Parameters(); err != nil {
 		return s, err
 	}
-	s.msg = generateSMP1Message(s)
+	s.msg = generateSMP1Message(s, c.version)
 	return
 }
 
@@ -61,11 +61,11 @@ func (c *Conversation) verifySMP1(msg smp1Message) error {
 		return newOtrError("g3a is an invalid group element")
 	}
 
-	if !verifyZKP(msg.d2, msg.g2a, msg.c2, 1) {
+	if !verifyZKP(msg.d2, msg.g2a, msg.c2, 1, c.version) {
 		return newOtrError("c2 is not a valid zero knowledge proof")
 	}
 
-	if !verifyZKP(msg.d3, msg.g3a, msg.c3, 2) {
+	if !verifyZKP(msg.d3, msg.g3a, msg.c3, 2, c.version) {
 		return newOtrError("c3 is not a valid zero knowledge proof")
 	}
 

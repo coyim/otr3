@@ -15,7 +15,7 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 		return dataMsg{}, dataMessageExtra{}, newOtrConflictError("cannot send message in unencrypted state")
 	}
 
-	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID)
+	keys, err := c.keys.calculateDHSessionKeys(c.keys.ourKeyID-1, c.keys.theirKeyID, c.version)
 	if err != nil {
 		return dataMsg{}, dataMessageExtra{}, err
 	}
@@ -34,7 +34,7 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 		tlvs:    tlvs,
 	}
 
-	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
+	encrypted := plain.encrypt(keys.sendingAESKey[:], topHalfCtr)
 
 	header, err := c.messageHeader(msgTypeData)
 	if err != nil {
@@ -50,7 +50,9 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 		encryptedMsg:   encrypted,
 		oldMACKeys:     c.keys.revealMACKeys(),
 	}
-	dataMessage.sign(keys.sendingMACKey, header)
+
+	// fmt.Printf("sendingMACKey: len: %d %X\n", len(keys.sendingMACKey), keys.sendingMACKey)
+	dataMessage.sign(keys.sendingMACKey, header, c.version)
 
 	c.updateMayRetransmitTo(noRetransmit)
 	c.lastMessage(message)
@@ -73,7 +75,7 @@ func (c *Conversation) createSerializedDataMessage(msg []byte, flag byte, tlvs [
 		return nil, dataMessageExtra{}, err
 	}
 
-	res, err := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+	res, err := c.wrapMessageHeader(msgTypeData, dataMsg.serialize(c.version))
 	if err != nil {
 		return nil, dataMessageExtra{}, err
 	}
@@ -111,7 +113,7 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 		return
 	}
 
-	if err = dataMessage.deserialize(msg); err != nil {
+	if err = dataMessage.deserialize(msg, c.version); err != nil {
 		return
 	}
 
@@ -119,18 +121,18 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 		return
 	}
 
-	sessionKeys, err := c.keys.calculateDHSessionKeys(dataMessage.recipientKeyID, dataMessage.senderKeyID)
+	sessionKeys, err := c.keys.calculateDHSessionKeys(dataMessage.recipientKeyID, dataMessage.senderKeyID, c.version)
 	if err != nil {
 		return
 	}
 
-	if err = dataMessage.checkSign(sessionKeys.receivingMACKey, header); err != nil {
+	if err = dataMessage.checkSign(sessionKeys.receivingMACKey, header, c.version); err != nil {
 		return
 	}
 
 	p := plainDataMsg{}
 	//this can't return an error since receivingAESKey is a AES-128 key
-	p.decrypt(sessionKeys.receivingAESKey, dataMessage.topHalfCtr, dataMessage.encryptedMsg)
+	p.decrypt(sessionKeys.receivingAESKey[:], dataMessage.topHalfCtr, dataMessage.encryptedMsg)
 
 	plain = makeCopy(p.message)
 	if len(plain) == 0 {
@@ -145,7 +147,7 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 
 	var tlvs []tlv
 
-	tlvs, err = c.processTLVs(p.tlvs, dataMessageExtra{sessionKeys.extraKey[:]})
+	tlvs, err = c.processTLVs(p.tlvs, dataMessageExtra{sessionKeys.extraKey})
 	if err != nil {
 		return
 	}
@@ -157,7 +159,7 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 			return
 		}
 
-		toSend, err = c.wrapMessageHeader(msgTypeData, reply.serialize())
+		toSend, err = c.wrapMessageHeader(msgTypeData, reply.serialize(c.version))
 		if err != nil {
 			return
 		}

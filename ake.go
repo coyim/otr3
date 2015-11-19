@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"crypto/hmac"
-	"crypto/sha256"
 	"crypto/subtle"
 	"io"
 	"math/big"
@@ -13,10 +12,13 @@ type ake struct {
 	ourPublicValue   *big.Int
 	theirPublicValue *big.Int
 
+	// TODO: why this number here?
 	r [16]byte
 
 	encryptedGx []byte
-	hashedGx    [sha256.Size]byte
+
+	// SIZE: this should always be version.hash2Length
+	xhashedGx []byte
 
 	revealKey akeKeys
 	sigKey    akeKeys
@@ -40,7 +42,7 @@ func (c *Conversation) initAKE() {
 }
 
 func (c *Conversation) calcAKEKeys(s *big.Int) {
-	c.ssid, c.ake.revealKey, c.ake.sigKey = calculateAKEKeys(s)
+	c.ssid, c.ake.revealKey, c.ake.sigKey = calculateAKEKeys(s, c.version)
 }
 
 func (c *Conversation) setSecretExponent(val *big.Int) {
@@ -53,9 +55,9 @@ func (c *Conversation) calcDHSharedSecret() *big.Int {
 }
 
 func (c *Conversation) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
-	verifyData := appendAll(c.ake.ourPublicValue, c.ake.theirPublicValue, &c.ourKey.PublicKey, c.ake.keys.ourKeyID)
+	verifyData := appendAll(c.ake.ourPublicValue, c.ake.theirPublicValue, c.ourCurrentKey.PublicKey(), c.ake.keys.ourKeyID)
 
-	mb := sumHMAC(key.m1[:], verifyData)
+	mb := sumHMAC(key.m1, verifyData, c.version)
 	xb, err := c.calcXb(key, mb)
 
 	if err != nil {
@@ -64,15 +66,24 @@ func (c *Conversation) generateEncryptedSignature(key *akeKeys) ([]byte, error) 
 
 	return appendData(nil, xb), nil
 }
-func appendAll(one, two *big.Int, publicKey *PublicKey, keyID uint32) []byte {
+func appendAll(one, two *big.Int, publicKey PublicKey, keyID uint32) []byte {
 	return appendWord(append(appendMPI(appendMPI(nil, one), two), publicKey.serialize()...), keyID)
 }
 
+func fixedSize(s int, v []byte) []byte {
+	if len(v) < s {
+		vv := make([]byte, s)
+		copy(vv, v)
+		return vv
+	}
+	return v
+}
+
 func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
-	xb := c.ourKey.PublicKey.serialize()
+	xb := c.ourCurrentKey.PublicKey().serialize()
 	xb = appendWord(xb, c.ake.keys.ourKeyID)
 
-	sigb, err := c.ourKey.Sign(c.rand(), mb)
+	sigb, err := c.ourCurrentKey.Sign(c.rand(), mb)
 	if err == io.ErrUnexpectedEOF {
 		return nil, errShortRandomRead
 	}
@@ -82,7 +93,7 @@ func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	}
 
 	// this error can't happen, since key.c is fixed to the correct size
-	xb, _ = encrypt(key.c[:], append(xb, sigb...))
+	xb, _ = encrypt(fixedSize(c.version.keyLength(), key.c), append(xb, sigb...))
 
 	return xb, nil
 }
@@ -93,6 +104,7 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 	c.initAKE()
 	c.ake.keys.ourKeyID = 0
 
+	// TODO: where does this 40 come from?
 	x, err := c.randMPI(make([]byte, 40))
 	if err != nil {
 		return nil, err
@@ -113,7 +125,7 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 func (c *Conversation) serializeDHCommit(public *big.Int) []byte {
 	dhCommitMsg := dhCommit{
 		encryptedGx: c.ake.encryptedGx,
-		hashedGx:    sha256.Sum256(appendMPI(nil, public)),
+		yhashedGx:   c.version.hash2(appendMPI(nil, public)),
 	}
 	return dhCommitMsg.serialize()
 }
@@ -123,6 +135,7 @@ func (c *Conversation) serializeDHCommit(public *big.Int) []byte {
 func (c *Conversation) dhKeyMessage() ([]byte, error) {
 	c.initAKE()
 
+	// TODO: where does this 40 come from?
 	y, err := c.randMPI(make([]byte, 40)[:])
 
 	if err != nil {
@@ -154,14 +167,14 @@ func (c *Conversation) revealSigMessage() ([]byte, error) {
 		return nil, err
 	}
 
-	macSig := sumHMAC(c.ake.revealKey.m2[:], encryptedSig)
+	macSig := sumHMAC(c.ake.revealKey.m2, encryptedSig, c.version)
 	revealSigMsg := revealSig{
 		r:            c.ake.r,
 		encryptedSig: encryptedSig,
 		macSig:       macSig,
 	}
 
-	return revealSigMsg.serialize(), nil
+	return revealSigMsg.serialize(c.version), nil
 }
 
 // sigMessage = alice = y
@@ -174,13 +187,13 @@ func (c *Conversation) sigMessage() ([]byte, error) {
 		return nil, err
 	}
 
-	macSig := sumHMAC(c.ake.sigKey.m2[:], encryptedSig)
+	macSig := sumHMAC(c.ake.sigKey.m2, encryptedSig, c.version)
 	sigMsg := sig{
 		encryptedSig: encryptedSig,
 		macSig:       macSig,
 	}
 
-	return sigMsg.serialize(), nil
+	return sigMsg.serialize(c.version), nil
 }
 
 // processDHCommit = alice = y
@@ -193,7 +206,7 @@ func (c *Conversation) processDHCommit(msg []byte) error {
 	}
 
 	c.ake.encryptedGx = dhCommitMsg.encryptedGx
-	c.ake.hashedGx = dhCommitMsg.hashedGx
+	c.ake.xhashedGx = dhCommitMsg.yhashedGx
 
 	return err
 }
@@ -225,7 +238,7 @@ func (c *Conversation) processDHKey(msg []byte) (isSame bool, err error) {
 // Bob ---- Reveal Signature ----> Alice
 func (c *Conversation) processRevealSig(msg []byte) (err error) {
 	revealSigMsg := revealSig{}
-	err = revealSigMsg.deserialize(msg)
+	err = revealSigMsg.deserialize(msg, c.version)
 	if err != nil {
 		return
 	}
@@ -239,7 +252,7 @@ func (c *Conversation) processRevealSig(msg []byte) (err error) {
 		return
 	}
 
-	if err = checkDecryptedGx(decryptedGx, c.ake.hashedGx[:]); err != nil {
+	if err = checkDecryptedGx(decryptedGx, c.ake.xhashedGx, c.version); err != nil {
 		return
 	}
 
@@ -287,9 +300,10 @@ func (c *Conversation) checkedSignatureVerification(mb, sig []byte) error {
 	return nil
 }
 
-func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *akeKeys) error {
+func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *akeKeys, v otrVersion) error {
 	tomac := appendData(nil, encryptedSig)
-	myMAC := sumHMAC(keys.m2[:], tomac)[:20]
+
+	myMAC := sumHMAC(keys.m2, tomac, v)[:v.truncateLength()]
 
 	if len(myMAC) != len(theirMAC) || subtle.ConstantTimeCompare(myMAC, theirMAC) == 0 {
 		return newOtrError("bad signature MAC in encrypted signature")
@@ -299,8 +313,9 @@ func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *ake
 }
 
 func (c *Conversation) parseTheirKey(key []byte) (sig []byte, keyID uint32, err error) {
-	c.theirKey = &PublicKey{}
-	rest, ok1 := c.theirKey.Parse(key)
+	var rest []byte
+	var ok1 bool
+	rest, ok1, c.theirKey = ParsePublicKey(key)
 	sig, keyID, ok2 := extractWord(rest)
 
 	if !ok1 || !ok2 {
@@ -312,16 +327,16 @@ func (c *Conversation) parseTheirKey(key []byte) (sig []byte, keyID uint32, err 
 
 func (c *Conversation) expectedMessageHMAC(keyID uint32, keys *akeKeys) []byte {
 	verifyData := appendAll(c.ake.theirPublicValue, c.ake.ourPublicValue, c.theirKey, keyID)
-	return sumHMAC(keys.m1[:], verifyData)
+	return sumHMAC(keys.m1, verifyData, c.version)
 }
 
 func (c *Conversation) processEncryptedSig(encryptedSig []byte, theirMAC []byte, keys *akeKeys) error {
-	if err := verifyEncryptedSignatureMAC(encryptedSig, theirMAC, keys); err != nil {
+	if err := verifyEncryptedSignatureMAC(encryptedSig, theirMAC, keys, c.version); err != nil {
 		return err
 	}
 
 	decryptedSig := encryptedSig
-	if err := decrypt(keys.c[:], decryptedSig, encryptedSig); err != nil {
+	if err := decrypt(fixedSize(c.version.keyLength(), keys.c), decryptedSig, encryptedSig); err != nil {
 		return err
 	}
 
@@ -353,14 +368,14 @@ func extractGx(decryptedGx []byte) (*big.Int, error) {
 	return gx, nil
 }
 
-func sumHMAC(key, data []byte) []byte {
-	mac := hmac.New(sha256.New, key)
+func sumHMAC(key, data []byte, v otrVersion) []byte {
+	mac := hmac.New(v.hash2Instance, key)
 	mac.Write(data)
 	return mac.Sum(nil)
 }
 
-func checkDecryptedGx(decryptedGx, hashedGx []byte) error {
-	digest := sha256.Sum256(decryptedGx)
+func checkDecryptedGx(decryptedGx, hashedGx []byte, v otrVersion) error {
+	digest := v.hash2(decryptedGx)
 
 	if subtle.ConstantTimeCompare(digest[:], hashedGx[:]) == 0 {
 		return newOtrError("bad commit MAC in reveal signature message")

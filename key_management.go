@@ -1,9 +1,6 @@
 package otr3
 
 import (
-	"crypto/aes"
-	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/binary"
 	"hash"
 	"io"
@@ -16,16 +13,19 @@ type dhKeyPair struct {
 }
 
 type akeKeys struct {
-	c      [aes.BlockSize]byte
-	m1, m2 [sha256.Size]byte
+	c      []byte
+	m1, m2 []byte
 }
 
-type macKey [sha1.Size]byte
+// SIZE: this will always be the same size as the version.hash1Length
+type macKey []byte
 
 type sessionKeys struct {
-	sendingAESKey, receivingAESKey [aes.BlockSize]byte
+	// SIZE: these should always be the same size as the AES used, usually 16
+	sendingAESKey, receivingAESKey []byte
 	sendingMACKey, receivingMACKey macKey
-	extraKey                       [sha256.Size]byte
+	// SIZE: this will be the same size as version.hash2Length
+	extraKey []byte
 }
 
 type macKeyUsage struct {
@@ -206,7 +206,7 @@ func (k *keyManagementContext) rotateTheirKey(senderKeyID uint32, pubDHKey *big.
 	}
 }
 
-func (k *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint32) (sessionKeys, error) {
+func (k *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint32, v otrVersion) (sessionKeys, error) {
 	var ret sessionKeys
 
 	ourPrivKey, ourPubKey, err := k.pickOurKeys(ourKeyID)
@@ -219,13 +219,13 @@ func (k *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 		return ret, err
 	}
 
-	ret = calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey)
+	ret = calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey, v)
 	k.macKeyHistory.addKeys(ourKeyID, theirKeyID, ret.receivingMACKey)
 
 	return ret, nil
 }
 
-func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int) sessionKeys {
+func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int, v otrVersion) sessionKeys {
 	var ret sessionKeys
 	var sendbyte, recvbyte byte
 
@@ -240,14 +240,15 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int) session
 	s := new(big.Int).Exp(theirPubKey, ourPrivKey, p)
 	secbytes := appendMPI(nil, s)
 
-	sha := sha1.New()
-	copy(ret.sendingAESKey[:], h(sendbyte, secbytes, sha))
-	copy(ret.receivingAESKey[:], h(recvbyte, secbytes, sha))
+	sha := v.hashInstance()
 
-	ret.sendingMACKey = sha1.Sum(ret.sendingAESKey[:])
-	ret.receivingMACKey = sha1.Sum(ret.receivingAESKey[:])
+	ret.sendingAESKey = h(sendbyte, secbytes, sha)[:v.keyLength()]
+	ret.receivingAESKey = h(recvbyte, secbytes, sha)[:v.keyLength()]
 
-	copy(ret.extraKey[:], h(0xFF, secbytes, sha256.New()))
+	ret.sendingMACKey = v.hash(ret.sendingAESKey)
+	ret.receivingMACKey = v.hash(ret.receivingAESKey)
+
+	ret.extraKey = h(0xFF, secbytes, v.hash2Instance())
 
 	return ret
 }
@@ -290,18 +291,19 @@ func (k *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int,
 	return pubKey, err
 }
 
-func calculateAKEKeys(s *big.Int) (ssid [8]byte, revealSigKeys, signatureKeys akeKeys) {
+func calculateAKEKeys(s *big.Int, v otrVersion) (ssid [8]byte, revealSigKeys, signatureKeys akeKeys) {
 	secbytes := appendMPI(nil, s)
-	sha := sha256.New()
+	sha := v.hash2Instance()
 	keys := h(0x01, secbytes, sha)
 
 	copy(ssid[:], h(0x00, secbytes, sha)[:8])
-	copy(revealSigKeys.c[:], keys[:16])
-	copy(signatureKeys.c[:], keys[16:])
-	copy(revealSigKeys.m1[:], h(0x02, secbytes, sha))
-	copy(revealSigKeys.m2[:], h(0x03, secbytes, sha))
-	copy(signatureKeys.m1[:], h(0x04, secbytes, sha))
-	copy(signatureKeys.m2[:], h(0x05, secbytes, sha))
+	// SIZE: 16 is the size of the AES key used
+	revealSigKeys.c = keys[:16]
+	signatureKeys.c = keys[16:]
+	revealSigKeys.m1 = h(0x02, secbytes, sha)
+	revealSigKeys.m2 = h(0x03, secbytes, sha)
+	signatureKeys.m1 = h(0x04, secbytes, sha)
+	signatureKeys.m2 = h(0x05, secbytes, sha)
 
 	return
 }

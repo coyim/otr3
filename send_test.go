@@ -77,10 +77,7 @@ func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected(t *testin
 
 	c.Send(m)
 
-	assertDeepEquals(t, c.resend.pending(),
-		[]MessagePlaintext{
-			MessagePlaintext(m),
-		})
+	assertDeepEquals(t, c.resend.lastMessage, MessagePlaintext(m))
 }
 
 func Test_Send_setsMayRetransmitFlagToExpectExactResending(t *testing.T) {
@@ -111,7 +108,7 @@ func captureStderr(f func()) string {
 func Test_Send_printsDebugStatementToStderrIfGivenMagicString(t *testing.T) {
 	m := []byte("hel?OTR!lo")
 	c := bobContextAfterAKE()
-	c.theirKey = &alicePrivateKey.PublicKey
+	c.theirKey = alicePrivateKey.PublicKey()
 	c.debug = true
 
 	var ret []ValidMessage

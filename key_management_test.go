@@ -22,14 +22,14 @@ func Test_calculateDHSessionKeys(t *testing.T) {
 	receivingMACKey := bytesFromHex("03f8034b891b1e843db5bba9a41ec68a1f5f8bbf")
 	extraKey := bytesFromHex("0e1810c7c62c3bace6450dcbef16af8a271b5ac93030b83e9d0d80e0641e3c18")
 
-	keys, err := c.calculateDHSessionKeys(1, 1)
+	keys, err := c.calculateDHSessionKeys(1, 1, otrV3{})
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, keys.sendingAESKey[:], sendingAESKey)
-	assertDeepEquals(t, keys.sendingMACKey[:], sendingMACKey)
-	assertDeepEquals(t, keys.receivingAESKey[:], receivingAESKey)
-	assertDeepEquals(t, keys.receivingMACKey[:], receivingMACKey)
-	assertDeepEquals(t, keys.extraKey[:], extraKey)
+	assertDeepEquals(t, keys.sendingAESKey, sendingAESKey)
+	assertDeepEquals(t, keys.sendingMACKey, macKey(sendingMACKey))
+	assertDeepEquals(t, keys.receivingAESKey, receivingAESKey)
+	assertDeepEquals(t, keys.receivingMACKey, macKey(receivingMACKey))
+	assertDeepEquals(t, keys.extraKey, extraKey)
 }
 
 func Test_calculateDHSessionKeys_storesGeneratedMACKeys(t *testing.T) {
@@ -45,7 +45,7 @@ func Test_calculateDHSessionKeys_storesGeneratedMACKeys(t *testing.T) {
 			pub:  big.NewInt(1),
 		},
 	}
-	keys, _ := c.calculateDHSessionKeys(ourKeyID, theirKeyID)
+	keys, _ := c.calculateDHSessionKeys(ourKeyID, theirKeyID, otrV3{})
 
 	expectedMACKeys := macKeyUsage{
 		ourKeyID:     ourKeyID,
@@ -63,10 +63,10 @@ func Test_calculateDHSessionKeys_failsWhenOurOrTheyKeyIsUnknown(t *testing.T) {
 		theirKeyID: 1,
 	}
 
-	_, err := c.calculateDHSessionKeys(2, 1)
+	_, err := c.calculateDHSessionKeys(2, 1, otrV3{})
 	assertDeepEquals(t, err, newOtrConflictError("mismatched key id for local peer"))
 
-	_, err = c.calculateDHSessionKeys(1, 3)
+	_, err = c.calculateDHSessionKeys(1, 3, otrV3{})
 	assertDeepEquals(t, err, newOtrConflictError("mismatched key id for remote peer"))
 }
 
@@ -75,7 +75,7 @@ func Test_calculateDHSessionKeys_failsWhenTheirPreviousPubliKeyIsNull(t *testing
 		ourKeyID:   2,
 		theirKeyID: 2,
 	}
-	_, err := c.calculateDHSessionKeys(2, 1)
+	_, err := c.calculateDHSessionKeys(2, 1, otrV3{})
 
 	assertEquals(t, err, newOtrConflictError("no previous key for remote peer found"))
 }
@@ -110,15 +110,15 @@ func Test_pickOurKeys_shouldFailsForInvalidRecipientID(t *testing.T) {
 }
 
 func Test_calculateAKEKeys(t *testing.T) {
-	ssid, revealSigKeys, signatureKeys := calculateAKEKeys(expectedSharedSecret)
+	ssid, revealSigKeys, signatureKeys := calculateAKEKeys(expectedSharedSecret, otrV3{})
 
 	assertDeepEquals(t, ssid[:], bytesFromHex("9cee5d2c7edbc86d"))
-	assertDeepEquals(t, revealSigKeys.c[:], bytesFromHex("5745340b350364a02a0ac1467a318dcc"))
-	assertDeepEquals(t, signatureKeys.c[:], bytesFromHex("d942cc80b66503414c05e3752d9ba5c4"))
-	assertDeepEquals(t, revealSigKeys.m1[:], bytesFromHex("d3251498fb9d977d07392a96eafb8c048d6bc67064bd7da72aa38f20f87a2e3d"))
-	assertDeepEquals(t, revealSigKeys.m2[:], bytesFromHex("79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6"))
-	assertDeepEquals(t, signatureKeys.m1[:], bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
-	assertDeepEquals(t, signatureKeys.m2[:], bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5"))
+	assertDeepEquals(t, revealSigKeys.c, bytesFromHex("5745340b350364a02a0ac1467a318dcc"))
+	assertDeepEquals(t, signatureKeys.c, bytesFromHex("d942cc80b66503414c05e3752d9ba5c4"))
+	assertDeepEquals(t, revealSigKeys.m1, bytesFromHex("d3251498fb9d977d07392a96eafb8c048d6bc67064bd7da72aa38f20f87a2e3d"))
+	assertDeepEquals(t, revealSigKeys.m2, bytesFromHex("79c101a78a6c5819547a36b4813c84a8ac553d27a5d4b58be45dd0f3a67d3ca6"))
+	assertDeepEquals(t, signatureKeys.m1, bytesFromHex("b6254b8eab0ad98152949454d23c8c9b08e4e9cf423b27edc09b1975a76eb59c"))
+	assertDeepEquals(t, signatureKeys.m2, bytesFromHex("954be27015eeb0455250144d906e83e7d329c49581aea634c4189a3c981184f5"))
 }
 
 func Test_rotateTheirKey_rotatesTheirKeysWhenWeReceiveANewPubKey(t *testing.T) {

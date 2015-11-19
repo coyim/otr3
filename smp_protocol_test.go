@@ -55,11 +55,11 @@ func TestFullSMPHandshake(t *testing.T) {
 
 func Test_SMP_Full(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
-	alice.ourKey = alicePrivateKey
+	alice.ourKeys = []PrivateKey{alicePrivateKey}
 	alice.Policies = policies(allowV3)
 
 	bob := &Conversation{Rand: rand.Reader}
-	bob.ourKey = bobPrivateKey
+	bob.ourKeys = []PrivateKey{bobPrivateKey}
 	bob.Policies = policies(allowV3)
 
 	var err error

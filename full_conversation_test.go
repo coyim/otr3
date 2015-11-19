@@ -18,7 +18,7 @@ func Test_receive_generatesErrorIfDoesNotHaveASecureChannel(t *testing.T) {
 	c.msgState = encrypted
 	smpMsg := fixtureMessage1()
 	dataMsg, _, _ := c.genDataMsg(nil, smpMsg.tlv())
-	m := dataMsg.serialize()
+	m := dataMsg.serialize(c.version)
 	m, _ = c.wrapMessageHeader(msgTypeData, m)
 	for _, s := range states {
 		c.msgState = s
@@ -37,7 +37,7 @@ func Test_receive_doesntGenerateErrorIfThereIsNoSecureChannelButTheMessageIsIGNO
 	c.msgState = encrypted
 	smpMsg := fixtureMessage1()
 	dataMsg, _, _ := c.genDataMsgWithFlag(nil, messageFlagIgnoreUnreadable, smpMsg.tlv())
-	m, _ := c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+	m, _ := c.wrapMessageHeader(msgTypeData, dataMsg.serialize(c.version))
 
 	for _, s := range states {
 		c.msgState = s
@@ -48,11 +48,13 @@ func Test_receive_doesntGenerateErrorIfThereIsNoSecureChannelButTheMessageIsIGNO
 
 func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
-	alice.ourKey = alicePrivateKey
+	alice.SetOurKeys([]PrivateKey{alicePrivateKey})
+	alice.ourCurrentKey = alicePrivateKey
 	alice.Policies = policies(allowV2 | allowV3)
 
 	bob := &Conversation{Rand: rand.Reader}
-	bob.ourKey = bobPrivateKey
+	bob.SetOurKeys([]PrivateKey{bobPrivateKey})
+	bob.ourCurrentKey = bobPrivateKey
 	bob.Policies = policies(allowV2 | allowV3)
 
 	var toSend []ValidMessage
@@ -102,11 +104,13 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 
 func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	alice := &Conversation{Rand: rand.Reader}
-	alice.ourKey = alicePrivateKey
+	alice.SetOurKeys([]PrivateKey{alicePrivateKey})
+	alice.ourCurrentKey = alicePrivateKey
 	alice.Policies = policies(allowV3)
 
 	bob := &Conversation{Rand: rand.Reader}
-	bob.ourKey = bobPrivateKey
+	bob.SetOurKeys([]PrivateKey{bobPrivateKey})
+	bob.ourCurrentKey = bobPrivateKey
 	bob.Policies = policies(allowV3)
 
 	var toSend []ValidMessage
@@ -160,11 +164,11 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 
 	alice := &Conversation{Rand: rand.Reader}
 	alice.Policies = policies(allowV2 | allowV3)
-	alice.ourKey = alicePrivateKey
+	alice.SetOurKeys([]PrivateKey{alicePrivateKey})
 
 	bob := &Conversation{Rand: rand.Reader}
 	bob.Policies = policies(allowV2 | allowV3)
-	bob.ourKey = bobPrivateKey
+	bob.SetOurKeys([]PrivateKey{bobPrivateKey})
 
 	msg := []byte("?OTRv3?")
 
@@ -198,7 +202,7 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 	// Alice sends a message to bob
 	msg = []byte("hello")
 	dataMsg, _, _ := alice.genDataMsg(msg)
-	m, _ = alice.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+	m, _ = alice.wrapMessageHeader(msgTypeData, dataMsg.serialize(alice.version))
 
 	bob.updateLastSent()
 	plain, ret, err := bob.receiveDecoded(m)
@@ -215,11 +219,11 @@ func Test_startingAKE_shouldNotBreakTheEncryptedChannel(t *testing.T) {
 
 	alice := &Conversation{Rand: rand.Reader}
 	alice.Policies = policies(allowV2 | allowV3)
-	alice.ourKey = alicePrivateKey
+	alice.SetOurKeys([]PrivateKey{alicePrivateKey})
 
 	bob := &Conversation{Rand: rand.Reader}
 	bob.Policies = policies(allowV2 | allowV3)
-	bob.ourKey = bobPrivateKey
+	bob.SetOurKeys([]PrivateKey{bobPrivateKey})
 
 	//Alice send Bob queryMsg
 	_, toSend, err = bob.Receive(alice.QueryMessage())

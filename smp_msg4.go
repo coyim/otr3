@@ -23,7 +23,7 @@ func (c *Conversation) generateSMP4(secret *big.Int, s2 smp2State, msg3 smp3Mess
 		return s, err
 	}
 	s.y = secret
-	s.msg = generateSMP4Message(s, s2, msg3)
+	s.msg = generateSMP4Message(s, s2, msg3, c.version)
 	return
 }
 
@@ -32,7 +32,7 @@ func (c *Conversation) verifySMP4(s3 *smp3State, msg smp4Message) error {
 		return newOtrError("Rb is an invalid group element")
 	}
 
-	if !verifyZKP4(msg.cr, s3.g3b, msg.d7, s3.qaqb, msg.rb, 8) {
+	if !verifyZKP4(msg.cr, s3.g3b, msg.d7, s3.qaqb, msg.rb, 8, c.version) {
 		return newOtrError("cR is not a valid zero knowledge proof")
 	}
 
@@ -45,13 +45,13 @@ func (c *Conversation) generateSMP4Parameters() (s smp4State, err error) {
 	return
 }
 
-func generateSMP4Message(s smp4State, s2 smp2State, msg3 smp3Message) smp4Message {
+func generateSMP4Message(s smp4State, s2 smp2State, msg3 smp3Message, v otrVersion) smp4Message {
 	var m smp4Message
 
 	qaqb := divMod(msg3.qa, s2.qb, p)
 
 	m.rb = modExp(qaqb, s2.b3)
-	m.cr = hashMPIsBN(nil, 8, modExp(g1, s.r7), modExp(qaqb, s.r7))
+	m.cr = hashMPIsBN(v.hash2Instance(), 8, modExp(g1, s.r7), modExp(qaqb, s.r7))
 	m.d7 = subMod(s.r7, mul(s2.b3, m.cr), q)
 
 	return m

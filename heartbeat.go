@@ -36,7 +36,7 @@ func (c *Conversation) potentialHeartbeat(plain MessagePlaintext) (toSend messag
 		return nil, err
 	}
 
-	toSend, err = c.wrapMessageHeader(msgTypeData, dataMsg.serialize())
+	toSend, err = c.wrapMessageHeader(msgTypeData, dataMsg.serialize(c.version))
 	if err != nil {
 		return nil, err
 	}

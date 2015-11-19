@@ -91,11 +91,12 @@ func bnFromHex(s string) *big.Int {
 }
 
 // parseIntoPrivateKey is a test utility that doesn't take into account possible errors. Thus, make sure to only call it with valid values
-func parseIntoPrivateKey(hexString string) *PrivateKey {
+// it only parses DSA keys right now
+func parseIntoPrivateKey(hexString string) PrivateKey {
 	b, _ := hex.DecodeString(hexString)
-	var pk PrivateKey
+	pk := new(DSAPrivateKey)
 	pk.Parse(b)
-	return &pk
+	return pk
 }
 
 func newConversation(v otrVersion, rand io.Reader) *Conversation {

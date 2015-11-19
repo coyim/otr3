@@ -6,7 +6,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/dsa"
-	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"hash"
@@ -18,22 +17,44 @@ import (
 )
 
 // PublicKey is a public key used to verify signed messages
-type PublicKey struct {
-	dsa.PublicKey
+type PublicKey interface {
+	Parse([]byte) ([]byte, bool)
+	Fingerprint(hash.Hash) []byte
+	DefaultFingerprint(v otrVersion) []byte
+	Verify([]byte, []byte) ([]byte, bool)
+
+	serialize() []byte
+
+	IsSame(PublicKey) bool
 }
 
 // PrivateKey is a private key used to sign messages
-type PrivateKey struct {
-	PublicKey
+type PrivateKey interface {
+	Parse([]byte) ([]byte, bool)
+	Serialize() []byte
+	Sign(io.Reader, []byte) ([]byte, error)
+	Generate(io.Reader) error
+	PublicKey() PublicKey
+	IsAvailableForVersion(uint16) bool
+}
+
+// DSAPublicKey is a DSA public key
+type DSAPublicKey struct {
+	dsa.PublicKey
+}
+
+// DSAPrivateKey is a DSA private key
+type DSAPrivateKey struct {
+	DSAPublicKey
 	dsa.PrivateKey
 }
 
 // Account is a holder for the private key associated with an account
 // It contains name, protocol and otr private key of an otr Account
 type Account struct {
-	Name     string
-	Protocol string
-	Key      *PrivateKey
+	name     string
+	protocol string
+	key      PrivateKey
 }
 
 func readSymbolAndExpect(r *bufio.Reader, s string) bool {
@@ -159,21 +180,21 @@ func readAccount(r *bufio.Reader) (a *Account, ok bool, atEnd bool) {
 	ok1 := readSymbolAndExpect(r, "account")
 	a = new(Account)
 	var ok2, ok3, ok4 bool
-	a.Name, ok2 = readAccountName(r)
-	a.Protocol, ok3 = readAccountProtocol(r)
-	a.Key, ok4 = readPrivateKey(r)
+	a.name, ok2 = readAccountName(r)
+	a.protocol, ok3 = readAccountProtocol(r)
+	a.key, ok4 = readPrivateKey(r)
 	ok5 := sexp.ReadListEnd(r)
 	return a, ok1 && ok2 && ok3 && ok4 && ok5, false
 }
 
-func readPrivateKey(r *bufio.Reader) (*PrivateKey, bool) {
+func readPrivateKey(r *bufio.Reader) (PrivateKey, bool) {
 	sexp.ReadListStart(r)
 	ok1 := readSymbolAndExpect(r, "private-key")
-	k := new(PrivateKey)
+	k := new(DSAPrivateKey)
 	res, ok2 := readDSAPrivateKey(r)
 	if ok2 {
 		k.PrivateKey = *res
-		k.PublicKey.PublicKey = k.PrivateKey.PublicKey
+		k.DSAPublicKey.PublicKey = k.PrivateKey.PublicKey
 	}
 	ok3 := sexp.ReadListEnd(r)
 	return k, ok1 && ok2 && ok3
@@ -213,8 +234,55 @@ func readParameter(r *bufio.Reader) (tag string, value *big.Int, end bool, ok bo
 	return
 }
 
+// IsAvailableForVersion returns true if this key is possible to use with the given version
+func (pub *DSAPublicKey) IsAvailableForVersion(v uint16) bool {
+	return v == 2 || v == 3
+}
+
+// IsSame returns true if the given public key is a DSA public key that is equal to this key
+func (pub *DSAPublicKey) IsSame(other PublicKey) bool {
+	oth, ok := other.(*DSAPublicKey)
+	return ok && pub == oth
+}
+
+// ParsePrivateKey is an algorithm indepedent way of parsing private keys
+func ParsePrivateKey(in []byte) (index []byte, ok bool, key PrivateKey) {
+	var typeTag uint16
+	index, typeTag, ok = extractShort(in)
+	if !ok {
+		return in, false, nil
+	}
+
+	switch typeTag {
+	case dsaKeyTypeValue:
+		key = &DSAPrivateKey{}
+		index, ok = key.Parse(in)
+		return
+	}
+
+	return in, false, nil
+}
+
+// ParsePublicKey is an algorithm independent way of parsing public keys
+func ParsePublicKey(in []byte) (index []byte, ok bool, key PublicKey) {
+	var typeTag uint16
+	index, typeTag, ok = extractShort(in)
+	if !ok {
+		return in, false, nil
+	}
+
+	switch typeTag {
+	case dsaKeyTypeValue:
+		key = &DSAPublicKey{}
+		index, ok = key.Parse(in)
+		return
+	}
+
+	return in, false, nil
+}
+
 // Parse takes the given data and tries to parse it into the PublicKey receiver. It will return not ok if the data is malformed or not for a DSA key
-func (pub *PublicKey) Parse(in []byte) (index []byte, ok bool) {
+func (pub *DSAPublicKey) Parse(in []byte) (index []byte, ok bool) {
 	var typeTag uint16
 	if index, typeTag, ok = extractShort(in); !ok || typeTag != dsaKeyTypeValue {
 		return in, false
@@ -235,12 +303,12 @@ func (pub *PublicKey) Parse(in []byte) (index []byte, ok bool) {
 }
 
 // Parse will parse a Private Key from the given data, by first parsing the public key components and then the private key component. It returns not ok for the same reasons as PublicKey.Parse.
-func (priv *PrivateKey) Parse(in []byte) (index []byte, ok bool) {
-	if in, ok = priv.PublicKey.Parse(in); !ok {
+func (priv *DSAPrivateKey) Parse(in []byte) (index []byte, ok bool) {
+	if in, ok = priv.DSAPublicKey.Parse(in); !ok {
 		return nil, false
 	}
 
-	priv.PrivateKey.PublicKey = priv.PublicKey.PublicKey
+	priv.PrivateKey.PublicKey = priv.DSAPublicKey.PublicKey
 	index, priv.X, ok = extractMPI(in)
 
 	return index, ok
@@ -249,17 +317,17 @@ func (priv *PrivateKey) Parse(in []byte) (index []byte, ok bool) {
 var dsaKeyType = []byte{0x00, 0x00}
 var dsaKeyTypeValue = uint16(0x0000)
 
-func (priv *PrivateKey) serialize() []byte {
-	result := priv.PublicKey.serialize()
+func (priv *DSAPrivateKey) serialize() []byte {
+	result := priv.DSAPublicKey.serialize()
 	return appendMPI(result, priv.PrivateKey.X)
 }
 
 // Serialize will return the serialization of the private key to a byte array
-func (priv *PrivateKey) Serialize() []byte {
+func (priv *DSAPrivateKey) Serialize() []byte {
 	return priv.serialize()
 }
 
-func (pub *PublicKey) serialize() []byte {
+func (pub *DSAPublicKey) serialize() []byte {
 	if pub.P == nil || pub.Q == nil || pub.G == nil || pub.Y == nil {
 		return nil
 	}
@@ -273,7 +341,7 @@ func (pub *PublicKey) serialize() []byte {
 }
 
 // Fingerprint will generate a fingerprint of the serialized version of the key using the provided hash.
-func (pub *PublicKey) Fingerprint(h hash.Hash) []byte {
+func (pub *DSAPublicKey) Fingerprint(h hash.Hash) []byte {
 	b := pub.serialize()
 	if b == nil {
 		return nil
@@ -284,12 +352,12 @@ func (pub *PublicKey) Fingerprint(h hash.Hash) []byte {
 }
 
 // DefaultFingerprint generates a fingerprint of the public key using SHA-1.
-func (pub *PublicKey) DefaultFingerprint() []byte {
-	return pub.Fingerprint(sha1.New())
+func (pub *DSAPublicKey) DefaultFingerprint(v otrVersion) []byte {
+	return pub.Fingerprint(v.hashInstance())
 }
 
 // Sign will generate a signature of a hashed data using dsa Sign.
-func (priv *PrivateKey) Sign(rand io.Reader, hashed []byte) ([]byte, error) {
+func (priv *DSAPrivateKey) Sign(rand io.Reader, hashed []byte) ([]byte, error) {
 	r, s, err := dsa.Sign(rand, &priv.PrivateKey, hashed)
 	if err == nil {
 		rBytes := r.Bytes()
@@ -304,7 +372,7 @@ func (priv *PrivateKey) Sign(rand io.Reader, hashed []byte) ([]byte, error) {
 }
 
 // Verify will verify a signature of a hashed data using dsa Verify.
-func (pub *PublicKey) Verify(hashed, sig []byte) (nextPoint []byte, sigOk bool) {
+func (pub *DSAPublicKey) Verify(hashed, sig []byte) (nextPoint []byte, sigOk bool) {
 	if len(sig) < 2*20 {
 		return nil, false
 	}
@@ -338,7 +406,7 @@ func decrypt(key, dst, src []byte) error {
 }
 
 // Import parses the contents of a libotr private key file.
-func (priv *PrivateKey) Import(in []byte) bool {
+func (priv *DSAPrivateKey) Import(in []byte) bool {
 	mpiStart := []byte(" #")
 
 	mpis := make([]*big.Int, 5)
@@ -373,22 +441,27 @@ func (priv *PrivateKey) Import(in []byte) bool {
 	priv.PrivateKey.G = mpis[2]
 	priv.PrivateKey.Y = mpis[3]
 	priv.PrivateKey.X = mpis[4]
-	priv.PublicKey.PublicKey = priv.PrivateKey.PublicKey
+	priv.DSAPublicKey.PublicKey = priv.PrivateKey.PublicKey
 
 	a := new(big.Int).Exp(priv.PrivateKey.G, priv.PrivateKey.X, priv.PrivateKey.P)
 	return a.Cmp(priv.PrivateKey.Y) == 0
 }
 
 // Generate will generate a new DSA Private Key with the randomness provided. The parameter size used is 1024 and 160.
-func (priv *PrivateKey) Generate(rand io.Reader) error {
+func (priv *DSAPrivateKey) Generate(rand io.Reader) error {
 	if err := dsa.GenerateParameters(&priv.PrivateKey.PublicKey.Parameters, rand, dsa.L1024N160); err != nil {
 		return err
 	}
 	if err := dsa.GenerateKey(&priv.PrivateKey, rand); err != nil {
 		return err
 	}
-	priv.PublicKey.PublicKey = priv.PrivateKey.PublicKey
+	priv.DSAPublicKey.PublicKey = priv.PrivateKey.PublicKey
 	return nil
+}
+
+// PublicKey returns the public key corresponding to this private key
+func (priv *DSAPrivateKey) PublicKey() PublicKey {
+	return &priv.DSAPublicKey
 }
 
 func notHex(r rune) bool {
@@ -417,16 +490,16 @@ func exportProtocol(n string, w *bufio.Writer) {
 	w.WriteString(")\n")
 }
 
-func exportPrivateKey(key *PrivateKey, w *bufio.Writer) {
+func exportPrivateKey(key PrivateKey, w *bufio.Writer) {
 	indent := "    "
 	w.WriteString(indent)
 	w.WriteString("(private-key\n")
-	exportDSAPrivateKey(key, w)
+	exportDSAPrivateKey(key.(*DSAPrivateKey), w)
 	w.WriteString(indent)
 	w.WriteString(")\n")
 }
 
-func exportDSAPrivateKey(key *PrivateKey, w *bufio.Writer) {
+func exportDSAPrivateKey(key *DSAPrivateKey, w *bufio.Writer) {
 	indent := "      "
 	w.WriteString(indent)
 	w.WriteString("(dsa\n")
@@ -449,9 +522,9 @@ func exportAccount(a *Account, w *bufio.Writer) {
 	indent := "  "
 	w.WriteString(indent)
 	w.WriteString("(account\n")
-	exportName(a.Name, w)
-	exportProtocol(a.Protocol, w)
-	exportPrivateKey(a.Key, w)
+	exportName(a.name, w)
+	exportProtocol(a.protocol, w)
+	exportPrivateKey(a.key, w)
 	w.WriteString(indent)
 	w.WriteString(")\n")
 }
