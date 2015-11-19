@@ -134,11 +134,6 @@ func (c *Conversation) GetTheirKey() PublicKey {
 	return c.theirKey
 }
 
-// GetTheirDefaultFingerPrint returns the public key default finger print of the other peer in this conversation
-func (c *Conversation) GetTheirDefaultFingerPrint() []byte {
-	return c.theirKey.DefaultFingerprint(c.version)
-}
-
 // GetSSID returns the SSID of this Conversation
 func (c *Conversation) GetSSID() [8]byte {
 	return c.ssid
