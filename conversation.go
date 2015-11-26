@@ -54,6 +54,7 @@ type Conversation struct {
 	sentRevealSig bool
 }
 
+// NewConversationWithVersion creates a new conversation with the given version
 func NewConversationWithVersion(v int) *Conversation {
 	var vv otrVersion
 
@@ -98,7 +99,7 @@ func (c *Conversation) wrapMessageHeader(msgType byte, msg []byte) (messageWithH
 
 // DefaultFingerprintFor returns the default fingerprint for the given key
 func (c *Conversation) DefaultFingerprintFor(pk PublicKey) []byte {
-	return pk.DefaultFingerprint(c.version)
+	return pk.defaultFingerprint(c.version)
 }
 
 // IsEncrypted returns true if the current conversation is private

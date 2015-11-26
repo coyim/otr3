@@ -20,12 +20,13 @@ import (
 type PublicKey interface {
 	Parse([]byte) ([]byte, bool)
 	Fingerprint(hash.Hash) []byte
-	DefaultFingerprint(v otrVersion) []byte
 	Verify([]byte, []byte) ([]byte, bool)
 
 	serialize() []byte
 
 	IsSame(PublicKey) bool
+
+	defaultFingerprint(v otrVersion) []byte
 }
 
 // PrivateKey is a private key used to sign messages
@@ -351,8 +352,8 @@ func (pub *DSAPublicKey) Fingerprint(h hash.Hash) []byte {
 	return h.Sum(nil)
 }
 
-// DefaultFingerprint generates a fingerprint of the public key using SHA-1.
-func (pub *DSAPublicKey) DefaultFingerprint(v otrVersion) []byte {
+// defaultFingerprint generates a fingerprint of the public key using SHA-1.
+func (pub *DSAPublicKey) defaultFingerprint(v otrVersion) []byte {
 	return pub.Fingerprint(v.hashInstance())
 }
 
