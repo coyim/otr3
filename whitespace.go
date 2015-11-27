@@ -26,6 +26,10 @@ func genWhitespaceTag(p policies) []byte {
 		ret = append(ret, otrV3{}.whitespaceTag()...)
 	}
 
+	if p.has(allowV3X) {
+		ret = append(ret, otrV3X{}.whitespaceTag()...)
+	}
+
 	return ret
 }
 
@@ -49,7 +53,9 @@ func extractWhitespaceTag(message ValidMessage) (plain MessagePlaintext, version
 			break
 		}
 		currentData = r
-		if bytes.Equal(aw, otrV3{}.whitespaceTag()) {
+		if bytes.Equal(aw, otrV3X{}.whitespaceTag()) {
+			versions |= (1 << 4)
+		} else if bytes.Equal(aw, otrV3{}.whitespaceTag()) {
 			versions |= (1 << 3)
 		} else if bytes.Equal(aw, otrV2{}.whitespaceTag()) {
 			versions |= (1 << 2)

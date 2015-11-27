@@ -8,6 +8,8 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+var otrv3XFragmentationPrefix = []byte("?OTR^")
+
 type otrV3X struct {
 	otrV3
 }

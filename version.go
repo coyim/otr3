@@ -36,6 +36,9 @@ func newOtrVersion(v uint16, p policies) (version otrVersion, err error) {
 	case 3:
 		version = otrV3{}
 		toCheck = allowV3
+	case 4:
+		version = otrV3X{}
+		toCheck = allowV3X
 	default:
 		return nil, errUnsupportedOTRVersion
 	}
@@ -49,6 +52,8 @@ func versionFromFragment(fragment []byte) uint16 {
 	var messageVersion uint16
 
 	switch {
+	case bytes.HasPrefix(fragment, otrv3XFragmentationPrefix):
+		messageVersion = 4
 	case bytes.HasPrefix(fragment, otrv3FragmentationPrefix):
 		messageVersion = 3
 	case bytes.HasPrefix(fragment, otrv2FragmentationPrefix):
@@ -85,6 +90,8 @@ func (c *Conversation) commitToVersionFrom(versions int) error {
 	var version otrVersion
 
 	switch {
+	case c.Policies.has(allowV3X) && versions&(1<<4) > 0:
+		version = otrV3X{}
 	case c.Policies.has(allowV3) && versions&(1<<3) > 0:
 		version = otrV3{}
 	case c.Policies.has(allowV2) && versions&(1<<2) > 0:

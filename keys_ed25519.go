@@ -116,8 +116,6 @@ func (priv *Ed25519PrivateKey) Sign(_ io.Reader, message []byte) ([]byte, error)
 
 // Generate will generate a new Ed25519 Private Key with the randomness provided.
 func (priv *Ed25519PrivateKey) Generate(rand io.Reader) error {
-	//	GenerateKey(rand io.Reader) (publicKey *[PublicKeySize]byte, privateKey *[PrivateKeySize]byte, err error)
-
 	pu, pr, err := ed25519.GenerateKey(rand)
 	if err != nil {
 		return err

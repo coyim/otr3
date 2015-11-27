@@ -63,6 +63,8 @@ func NewConversationWithVersion(v int) *Conversation {
 		vv = otrV2{}
 	case 3:
 		vv = otrV3{}
+	case 4:
+		vv = otrV3X{}
 	}
 	return &Conversation{version: vv}
 }

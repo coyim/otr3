@@ -9,7 +9,7 @@ func Test_newOtrVersion_returnsTheCorrectOTRVersionForAValidVersionNumber(t *tes
 }
 
 func Test_newOtrVersion_returnsUnsupportedVersionErrorIfGivenAWrongVersion(t *testing.T) {
-	_, err := newOtrVersion(4, policies(allowV3))
+	_, err := newOtrVersion(5, policies(allowV3))
 	assertEquals(t, err, errUnsupportedOTRVersion)
 }
 

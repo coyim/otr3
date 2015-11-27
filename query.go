@@ -36,6 +36,8 @@ func extractVersionsFromQueryMessage(p policies, msg ValidMessage) int {
 	versions := 0
 	for _, v := range parseOTRQueryMessage(msg) {
 		switch {
+		case v == 4 && p.has(allowV3X):
+			versions |= (1 << 4)
 		case v == 3 && p.has(allowV3):
 			versions |= (1 << 3)
 		case v == 2 && p.has(allowV2):
@@ -67,6 +69,10 @@ func (c Conversation) QueryMessage() ValidMessage {
 
 	if c.Policies.has(allowV3) {
 		queryMessage = append(queryMessage, '3')
+	}
+
+	if c.Policies.has(allowV3X) {
+		queryMessage = append(queryMessage, '4')
 	}
 
 	return append(queryMessage, '?')
