@@ -194,6 +194,10 @@ func ParsePrivateKey(in []byte) (index []byte, ok bool, key PrivateKey) {
 		key = &DSAPrivateKey{}
 		index, ok = key.Parse(in)
 		return
+	case ed25519KeyTypeValue:
+		key = &Ed25519PrivateKey{}
+		index, ok = key.Parse(in)
+		return
 	}
 
 	return in, false, nil
@@ -210,6 +214,10 @@ func ParsePublicKey(in []byte) (index []byte, ok bool, key PublicKey) {
 	switch typeTag {
 	case dsaKeyTypeValue:
 		key = &DSAPublicKey{}
+		index, ok = key.Parse(in)
+		return
+	case ed25519KeyTypeValue:
+		key = &Ed25519PublicKey{}
 		index, ok = key.Parse(in)
 		return
 	}
