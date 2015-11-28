@@ -125,9 +125,19 @@ func (c *Conversation) End() (toSend []ValidMessage, err error) {
 	return
 }
 
-// SetOurKeys assigns our private key to the conversation
+// SetOurKeys assigns our private keys to the conversation
 func (c *Conversation) SetOurKeys(ourKeys []PrivateKey) {
 	c.ourKeys = ourKeys
+}
+
+// GetOurKeys returns all our keys for the current conversation
+func (c *Conversation) GetOurKeys() []PrivateKey {
+	return c.ourKeys
+}
+
+// GetOurCurrentKey returns the currently chosen key for us
+func (c *Conversation) GetOurCurrentKey() PrivateKey {
+	return c.ourCurrentKey
 }
 
 // GetTheirKey returns the public key of the other peer in this conversation
