@@ -39,16 +39,28 @@ type PrivateKey interface {
 func GenerateMissingKeys(existing [][]byte) ([]PrivateKey, error) {
 	var result []PrivateKey
 	hasDSA := false
+	hasED := false
 
 	for _, x := range existing {
 		_, typeTag, ok := extractShort(x)
 		if ok && typeTag == dsaKeyTypeValue {
 			hasDSA = true
 		}
+		if ok && typeTag == ed25519KeyTypeValue {
+			hasED = true
+		}
 	}
 
 	if !hasDSA {
 		var priv DSAPrivateKey
+		if err := priv.Generate(rand.Reader); err != nil {
+			return nil, err
+		}
+		result = append(result, &priv)
+	}
+
+	if !hasED {
+		var priv Ed25519PrivateKey
 		if err := priv.Generate(rand.Reader); err != nil {
 			return nil, err
 		}
