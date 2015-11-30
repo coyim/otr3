@@ -6,6 +6,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/dsa"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"hash"
@@ -37,6 +38,29 @@ type PrivateKey interface {
 	Generate(io.Reader) error
 	PublicKey() PublicKey
 	IsAvailableForVersion(uint16) bool
+}
+
+// GenerateMissingKeys will look through the existing serialized keys and generate new keys to ensure that the functioning of this version of OTR will work correctly. It will only return the newly generated keys, not the old ones
+func GenerateMissingKeys(existing [][]byte) ([]PrivateKey, error) {
+	var result []PrivateKey
+	hasDSA := false
+
+	for _, x := range existing {
+		_, typeTag, ok := extractShort(x)
+		if ok && typeTag == dsaKeyTypeValue {
+			hasDSA = true
+		}
+	}
+
+	if !hasDSA {
+		var priv DSAPrivateKey
+		if err := priv.Generate(rand.Reader); err != nil {
+			return nil, err
+		}
+		result = append(result, &priv)
+	}
+
+	return result, nil
 }
 
 // DSAPublicKey is a DSA public key

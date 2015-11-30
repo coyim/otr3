@@ -18,7 +18,7 @@
 //  c := &otr3.Conversation{}
 //
 //  // You will need to prepare a long-term PrivateKey for otr conversation handshakes.
-//  priv := &otr3.PrivateKey{}
+//  var priv otr3.DSAPrivateKey
 //  priv.Generate(rand.Reader)
 //  c.SetKeys(priv, nil)
 //
