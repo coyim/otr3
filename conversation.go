@@ -97,11 +97,6 @@ func (c *Conversation) wrapMessageHeader(msgType byte, msg []byte) (messageWithH
 	return append(header, msg...), nil
 }
 
-// DefaultFingerprintFor returns the default fingerprint for the given key
-func (c *Conversation) DefaultFingerprintFor(pk PublicKey) []byte {
-	return pk.defaultFingerprint(c.version)
-}
-
 // IsEncrypted returns true if the current conversation is private
 func (c *Conversation) IsEncrypted() bool {
 	return c.msgState == encrypted
