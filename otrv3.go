@@ -171,36 +171,28 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, 
 
 func (v otrV3) hashInstance() hash.Hash {
 	return sha1.New()
-	// return sha3.New256()
 }
 
 func (v otrV3) hash(val []byte) []byte {
 	ret := sha1.Sum(val)
 	return ret[:]
-	// ret := sha3.Sum256(val)
-	// return ret[:]
 }
 
 func (v otrV3) hashLength() int {
 	return sha1.Size
-	// return 32
 }
 
 func (v otrV3) hash2Instance() hash.Hash {
 	return sha256.New()
-	// return sha3.New256()
 }
 
 func (v otrV3) hash2(val []byte) []byte {
 	ret := sha256.Sum256(val)
 	return ret[:]
-	// ret := sha3.Sum256(val)
-	// return ret[:]
 }
 
 func (v otrV3) hash2Length() int {
 	return sha256.Size
-	// return 32
 }
 
 func (v otrV3) truncateLength() int {

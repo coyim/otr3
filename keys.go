@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"crypto/rand"
 	"fmt"
-	"hash"
 	"io"
 	"math/big"
 	"os"
@@ -15,14 +14,12 @@ import (
 // PublicKey is a public key used to verify signed messages
 type PublicKey interface {
 	Parse([]byte) ([]byte, bool)
-	Fingerprint(hash.Hash) []byte
+	Fingerprint() []byte
 	Verify([]byte, []byte) ([]byte, bool)
 
 	serialize() []byte
 
 	IsSame(PublicKey) bool
-
-	defaultFingerprint(v otrVersion) []byte
 }
 
 // PrivateKey is a private key used to sign messages

@@ -64,7 +64,7 @@ func (c *Conversation) dumpAKE(w *bufio.Writer) {
 
 	w.WriteString(fmt.Sprintf("    Our keyid:   %d\n", c.keys.ourKeyID))
 	w.WriteString(fmt.Sprintf("    Their keyid: %d\n", c.keys.theirKeyID))
-	w.WriteString(fmt.Sprintf("    Their fingerprint: %X\n", c.theirKey.defaultFingerprint(c.version)))
+	w.WriteString(fmt.Sprintf("    Their fingerprint: %X\n", c.theirKey.Fingerprint()))
 	w.WriteString(fmt.Sprintf("    Proto version = %d\n", c.version.protocolVersion()))
 	w.Flush()
 }
