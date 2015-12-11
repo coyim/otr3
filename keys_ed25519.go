@@ -2,7 +2,6 @@ package otr3
 
 import (
 	"bytes"
-	"hash"
 	"io"
 
 	"github.com/agl/ed25519"
@@ -34,18 +33,15 @@ func (pub *Ed25519PublicKey) IsSame(other PublicKey) bool {
 }
 
 // Fingerprint will generate a fingerprint of the serialized version of the key using the provided hash.
-func (pub *Ed25519PublicKey) Fingerprint(h hash.Hash) []byte {
+func (pub *Ed25519PublicKey) Fingerprint() []byte {
 	b := pub.serialize()
 	if b == nil {
 		return nil
 	}
+
+	h := fingerprintHashInstanceForVersion(4)
 	h.Write(b)
 	return h.Sum(nil)
-}
-
-// defaultFingerprint generates a fingerprint of the public key using the default Hash Instance
-func (pub *Ed25519PublicKey) defaultFingerprint(v otrVersion) []byte {
-	return pub.Fingerprint(v.hashInstance())
 }
 
 // PublicKey returns the public key corresponding to this private key

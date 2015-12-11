@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"crypto/dsa"
 	"encoding/hex"
-	"hash"
 	"io"
 	"math/big"
 
@@ -114,19 +113,16 @@ func (pub *DSAPublicKey) serialize() []byte {
 }
 
 // Fingerprint will generate a fingerprint of the serialized version of the key using the provided hash.
-func (pub *DSAPublicKey) Fingerprint(h hash.Hash) []byte {
+func (pub *DSAPublicKey) Fingerprint() []byte {
 	b := pub.serialize()
 	if b == nil {
 		return nil
 	}
 
+	h := fingerprintHashInstanceForVersion(3)
+
 	h.Write(b[2:]) // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
 	return h.Sum(nil)
-}
-
-// defaultFingerprint generates a fingerprint of the public key using SHA-1.
-func (pub *DSAPublicKey) defaultFingerprint(v otrVersion) []byte {
-	return pub.Fingerprint(v.hashInstance())
 }
 
 // Sign will generate a signature of a hashed data using dsa Sign.
