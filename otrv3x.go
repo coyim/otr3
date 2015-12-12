@@ -51,7 +51,7 @@ func (v otrV3X) hash2Length() int {
 }
 
 func (v otrV3X) truncateLength() int {
-	return 32
+	return 20
 }
 
 func (v otrV3X) keyLength() int {
