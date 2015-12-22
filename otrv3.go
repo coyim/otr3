@@ -85,9 +85,7 @@ func (v otrV3) protocolVersion() uint16 {
 }
 
 func (v otrV3) whitespaceTag() []byte {
-	return []byte{
-		0x20, 0x20, 0x09, 0x09, 0x20, 0x20, 0x09, 0x09,
-	}
+	return convertToWhitespace("3")
 }
 
 func (v otrV3) messageHeader(c *Conversation, msgType byte) ([]byte, error) {

@@ -1,6 +1,11 @@
 package otr3
 
-import "bytes"
+import (
+	"bytes"
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 type whitespaceState int
 
@@ -10,9 +15,19 @@ const (
 	whitespaceRejected
 )
 
+func convertToWhitespace(v string) []byte {
+	result := make([]byte, 0, len(v)*8)
+
+	for _, v := range []byte(v) {
+		result = append(result, []byte(strings.Replace(strings.Replace(fmt.Sprintf("%08s", strconv.FormatInt(int64(v), 2)), "0", " ", -1), "1", "\t", -1))...)
+	}
+
+	return result
+}
+
 var (
 	// Maps to OTRL_MESSAGE_TAG_BASE
-	whitespaceTagHeader = []byte(" \t  \t\t\t\t \t \t \t  ")
+	whitespaceTagHeader = convertToWhitespace("OT")
 )
 
 func genWhitespaceTag(p policies) []byte {
