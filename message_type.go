@@ -26,20 +26,28 @@ func guessMessageType(msg []byte) messageTypeGuess {
 			return msgGuessDHCommit
 		case bytes.HasPrefix(msg, []byte("?OTR:AAIC")):
 			return msgGuessDHCommit
+		case bytes.HasPrefix(msg, []byte("?OTR:AAQC")):
+			return msgGuessDHCommit
 
 		case bytes.HasPrefix(msg, []byte("?OTR:AAMK")):
 			return msgGuessDHKey
 		case bytes.HasPrefix(msg, []byte("?OTR:AAIK")):
+			return msgGuessDHKey
+		case bytes.HasPrefix(msg, []byte("?OTR:AAQK")):
 			return msgGuessDHKey
 
 		case bytes.HasPrefix(msg, []byte("?OTR:AAMR")):
 			return msgGuessRevealSig
 		case bytes.HasPrefix(msg, []byte("?OTR:AAIR")):
 			return msgGuessRevealSig
+		case bytes.HasPrefix(msg, []byte("?OTR:AAQR")):
+			return msgGuessRevealSig
 
 		case bytes.HasPrefix(msg, []byte("?OTR:AAMS")):
 			return msgGuessSignature
 		case bytes.HasPrefix(msg, []byte("?OTR:AAIS")):
+			return msgGuessSignature
+		case bytes.HasPrefix(msg, []byte("?OTR:AAQS")):
 			return msgGuessSignature
 
 		case bytes.HasPrefix(msg, []byte("?OTR:AAED")):
@@ -47,6 +55,8 @@ func guessMessageType(msg []byte) messageTypeGuess {
 		case bytes.HasPrefix(msg, []byte("?OTR:AAID")):
 			return msgGuessData
 		case bytes.HasPrefix(msg, []byte("?OTR:AAMD")):
+			return msgGuessData
+		case bytes.HasPrefix(msg, []byte("?OTR:AAQD")):
 			return msgGuessData
 
 		case bytes.HasPrefix(msg, []byte("?OTR?")):
@@ -63,6 +73,8 @@ func guessMessageType(msg []byte) messageTypeGuess {
 		case bytes.HasPrefix(msg, []byte("?OTR|")):
 			return msgGuessFragment
 		case bytes.HasPrefix(msg, []byte("?OTR,")):
+			return msgGuessFragment
+		case bytes.HasPrefix(msg, []byte("?OTR^")):
 			return msgGuessFragment
 		}
 		return msgGuessUnknown
