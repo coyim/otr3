@@ -19,9 +19,7 @@ func (v otrV3X) protocolVersion() uint16 {
 }
 
 func (v otrV3X) whitespaceTag() []byte {
-	return []byte{
-		0x20, 0x20, 0x09, 0x09, 0x20, 0x09, 0x09, 0x09,
-	}
+	return convertToWhitespace("4")
 }
 
 func (v otrV3X) hashInstance() hash.Hash {
