@@ -136,7 +136,7 @@ func Test_generateInstanceTag_returnsAnErrorIfFailsToReadFromRand(t *testing.T) 
 }
 
 func Test_messageHeader_generatesOurInstanceTagLazily(t *testing.T) {
-	c := &Conversation{}
+	c := &Conversation{version: otrV3{}}
 
 	_, err := otrV3{}.messageHeader(c, msgTypeDHCommit)
 

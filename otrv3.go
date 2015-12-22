@@ -93,7 +93,7 @@ func (v otrV3) messageHeader(c *Conversation, msgType byte) ([]byte, error) {
 		return nil, err
 	}
 
-	out := appendShort(nil, v.protocolVersion())
+	out := appendShort(nil, c.version.protocolVersion())
 	out = append(out, msgType)
 	out = appendWord(out, c.ourInstanceTag)
 	out = appendWord(out, c.theirInstanceTag)
