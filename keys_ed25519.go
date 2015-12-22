@@ -66,7 +66,7 @@ func (pub *Ed25519PublicKey) Parse(in []byte) (index []byte, ok bool) {
 
 // Parse will parse a Private Key from the given data, by first parsing the public key components and then the private key component. It returns not ok for the same reasons as PublicKey.Parse.
 func (priv *Ed25519PrivateKey) Parse(in []byte) (index []byte, ok bool) {
-	if in, ok = priv.Ed25519PublicKey.Parse(in); !ok {
+	if index, ok = priv.Ed25519PublicKey.Parse(in); !ok {
 		return nil, false
 	}
 
