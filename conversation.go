@@ -77,17 +77,23 @@ func (c *Conversation) parseMessageHeader(msg messageWithHeader) ([]byte, []byte
 	return c.version.parseMessageHeader(c, msg)
 }
 
-func (c *Conversation) resolveVersionFromFragment(fragment []byte) error {
+func (c *Conversation) resolveVersionFromFragment(fragment []byte) (otrVersion, error) {
 	versions := 1 << versionFromFragment(fragment)
-	return c.commitToVersionFrom(versions)
+	return c.decideOnVersionFrom(versions)
 }
 
 func (c *Conversation) parseFragmentPrefix(data []byte) ([]byte, bool, bool) {
-	if err := c.resolveVersionFromFragment(data); err != nil {
+	version, err := c.resolveVersionFromFragment(data)
+
+	if err != nil {
 		return data, true, false
 	}
 
-	return c.version.parseFragmentPrefix(c, data)
+	if version == nil {
+		version = c.version
+	}
+
+	return version.parseFragmentPrefix(c, data)
 }
 
 func (c *Conversation) wrapMessageHeader(msgType byte, msg []byte) (messageWithHeader, error) {

@@ -270,7 +270,7 @@ func Test_parseFragmentPrefix_resolveVersion2IfNotDefined(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV2)}
 	c.parseFragmentPrefix(fragment)
 
-	assertEquals(t, c.version, otrV2{})
+	assertEquals(t, c.version, nil)
 
 }
 
@@ -292,7 +292,7 @@ func Test_parseFragmentPrefix_resolveVersion3IfNotDefined(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV3)}
 	c.parseFragmentPrefix(fragment)
 
-	assertEquals(t, c.version, otrV3{})
+	assertEquals(t, c.version, nil)
 }
 
 func Test_parseFragmentPrefix_rejectsVersion3IfNotAllowedByThePolicy(t *testing.T) {

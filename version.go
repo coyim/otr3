@@ -52,8 +52,6 @@ func versionFromFragment(fragment []byte) uint16 {
 	var messageVersion uint16
 
 	switch {
-	case bytes.HasPrefix(fragment, otrv3XFragmentationPrefix):
-		messageVersion = 4
 	case bytes.HasPrefix(fragment, otrv3FragmentationPrefix):
 		messageVersion = 3
 	case bytes.HasPrefix(fragment, otrv2FragmentationPrefix):
@@ -81,10 +79,9 @@ func (c *Conversation) checkVersion(message []byte) (err error) {
 	return nil
 }
 
-// Based on the policy, commit to a version given a set of versions offered by the other peer unless the conversation has already committed to a version.
-func (c *Conversation) commitToVersionFrom(versions int) error {
+func (c *Conversation) decideOnVersionFrom(versions int) (otrVersion, error) {
 	if c.version != nil {
-		return nil
+		return nil, nil
 	}
 
 	var version otrVersion
@@ -97,10 +94,25 @@ func (c *Conversation) commitToVersionFrom(versions int) error {
 	case c.Policies.has(allowV2) && versions&(1<<2) > 0:
 		version = otrV2{}
 	default:
-		return errUnsupportedOTRVersion
+		return nil, errUnsupportedOTRVersion
 	}
 
-	c.version = version
+	return version, nil
+}
+
+// Based on the policy, commit to a version given a set of versions offered by the other peer unless the conversation has already committed to a version.
+func (c *Conversation) commitToVersionFrom(versions int) error {
+	vv, ee := c.decideOnVersionFrom(versions)
+
+	if ee != nil {
+		return ee
+	}
+
+	if vv == nil {
+		return nil
+	}
+
+	c.version = vv
 
 	return c.setKeyMatchingVersion()
 }
