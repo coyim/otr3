@@ -1,30 +1,28 @@
 package otr3
 
-import (
-	"bytes"
-	"strconv"
-)
+import "bytes"
 
 func isQueryMessage(msg ValidMessage) bool {
 	return bytes.HasPrefix(msg, queryMarker)
 }
 
-func parseOTRQueryMessage(msg ValidMessage) []int {
-	ret := []int{}
+func parseOTRQueryMessage(msg ValidMessage) []string {
+	ret := []string{}
 
 	if bytes.HasPrefix(msg, queryMarker) && len(msg) > len(queryMarker) {
 		versions := msg[len(queryMarker):]
 
 		if versions[0] == '?' {
-			ret = append(ret, 1)
+			ret = append(ret, "1")
 			versions = versions[1:]
 		}
 
 		if len(versions) > 0 && versions[0] == 'v' {
-			for _, c := range versions {
-				if v, err := strconv.Atoi(string(c)); err == nil {
-					ret = append(ret, v)
+			for _, c := range versions[1:] {
+				if c == '?' {
+					break
 				}
+				ret = append(ret, string(c))
 			}
 		}
 	}
@@ -32,16 +30,16 @@ func parseOTRQueryMessage(msg ValidMessage) []int {
 	return ret
 }
 
-func extractVersionsFromQueryMessage(p policies, msg ValidMessage) int {
-	versions := 0
+func extractVersionsFromQueryMessage(p policies, msg ValidMessage) map[string]bool {
+	versions := make(map[string]bool)
 	for _, v := range parseOTRQueryMessage(msg) {
 		switch {
-		case v == 4 && p.has(allowV3X):
-			versions |= (1 << 4)
-		case v == 3 && p.has(allowV3):
-			versions |= (1 << 3)
-		case v == 2 && p.has(allowV2):
-			versions |= (1 << 2)
+		case v == "J" && p.has(allowVExtensionJ):
+			versions[v] = true
+		case v == "3" && p.has(allowV3):
+			versions[v] = true
+		case v == "2" && p.has(allowV2):
+			versions[v] = true
 		}
 	}
 
@@ -71,8 +69,8 @@ func (c Conversation) QueryMessage() ValidMessage {
 		queryMessage = append(queryMessage, '3')
 	}
 
-	if c.Policies.has(allowV3X) {
-		queryMessage = append(queryMessage, '4')
+	if c.Policies.has(allowVExtensionJ) {
+		queryMessage = append(queryMessage, 'J')
 	}
 
 	return append(queryMessage, '?')

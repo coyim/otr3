@@ -55,16 +55,16 @@ type Conversation struct {
 }
 
 // NewConversationWithVersion creates a new conversation with the given version
-func NewConversationWithVersion(v int) *Conversation {
+func NewConversationWithVersion(v uint16) *Conversation {
 	var vv otrVersion
 
 	switch v {
-	case 2:
+	case otrV2{}.protocolVersionNumber():
 		vv = otrV2{}
-	case 3:
+	case otrV3{}.protocolVersionNumber():
 		vv = otrV3{}
-	case 4:
-		vv = otrV3X{}
+	case otrVJ{}.protocolVersionNumber():
+		vv = otrVJ{}
 	}
 	return &Conversation{version: vv}
 }
@@ -77,9 +77,16 @@ func (c *Conversation) parseMessageHeader(msg messageWithHeader) ([]byte, []byte
 	return c.version.parseMessageHeader(c, msg)
 }
 
+func set(s ...string) map[string]bool {
+	m := make(map[string]bool)
+	for _, vv := range s {
+		m[vv] = true
+	}
+	return m
+}
+
 func (c *Conversation) resolveVersionFromFragment(fragment []byte) (otrVersion, error) {
-	versions := 1 << versionFromFragment(fragment)
-	return c.decideOnVersionFrom(versions)
+	return c.decideOnVersionFrom(set(versionFromFragment(fragment)))
 }
 
 func (c *Conversation) parseFragmentPrefix(data []byte) ([]byte, bool, bool) {

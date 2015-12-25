@@ -19,7 +19,7 @@ func Test_extractWhitespaceTag_removesTagFromMessage(t *testing.T) {
 		plain, versions := extractWhitespaceTag(m)
 
 		assertDeepEquals(t, plain, MessagePlaintext("hi there"))
-		assertEquals(t, versions, 1<<2)
+		assertDeepEquals(t, versions, set("2"))
 	}
 }
 

@@ -40,7 +40,7 @@ func (c *Conversation) dump(w *bufio.Writer) {
 	w.WriteString(fmt.Sprintf("  Our instance:   %08X\n", c.ourInstanceTag))
 	w.WriteString(fmt.Sprintf("  Their instance: %08X\n\n", c.theirInstanceTag))
 	w.WriteString(fmt.Sprintf("  Msgstate: %d (%s)\n\n", c.msgState, c.msgState.identityString()))
-	w.WriteString(fmt.Sprintf("  Protocol version: %d\n", c.version.protocolVersion()))
+	w.WriteString(fmt.Sprintf("  Protocol version: %s\n", c.version.protocolVersion()))
 	w.WriteString(fmt.Sprintf("  OTR offer: %s\n\n", c.otrOffer()))
 	if c.ake == nil {
 		w.WriteString("  Auth info: NULL\n")
@@ -65,7 +65,7 @@ func (c *Conversation) dumpAKE(w *bufio.Writer) {
 	w.WriteString(fmt.Sprintf("    Our keyid:   %d\n", c.keys.ourKeyID))
 	w.WriteString(fmt.Sprintf("    Their keyid: %d\n", c.keys.theirKeyID))
 	w.WriteString(fmt.Sprintf("    Their fingerprint: %X\n", c.theirKey.Fingerprint()))
-	w.WriteString(fmt.Sprintf("    Proto version = %d\n", c.version.protocolVersion()))
+	w.WriteString(fmt.Sprintf("    Proto version = %s\n", c.version.protocolVersion()))
 	w.Flush()
 }
 

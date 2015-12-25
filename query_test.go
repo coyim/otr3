@@ -3,7 +3,7 @@ package otr3
 import "testing"
 
 func Test_receiveQueryMessage_sendDHCommitv3AndTransitToStateAwaitingDHKey(t *testing.T) {
-	queryMsg := []byte("?OTRv?23?")
+	queryMsg := []byte("?OTR?v23?")
 
 	c := &Conversation{Policies: policies(allowV3)}
 	c.SetOurKeys([]PrivateKey{bobPrivateKey})
@@ -16,7 +16,7 @@ func Test_receiveQueryMessage_sendDHCommitv3AndTransitToStateAwaitingDHKey(t *te
 }
 
 func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
-	queryMsg := []byte("?OTRv?23?")
+	queryMsg := []byte("?OTR?v23?")
 
 	c := &Conversation{Policies: policies(allowV2)}
 	c.SetOurKeys([]PrivateKey{bobPrivateKey})
@@ -29,7 +29,7 @@ func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
 }
 
 func Test_receiveQueryMessageV2V3_sendDHCommitv3WhenV2AndV3AreAllowed(t *testing.T) {
-	queryMsg := []byte("?OTRv?23?")
+	queryMsg := []byte("?OTR?v23?")
 
 	c := &Conversation{Policies: policies(allowV2 | allowV3)}
 	c.SetOurKeys([]PrivateKey{bobPrivateKey})
@@ -88,14 +88,14 @@ func Test_receiveQueryMessage_returnsErrorIfDhCommitMessageGeneratesError(t *tes
 }
 
 func Test_parseOTRQueryMessage(t *testing.T) {
-	var exp = map[string][]int{
-		"?OTR?":     []int{1},
-		"?OTRv2?":   []int{2},
-		"?OTRv23?":  []int{2, 3},
-		"?OTR?v2":   []int{1, 2},
-		"?OTRv248?": []int{2, 4, 8},
-		"?OTR?v?":   []int{1},
-		"?OTRv?":    []int{},
+	var exp = map[string][]string{
+		"?OTR?":     []string{"1"},
+		"?OTRv2?":   []string{"2"},
+		"?OTRv23?":  []string{"2", "3"},
+		"?OTR?v2":   []string{"1", "2"},
+		"?OTRv248?": []string{"2", "4", "8"},
+		"?OTR?v?":   []string{"1"},
+		"?OTRv?":    []string{},
 	}
 
 	for queryMsg, versions := range exp {
@@ -109,7 +109,7 @@ func Test_extractVersionsFromQueryMessage_returnsNilForUnsupportedVersions(t *te
 	msg := []byte("?OTR?")
 	versions := extractVersionsFromQueryMessage(p, msg)
 
-	assertEquals(t, versions, 0)
+	assertDeepEquals(t, versions, set())
 }
 
 func Test_extractVersionsFromQueryMessage_acceptsBothV2AndV3IfThePolicyAllows(t *testing.T) {
@@ -117,7 +117,7 @@ func Test_extractVersionsFromQueryMessage_acceptsBothV2AndV3IfThePolicyAllows(t 
 	p := policies(allowV2 | allowV3)
 	versions := extractVersionsFromQueryMessage(p, msg)
 
-	assertEquals(t, versions, 1<<2|1<<3)
+	assertDeepEquals(t, versions, set("2", "3"))
 }
 
 func Test_extractVersionsFromQueryMessage_acceptsOTRV2IfHasOnlyAllowV2Policy(t *testing.T) {
@@ -125,5 +125,5 @@ func Test_extractVersionsFromQueryMessage_acceptsOTRV2IfHasOnlyAllowV2Policy(t *
 	p := policies(allowV2)
 	versions := extractVersionsFromQueryMessage(p, msg)
 
-	assertEquals(t, versions, 1<<2)
+	assertDeepEquals(t, versions, set("2"))
 }

@@ -40,16 +40,20 @@ func (v otrV2) fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte {
 	return []byte(fmt.Sprintf("%s%05d,%05d,", string(otrv2FragmentationPrefix), n+1, total))
 }
 
-func (v otrV2) protocolVersion() uint16 {
+func (v otrV2) protocolVersion() string {
+	return "2"
+}
+
+func (v otrV2) protocolVersionNumber() uint16 {
 	return 2
 }
 
 func (v otrV2) whitespaceTag() []byte {
-	return convertToWhitespace("2")
+	return convertToWhitespace(v.protocolVersion())
 }
 
 func (v otrV2) messageHeader(c *Conversation, msgType byte) ([]byte, error) {
-	out := appendShort(nil, v.protocolVersion())
+	out := appendShort(nil, v.protocolVersionNumber())
 	out = append(out, msgType)
 	return out, nil
 }

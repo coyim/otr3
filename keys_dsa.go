@@ -47,7 +47,7 @@ func readDSAPrivateKey(r *bufio.Reader) (*dsa.PrivateKey, bool) {
 
 // IsAvailableForVersion returns true if this key is possible to use with the given version
 func (pub *DSAPublicKey) IsAvailableForVersion(v uint16) bool {
-	return v == 2 || v == 3
+	return v == otrV2{}.protocolVersionNumber() || v == otrV3{}.protocolVersionNumber()
 }
 
 // IsSame returns true if the given public key is a DSA public key that is equal to this key

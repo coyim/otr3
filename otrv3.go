@@ -80,12 +80,16 @@ func (v otrV3) fragmentPrefix(n, total int, itags uint32, itagr uint32) []byte {
 	return []byte(fmt.Sprintf("%s%08x|%08x,%05d,%05d,", string(otrv3FragmentationPrefix), itags, itagr, n+1, total))
 }
 
-func (v otrV3) protocolVersion() uint16 {
+func (v otrV3) protocolVersion() string {
+	return "3"
+}
+
+func (v otrV3) protocolVersionNumber() uint16 {
 	return 3
 }
 
 func (v otrV3) whitespaceTag() []byte {
-	return convertToWhitespace("3")
+	return convertToWhitespace(v.protocolVersion())
 }
 
 func (v otrV3) messageHeader(c *Conversation, msgType byte) ([]byte, error) {
@@ -93,7 +97,7 @@ func (v otrV3) messageHeader(c *Conversation, msgType byte) ([]byte, error) {
 		return nil, err
 	}
 
-	out := appendShort(nil, c.version.protocolVersion())
+	out := appendShort(nil, c.version.protocolVersionNumber())
 	out = append(out, msgType)
 	out = appendWord(out, c.ourInstanceTag)
 	out = appendWord(out, c.theirInstanceTag)

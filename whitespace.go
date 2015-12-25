@@ -41,8 +41,8 @@ func genWhitespaceTag(p policies) []byte {
 		ret = append(ret, otrV3{}.whitespaceTag()...)
 	}
 
-	if p.has(allowV3X) {
-		ret = append(ret, otrV3X{}.whitespaceTag()...)
+	if p.has(allowVExtensionJ) {
+		ret = append(ret, otrVJ{}.whitespaceTag()...)
 	}
 
 	return ret
@@ -58,9 +58,10 @@ func (c *Conversation) appendWhitespaceTag(message []byte) []byte {
 }
 
 // By the spec "this tag may occur anywhere in the message"
-func extractWhitespaceTag(message ValidMessage) (plain MessagePlaintext, versions int) {
+func extractWhitespaceTag(message ValidMessage) (plain MessagePlaintext, versions map[string]bool) {
 	wsPos := bytes.Index(message, whitespaceTagHeader)
 	currentData := message[wsPos+len(whitespaceTagHeader):]
+	versions = make(map[string]bool)
 
 	for {
 		aw, r, has := nextAllWhite(currentData)
@@ -68,12 +69,12 @@ func extractWhitespaceTag(message ValidMessage) (plain MessagePlaintext, version
 			break
 		}
 		currentData = r
-		if bytes.Equal(aw, otrV3X{}.whitespaceTag()) {
-			versions |= (1 << 4)
+		if bytes.Equal(aw, otrVJ{}.whitespaceTag()) {
+			versions["J"] = true
 		} else if bytes.Equal(aw, otrV3{}.whitespaceTag()) {
-			versions |= (1 << 3)
+			versions["3"] = true
 		} else if bytes.Equal(aw, otrV2{}.whitespaceTag()) {
-			versions |= (1 << 2)
+			versions["2"] = true
 		}
 	}
 
@@ -106,7 +107,7 @@ func nextAllWhite(data []byte) (allwhite []byte, rest []byte, hasAllWhite bool) 
 	return data[0:8], data[8:], true
 }
 
-func (c *Conversation) startAKEFromWhitespaceTag(versions int) (toSend []messageWithHeader, err error) {
+func (c *Conversation) startAKEFromWhitespaceTag(versions map[string]bool) (toSend []messageWithHeader, err error) {
 	if err = c.commitToVersionFrom(versions); err != nil {
 		return
 	}

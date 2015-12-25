@@ -23,7 +23,8 @@ type Ed25519PrivateKey struct {
 
 // IsAvailableForVersion returns true if this key is possible to use with the given version
 func (pub *Ed25519PublicKey) IsAvailableForVersion(v uint16) bool {
-	return v == 4
+	return v == otrVJ{}.protocolVersionNumber()
+
 }
 
 // IsSame returns true if the given public key is an Ed2559 public key that is equal to this key
