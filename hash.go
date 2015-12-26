@@ -7,11 +7,11 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-func fingerprintHashInstanceForVersion(v int) hash.Hash {
+func fingerprintHashInstanceForVersion(v uint16) hash.Hash {
 	switch v {
-	case 2, 3:
+	case otrV2{}.protocolVersionNumber(), otrV3{}.protocolVersionNumber():
 		return sha1.New()
-	case 4:
+	case otrVJ{}.protocolVersionNumber():
 		return sha3.New256()
 	}
 
