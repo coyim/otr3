@@ -3,7 +3,6 @@ package otr3
 import "bytes"
 
 var (
-	fragment3XSeparator    = []byte{'^'}
 	fragmentSeparator      = []byte{','}
 	fragmentItagsSeparator = []byte{'|'}
 )
