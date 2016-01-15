@@ -69,5 +69,14 @@ func (c Conversation) QueryMessage() ValidMessage {
 		queryMessage = append(queryMessage, '3')
 	}
 
-	return append(queryMessage, '?')
+	suffix := "?"
+	if c.friendlyQueryMessage != "" {
+		suffix = "? " + c.friendlyQueryMessage
+	}
+
+	return append(queryMessage, suffix...)
+}
+
+func (c *Conversation) SetFriendlyQueryMessage(msg string) {
+	c.friendlyQueryMessage = msg
 }

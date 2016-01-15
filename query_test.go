@@ -127,3 +127,14 @@ func Test_extractVersionsFromQueryMessage_acceptsOTRV2IfHasOnlyAllowV2Policy(t *
 
 	assertEquals(t, versions, 1<<2)
 }
+
+func Test_QueryMessage_returnsARegularQueryMessage(t *testing.T) {
+	c := &Conversation{Policies: policies(allowV3)}
+	assertEquals(t, string(c.QueryMessage()), "?OTRv3?")
+}
+
+func Test_QueryMessage_returnsAQueryMessageWithExtraMessage(t *testing.T) {
+	c := &Conversation{Policies: policies(allowV3)}
+	c.SetFriendlyQueryMessage("hello foobarium")
+	assertEquals(t, string(c.QueryMessage()), "?OTRv3? hello foobarium")
+}

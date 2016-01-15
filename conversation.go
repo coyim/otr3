@@ -52,6 +52,8 @@ type Conversation struct {
 
 	debug         bool
 	sentRevealSig bool
+
+	friendlyQueryMessage string
 }
 
 // NewConversationWithVersion creates a new conversation with the given version
