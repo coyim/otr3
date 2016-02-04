@@ -77,7 +77,10 @@ func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected(t *testin
 
 	c.Send(m)
 
-	assertDeepEquals(t, c.resend.lastMessage, MessagePlaintext(m))
+	assertDeepEquals(t, c.resend.pending(),
+		[]MessagePlaintext{
+			MessagePlaintext(m),
+		})
 }
 
 func Test_Send_setsMayRetransmitFlagToExpectExactResending(t *testing.T) {
