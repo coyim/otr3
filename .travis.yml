@@ -2,8 +2,9 @@ language: go
 
 go:
   - tip
-  - 1.5
-  - 1.4.2
+  - 1.6
+  - 1.5.3
+  - 1.4.3
 
 matrix:
   allow_failures:
