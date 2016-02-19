@@ -6,7 +6,7 @@ import "fmt"
 type MessageEvent int
 
 const (
-	// MessageEventEncryptionRequired is signaled when our policy requires encryption bt we are trying to send an unencrypted message.
+	// MessageEventEncryptionRequired is signaled when our policy requires encryption but we are trying to send an unencrypted message.
 	MessageEventEncryptionRequired MessageEvent = iota
 
 	// MessageEventEncryptionError is signaled when an error occured while encrypting a message and the message was not sent.
