@@ -18,7 +18,7 @@
 //  c := &otr3.Conversation{}
 //
 //  // You will need to prepare a long-term PrivateKey for otr conversation handshakes.
-//  var priv otr3.DSAPrivateKey
+//  var priv *otr3.DSAPrivateKey
 //  priv.Generate(rand.Reader)
 //  c.SetOurKeys([]otr3.PrivateKey{priv})
 //
@@ -34,7 +34,7 @@
 //
 //  // Use Send and Receive for messages exchange
 //  toSend, err := c.Send(otr3.ValidMessage("hello"))
-//  plain, toSend, err := c.Receive(toSend)
+//  plain, toSend, err := c.Receive(toSend[0])
 //
 //  // Use Authenticate to start a SMP process
 //  toSend, err := c.StartAuthenticate([]byte{"My pet's name?"},[]byte{"Gopher"})
