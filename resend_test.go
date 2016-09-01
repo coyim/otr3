@@ -213,7 +213,7 @@ func Test_maybeRetransmit_signalsMessageEventWhenResendingMessage(t *testing.T) 
 	}, MessageEventMessageResent, nil, nil)
 }
 
-func Test_maybeRetransmit_doesntSignalMessageEventWhenResendingMessageExact(t *testing.T) {
+func Test_maybeRetransmit_signalMessageEventWhenSendingMessageExact(t *testing.T) {
 	c := newConversation(otrV3{}, rand.Reader)
 	c.Policies.add(allowV3)
 	c.ourCurrentKey = bobPrivateKey
@@ -230,7 +230,7 @@ func Test_maybeRetransmit_doesntSignalMessageEventWhenResendingMessageExact(t *t
 	fixtureCorrectResend(c)
 	c.resend.mayRetransmit = retransmitExact
 
-	c.doesntExpectMessageEvent(t, func() {
+	c.expectMessageEvent(t, func() {
 		c.maybeRetransmit()
-	})
+	}, MessageEventMessageSent, nil, nil)
 }

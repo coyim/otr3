@@ -22,6 +22,9 @@ const (
 	// MessageEventMessageReflected will be signaled if we received our own OTR messages.
 	MessageEventMessageReflected
 
+	// MessageEventMessageSent is signaled when a message is sent after having been queued
+	MessageEventMessageSent
+
 	// MessageEventMessageResent is signaled when a message is resent
 	MessageEventMessageResent
 
@@ -100,6 +103,8 @@ func (s MessageEvent) String() string {
 		return "MessageEventSetupError"
 	case MessageEventMessageReflected:
 		return "MessageEventMessageReflected"
+	case MessageEventMessageSent:
+		return "MessageEventMessageSent"
 	case MessageEventMessageResent:
 		return "MessageEventMessageResent"
 	case MessageEventReceivedMessageNotInPrivate:

@@ -120,12 +120,12 @@ func (c *Conversation) retransmit() ([]messageWithHeader, error) {
 		ret = append(ret, toSend)
 	}
 
+	ev := MessageEventMessageSent
 	if resending {
-		for _, msgx := range msgs {
-			v := []interface{}{msgx.m}
-			v = append(v, msgx.opaque...)
-			c.messageEvent(MessageEventMessageResent, v...)
-		}
+		ev = MessageEventMessageResent
+	}
+	for _, msgx := range msgs {
+		c.messageEvent(ev, msgx.opaque...)
 	}
 
 	c.updateLastSent()
