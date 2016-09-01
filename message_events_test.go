@@ -23,13 +23,13 @@ func Test_MessageEvent_hasValidStringImplementation(t *testing.T) {
 
 func Test_combinedMessageEventHandler_callsAllErrorMessageHandlersGiven(t *testing.T) {
 	var called1, called2, called3 bool
-	f1 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error) {
+	f1 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error, trace ...interface{}) {
 		called1 = true
 	}}
-	f2 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error) {
+	f2 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error, trace ...interface{}) {
 		called2 = true
 	}}
-	f3 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error) {
+	f3 := dynamicMessageEventHandler{func(event MessageEvent, message []byte, err error, trace ...interface{}) {
 		called3 = true
 	}}
 	d := CombineMessageEventHandlers(f1, f2, nil, f3)
@@ -44,5 +44,5 @@ func Test_debugMessageEventHandler_writesTheEventToStderr(t *testing.T) {
 	ss := captureStderr(func() {
 		DebugMessageEventHandler{}.HandleMessageEvent(MessageEventLogHeartbeatSent, []byte("A message"), newOtrError("hello world"))
 	})
-	assertEquals(t, ss, "[DEBUG] HandleMessageEvent(MessageEventLogHeartbeatSent, message: \"A message\", error: otr: hello world)\n")
+	assertEquals(t, ss, "[DEBUG] HandleMessageEvent(MessageEventLogHeartbeatSent, message: \"A message\", error: otr: hello world, trace: [])\n")
 }

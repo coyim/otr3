@@ -78,8 +78,25 @@ func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected(t *testin
 	c.Send(m)
 
 	assertDeepEquals(t, c.resend.pending(),
-		[]MessagePlaintext{
-			MessagePlaintext(m),
+		[]messageToResend{
+			messageToResend{MessagePlaintext(m), nil},
+		})
+}
+
+func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected_AndAddsAnOpaqueValueForEachMessage(t *testing.T) {
+	m := []byte("hello")
+	m2 := []byte("hello again?")
+	c := bobContextAfterAKE()
+	c.msgState = plainText
+	c.Policies = policies(allowV3 | requireEncryption)
+
+	c.Send(m, 42, "hello")
+	c.Send(m2, 15, "something")
+
+	assertDeepEquals(t, c.resend.pending(),
+		[]messageToResend{
+			messageToResend{MessagePlaintext(m), []interface{}{42, "hello"}},
+			messageToResend{MessagePlaintext(m2), []interface{}{15, "something"}},
 		})
 }
 

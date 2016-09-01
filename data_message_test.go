@@ -103,8 +103,8 @@ func Test_genDataMsg_setsLastMessageWhenNewMessageIsPlaintext(t *testing.T) {
 	c.genDataMsg(msg)
 
 	assertDeepEquals(t, c.resend.pending(),
-		[]MessagePlaintext{
-			MessagePlaintext(msg),
+		[]messageToResend{
+			messageToResend{MessagePlaintext(msg), nil},
 		})
 }
 
