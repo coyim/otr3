@@ -25,6 +25,7 @@ type messageToResend struct {
 type resendContext struct {
 	mayRetransmit    retransmitFlag
 	messageTransform func([]byte) []byte
+	retransmitting   bool
 
 	messages struct {
 		m []messageToResend
@@ -33,6 +34,10 @@ type resendContext struct {
 }
 
 func (r *resendContext) later(msg MessagePlaintext, opaque ...interface{}) {
+	if r.retransmitting {
+		return
+	}
+
 	r.messages.Lock()
 	defer r.messages.Unlock()
 
@@ -62,6 +67,14 @@ func (r *resendContext) clear() {
 
 func (r *resendContext) shouldRetransmit() bool {
 	return len(r.messages.m) > 0 && r.mayRetransmit != noRetransmit
+}
+
+func (r *resendContext) startRetransmitting() {
+	r.retransmitting = true
+}
+
+func (r *resendContext) endRetransmitting() {
+	r.retransmitting = false
 }
 
 func defaultResendMessageTransform(msg []byte) []byte {
@@ -102,6 +115,9 @@ func (c *Conversation) retransmit() ([]messageWithHeader, error) {
 	ret := make([]messageWithHeader, 0, len(msgs))
 
 	resending := c.resend.mayRetransmit == retransmitWithPrefix
+
+	c.resend.startRetransmitting()
+	defer c.resend.endRetransmitting()
 
 	for _, msgx := range msgs {
 		msg := msgx.m
