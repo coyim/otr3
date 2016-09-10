@@ -50,6 +50,8 @@ func (c *Conversation) processAKE(msgType byte, msg []byte) (toSend []messageWit
 		err = newOtrErrorf("unknown message type 0x%X", msgType)
 	}
 
+	c.ake.lastStateChange = time.Now()
+
 	messages := append([]messageWithHeader{toSendSingle}, toSendExtra...)
 	toSend = compactMessagesWithHeader(messages...)
 
