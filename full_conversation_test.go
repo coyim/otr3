@@ -3,6 +3,7 @@ package otr3
 import (
 	"crypto/rand"
 	"testing"
+	"time"
 )
 
 func Test_conversation_SMPStateMachineStartsAtSmpExpect1(t *testing.T) {
@@ -267,6 +268,8 @@ func Test_startingAKE_shouldNotBreakTheEncryptedChannel(t *testing.T) {
 	//
 
 	//Alice send Bob queryMsg
+	bob.lastMessageStateChange = time.Time{}
+	bob.ake.lastStateChange = time.Time{}
 	_, toSend, err = bob.Receive(alice.QueryMessage())
 	assertNil(t, err)
 	assertEquals(t, bob.ake.state, authStateAwaitingDHKey{})
