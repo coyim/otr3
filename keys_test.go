@@ -882,13 +882,19 @@ func Test_readAccountName_willSignalNotOKIfTagIsNotTheSymbolName(t *testing.T) {
 }
 
 func Test_readAccountName_willSignalNotOKIfValueIsTheWrongType(t *testing.T) {
-	from := inp(`(name foo)`)
+	from := inp(`(name #42)`)
 	_, ok := readAccountName(from)
 	assertDeepEquals(t, ok, false)
 }
 
 func Test_readAccountName_willSignalOKIfTagAndValueIsCorrect(t *testing.T) {
 	from := inp(`(name "foo")`)
+	_, ok := readAccountName(from)
+	assertDeepEquals(t, ok, true)
+}
+
+func Test_readAccountName_willSignalOKIfTagAndValueAsSymbolIsCorrect(t *testing.T) {
+	from := inp(`(name foo)`)
 	_, ok := readAccountName(from)
 	assertDeepEquals(t, ok, true)
 }
