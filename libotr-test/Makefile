@@ -12,7 +12,7 @@ default:
 	echo "No default rule"
 
 $(LIBOTR_SRC):
-	git clone git://git.otr.im/libotr.git $(LIBOTR_SRC)
+	git clone https://bugs.otr.im/git/libotr.git $(LIBOTR_SRC)
 
 $(LIBOTR_TARGET): $(LIBOTR_SRC)
 	$(GIT) clean -fd
