@@ -12,7 +12,7 @@ libotr-compat: $(TEST_HELPER)
 	go test -v \
 	-run=TestAgainstLibOTR \
 	-tags="libotr2" \
-	-ldflags "-X github.com/twstrike/otr3/compat.numIterations 1000"
+	-ldflags "-X github.com/twstrike/otr3/compat.numIterations=1000"
 
 $(TEST_HELPER): $(LIBOTR_TARGET) libotr_test_helper.c
 	$(CC) libotr_test_helper.c $(LDLIBS) $(LDFLAGS) $(CFLAGS) -o $(TEST_HELPER)
