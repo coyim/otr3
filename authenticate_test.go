@@ -174,3 +174,32 @@ func Test_ProvideAuthenticationSecret_returnsFailureFromContinueSMP(t *testing.T
 	_, e := c.ProvideAuthenticationSecret([]byte("hello world"))
 	assertEquals(t, e, errCantAuthenticateWithoutEncryption)
 }
+
+func Test_AbortAuthentication_generatesSMPAbortMessage(t *testing.T) {
+	c := bobContextAfterAKE()
+	c.msgState = encrypted
+	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
+	c.ourCurrentKey = bobPrivateKey
+	c.theirKey = alicePrivateKey.PublicKey()
+	c.smp.state = smpStateWaitingForSecret{msg: fixtureMessage1()}
+
+	msgs, e := c.AbortAuthentication()
+
+	assertDeepEquals(t, c.smp.state, smpStateExpect1{})
+	assertNil(t, e)
+	dec, _ := c.decode(encodedMessage(msgs[0]))
+	_, messageBody, _ := c.parseMessageHeader(dec)
+	assertEquals(t, len(messageBody), 505)
+}
+
+func Test_AbortAuthentication_generatesErrorWhenNoEncryptedChannelExists(t *testing.T) {
+	c := bobContextAfterAKE()
+	c.msgState = plainText
+	c.ssid = [8]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
+	c.ourCurrentKey = bobPrivateKey
+	c.theirKey = alicePrivateKey.PublicKey()
+
+	_, e := c.AbortAuthentication()
+
+	assertEquals(t, e, errCannotSendUnencrypted)
+}
