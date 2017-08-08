@@ -16,6 +16,7 @@ else
 	golint ./...
 endif
 endif
+endif
 
 test:
 	go test -cover -v ./...
@@ -33,6 +34,7 @@ else
 ifeq ($(GO_VERSION), go1.5)
 else
 	go get github.com/golang/lint/golint
+endif
 endif
 endif
 	go get golang.org/x/tools/cmd/cover
