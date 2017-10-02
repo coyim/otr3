@@ -13,7 +13,7 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/twstrike/otr3/sexp"
+	"github.com/coyim/otr3/sexp"
 )
 
 // PublicKey is a public key used to verify signed messages

@@ -12,14 +12,14 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/twstrike/otr3"
+	"github.com/coyim/otr3"
 )
 
 var (
 	numIterations   = "0"
-	disabledMessage = `You must set "github.com/twstrike/otr3/compat.numIterations".
+	disabledMessage = `You must set "github.com/coyim/otr3/compat.numIterations".
 	For instance, if you want to run 5 iterations, use:
-	  go test -ldflags "-X github.com/twstrike/otr3/compat.numIterations 5"
+	  go test -ldflags "-X github.com/coyim/otr3/compat.numIterations 5"
 `
 )
 
