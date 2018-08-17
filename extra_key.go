@@ -1,7 +1,9 @@
 package otr3
 
+import "github.com/coyim/gotrax"
+
 func (c *Conversation) processExtraSymmetricKeyTLV(t tlv, x dataMessageExtra) (toSend *tlv, err error) {
-	rest, usage, ok := extractWord(t.tlvValue[:t.tlvLength])
+	rest, usage, ok := gotrax.ExtractWord(t.tlvValue[:t.tlvLength])
 	if ok {
 		c.receivedSymKey(usage, rest, x.key)
 	}
@@ -19,7 +21,7 @@ func (c *Conversation) UseExtraSymmetricKey(usage uint32, usageData []byte) ([]b
 	t := tlv{
 		tlvType:   tlvTypeExtraSymmetricKey,
 		tlvLength: 4 + uint16(len(usageData)),
-		tlvValue:  append(appendWord(nil, usage), usageData...),
+		tlvValue:  append(gotrax.AppendWord(nil, usage), usageData...),
 	}
 
 	toSend, x, err := c.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{t})

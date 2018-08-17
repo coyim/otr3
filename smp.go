@@ -1,6 +1,10 @@
 package otr3
 
-import "math/big"
+import (
+	"math/big"
+
+	"github.com/coyim/gotrax"
+)
 
 type smp struct {
 	state    smpState
@@ -96,8 +100,9 @@ func verifyZKP4(cr, g3a, d7, qaqb, ra *big.Int, ix byte, v otrVersion) bool {
 func genSMPTLV(tp uint16, mpis ...*big.Int) tlv {
 	data := make([]byte, 0, 1000)
 
-	data = appendWord(data, uint32(len(mpis)))
-	data = appendMPIs(data, mpis...)
+	// TODO: is this really correct? It seems like it's adding the length for MPIs two times
+	data = gotrax.AppendWord(data, uint32(len(mpis)))
+	data = gotrax.AppendMPIs(data, mpis...)
 	length := uint16(len(data))
 	out := tlv{
 		tlvType:   tp,

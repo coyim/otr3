@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"os"
 
+	"github.com/coyim/gotrax"
 	"github.com/coyim/otr3/sexp"
 )
 
@@ -43,7 +44,7 @@ func GenerateMissingKeys(existing [][]byte) ([]PrivateKey, error) {
 	hasDSA := false
 
 	for _, x := range existing {
-		_, typeTag, ok := extractShort(x)
+		_, typeTag, ok := gotrax.ExtractShort(x)
 		if ok && typeTag == dsaKeyTypeValue {
 			hasDSA = true
 		}
@@ -283,7 +284,7 @@ func (pub *DSAPublicKey) IsSame(other PublicKey) bool {
 // ParsePrivateKey is an algorithm indepedent way of parsing private keys
 func ParsePrivateKey(in []byte) (index []byte, ok bool, key PrivateKey) {
 	var typeTag uint16
-	index, typeTag, ok = extractShort(in)
+	index, typeTag, ok = gotrax.ExtractShort(in)
 	if !ok {
 		return in, false, nil
 	}
@@ -301,7 +302,7 @@ func ParsePrivateKey(in []byte) (index []byte, ok bool, key PrivateKey) {
 // ParsePublicKey is an algorithm independent way of parsing public keys
 func ParsePublicKey(in []byte) (index []byte, ok bool, key PublicKey) {
 	var typeTag uint16
-	index, typeTag, ok = extractShort(in)
+	index, typeTag, ok = gotrax.ExtractShort(in)
 	if !ok {
 		return in, false, nil
 	}
@@ -319,19 +320,19 @@ func ParsePublicKey(in []byte) (index []byte, ok bool, key PublicKey) {
 // Parse takes the given data and tries to parse it into the PublicKey receiver. It will return not ok if the data is malformed or not for a DSA key
 func (pub *DSAPublicKey) Parse(in []byte) (index []byte, ok bool) {
 	var typeTag uint16
-	if index, typeTag, ok = extractShort(in); !ok || typeTag != dsaKeyTypeValue {
+	if index, typeTag, ok = gotrax.ExtractShort(in); !ok || typeTag != dsaKeyTypeValue {
 		return in, false
 	}
-	if index, pub.P, ok = extractMPI(index); !ok {
+	if index, pub.P, ok = gotrax.ExtractMPI(index); !ok {
 		return in, false
 	}
-	if index, pub.Q, ok = extractMPI(index); !ok {
+	if index, pub.Q, ok = gotrax.ExtractMPI(index); !ok {
 		return in, false
 	}
-	if index, pub.G, ok = extractMPI(index); !ok {
+	if index, pub.G, ok = gotrax.ExtractMPI(index); !ok {
 		return in, false
 	}
-	if index, pub.Y, ok = extractMPI(index); !ok {
+	if index, pub.Y, ok = gotrax.ExtractMPI(index); !ok {
 		return in, false
 	}
 	return
@@ -344,7 +345,7 @@ func (priv *DSAPrivateKey) Parse(in []byte) (index []byte, ok bool) {
 	}
 
 	priv.PrivateKey.PublicKey = priv.DSAPublicKey.PublicKey
-	index, priv.X, ok = extractMPI(in)
+	index, priv.X, ok = gotrax.ExtractMPI(in)
 
 	return index, ok
 }
@@ -354,7 +355,7 @@ var dsaKeyTypeValue = uint16(0x0000)
 
 func (priv *DSAPrivateKey) serialize() []byte {
 	result := priv.DSAPublicKey.serialize()
-	return appendMPI(result, priv.PrivateKey.X)
+	return gotrax.AppendMPI(result, priv.PrivateKey.X)
 }
 
 // Serialize will return the serialization of the private key to a byte array
@@ -368,10 +369,10 @@ func (pub *DSAPublicKey) serialize() []byte {
 	}
 
 	result := dsaKeyType
-	result = appendMPI(result, pub.P)
-	result = appendMPI(result, pub.Q)
-	result = appendMPI(result, pub.G)
-	result = appendMPI(result, pub.Y)
+	result = gotrax.AppendMPI(result, pub.P)
+	result = gotrax.AppendMPI(result, pub.Q)
+	result = gotrax.AppendMPI(result, pub.G)
+	result = gotrax.AppendMPI(result, pub.Y)
 	return result
 }
 

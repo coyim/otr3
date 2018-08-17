@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"reflect"
 	"testing"
+
+	"github.com/coyim/gotrax"
 )
 
 func assertEquals(t *testing.T, actual, expected interface{}) {
@@ -75,7 +77,7 @@ func dhMsgType(msg []byte) byte {
 }
 
 func dhMsgVersion(msg []byte) uint16 {
-	_, protocolVersion, _ := extractShort(msg)
+	_, protocolVersion, _ := gotrax.ExtractShort(msg)
 	return protocolVersion
 }
 

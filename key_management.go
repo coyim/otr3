@@ -5,6 +5,8 @@ import (
 	"hash"
 	"io"
 	"math/big"
+
+	"github.com/coyim/gotrax"
 )
 
 type dhKeyPair struct {
@@ -238,7 +240,7 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int, v otrVe
 	}
 
 	s := new(big.Int).Exp(theirPubKey, ourPrivKey, p)
-	secbytes := appendMPI(nil, s)
+	secbytes := gotrax.AppendMPI(nil, s)
 
 	sha := v.hashInstance()
 
@@ -292,7 +294,7 @@ func (k *keyManagementContext) pickTheirKey(theirKeyID uint32) (pubKey *big.Int,
 }
 
 func calculateAKEKeys(s *big.Int, v otrVersion) (ssid [8]byte, revealSigKeys, signatureKeys akeKeys) {
-	secbytes := appendMPI(nil, s)
+	secbytes := gotrax.AppendMPI(nil, s)
 	sha := v.hash2Instance()
 	keys := h(0x01, secbytes, sha)
 

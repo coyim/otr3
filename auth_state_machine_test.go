@@ -3,6 +3,8 @@ package otr3
 import (
 	"math/big"
 	"testing"
+
+	"github.com/coyim/gotrax"
 )
 
 func Test_conversationInitialState(t *testing.T) {
@@ -31,8 +33,8 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing
 	c := newConversation(otrV3{}, fixtureRand())
 
 	dhCommitMsg := fixtureDHCommitMsgBody()
-	newMsg, encryptedGx, _ := extractData(dhCommitMsg)
-	_, hashedGx, _ := extractData(newMsg)
+	newMsg, encryptedGx, _ := gotrax.ExtractData(dhCommitMsg)
+	_, hashedGx, _ := gotrax.ExtractData(newMsg)
 
 	authStateNone{}.receiveDHCommitMessage(c, dhCommitMsg)
 
@@ -61,8 +63,8 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 	c.ake.xhashedGx = fixedSize(otrV3{}.hash2Length(), []byte{0x05}) //some hashedGx
 
 	newDHCommitMsg := fixtureDHCommitMsgBody()
-	newMsg, newEncryptedGx, _ := extractData(newDHCommitMsg)
-	_, newHashedGx, _ := extractData(newMsg)
+	newMsg, newEncryptedGx, _ := gotrax.ExtractData(newDHCommitMsg)
+	_, newHashedGx, _ := gotrax.ExtractData(newMsg)
 
 	authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsgBody())
 
@@ -93,7 +95,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 
 	// force their hashedGx to be lower than ours
 	msg := fixtureDHCommitMsgBody()
-	newPoint, _, _ := extractData(msg)
+	newPoint, _, _ := gotrax.ExtractData(msg)
 	newPoint[4] = 0x00
 
 	state, newMsg, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(c, msg)
@@ -113,7 +115,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 
 	// force their hashedGx to be higher than ours
 	msg := fixtureDHCommitMsgBody()
-	newPoint, _, _ := extractData(msg)
+	newPoint, _, _ := gotrax.ExtractData(msg)
 	newPoint[4] = 0xFF
 
 	state, newMsg, err := authStateAwaitingDHKey{}.receiveDHCommitMessage(c, msg)

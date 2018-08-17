@@ -5,6 +5,8 @@ import (
 	"errors"
 	"hash"
 	"math/big"
+
+	"github.com/coyim/gotrax"
 )
 
 type otrVersion interface {
@@ -59,7 +61,7 @@ func versionFromFragment(fragment []byte) uint16 {
 }
 
 func (c *Conversation) checkVersion(message []byte) (err error) {
-	_, messageVersion, ok := extractShort(message)
+	_, messageVersion, ok := gotrax.ExtractShort(message)
 	if !ok {
 		return errInvalidOTRMessage
 	}

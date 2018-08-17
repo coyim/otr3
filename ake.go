@@ -6,6 +6,8 @@ import (
 	"io"
 	"math/big"
 	"time"
+
+	"github.com/coyim/gotrax"
 )
 
 var dontIgnoreFastRepeatQueryMessage = "false"
@@ -69,10 +71,10 @@ func (c *Conversation) generateEncryptedSignature(key *akeKeys) ([]byte, error) 
 		return nil, err
 	}
 
-	return appendData(nil, xb), nil
+	return gotrax.AppendData(nil, xb), nil
 }
 func appendAll(one, two *big.Int, publicKey PublicKey, keyID uint32) []byte {
-	return appendWord(append(appendMPI(appendMPI(nil, one), two), publicKey.serialize()...), keyID)
+	return gotrax.AppendWord(append(gotrax.AppendMPI(gotrax.AppendMPI(nil, one), two), publicKey.serialize()...), keyID)
 }
 
 func fixedSize(s int, v []byte) []byte {
@@ -86,7 +88,7 @@ func fixedSize(s int, v []byte) []byte {
 
 func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	xb := c.ourCurrentKey.PublicKey().serialize()
-	xb = appendWord(xb, c.ake.keys.ourKeyID)
+	xb = gotrax.AppendWord(xb, c.ake.keys.ourKeyID)
 
 	sigb, err := c.ourCurrentKey.Sign(c.rand(), mb)
 	if err == io.ErrUnexpectedEOF {
@@ -123,7 +125,7 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
-	c.ake.encryptedGx, _ = encrypt(c.ake.r[:], appendMPI(nil, c.ake.ourPublicValue))
+	c.ake.encryptedGx, _ = encrypt(c.ake.r[:], gotrax.AppendMPI(nil, c.ake.ourPublicValue))
 
 	return c.serializeDHCommit(c.ake.ourPublicValue), nil
 }
@@ -131,7 +133,7 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 func (c *Conversation) serializeDHCommit(public *big.Int) []byte {
 	dhCommitMsg := dhCommit{
 		encryptedGx: c.ake.encryptedGx,
-		yhashedGx:   c.version.hash2(appendMPI(nil, public)),
+		yhashedGx:   c.version.hash2(gotrax.AppendMPI(nil, public)),
 	}
 	return dhCommitMsg.serialize()
 }
@@ -307,7 +309,7 @@ func (c *Conversation) checkedSignatureVerification(mb, sig []byte) error {
 }
 
 func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *akeKeys, v otrVersion) error {
-	tomac := appendData(nil, encryptedSig)
+	tomac := gotrax.AppendData(nil, encryptedSig)
 
 	myMAC := sumHMAC(keys.m2, tomac, v)[:v.truncateLength()]
 
@@ -322,7 +324,7 @@ func (c *Conversation) parseTheirKey(key []byte) (sig []byte, keyID uint32, err 
 	var rest []byte
 	var ok1 bool
 	rest, ok1, c.theirKey = ParsePublicKey(key)
-	sig, keyID, ok2 := extractWord(rest)
+	sig, keyID, ok2 := gotrax.ExtractWord(rest)
 
 	if !ok1 || !ok2 {
 		return nil, 0, errCorruptEncryptedSignature
@@ -362,7 +364,7 @@ func (c *Conversation) processEncryptedSig(encryptedSig []byte, theirMAC []byte,
 }
 
 func extractGx(decryptedGx []byte) (*big.Int, error) {
-	newData, gx, ok := extractMPI(decryptedGx)
+	newData, gx, ok := gotrax.ExtractMPI(decryptedGx)
 	if !ok || len(newData) > 0 {
 		return gx, newOtrError("gx corrupt after decryption")
 	}
