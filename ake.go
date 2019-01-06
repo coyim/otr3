@@ -91,7 +91,7 @@ func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 	xb = gotrax.AppendWord(xb, c.ake.keys.ourKeyID)
 
 	sigb, err := c.ourCurrentKey.Sign(c.rand(), mb)
-	if err == io.ErrUnexpectedEOF {
+	if err == io.ErrUnexpectedEOF || err == io.EOF {
 		return nil, errShortRandomRead
 	}
 
