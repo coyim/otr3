@@ -10,6 +10,7 @@ else ifeq ($(GO_VERSION), go1.5)
 else ifeq ($(GO_VERSION), go1.6)
 else ifeq ($(GO_VERSION), go1.7)
 else ifeq ($(GO_VERSION), go1.8)
+else ifeq ($(GO_VERSION), go1.12)
 else
 	golint ./...
 endif
