@@ -29,8 +29,9 @@ else ifeq ($(GO_VERSION), go1.5)
 else ifeq ($(GO_VERSION), go1.6)
 else ifeq ($(GO_VERSION), go1.7)
 else ifeq ($(GO_VERSION), go1.8)
+else ifeq ($(GO_VERSION), go1.12)
 else
-	go get -u golang.org/x/lint/golint
+	go get -u github.com/golang/lint/golint
 endif
 	go get golang.org/x/tools/cmd/cover
 
