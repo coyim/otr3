@@ -1,4 +1,4 @@
-GO_VERSION=$(shell go version | grep  -o 'go[[:digit:]]\.[[:digit:]]')
+GO_VERSION=$(shell go version | grep  -o 'go[[:digit:]]\.[[:digit:]]*')
 
 
 default: deps lint test
@@ -23,6 +23,7 @@ test-slow:
 ci: lint test test-slow
 
 deps:
+	echo "BUILDING ON: $(GO_VERSION)"
 ifeq ($(GO_VERSION), go1.3)
 else ifeq ($(GO_VERSION), go1.4)
 else ifeq ($(GO_VERSION), go1.5)
