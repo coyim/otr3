@@ -90,6 +90,7 @@ func (c Conversation) QueryMessage() ValidMessage {
 	return append(queryMessage, suffix...)
 }
 
+//SetFriendlyQueryMessage will set a new message as query message
 func (c *Conversation) SetFriendlyQueryMessage(msg string) {
 	c.friendlyQueryMessage = msg
 }
