@@ -23,6 +23,10 @@ func parseOTRQueryMessage(msg ValidMessage) []int {
 
 		if len(versions) > 0 && versions[0] == 'v' {
 			for _, c := range versions {
+				r := rune(c)
+				if r == '?' || r == ' ' || r == '\n' || r == '\r' || r == '\t' {
+					break
+				}
 				if v, err := strconv.Atoi(string(c)); err == nil {
 					ret = append(ret, v)
 				}

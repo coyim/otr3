@@ -6,6 +6,25 @@ import (
 	"testing"
 )
 
+func Test_receive_OTRQueryMsgV2RepliesWithDHCommitMessage(t *testing.T) {
+	msg := []byte("?OTRv2? no otr support message 0123456789")
+	c := newConversation(nil, fixtureRand())
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
+	c.Policies.add(allowV2 | allowV3)
+
+	exp := messageWithHeader{
+		0x00, 0x02, // protocol version
+		msgTypeDHCommit,
+	}
+
+	_, enc, err := c.Receive(msg)
+	assertEquals(t, err, nil)
+
+	toSend, _ := c.decode(encodedMessage(enc[0]))
+
+	assertDeepEquals(t, toSend[:3], exp)
+}
+
 func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	msg := []byte("?OTRv3?")
 	c := newConversation(nil, fixtureRand())
