@@ -1,8 +1,47 @@
 package otr3
 
-import "testing"
+import (
+	"testing"
+)
 
-func Test_receiveQueryMessage_ignoreAdditionaltext(t *testing.T) {
+func Test_receiveQueryMessage_ignoreVersion1(t *testing.T) {
+	queryMsg := []byte("?OTR?")
+
+	c := &Conversation{Policies: policies(allowV2 | allowV3)}
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
+	msg, err := c.receiveQueryMessage(queryMsg)
+
+	expError := OtrError{msg: "unsupported OTR version", conflict: false}
+	assertEquals(t, err, expError)
+	assertNil(t, msg)
+}
+
+func Test_receiveQueryMessage_ignoreVersion1AndSupportVersion2(t *testing.T) {
+	queryMsg := []byte("?OTR?v2?")
+
+	c := &Conversation{Policies: policies(allowV2 | allowV3)}
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
+	msg, err := c.receiveQueryMessage(queryMsg)
+
+	assertNil(t, err)
+	assertEquals(t, c.ake.state, authStateAwaitingDHKey{})
+	assertDeepEquals(t, dhMsgType(msg[0]), msgTypeDHCommit)
+	assertDeepEquals(t, dhMsgVersion(msg[0]), uint16(2))
+}
+
+func Test_receiveQueryMessage_ignoreBizarreClaim(t *testing.T) {
+	queryMsg := []byte("?OTRv?")
+
+	c := &Conversation{Policies: policies(allowV2 | allowV3)}
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
+	msg, err := c.receiveQueryMessage(queryMsg)
+
+	expError := OtrError{msg: "unsupported OTR version", conflict: false}
+	assertEquals(t, err, expError)
+	assertNil(t, msg)
+}
+
+func Test_receiveQueryMessage_ignoreAdditionalText(t *testing.T) {
 	queryMsg := []byte("?OTRv2? I like number 3")
 
 	c := &Conversation{Policies: policies(allowV2 | allowV3)}
