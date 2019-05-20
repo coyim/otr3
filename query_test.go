@@ -2,8 +2,21 @@ package otr3
 
 import "testing"
 
+func Test_receiveQueryMessage_ignoreAdditionaltext(t *testing.T) {
+	queryMsg := []byte("?OTRv2? I like number 3")
+
+	c := &Conversation{Policies: policies(allowV2 | allowV3)}
+	c.SetOurKeys([]PrivateKey{bobPrivateKey})
+	msg, err := c.receiveQueryMessage(queryMsg)
+
+	assertNil(t, err)
+	assertEquals(t, c.ake.state, authStateAwaitingDHKey{})
+	assertDeepEquals(t, dhMsgType(msg[0]), msgTypeDHCommit)
+	assertDeepEquals(t, dhMsgVersion(msg[0]), uint16(2))
+}
+
 func Test_receiveQueryMessage_sendDHCommitv3AndTransitToStateAwaitingDHKey(t *testing.T) {
-	queryMsg := []byte("?OTRv?23?")
+	queryMsg := []byte("?OTRv23?")
 
 	c := &Conversation{Policies: policies(allowV3)}
 	c.SetOurKeys([]PrivateKey{bobPrivateKey})
@@ -16,7 +29,7 @@ func Test_receiveQueryMessage_sendDHCommitv3AndTransitToStateAwaitingDHKey(t *te
 }
 
 func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
-	queryMsg := []byte("?OTRv?23?")
+	queryMsg := []byte("?OTRvx23?")
 
 	c := &Conversation{Policies: policies(allowV2)}
 	c.SetOurKeys([]PrivateKey{bobPrivateKey})
@@ -29,7 +42,7 @@ func Test_receiveQueryMessageV2_sendDHCommitv2(t *testing.T) {
 }
 
 func Test_receiveQueryMessageV2V3_sendDHCommitv3WhenV2AndV3AreAllowed(t *testing.T) {
-	queryMsg := []byte("?OTRv?23?")
+	queryMsg := []byte("?OTRvx23?")
 
 	c := &Conversation{Policies: policies(allowV2 | allowV3)}
 	c.SetOurKeys([]PrivateKey{bobPrivateKey})
