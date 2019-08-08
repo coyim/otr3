@@ -89,7 +89,7 @@ func Test_SMP_Full(t *testing.T) {
 	assertNil(t, err)
 	assertEquals(t, bob.smp.state, smpStateExpect2{})
 
-	_, aliceMessages, err = alice.Receive(bobMessages[0])
+	_, _, err = alice.Receive(bobMessages[0])
 	assertNil(t, err)
 
 	// this is an internal state
@@ -108,7 +108,7 @@ func Test_SMP_Full(t *testing.T) {
 	assertNil(t, err)
 	assertEquals(t, alice.smp.state, smpStateExpect1{})
 
-	_, bobMessages, err = bob.Receive(aliceMessages[0])
+	_, _, err = bob.Receive(aliceMessages[0])
 	assertNil(t, err)
 	assertEquals(t, bob.smp.state, smpStateExpect1{})
 
