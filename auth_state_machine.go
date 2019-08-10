@@ -120,10 +120,13 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg 
 }
 
 func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
-	newMsg, _, ok1 := gotrax.ExtractData(msg)
-	_, theirHashedGx, ok2 := gotrax.ExtractData(newMsg)
+	newMsg, _, ok := gotrax.ExtractData(msg)
+	if !ok {
+		return s, nil, errInvalidOTRMessage
+	}
 
-	if !ok1 || !ok2 {
+	_, theirHashedGx, ok := gotrax.ExtractData(newMsg)
+	if !ok {
 		return s, nil, errInvalidOTRMessage
 	}
 

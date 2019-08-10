@@ -42,14 +42,14 @@ func (c dhCommit) serialize() []byte {
 }
 
 func (c *dhCommit) deserialize(msg []byte) error {
-	var ok1 bool
-	msg, c.encryptedGx, ok1 = gotrax.ExtractData(msg)
-	if !ok1 {
+	var ok bool
+	msg, c.encryptedGx, ok = gotrax.ExtractData(msg)
+	if !ok {
 		return newOtrError("corrupt DH commit message")
 	}
 
-	_, h, ok2 := gotrax.ExtractData(msg)
-	if !ok2 {
+	_, h, ok := gotrax.ExtractData(msg)
+	if !ok {
 		return newOtrError("corrupt DH commit message")
 	}
 
