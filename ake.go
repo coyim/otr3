@@ -18,6 +18,7 @@ type ake struct {
 	theirPublicValue *big.Int
 
 	// TODO: why this number here?
+	// A random value r of 128 bits (16 byte)
 	r [16]byte
 
 	encryptedGx []byte
@@ -111,7 +112,7 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 	c.initAKE()
 	c.ake.keys.ourKeyID = 0
 
-	// TODO: where does this 40 come from?
+	// A random value x of at least 320 bits (40 byte)
 	x, err := c.randMPI(make([]byte, 40))
 	if err != nil {
 		return nil, err
@@ -143,7 +144,7 @@ func (c *Conversation) serializeDHCommit(public *big.Int) []byte {
 func (c *Conversation) dhKeyMessage() ([]byte, error) {
 	c.initAKE()
 
-	// TODO: where does this 40 come from?
+	// A random value x of at least 320 bits (40 byte)
 	y, err := c.randMPI(make([]byte, 40)[:])
 
 	if err != nil {
