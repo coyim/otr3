@@ -91,9 +91,17 @@ func (c revealSig) serialize(v otrVersion) []byte {
 }
 
 func (c *revealSig) deserialize(msg []byte, v otrVersion) error {
-	in, r, ok1 := gotrax.ExtractData(msg)
-	macSig, encryptedSig, ok2 := gotrax.ExtractData(in)
-	if !ok1 || !ok2 || len(macSig) != v.truncateLength() {
+	in, r, ok := gotrax.ExtractData(msg)
+	if len(r) != 16 {
+		return newOtrError("corrupt reveal signature message")
+	}
+
+	if !ok {
+		return newOtrError("corrupt reveal signature message")
+	}
+
+	macSig, encryptedSig, ok := gotrax.ExtractData(in)
+	if !ok || len(macSig) != v.truncateLength() {
 		return newOtrError("corrupt reveal signature message")
 	}
 
