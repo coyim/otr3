@@ -38,3 +38,11 @@ endif
 cover:
 	go test . -coverprofile=coverage.out
 	go tool cover -html=coverage.out
+
+lint-aggregator:
+	go get -u github.com/golangci/golangci-lint/...
+	golangci-lint run
+
+gosec:
+	go get -u github.com/securego/gosec/cmd/gosec...
+	gosec ./...
