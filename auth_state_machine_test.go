@@ -14,16 +14,19 @@ func Test_conversationInitialState(t *testing.T) {
 
 func Test_receiveDHCommit_TransitionsFromNoneToAwaitingRevealSigAndSendDHKeyMsg(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	nextState, nextMsg, e := authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsgBody())
+	nextState, nextMsg, err := authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsgBody())
 
-	assertEquals(t, e, nil)
+	assertEquals(t, err, nil)
 	assertEquals(t, nextState, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(nextMsg), msgTypeDHKey)
 }
 
 func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsg())
+	nextState, nextMsg, err := authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsg())
+	assertEquals(t, err, newOtrError("corrupt DH commit message"))
+	assertEquals(t, nextState, authStateNone{})
+	assertDeepEquals(t, nextMsg, messageWithHeader(nil))
 
 	assertDeepEquals(t, c.ake.ourPublicValue, fixedGY())
 	assertDeepEquals(t, c.ake.secretExponent, fixedY())
@@ -36,7 +39,10 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing
 	newMsg, encryptedGx, _ := gotrax.ExtractData(dhCommitMsg)
 	_, hashedGx, _ := gotrax.ExtractData(newMsg)
 
-	authStateNone{}.receiveDHCommitMessage(c, dhCommitMsg)
+	nextState, nextMsg, err := authStateNone{}.receiveDHCommitMessage(c, dhCommitMsg)
+	assertEquals(t, err, nil)
+	assertEquals(t, nextState, authStateAwaitingRevealSig{})
+	assertEquals(t, dhMsgType(nextMsg), msgTypeDHKey)
 
 	assertDeepEquals(t, c.ake.xhashedGx, hashedGx)
 	assertDeepEquals(t, c.ake.encryptedGx, encryptedGx)

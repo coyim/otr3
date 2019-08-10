@@ -6,8 +6,6 @@ import (
 	"github.com/coyim/gotrax"
 )
 
-const tlvHeaderLength = 4
-
 const (
 	tlvTypePadding           = uint16(0x00)
 	tlvTypeDisconnected      = uint16(0x01)

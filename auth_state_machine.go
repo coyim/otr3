@@ -7,8 +7,6 @@ import (
 	"github.com/coyim/gotrax"
 )
 
-const minimumMessageLength = 3 // length of protocol version (SHORT) and message type (BYTE)
-
 func (c *Conversation) generateNewDHKeyPair() error {
 	return c.keys.generateNewDHKeyPair(c.rand())
 }

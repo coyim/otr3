@@ -293,7 +293,9 @@ func Test_encrypt(t *testing.T) {
 	c.initAKE()
 
 	c.ake.theirPublicValue = fixedGX()
-	io.ReadFull(c.rand(), c.ake.r[:])
+	b, err := io.ReadFull(c.rand(), c.ake.r[:])
+	assertEquals(t, b, 16)
+	assertEquals(t, err, nil)
 
 	encryptedGx, err := encrypt(c.ake.r[:], gotrax.AppendMPI(nil, c.ake.theirPublicValue))
 	assertEquals(t, err, nil)
@@ -306,11 +308,13 @@ func Test_decrypt(t *testing.T) {
 	c.initAKE()
 
 	c.ake.theirPublicValue = fixedGX()
-	io.ReadFull(c.rand(), c.ake.r[:])
+	b, err := io.ReadFull(c.rand(), c.ake.r[:])
+	assertEquals(t, b, 16)
+	assertEquals(t, err, nil)
 
 	encryptedGx, _ := encrypt(c.ake.r[:], gotrax.AppendMPI(nil, c.ake.theirPublicValue))
 	decryptedGx := encryptedGx
-	err := decrypt(c.ake.r[:], decryptedGx, encryptedGx)
+	err = decrypt(c.ake.r[:], decryptedGx, encryptedGx)
 
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, decryptedGx, gotrax.AppendMPI([]byte{}, c.ake.theirPublicValue))

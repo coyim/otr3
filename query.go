@@ -75,7 +75,7 @@ func (c *Conversation) receiveQueryMessage(msg ValidMessage) ([]messageWithHeade
 }
 
 //QueryMessage will return a QueryMessage determined by Conversation Policies
-func (c Conversation) QueryMessage() ValidMessage {
+func (c *Conversation) QueryMessage() ValidMessage {
 	queryMessage := []byte("?OTRv")
 
 	if c.Policies.has(allowV2) {
