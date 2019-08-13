@@ -339,7 +339,9 @@ func (c plainDataMsg) encrypt(key []byte, topHalfCtr [8]byte) []byte {
 
 	data := c.pad().serialize()
 	dst := make([]byte, len(data))
-	counterEncipher(key[:], iv[:], data, dst)
+	counterEncipher(key, iv[:], data, dst)
+
+	wipeBytes(iv[:])
 	return dst
 }
 
@@ -347,9 +349,11 @@ func (c *plainDataMsg) decrypt(key []byte, topHalfCtr [8]byte, src []byte) error
 	var iv [aes.BlockSize]byte
 	copy(iv[:], topHalfCtr[:])
 
-	if err := counterEncipher(key[:], iv[:], src, src); err != nil {
+	if err := counterEncipher(key, iv[:], src, src); err != nil {
 		return err
 	}
+
+	wipeBytes(iv[:])
 
 	c.deserialize(src)
 	return nil
