@@ -42,17 +42,14 @@ func (c dhCommit) serialize() []byte {
 }
 
 func (c *dhCommit) deserialize(msg []byte) error {
-	var ok bool
-	msg, c.encryptedGx, ok = gotrax.ExtractData(msg)
-	if !ok {
+	msg, g, ok := gotrax.ExtractData(msg)
+	_, h, ok2 := gotrax.ExtractData(msg)
+
+	if !(ok && ok2) {
 		return newOtrError("corrupt DH commit message")
 	}
 
-	_, h, ok := gotrax.ExtractData(msg)
-	if !ok {
-		return newOtrError("corrupt DH commit message")
-	}
-
+	c.encryptedGx = g
 	c.yhashedGx = h
 	return nil
 }
@@ -92,16 +89,11 @@ func (c revealSig) serialize(v otrVersion) []byte {
 
 func (c *revealSig) deserialize(msg []byte, v otrVersion) error {
 	in, r, ok := gotrax.ExtractData(msg)
-	if len(r) != 16 {
-		return newOtrError("corrupt reveal signature message")
-	}
+	okLen := len(r) == 16
+	macSig, encryptedSig, ok2 := gotrax.ExtractData(in)
+	okLen2 := len(macSig) == v.truncateLength()
 
-	if !ok {
-		return newOtrError("corrupt reveal signature message")
-	}
-
-	macSig, encryptedSig, ok := gotrax.ExtractData(in)
-	if !ok || len(macSig) != v.truncateLength() {
+	if !(ok && ok2 && okLen && okLen2) {
 		return newOtrError("corrupt reveal signature message")
 	}
 

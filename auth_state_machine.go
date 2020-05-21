@@ -121,15 +121,11 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg 
 
 func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
 	newMsg, _, ok := gotrax.ExtractData(msg)
-	if !ok {
+	_, theirHashedGx, ok2 := gotrax.ExtractData(newMsg)
+	if !(ok && ok2) {
 		return s, nil, errInvalidOTRMessage
 	}
-
-	_, theirHashedGx, ok := gotrax.ExtractData(newMsg)
-	if !ok {
-		return s, nil, errInvalidOTRMessage
-	}
-
+	
 	gxMPI := gotrax.AppendMPI(nil, c.ake.ourPublicValue)
 	hashedGx := c.version.hash2(gxMPI)
 	//If yours is the higher hash value:

@@ -323,14 +323,10 @@ func verifyEncryptedSignatureMAC(encryptedSig []byte, theirMAC []byte, keys *ake
 
 func (c *Conversation) parseTheirKey(key []byte) (sig []byte, keyID uint32, err error) {
 	var rest []byte
-	var ok bool
+	var ok, ok2 bool
 	rest, ok, c.theirKey = ParsePublicKey(key)
-	if !ok {
-		return nil, 0, errCorruptEncryptedSignature
-	}
-
-	sig, keyID, ok = gotrax.ExtractWord(rest)
-	if !ok {
+	sig, keyID, ok2 = gotrax.ExtractWord(rest)
+	if !(ok && ok2) {
 		return nil, 0, errCorruptEncryptedSignature
 	}
 
