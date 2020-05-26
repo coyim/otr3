@@ -30,5 +30,5 @@
   unused-packages = true
 
 [[constraint]]
-  branch = "master"
+  branch = "28264998edad01b96574dc0dea61857993f132fe"
   name = "github.com/coyim/gotrax"
