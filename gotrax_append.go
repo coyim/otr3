@@ -1,4 +1,4 @@
-package gotrax
+package otr3
 
 import "math/big"
 

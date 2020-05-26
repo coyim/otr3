@@ -4,8 +4,6 @@ import (
 	"crypto/aes"
 	"math/big"
 	"testing"
-
-	"github.com/coyim/gotrax"
 )
 
 func Test_tlvSerialize(t *testing.T) {
@@ -128,21 +126,21 @@ func Test_dataMsgDeserialze(t *testing.T) {
 
 	msg = append(msg, flag)
 
-	msg = gotrax.AppendWord(msg, senderKeyID)
-	msg = gotrax.AppendWord(msg, recipientKeyID)
+	msg = AppendWord(msg, senderKeyID)
+	msg = AppendWord(msg, recipientKeyID)
 
-	msg = gotrax.AppendMPI(msg, y)
+	msg = AppendMPI(msg, y)
 
 	msg = append(msg, topHalfCtr[:]...)
 
-	msg = gotrax.AppendData(msg, encryptedMsg)
+	msg = AppendData(msg, encryptedMsg)
 
 	msg = append(msg, authenticator[:]...)
 	revKeys := make([]byte, 0, len(oldMACKeys)*otrV3{}.hashLength())
 	for _, k := range oldMACKeys {
 		revKeys = append(revKeys, k[:]...)
 	}
-	msg = gotrax.AppendData(msg, revKeys)
+	msg = AppendData(msg, revKeys)
 
 	dataMessage := dataMsg{}
 	err := dataMessage.deserialize(msg, otrV3{})
@@ -187,7 +185,7 @@ func Test_dataMsgDeserialzeErrorWhenCorruptedReceiverKeyID(t *testing.T) {
 	recipientKeyID := byte(0x00)
 	msg = append(msg, flag)
 
-	msg = gotrax.AppendWord(msg, senderKeyID)
+	msg = AppendWord(msg, senderKeyID)
 	msg = append(msg, recipientKeyID)
 
 	dataMessage := dataMsg{}
@@ -204,9 +202,9 @@ func Test_dataMsgDeserialzeErrorWhenCorruptedY(t *testing.T) {
 	y := big.NewInt(1)
 	msg = append(msg, flag)
 
-	msg = gotrax.AppendWord(msg, senderKeyID)
+	msg = AppendWord(msg, senderKeyID)
 	msg = append(msg, recipientKeyID)
-	mpiY := gotrax.AppendMPI([]byte{}, y)
+	mpiY := AppendMPI([]byte{}, y)
 	msg = append(msg, mpiY[1:]...)
 
 	dataMessage := dataMsg{}
@@ -225,11 +223,11 @@ func Test_dataMsgDeserialzeErrorWhenCorruptedEncryptedMsg(t *testing.T) {
 	encryptedMsg := []byte{0x00, 0x01, 0x02, 0x03}
 
 	msg = append(msg, flag)
-	msg = gotrax.AppendWord(msg, senderKeyID)
-	msg = gotrax.AppendWord(msg, recipientKeyID)
-	msg = gotrax.AppendMPI(msg, y)
+	msg = AppendWord(msg, senderKeyID)
+	msg = AppendWord(msg, recipientKeyID)
+	msg = AppendMPI(msg, y)
 	msg = append(msg, topHalfCtr[:]...)
-	encryptedMsgData := gotrax.AppendData([]byte{}, encryptedMsg)
+	encryptedMsgData := AppendData([]byte{}, encryptedMsg)
 	msg = append(msg, encryptedMsgData[1:]...)
 
 	dataMessage := dataMsg{}
@@ -247,9 +245,9 @@ func Test_dataMsgDeserialzeErrorWhenCorruptedTopHalfCtr(t *testing.T) {
 	topHalfCtr := [7]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 
 	msg = append(msg, flag)
-	msg = gotrax.AppendWord(msg, senderKeyID)
-	msg = gotrax.AppendWord(msg, recipientKeyID)
-	msg = gotrax.AppendMPI(msg, y)
+	msg = AppendWord(msg, senderKeyID)
+	msg = AppendWord(msg, recipientKeyID)
+	msg = AppendMPI(msg, y)
 
 	msg = append(msg, topHalfCtr[:]...)
 
@@ -276,21 +274,21 @@ func Test_dataMsgDeserialzeErrorWhenCorruptedRevealMACKeys(t *testing.T) {
 
 	msg = append(msg, flag)
 
-	msg = gotrax.AppendWord(msg, senderKeyID)
-	msg = gotrax.AppendWord(msg, recipientKeyID)
+	msg = AppendWord(msg, senderKeyID)
+	msg = AppendWord(msg, recipientKeyID)
 
-	msg = gotrax.AppendMPI(msg, y)
+	msg = AppendMPI(msg, y)
 
 	msg = append(msg, topHalfCtr[:]...)
 
-	msg = gotrax.AppendData(msg, encryptedMsg)
+	msg = AppendData(msg, encryptedMsg)
 
 	msg = append(msg, authenticator...)
 	revKeys := make([]byte, 0, len(oldMACKeys)*otrV3{}.hashLength())
 	for _, k := range oldMACKeys {
 		revKeys = append(revKeys, k[1:]...)
 	}
-	msg = gotrax.AppendData(msg, revKeys)
+	msg = AppendData(msg, revKeys)
 
 	dataMessage := dataMsg{}
 	err := dataMessage.deserialize(msg, otrV3{})
@@ -315,20 +313,20 @@ func Test_dataMsgDeserialzeErrorWhenCorruptedRevealMACKeyEnding(t *testing.T) {
 
 	msg = append(msg, flag)
 
-	msg = gotrax.AppendWord(msg, senderKeyID)
-	msg = gotrax.AppendWord(msg, recipientKeyID)
+	msg = AppendWord(msg, senderKeyID)
+	msg = AppendWord(msg, recipientKeyID)
 
-	msg = gotrax.AppendMPI(msg, y)
+	msg = AppendMPI(msg, y)
 
 	msg = append(msg, topHalfCtr[:]...)
 
-	msg = gotrax.AppendData(msg, encryptedMsg)
+	msg = AppendData(msg, encryptedMsg)
 
 	msg = append(msg, authenticator[:]...)
 	revKeys := make([]byte, 0, len(oldMACKeys)*otrV3{}.hashLength())
 	revKeys = append(revKeys, oldMACKeys[0][:]...)
 	revKeys = append(revKeys, oldMACKeys[1][:otrV3{}.hashLength()-1]...)
-	msg = gotrax.AppendData(msg, revKeys)
+	msg = AppendData(msg, revKeys)
 
 	dataMessage := dataMsg{}
 	err := dataMessage.deserialize(msg, otrV3{})
@@ -482,7 +480,7 @@ func Test_dataMsg_serializeExposesOldMACKeys(t *testing.T) {
 	msg := m.serialize(otrV3{})
 	MACsIndex := len(msg) - 2*keyLen - 4
 
-	_, expectedData, _ := gotrax.ExtractData(msg[MACsIndex:])
+	_, expectedData, _ := ExtractData(msg[MACsIndex:])
 	assertDeepEquals(t, expectedData[:keyLen], macKey1[:])
 	assertDeepEquals(t, expectedData[keyLen:], macKey2[:])
 }

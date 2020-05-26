@@ -1,6 +1,0 @@
-bin/
-
-# direnv related files
-.envrc
-
-coverage.out

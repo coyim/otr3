@@ -4,15 +4,13 @@ import (
 	"hash"
 	"math/big"
 	"strconv"
-
-	"github.com/coyim/gotrax"
 )
 
 func hashMPIs(h hash.Hash, magic byte, mpis ...*big.Int) []byte {
 	h.Reset()
 	h.Write([]byte{magic})
 	for _, mpi := range mpis {
-		h.Write(gotrax.AppendMPI(nil, mpi))
+		h.Write(AppendMPI(nil, mpi))
 	}
 	return h.Sum(nil)
 }

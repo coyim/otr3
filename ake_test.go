@@ -5,8 +5,6 @@ import (
 	"io"
 	"math/big"
 	"testing"
-
-	"github.com/coyim/gotrax"
 )
 
 var (
@@ -26,8 +24,8 @@ func Test_dhCommitMessage(t *testing.T) {
 	c.ourCurrentKey = bobPrivateKey
 
 	var out []byte
-	out = gotrax.AppendData(out, encryptedFixedGX())
-	out = gotrax.AppendData(out, hashedFixedGX())
+	out = AppendData(out, encryptedFixedGX())
+	out = AppendData(out, hashedFixedGX())
 
 	result, err := c.dhCommitMessage()
 	assertEquals(t, err, nil)
@@ -42,7 +40,7 @@ func Test_dhKeyMessage(t *testing.T) {
 	expectedGyValue := bnFromHex("075dfab5a1eab059052d0ad881c4938d52669630d61833a367155d67d03a457f619683d0fa829781e974fd24f6865e8128a9312a167b77326a87dea032fc31784d05b18b9cbafebe162ae9b5369f8b0c5911cf1be757f45f2a674be5126a714a6366c28086b3c7088911dcc4e5fb1481ad70a5237b8e4a6aff4954c2ca6df338b9f08691e4c0defe12689b37d4df30ddef2687f789fcf623c5d0cf6f09b7e5e69f481d5fd1b24a77636fb676e6d733d129eb93e81189340233044766a36eb07d")
 
 	var out []byte
-	out = gotrax.AppendMPI(out, expectedGyValue)
+	out = AppendMPI(out, expectedGyValue)
 
 	result, err := c.dhKeyMessage()
 	assertEquals(t, err, nil)
@@ -72,7 +70,7 @@ func Test_revealSigMessage(t *testing.T) {
 	expedctedMACSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 
 	var out []byte
-	out = gotrax.AppendData(out, c.ake.r[:])
+	out = AppendData(out, c.ake.r[:])
 	out = append(out, expectedEncryptedSignature...)
 	out = append(out, expedctedMACSignature[:20]...)
 
@@ -100,7 +98,7 @@ func Test_processDHKey(t *testing.T) {
 	c.initAKE()
 	c.ake.theirPublicValue = fixedGY()
 
-	msg := gotrax.AppendMPI(nil, c.ake.theirPublicValue)
+	msg := AppendMPI(nil, c.ake.theirPublicValue)
 
 	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err, nil)
@@ -112,7 +110,7 @@ func Test_processDHKeyNotSame(t *testing.T) {
 	c.initAKE()
 	c.ake.theirPublicValue = fixedGY()
 
-	msg := gotrax.AppendMPI(nil, fixedGX())
+	msg := AppendMPI(nil, fixedGX())
 
 	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err, nil)
@@ -126,7 +124,7 @@ func Test_processDHKeyHavingError(t *testing.T) {
 	c.initAKE()
 	c.ake.theirPublicValue = fixedGY()
 
-	msg := gotrax.AppendMPI(nil, invalidGy)
+	msg := AppendMPI(nil, invalidGy)
 
 	isSame, err := c.processDHKey(msg)
 	assertEquals(t, err.Error(), "otr: DH value out of range")
@@ -142,7 +140,7 @@ func Test_processEncryptedSig(t *testing.T) {
 	c.ake.keys.ourKeyID = 1
 	c.calcAKEKeys(c.calcDHSharedSecret())
 
-	_, encryptedSig, _ := gotrax.ExtractData(bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf"))
+	_, encryptedSig, _ := ExtractData(bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf"))
 	macSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 	err := c.processEncryptedSig(encryptedSig, macSignature[:20], &c.ake.revealKey)
 	assertEquals(t, err, nil)
@@ -153,7 +151,7 @@ func Test_processEncryptedSigWithBadSignatureMACError(t *testing.T) {
 	c := Conversation{version: otrV3{}}
 	c.initAKE()
 
-	_, encryptedSig, _ := gotrax.ExtractData(bytesFromHex("000001b2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf"))
+	_, encryptedSig, _ := ExtractData(bytesFromHex("000001b2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbecf"))
 	macSignature := bytesFromHex("8e6e5ef63a4e8d6aa2cfb1c5fe1831498862f69d7de32af4f9895180e4b494e6")
 	err := c.processEncryptedSig(encryptedSig, macSignature[:20], &c.ake.revealKey)
 	assertEquals(t, err.Error(), "otr: bad signature MAC in encrypted signature")
@@ -172,7 +170,7 @@ func Test_processEncryptedSigWithBadSignatureError(t *testing.T) {
 	s := c.calcDHSharedSecret()
 	c.calcAKEKeys(s)
 
-	_, encryptedSig, _ := gotrax.ExtractData(bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbeca"))
+	_, encryptedSig, _ := ExtractData(bytesFromHex("000001d2dda2d4ef365711c172dad92804b201fcd2fdd6444568ebf0844019fb65ca4f5f57031936f9a339e08bfd4410905ab86c5d6f73e6c94de6a207f373beff3f7676faee7b1d3be21e630fe42e95db9d4ac559252bff530481301b590e2163b99bde8aa1b07448bf7252588e317b0ba2fc52f85a72a921ba757785b949e5e682341d98800aa180aa0bd01f51180d48260e4358ffae72a97f652f02eb6ae3bc6a25a317d0ca5ed0164a992240baac8e043f848332d22c10a46d12c745dc7b1b0ee37fd14614d4b69d500b8ce562040e3a4bfdd1074e2312d3e3e4c68bd15d70166855d8141f695b21c98c6055a5edb9a233925cf492218342450b806e58b3a821e5d1d2b9c6b9cbcba263908d7190a3428ace92572c064a328f86fa5b8ad2a9c76d5b9dcaeae5327f545b973795f7c655248141c2f82db0a2045e95c1936b726d6474f50283289e92ab5c7297081a54b9e70fce87603506dedd6734bab3c1567ee483cd4bcb0e669d9d97866ca274f178841dafc2acfdcd10cb0e2d07db244ff4b1d23afe253831f142083d912a7164a3425f82c95675298cf3c5eb3e096bbc95e44ecffafbb585738723c0adbe11f16c311a6cddde630b9c304717ce5b09247d482f32709ea71ced16ba930a554f9949c1acbeca"))
 	macSignature := bytesFromHex("741f14776485e6c593928fd859afe1ab4896f1e6")
 	err := c.processEncryptedSig(encryptedSig, macSignature[:20], &c.ake.revealKey)
 	assertEquals(t, err.Error(), "otr: bad signature in encrypted signature")
@@ -297,9 +295,9 @@ func Test_encrypt(t *testing.T) {
 	assertEquals(t, b, 16)
 	assertEquals(t, err, nil)
 
-	encryptedGx, err := encrypt(c.ake.r[:], gotrax.AppendMPI(nil, c.ake.theirPublicValue))
+	encryptedGx, err := encrypt(c.ake.r[:], AppendMPI(nil, c.ake.theirPublicValue))
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, len(encryptedGx), len(gotrax.AppendMPI([]byte{}, c.ake.theirPublicValue)))
+	assertDeepEquals(t, len(encryptedGx), len(AppendMPI([]byte{}, c.ake.theirPublicValue)))
 }
 
 func Test_decrypt(t *testing.T) {
@@ -312,34 +310,34 @@ func Test_decrypt(t *testing.T) {
 	assertEquals(t, b, 16)
 	assertEquals(t, err, nil)
 
-	encryptedGx, _ := encrypt(c.ake.r[:], gotrax.AppendMPI(nil, c.ake.theirPublicValue))
+	encryptedGx, _ := encrypt(c.ake.r[:], AppendMPI(nil, c.ake.theirPublicValue))
 	decryptedGx := encryptedGx
 	err = decrypt(c.ake.r[:], decryptedGx, encryptedGx)
 
 	assertEquals(t, err, nil)
-	assertDeepEquals(t, decryptedGx, gotrax.AppendMPI([]byte{}, c.ake.theirPublicValue))
+	assertDeepEquals(t, decryptedGx, AppendMPI([]byte{}, c.ake.theirPublicValue))
 }
 
 func Test_checkDecryptedGxWithoutError(t *testing.T) {
-	hashedGx := otrV3{}.hash2(gotrax.AppendMPI([]byte{}, fixedGX()))
-	err := checkDecryptedGx(gotrax.AppendMPI([]byte{}, fixedGX()), hashedGx[:], otrV3{})
+	hashedGx := otrV3{}.hash2(AppendMPI([]byte{}, fixedGX()))
+	err := checkDecryptedGx(AppendMPI([]byte{}, fixedGX()), hashedGx[:], otrV3{})
 	assertDeepEquals(t, err, nil)
 }
 
 func Test_checkDecryptedGxWithError(t *testing.T) {
-	hashedGx := otrV3{}.hash2(gotrax.AppendMPI([]byte{}, fixedGY()))
-	err := checkDecryptedGx(gotrax.AppendMPI([]byte{}, fixedGX()), hashedGx[:], otrV3{})
+	hashedGx := otrV3{}.hash2(AppendMPI([]byte{}, fixedGY()))
+	err := checkDecryptedGx(AppendMPI([]byte{}, fixedGX()), hashedGx[:], otrV3{})
 	assertDeepEquals(t, err.Error(), "otr: bad commit MAC in reveal signature message")
 }
 
 func Test_extractGxWithoutError(t *testing.T) {
-	gx, err := extractGx(gotrax.AppendMPI([]byte{}, fixedGX()))
+	gx, err := extractGx(AppendMPI([]byte{}, fixedGX()))
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, gx, fixedGX())
 }
 
 func Test_extractGxWithCorruptError(t *testing.T) {
-	gx, err := extractGx(gotrax.AppendMPI(gotrax.AppendMPI([]byte{}, fixedGX()), fixedY()))
+	gx, err := extractGx(AppendMPI(AppendMPI([]byte{}, fixedGX()), fixedY()))
 	assertDeepEquals(t, err.Error(), "otr: gx corrupt after decryption")
 	assertDeepEquals(t, gx, fixedGX())
 }
@@ -350,7 +348,7 @@ func Test_extractGx_returnsErrorWhenThereIsNotEnoughLengthForTheMPI(t *testing.T
 }
 
 func Test_extractGxWithRangeError(t *testing.T) {
-	gx, err := extractGx(gotrax.AppendMPI([]byte{}, big.NewInt(1)))
+	gx, err := extractGx(AppendMPI([]byte{}, big.NewInt(1)))
 	assertDeepEquals(t, gx, big.NewInt(1))
 	assertDeepEquals(t, err.Error(), "otr: DH value out of range")
 }

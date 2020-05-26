@@ -3,8 +3,6 @@ package otr3
 import (
 	"bytes"
 	"time"
-
-	"github.com/coyim/gotrax"
 )
 
 func (c *Conversation) generateNewDHKeyPair() error {
@@ -120,13 +118,13 @@ func (s authStateAwaitingRevealSig) receiveDHCommitMessage(c *Conversation, msg 
 }
 
 func (s authStateAwaitingDHKey) receiveDHCommitMessage(c *Conversation, msg []byte) (authState, messageWithHeader, error) {
-	newMsg, _, ok := gotrax.ExtractData(msg)
-	_, theirHashedGx, ok2 := gotrax.ExtractData(newMsg)
+	newMsg, _, ok := ExtractData(msg)
+	_, theirHashedGx, ok2 := ExtractData(newMsg)
 	if !(ok && ok2) {
 		return s, nil, errInvalidOTRMessage
 	}
-	
-	gxMPI := gotrax.AppendMPI(nil, c.ake.ourPublicValue)
+
+	gxMPI := AppendMPI(nil, c.ake.ourPublicValue)
 	hashedGx := c.version.hash2(gxMPI)
 	//If yours is the higher hash value:
 	//Ignore the incoming D-H Commit message, but resend your D-H Commit message.

@@ -10,8 +10,6 @@ import (
 	"hash"
 	"math/big"
 	"strconv"
-
-	"github.com/coyim/gotrax"
 )
 
 var otrv3FragmentationPrefix = []byte("?OTR|")
@@ -95,10 +93,10 @@ func (v otrV3) messageHeader(c *Conversation, msgType byte) ([]byte, error) {
 		return nil, err
 	}
 
-	out := gotrax.AppendShort(nil, v.protocolVersion())
+	out := AppendShort(nil, v.protocolVersion())
 	out = append(out, msgType)
-	out = gotrax.AppendWord(out, c.ourInstanceTag)
-	out = gotrax.AppendWord(out, c.theirInstanceTag)
+	out = AppendWord(out, c.ourInstanceTag)
+	out = AppendWord(out, c.theirInstanceTag)
 	return out, nil
 }
 
@@ -159,8 +157,8 @@ func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, 
 	}
 	header := msg[:otrv3HeaderLen]
 
-	msg, senderInstanceTag, _ := gotrax.ExtractWord(msg[messageHeaderPrefix:])
-	msg, receiverInstanceTag, _ := gotrax.ExtractWord(msg)
+	msg, senderInstanceTag, _ := ExtractWord(msg[messageHeaderPrefix:])
+	msg, receiverInstanceTag, _ := ExtractWord(msg)
 
 	if err := v.verifyInstanceTags(c, senderInstanceTag, receiverInstanceTag); err != nil {
 		return nil, nil, err

@@ -2,8 +2,6 @@ package otr3
 
 import (
 	"math/big"
-
-	"github.com/coyim/gotrax"
 )
 
 type smp struct {
@@ -101,8 +99,8 @@ func genSMPTLV(tp uint16, mpis ...*big.Int) tlv {
 	data := make([]byte, 0, 1000)
 
 	// TODO: is this really correct? It seems like it's adding the length for MPIs two times
-	data = gotrax.AppendWord(data, uint32(len(mpis)))
-	data = gotrax.AppendMPIs(data, mpis...)
+	data = AppendWord(data, uint32(len(mpis)))
+	data = AppendMPIs(data, mpis...)
 	length := uint16(len(data))
 	out := tlv{
 		tlvType:   tp,

@@ -6,8 +6,6 @@ import (
 	"crypto/subtle"
 	"encoding/binary"
 	"math/big"
-
-	"github.com/coyim/gotrax"
 )
 
 const (
@@ -36,14 +34,14 @@ type dhCommit struct {
 }
 
 func (c dhCommit) serialize() []byte {
-	out := gotrax.AppendData(nil, c.encryptedGx)
-	out = gotrax.AppendData(out, c.yhashedGx)
+	out := AppendData(nil, c.encryptedGx)
+	out = AppendData(out, c.yhashedGx)
 	return out
 }
 
 func (c *dhCommit) deserialize(msg []byte) error {
-	msg, g, ok := gotrax.ExtractData(msg)
-	_, h, ok2 := gotrax.ExtractData(msg)
+	msg, g, ok := ExtractData(msg)
+	_, h, ok2 := ExtractData(msg)
 
 	if !(ok && ok2) {
 		return newOtrError("corrupt DH commit message")
@@ -59,11 +57,11 @@ type dhKey struct {
 }
 
 func (c dhKey) serialize() []byte {
-	return gotrax.AppendMPI(nil, c.gy)
+	return AppendMPI(nil, c.gy)
 }
 
 func (c *dhKey) deserialize(msg []byte) error {
-	_, gy, ok := gotrax.ExtractMPI(msg)
+	_, gy, ok := ExtractMPI(msg)
 
 	if !ok {
 		return newOtrError("corrupt DH key message")
@@ -82,15 +80,15 @@ type revealSig struct {
 
 func (c revealSig) serialize(v otrVersion) []byte {
 	var out []byte
-	out = gotrax.AppendData(out, c.r[:])
+	out = AppendData(out, c.r[:])
 	out = append(out, c.encryptedSig...)
 	return append(out, c.macSig[:v.truncateLength()]...)
 }
 
 func (c *revealSig) deserialize(msg []byte, v otrVersion) error {
-	in, r, ok := gotrax.ExtractData(msg)
+	in, r, ok := ExtractData(msg)
 	okLen := len(r) == 16
-	macSig, encryptedSig, ok2 := gotrax.ExtractData(in)
+	macSig, encryptedSig, ok2 := ExtractData(in)
 	okLen2 := len(macSig) == v.truncateLength()
 
 	if !(ok && ok2 && okLen && okLen2) {
@@ -115,7 +113,7 @@ func (c sig) serialize(v otrVersion) []byte {
 }
 
 func (c *sig) deserialize(msg []byte) error {
-	macSig, encryptedSig, ok := gotrax.ExtractData(msg)
+	macSig, encryptedSig, ok := ExtractData(msg)
 
 	if !ok || len(macSig) != 20 {
 		return newOtrError("corrupt signature message")
@@ -163,11 +161,11 @@ func (c dataMsg) serializeUnsigned() []byte {
 	var out []byte
 
 	out = append(out, c.flag)
-	out = gotrax.AppendWord(out, c.senderKeyID)
-	out = gotrax.AppendWord(out, c.recipientKeyID)
-	out = gotrax.AppendMPI(out, c.y)
+	out = AppendWord(out, c.senderKeyID)
+	out = AppendWord(out, c.recipientKeyID)
+	out = AppendMPI(out, c.y)
 	out = append(out, c.topHalfCtr[:]...)
-	out = gotrax.AppendData(out, c.encryptedMsg)
+	out = AppendData(out, c.encryptedMsg)
 	return out
 }
 
@@ -181,17 +179,17 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 	in = in[1:]
 	var ok bool
 
-	in, c.senderKeyID, ok = gotrax.ExtractWord(in)
+	in, c.senderKeyID, ok = ExtractWord(in)
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted senderKeyID")
 	}
 
-	in, c.recipientKeyID, ok = gotrax.ExtractWord(in)
+	in, c.recipientKeyID, ok = ExtractWord(in)
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted recipientKeyID")
 	}
 
-	in, c.y, ok = gotrax.ExtractMPI(in)
+	in, c.y, ok = ExtractMPI(in)
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted y")
 	}
@@ -207,7 +205,7 @@ func (c *dataMsg) deserializeUnsigned(msg []byte) error {
 
 	copy(c.topHalfCtr[:], in)
 	in = in[len(c.topHalfCtr):]
-	in, c.encryptedMsg, ok = gotrax.ExtractData(in)
+	in, c.encryptedMsg, ok = ExtractData(in)
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted encryptedMsg")
 	}
@@ -229,7 +227,7 @@ func (c dataMsg) serialize(v otrVersion) []byte {
 	for _, k := range c.oldMACKeys {
 		revKeys = append(revKeys, k[:]...)
 	}
-	out = gotrax.AppendData(out, revKeys)
+	out = AppendData(out, revKeys)
 
 	return out
 }
@@ -244,7 +242,7 @@ func (c *dataMsg) deserialize(msg []byte, v otrVersion) error {
 	msg = msg[len(c.authenticator):]
 
 	var revKeysBytes []byte
-	msg, revKeysBytes, ok := gotrax.ExtractData(msg)
+	msg, revKeysBytes, ok := ExtractData(msg)
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted revealMACKeys")
 	}
@@ -297,8 +295,8 @@ func (c plainDataMsg) serialize() []byte {
 
 	if len(c.tlvs) > 0 {
 		for i := range c.tlvs {
-			out = gotrax.AppendShort(out, c.tlvs[i].tlvType)
-			out = gotrax.AppendShort(out, c.tlvs[i].tlvLength)
+			out = AppendShort(out, c.tlvs[i].tlvType)
+			out = AppendShort(out, c.tlvs[i].tlvLength)
 			out = append(out, c.tlvs[i].tlvValue...)
 		}
 	}
