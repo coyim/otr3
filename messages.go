@@ -21,11 +21,6 @@ const (
 	msgTypeSig       = byte(0x12)
 )
 
-type message interface {
-	serialize() []byte
-	deserialize(msg []byte) error
-}
-
 type dhCommit struct {
 	encryptedGx []byte
 

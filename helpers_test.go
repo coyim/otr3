@@ -20,14 +20,6 @@ func assertNotEquals(t *testing.T, actual, expected interface{}) {
 	}
 }
 
-func assertFuncEquals(t *testing.T, actual, expected interface{}) {
-	f1 := reflect.ValueOf(actual)
-	f2 := reflect.ValueOf(expected)
-	if f1.Pointer() != f2.Pointer() {
-		t.Errorf("Expected:\n%#v \nto equal:\n%#v\n", actual, expected)
-	}
-}
-
 func isNil(actual interface{}) bool {
 	val := reflect.ValueOf(actual)
 	switch val.Kind() {

@@ -30,7 +30,6 @@ var (
 	fixtureLong5  = bnFromHex(randData[4][:384])
 	fixtureLong6  = bnFromHex(randData[5][:384])
 	fixtureLong7  = bnFromHex(randData[6][:384])
-	fixtureLong8  = bnFromHex(randData[7][:384])
 	fixtureShort1 = bnFromHex(randData[0][:32])
 	fixtureShort2 = bnFromHex(randData[1][:32])
 	fixtureShort3 = bnFromHex(randData[2][:32])
@@ -38,7 +37,6 @@ var (
 	fixtureShort5 = bnFromHex(randData[4][:32])
 	fixtureShort6 = bnFromHex(randData[5][:32])
 	fixtureShort7 = bnFromHex(randData[6][:32])
-	fixtureShort8 = bnFromHex(randData[7][:32])
 )
 
 func fixtureSecret() *big.Int {

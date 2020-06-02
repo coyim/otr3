@@ -104,16 +104,6 @@ func readPotentialSymbol(r *bufio.Reader) (string, bool) {
 	return "", false
 }
 
-func readPotentialString(r *bufio.Reader) (string, bool) {
-	res, _ := sexp.ReadValue(r)
-	if res != nil {
-		if tres, ok := res.(sexp.Sstring); ok {
-			return tres.Value().(string), true
-		}
-	}
-	return "", false
-}
-
 func readPotentialStringOrSymbol(r *bufio.Reader) (string, bool) {
 	res, _ := sexp.ReadValue(r)
 	if res != nil {
