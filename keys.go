@@ -424,6 +424,8 @@ func counterEncipher(key, iv, src, dst []byte) error {
 	ctr := cipher.NewCTR(aesCipher, iv)
 	ctr.XORKeyStream(dst, src)
 
+	unsafeWipe(aesCipher)
+
 	return nil
 }
 
