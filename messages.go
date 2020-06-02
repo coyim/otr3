@@ -71,9 +71,10 @@ func (c *dhKey) deserialize(msg []byte) error {
 	return nil
 }
 
+const revealSigRSize = 16
+
 type revealSig struct {
-	// TODO: why this number here?
-	r            [16]byte
+	r            [revealSigRSize]byte
 	encryptedSig []byte
 	macSig       []byte
 }
@@ -87,7 +88,7 @@ func (c revealSig) serialize(v otrVersion) []byte {
 
 func (c *revealSig) deserialize(msg []byte, v otrVersion) error {
 	in, r, ok := ExtractData(msg)
-	okLen := len(r) == 16
+	okLen := len(r) == revealSigRSize
 	macSig, encryptedSig, ok2 := ExtractData(in)
 	okLen2 := len(macSig) == v.truncateLength()
 
