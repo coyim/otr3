@@ -12,6 +12,7 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"runtime"
 
 	"github.com/coyim/otr3/sexp"
 )
@@ -421,6 +422,8 @@ func counterEncipher(key, iv, src, dst []byte) error {
 	ctr.XORKeyStream(dst, src)
 
 	unsafeWipe(aesCipher)
+
+	runtime.KeepAlive(aesCipher)
 
 	return nil
 }
