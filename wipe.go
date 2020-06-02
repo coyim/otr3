@@ -220,11 +220,13 @@ var uint32Type = reflect.ValueOf(uint32(1)).Type()
 var uint32SliceType = reflect.SliceOf(uint32Type)
 
 func unsafeWipeSliceUint8(val reflect.Value) {
+	/* #nosec G103*/
 	ss := *(*[]uint8)(unsafe.Pointer(val.UnsafeAddr()))
 	wipeBytes(ss)
 }
 
 func unsafeWipeSliceUint32(val reflect.Value) {
+	/* #nosec G103*/
 	ss := *(*[]uint32)(unsafe.Pointer(val.UnsafeAddr()))
 	wipeUint32(ss)
 }

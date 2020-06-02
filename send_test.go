@@ -21,7 +21,7 @@ func Test_Send_signalsMessageEventIfTryingToSendWithoutEncryptedChannel(t *testi
 	c.Policies = policies(allowV3 | requireEncryption)
 
 	c.expectMessageEvent(t, func() {
-		c.Send(m)
+		_, _ = c.Send(m)
 	}, MessageEventEncryptionRequired, nil, nil)
 }
 
@@ -32,7 +32,7 @@ func Test_Send_signalsMessageEventIfTryingToSendOnAFinishedChannel(t *testing.T)
 	c.Policies = policies(allowV3 | requireEncryption)
 
 	c.expectMessageEvent(t, func() {
-		c.Send(m)
+		_, _ = c.Send(m)
 	}, MessageEventConnectionEnded, nil, nil)
 }
 
@@ -45,7 +45,7 @@ func Test_Send_signalsEncryptionErrorMessageEventIfSomethingWentWrong(t *testing
 	c.keys.theirKeyID = 0
 
 	c.expectMessageEvent(t, func() {
-		c.Send(msg)
+		_, _ = c.Send(msg)
 	}, MessageEventEncryptionError, nil, nil)
 }
 
@@ -75,7 +75,7 @@ func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected(t *testin
 	c.msgState = plainText
 	c.Policies = policies(allowV3 | requireEncryption)
 
-	c.Send(m)
+	_, _ = c.Send(m)
 
 	assertDeepEquals(t, c.resend.pending(),
 		[]messageToResend{
@@ -90,8 +90,8 @@ func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected_AndAddsAn
 	c.msgState = plainText
 	c.Policies = policies(allowV3 | requireEncryption)
 
-	c.Send(m, 42, "hello")
-	c.Send(m2, 15, "something")
+	_, _ = c.Send(m, 42, "hello")
+	_, _ = c.Send(m2, 15, "something")
 
 	assertDeepEquals(t, c.resend.pending(),
 		[]messageToResend{
@@ -106,7 +106,7 @@ func Test_Send_setsMayRetransmitFlagToExpectExactResending(t *testing.T) {
 	c.msgState = plainText
 	c.Policies = policies(allowV3 | requireEncryption)
 
-	c.Send(m)
+	_, _ = c.Send(m)
 
 	assertEquals(t, c.resend.mayRetransmit, retransmitExact)
 }

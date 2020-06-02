@@ -16,7 +16,7 @@ func Test_smpStateExpect1_goToWaitingForSecretWhenReceivesSmpMessage1(t *testing
 func Test_smpStateExpect1_willSendANotificationThatASecretIsNeeded(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.expectSMPEvent(t, func() {
-		smpStateExpect1{}.receiveMessage1(c, fixtureMessage1())
+		_, _, _ = smpStateExpect1{}.receiveMessage1(c, fixtureMessage1())
 	}, SMPEventAskForSecret, 25, "")
 }
 
@@ -27,7 +27,7 @@ func Test_smpStateExpect1_willSendANotificationThatAnAnswerIsNeededIfQuestionPro
 	msg.question = "What do you think?"
 
 	c.expectSMPEvent(t, func() {
-		smpStateExpect1{}.receiveMessage1(c, msg)
+		_, _, _ = smpStateExpect1{}.receiveMessage1(c, msg)
 	}, SMPEventAskForAnswer, 25, "What do you think?")
 }
 
@@ -52,7 +52,7 @@ func Test_smpStateExpect1_receiveMessage1_setsTheSMPQuestionIfThereWasOneInTheMe
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 	msg := fixtureMessage1Q()
 
-	smpStateExpect1{}.receiveMessage1(c, msg)
+	_, _, _ = smpStateExpect1{}.receiveMessage1(c, msg)
 	v, ok := c.SMPQuestion()
 
 	assertDeepEquals(t, ok, true)
@@ -80,15 +80,15 @@ func Test_smpStateExpect1_givesAnErrorNotificationIfTheWrongMessageIsSent(t *tes
 	c := newConversation(otrV3{}, fixtureRand())
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage2(c, smp2Message{})
+		_, _, _ = state.receiveMessage2(c, smp2Message{})
 	}, SMPEventError, 0, "")
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage3(c, smp3Message{})
+		_, _, _ = state.receiveMessage3(c, smp3Message{})
 	}, SMPEventError, 0, "")
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage4(c, smp4Message{})
+		_, _, _ = state.receiveMessage4(c, smp4Message{})
 	}, SMPEventError, 0, "")
 }
 
@@ -97,15 +97,15 @@ func Test_smpStateExpect2_givesAnErrorNotificationIfTheWrongMessageIsSent(t *tes
 	c := newConversation(otrV3{}, fixtureRand())
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage1(c, smp1Message{})
+		_, _, _ = state.receiveMessage1(c, smp1Message{})
 	}, SMPEventError, 0, "")
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage3(c, smp3Message{})
+		_, _, _ = state.receiveMessage3(c, smp3Message{})
 	}, SMPEventError, 0, "")
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage4(c, smp4Message{})
+		_, _, _ = state.receiveMessage4(c, smp4Message{})
 	}, SMPEventError, 0, "")
 }
 
@@ -114,15 +114,15 @@ func Test_smpStateExpect3_givesAnErrorNotificationIfTheWrongMessageIsSent(t *tes
 	c := newConversation(otrV3{}, fixtureRand())
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage1(c, smp1Message{})
+		_, _, _ = state.receiveMessage1(c, smp1Message{})
 	}, SMPEventError, 0, "")
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage2(c, smp2Message{})
+		_, _, _ = state.receiveMessage2(c, smp2Message{})
 	}, SMPEventError, 0, "")
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage4(c, smp4Message{})
+		_, _, _ = state.receiveMessage4(c, smp4Message{})
 	}, SMPEventError, 0, "")
 }
 
@@ -131,15 +131,15 @@ func Test_smpStateExpect4_givesAnErrorNotificationIfTheWrongMessageIsSent(t *tes
 	c := newConversation(otrV3{}, fixtureRand())
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage1(c, smp1Message{})
+		_, _, _ = state.receiveMessage1(c, smp1Message{})
 	}, SMPEventError, 0, "")
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage2(c, smp2Message{})
+		_, _, _ = state.receiveMessage2(c, smp2Message{})
 	}, SMPEventError, 0, "")
 
 	c.expectSMPEvent(t, func() {
-		state.receiveMessage3(c, smp3Message{})
+		_, _, _ = state.receiveMessage3(c, smp3Message{})
 	}, SMPEventError, 0, "")
 }
 
@@ -162,7 +162,7 @@ func Test_smpStateExpect2_sendsAnSMPEventAboutSMPProgressHere(t *testing.T) {
 	c.smp.s1 = fixtureSmp1()
 
 	c.expectSMPEvent(t, func() {
-		smpStateExpect2{}.receiveMessage2(c, fixtureMessage2())
+		_, _, _ = smpStateExpect2{}.receiveMessage2(c, fixtureMessage2())
 	}, SMPEventInProgress, 60, "")
 }
 
@@ -213,7 +213,7 @@ func Test_smpStateExpect3_willSendAnSMPNotificationOnProtocolSuccess(t *testing.
 	c.smp.s2 = fixtureSmp2()
 
 	c.expectSMPEvent(t, func() {
-		smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
+		_, _, _ = smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
 	}, SMPEventSuccess, 100, "")
 }
 
@@ -250,7 +250,7 @@ func Test_smpStateExpect4_willSendAnSMPNotificationOnProtocolSuccess(t *testing.
 	c.smp.s3 = fixtureSmp3()
 
 	c.expectSMPEvent(t, func() {
-		smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
+		_, _, _ = smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
 	}, SMPEventSuccess, 100, "")
 }
 
@@ -290,7 +290,7 @@ func Test_contextTransitionsFromSmpExpect1ToSmpWaitingForSecret(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	c.receiveSMP(m)
+	_, _ = c.receiveSMP(m)
 	assertDeepEquals(t, c.smp.state, smpStateWaitingForSecret{msg: m})
 }
 
@@ -301,7 +301,7 @@ func Test_contextTransitionsFromSmpExpect2ToSmpExpect4(t *testing.T) {
 	c.smp.s1 = fixtureSmp1()
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	c.receiveSMP(m)
+	_, _ = c.receiveSMP(m)
 	assertEquals(t, c.smp.state, smpStateExpect4{})
 }
 
@@ -312,7 +312,7 @@ func Test_contextTransitionsFromSmpExpect3ToSmpExpect1(t *testing.T) {
 	c.smp.s2 = fixtureSmp2()
 	c.smp.secret = bnFromHex("ABCDE56321F9A9F8E364607C8C82DECD8E8E6209E2CB952C7E649620F5286FE3")
 
-	c.receiveSMP(m)
+	_, _ = c.receiveSMP(m)
 	assertEquals(t, c.smp.state, smpStateExpect1{})
 }
 
@@ -323,7 +323,7 @@ func Test_contextTransitionsFromSmpExpect4ToSmpExpect1(t *testing.T) {
 	c.smp.s1 = fixtureSmp1()
 	c.smp.s3 = fixtureSmp3()
 
-	c.receiveSMP(m)
+	_, _ = c.receiveSMP(m)
 	assertEquals(t, c.smp.state, smpStateExpect1{})
 }
 
@@ -353,7 +353,7 @@ func Test_smpStateExpect1_receiveMessage1_signalsCheatingIfVerifySMP1Fails(t *te
 	c := newConversation(otrV3{}, fixtureRand())
 
 	c.expectSMPEvent(t, func() {
-		smpStateExpect1{}.receiveMessage1(c, smp1Message{g2a: big.NewInt(1)})
+		_, _, _ = smpStateExpect1{}.receiveMessage1(c, smp1Message{g2a: big.NewInt(1)})
 	}, SMPEventCheated, 0, "")
 }
 
@@ -457,7 +457,7 @@ func Test_smpStateExpect3_receiveMessage3_willSendAnSMPNotificationOnProtocolFai
 	c.smp.s2.b3 = sub(c.smp.s2.b3, big.NewInt(1))
 
 	c.expectSMPEvent(t, func() {
-		smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
+		_, _, _ = smpStateExpect3{}.receiveMessage3(c, fixtureMessage3())
 	}, SMPEventFailure, 100, "")
 
 }
@@ -503,7 +503,7 @@ func Test_smpStateExpect4_receiveMessage4_willSendAnSMPNotificationOnProtocolFai
 	c.smp.s3.papb = sub(c.smp.s3.papb, big.NewInt(1))
 
 	c.expectSMPEvent(t, func() {
-		smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
+		_, _, _ = smpStateExpect4{}.receiveMessage4(c, fixtureMessage4())
 	}, SMPEventFailure, 100, "")
 }
 
@@ -560,7 +560,7 @@ func Test_smpMessageAbort_receivedMessage_sendsAnSMPEventAboutTheAbort(t *testin
 	c.smp.state = smpStateExpect2{}
 
 	c.expectSMPEvent(t, func() {
-		smpMessageAbort{}.receivedMessage(c)
+		_, _ = smpMessageAbort{}.receivedMessage(c)
 	}, SMPEventAbort, 0, "")
 }
 

@@ -50,7 +50,7 @@ func Test_checkVersion_returnsTheErrorFromNewOtrVersion(t *testing.T) {
 func Test_checkVersion_doesNotSetConversationVersionIfOneIsAlreadySet(t *testing.T) {
 	c := &Conversation{Policies: policies(allowV2 | allowV3), version: otrV3{}}
 	c.ourKeys = []PrivateKey{alicePrivateKey}
-	c.checkVersion([]byte{0x00, 0x02})
+	_ = c.checkVersion([]byte{0x00, 0x02})
 	assertEquals(t, otrV3{}, c.version)
 }
 

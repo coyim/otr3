@@ -43,11 +43,11 @@ func (c *Conversation) SMPQuestion() (string, bool) {
 
 func generateSMPSecret(initiatorFingerprint, recipientFingerprint, ssid, secret []byte, v otrVersion) *big.Int {
 	h := v.hash2Instance()
-	h.Write([]byte{smpVersion})
-	h.Write(initiatorFingerprint)
-	h.Write(recipientFingerprint)
-	h.Write(ssid)
-	h.Write(secret)
+	_, _ = h.Write([]byte{smpVersion})
+	_, _ = h.Write(initiatorFingerprint)
+	_, _ = h.Write(recipientFingerprint)
+	_, _ = h.Write(ssid)
+	_, _ = h.Write(secret)
 	return new(big.Int).SetBytes(h.Sum(nil))
 }
 

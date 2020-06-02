@@ -168,7 +168,7 @@ func Test_rotateOurKeys_rotateOurCurrentDHKeys(t *testing.T) {
 		},
 	}
 
-	c.rotateOurKeys(recipientKeyID, fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
+	_ = c.rotateOurKeys(recipientKeyID, fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
 
 	assertEquals(t, c.ourKeyID, recipientKeyID+1)
 	assertDeepEquals(t, c.ourPreviousDHKeys.priv, fixedX())
@@ -189,7 +189,7 @@ func Test_rotateOurKeys_doesNotRotateIfWeDontReceiveOurCurrentKeyID(t *testing.T
 		},
 	}
 
-	c.rotateOurKeys(recipientKeyID+1, fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
+	_ = c.rotateOurKeys(recipientKeyID+1, fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
 
 	assertEquals(t, c.ourKeyID, recipientKeyID)
 	assertEquals(t, c.ourPreviousDHKeys.priv, nilB)
@@ -264,7 +264,7 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 		},
 	}
 
-	c.rotateOurKeys(2, fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
+	_ = c.rotateOurKeys(2, fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
 
 	assertDeepEquals(t, c.oldMACKeys, expectedMACKeys)
 	assertDeepEquals(t, len(c.macKeyHistory.items), 1)
@@ -331,7 +331,7 @@ func Test_generateNewDHKeypair_wipesPreviousDHKeysBeforePointingToCurrentDHKeys(
 		},
 	}
 
-	c.generateNewDHKeyPair(fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
+	_ = c.generateNewDHKeyPair(fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
 
 	assertEquals(t, prevPrivKey.Int64(), int64(0))
 	assertEquals(t, prevPubKey.Int64(), int64(0))

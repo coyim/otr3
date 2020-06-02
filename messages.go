@@ -136,15 +136,15 @@ func (c *dataMsg) sign(key []byte, header []byte, v otrVersion) {
 		c.serializeUnsignedCache = c.serializeUnsigned()
 	}
 	mac := hmac.New(v.hashInstance, key)
-	mac.Write(header)
-	mac.Write(c.serializeUnsignedCache)
+	_, _ = mac.Write(header)
+	_, _ = mac.Write(c.serializeUnsignedCache)
 	c.authenticator = mac.Sum(nil)
 }
 
 func (c dataMsg) checkSign(key []byte, header []byte, v otrVersion) error {
 	mac := hmac.New(v.hashInstance, key[:])
-	mac.Write(header)
-	mac.Write(c.serializeUnsignedCache)
+	_, _ = mac.Write(header)
+	_, _ = mac.Write(c.serializeUnsignedCache)
 	authenticatorCalculated := mac.Sum(nil)
 
 	if subtle.ConstantTimeCompare(c.authenticator, authenticatorCalculated) == 0 {
@@ -238,7 +238,7 @@ func (c *dataMsg) deserialize(msg []byte, v otrVersion) error {
 	msg = msg[len(c.authenticator):]
 
 	var revKeysBytes []byte
-	msg, revKeysBytes, ok := ExtractData(msg)
+	_, revKeysBytes, ok := ExtractData(msg)
 	if !ok {
 		return newOtrError("dataMsg.deserialize corrupted revealMACKeys")
 	}
@@ -325,7 +325,7 @@ func (c plainDataMsg) encrypt(key []byte, topHalfCtr [8]byte) []byte {
 
 	data := c.pad().serialize()
 	dst := make([]byte, len(data))
-	counterEncipher(key, iv[:], data, dst)
+	_ = counterEncipher(key, iv[:], data, dst)
 
 	return dst
 }
@@ -338,6 +338,5 @@ func (c *plainDataMsg) decrypt(key []byte, topHalfCtr [8]byte, src []byte) error
 		return err
 	}
 
-	c.deserialize(src)
-	return nil
+	return c.deserialize(src)
 }

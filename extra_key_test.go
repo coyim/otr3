@@ -17,7 +17,7 @@ func Test_processExtraSymmetricKeyTLV_signalsAReceivedKeyEventWithTheExtraKey(t 
 		called = true
 	}}
 
-	c.processExtraSymmetricKeyTLV(tlv{tlvTypeExtraSymmetricKey, 0x04, []byte{0xAB, 0x12, 0xCD, 0x44}}, x)
+	_, _ = c.processExtraSymmetricKeyTLV(tlv{tlvTypeExtraSymmetricKey, 0x04, []byte{0xAB, 0x12, 0xCD, 0x44}}, x)
 
 	assertEquals(t, called, true)
 }
@@ -34,7 +34,7 @@ func Test_processExtraSymmetricKeyTLV_signalsTheReceivedUsageData(t *testing.T) 
 		called = true
 	}}
 
-	c.processExtraSymmetricKeyTLV(tlv{tlvTypeExtraSymmetricKey, 0x04, []byte{0xAB, 0x12, 0xCD, 0x44}}, x)
+	_, _ = c.processExtraSymmetricKeyTLV(tlv{tlvTypeExtraSymmetricKey, 0x04, []byte{0xAB, 0x12, 0xCD, 0x44}}, x)
 
 	assertEquals(t, called, true)
 }
@@ -48,7 +48,7 @@ func Test_processExtraSymmetricKeyTLV_doesntSignalAnythingIfThereIsNoUsageData(t
 		t.Errorf("Didn't expect a received key event one")
 	}}
 
-	c.processExtraSymmetricKeyTLV(tlv{tlvTypeExtraSymmetricKey, 0x00, []byte{}}, x)
+	_, _ = c.processExtraSymmetricKeyTLV(tlv{tlvTypeExtraSymmetricKey, 0x00, []byte{}}, x)
 }
 
 func Test_processExtraSymmetricKeyTLV_providesExtraUsageDataIfGiven(t *testing.T) {
@@ -63,7 +63,7 @@ func Test_processExtraSymmetricKeyTLV_providesExtraUsageDataIfGiven(t *testing.T
 		called = true
 	}}
 
-	c.processExtraSymmetricKeyTLV(tlv{tlvTypeExtraSymmetricKey, 0x06, []byte{0xAB, 0x12, 0xCD, 0x44, 0x01, 0x02, 0x04}}, x)
+	_, _ = c.processExtraSymmetricKeyTLV(tlv{tlvTypeExtraSymmetricKey, 0x06, []byte{0xAB, 0x12, 0xCD, 0x44, 0x01, 0x02, 0x04}}, x)
 
 	assertEquals(t, called, true)
 }

@@ -139,7 +139,7 @@ func Test_receiveFragment_signalsMessageEventIfInstanceTagsDoesNotMatch(t *testi
 	existingContext := fragmentationContext{frag: []byte("shouldn't change")}
 
 	c.expectMessageEvent(t, func() {
-		c.receiveFragment(existingContext, []byte("?OTR|00000204|00000103,00001,00004,one ,"))
+		_, _ = c.receiveFragment(existingContext, []byte("?OTR|00000204|00000103,00001,00004,one ,"))
 	}, MessageEventReceivedMessageForOtherInstance, nil, nil)
 }
 
@@ -158,7 +158,7 @@ func Test_receiveFragment_sendsAnErrorMessageAboutMalformedIfHandlerExists(t *te
 			return []byte("white happened")
 		}}
 
-	c.receiveFragment(existingContext, []byte("?OTR|0000000A|00000103,00001,00004,one ,"))
+	_, _ = c.receiveFragment(existingContext, []byte("?OTR|0000000A|00000103,00001,00004,one ,"))
 	ts, _ := c.withInjections(nil, nil)
 	assertDeepEquals(t, string(ts[0]), "?OTR Error: black happened")
 }
@@ -171,7 +171,7 @@ func Test_receiveFragment_signalsMalformedMessageIfTheirInstanceTagIsBelowTheLim
 	existingContext := fragmentationContext{frag: []byte("shouldn't change")}
 
 	c.expectMessageEvent(t, func() {
-		c.receiveFragment(existingContext, []byte("?OTR|0000000A|00000103,00001,00004,one ,"))
+		_, _ = c.receiveFragment(existingContext, []byte("?OTR|0000000A|00000103,00001,00004,one ,"))
 	}, MessageEventReceivedMessageMalformed, nil, nil)
 }
 

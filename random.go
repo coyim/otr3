@@ -32,10 +32,6 @@ func randSizedMPI(r io.Reader, size int) (*big.Int, error) {
 	return randMPI(r, make([]byte, size))
 }
 
-func (c *Conversation) randSizedMPI(size int) (*big.Int, error) {
-	return randMPI(c.rand(), make([]byte, size))
-}
-
 func (c *Conversation) randMPI(buf []byte) (*big.Int, error) {
 	return randMPI(c.rand(), buf)
 }

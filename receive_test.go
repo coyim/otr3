@@ -61,7 +61,7 @@ func Test_receivePlaintext_signalsAMessageEventThatItWasUnencryptedIfNotInPlaint
 	c.msgState = encrypted
 
 	c.expectMessageEvent(t, func() {
-		c.receivePlaintext(ValidMessage("Hello world"))
+		_, _, _ = c.receivePlaintext(ValidMessage("Hello world"))
 	}, MessageEventReceivedMessageUnencrypted, []byte("Hello world"), nil)
 }
 
@@ -72,7 +72,7 @@ func Test_receivePlaintext_signalsAMessageEventThatItWasUnencryptedIfRequiringEn
 	c.Policies = policies(requireEncryption)
 
 	c.expectMessageEvent(t, func() {
-		c.receivePlaintext(ValidMessage("Hello world"))
+		_, _, _ = c.receivePlaintext(ValidMessage("Hello world"))
 	}, MessageEventReceivedMessageUnencrypted, []byte("Hello world"), nil)
 }
 
@@ -82,7 +82,7 @@ func Test_receivePlaintext_doesntSignalAMessageEventThatItWasUnencryptedIfNotInP
 	c.msgState = plainText
 
 	c.doesntExpectMessageEvent(t, func() {
-		c.receivePlaintext(ValidMessage("Hello world"))
+		_, _, _ = c.receivePlaintext(ValidMessage("Hello world"))
 	})
 }
 
@@ -92,7 +92,7 @@ func Test_receiveTaggedPlaintext_signalsAMessageEventThatItWasUnencryptedIfNotIn
 	c.msgState = encrypted
 
 	c.expectMessageEvent(t, func() {
-		c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
+		_, _, _ = c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
 	}, MessageEventReceivedMessageUnencrypted, []byte("Hello world"), nil)
 }
 
@@ -103,7 +103,7 @@ func Test_receiveTaggedPlaintext_signalsAMessageEventThatItWasUnencryptedIfRequi
 	c.Policies = policies(requireEncryption)
 
 	c.expectMessageEvent(t, func() {
-		c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
+		_, _, _ = c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
 	}, MessageEventReceivedMessageUnencrypted, []byte("Hello world"), nil)
 }
 
@@ -113,7 +113,7 @@ func Test_receiveTaggedPlaintext_doesntSignalAMessageEventThatItWasUnencryptedIf
 	c.msgState = plainText
 
 	c.doesntExpectMessageEvent(t, func() {
-		c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
+		_, _, _ = c.receiveTaggedPlaintext(ValidMessage("Hello \t  \t\t\t\t \t \t \t   world"))
 	})
 }
 
@@ -123,7 +123,7 @@ func Test_Receive_signalsAMessageEventWhenWeReceiveAMessageThatLooksLikeAnOTRMes
 	c.Policies = policies(allowV3)
 
 	c.expectMessageEvent(t, func() {
-		c.Receive(ValidMessage("?OTR Something: strange"))
+		_, _, _ = c.Receive(ValidMessage("?OTR Something: strange"))
 	}, MessageEventReceivedMessageUnrecognized, nil, nil)
 }
 
@@ -153,7 +153,7 @@ func Test_Receive_signalsAMessageEventWhenWeReceiveADataMessageForAnotherInstanc
 	reencoded := append(append(msgMarker, b64encode(decoded)...), '.')
 
 	alice.expectMessageEvent(t, func() {
-		alice.Receive(reencoded)
+		_, _, _ = alice.Receive(reencoded)
 	}, MessageEventReceivedMessageForOtherInstance, nil, nil)
 
 	decoded[6] = 0x01
@@ -161,7 +161,7 @@ func Test_Receive_signalsAMessageEventWhenWeReceiveADataMessageForAnotherInstanc
 	reencoded = append(append(msgMarker, b64encode(decoded)...), '.')
 
 	alice.expectMessageEvent(t, func() {
-		alice.Receive(reencoded)
+		_, _, _ = alice.Receive(reencoded)
 	}, MessageEventReceivedMessageForOtherInstance, nil, nil)
 }
 
@@ -200,7 +200,7 @@ func Test_receiveErrorMessage_updateMayRetransmitToRetransmitWithPrefix(t *testi
 	c.msgState = encrypted
 	m := []byte("?OTR Error:error msg")
 
-	c.receiveErrorMessage(m)
+	_, _, _ = c.receiveErrorMessage(m)
 
 	assertEquals(t, c.resend.mayRetransmit, retransmitWithPrefix)
 }
@@ -211,7 +211,7 @@ func Test_receiveErrorMessage_willSignalAnEventWithTheErrorMessage(t *testing.T)
 	m := []byte("?OTR Error:error msg")
 
 	c.expectMessageEvent(t, func() {
-		c.receiveErrorMessage(m)
+		_, _, _ = c.receiveErrorMessage(m)
 	}, MessageEventReceivedMessageGeneralError, []byte("error msg"), nil)
 }
 
@@ -221,7 +221,7 @@ func Test_receiveErrorMessage_willSignalAnEventWithTheErrorMessageWithoutLeading
 	m := []byte("?OTR Error: an error msg")
 
 	c.expectMessageEvent(t, func() {
-		c.receiveErrorMessage(m)
+		_, _, _ = c.receiveErrorMessage(m)
 	}, MessageEventReceivedMessageGeneralError, []byte("an error msg"), nil)
 }
 
@@ -237,7 +237,7 @@ func Test_Receive_returnsAnErrorIfWeReceiveARequestToStartAVersion1KeyExchange(t
 func Test_Receive_willResetFragmentationContextIfWeReceiveAnUnfragmentedMessage(t *testing.T) {
 	c := aliceContextAfterAKE()
 	c.fragmentationContext = fragmentationContext{[]byte("hello"), 2, 5}
-	c.Receive(ValidMessage("Hello World"))
+	_, _, _ = c.Receive(ValidMessage("Hello World"))
 
 	assertNil(t, c.fragmentationContext.frag)
 	assertEquals(t, c.fragmentationContext.currentIndex, uint16(0))

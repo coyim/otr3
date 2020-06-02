@@ -119,12 +119,19 @@ func readPotentialStringOrSymbol(r *bufio.Reader) (string, bool) {
 
 // ImportKeysFromFile will read the libotr formatted file given and return all accounts defined in it
 func ImportKeysFromFile(fname string) ([]*Account, error) {
+	/* #nosec G304 */
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
-	return ImportKeys(f)
+
+	res, e := ImportKeys(f)
+	if e != nil {
+		_ = f.Close()
+		return nil, e
+	}
+
+	return res, f.Close()
 }
 
 // ExportKeysToFile will create the named file (or truncate it) and write all the accounts to that file in libotr format.
@@ -133,9 +140,8 @@ func ExportKeysToFile(acs []*Account, fname string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 	exportAccounts(acs, f)
-	return nil
+	return f.Close()
 }
 
 // ImportKeys will read the libotr formatted data given and return all accounts defined in it
@@ -273,7 +279,7 @@ func (pub *DSAPublicKey) IsSame(other PublicKey) bool {
 // ParsePrivateKey is an algorithm indepedent way of parsing private keys
 func ParsePrivateKey(in []byte) (index []byte, ok bool, key PrivateKey) {
 	var typeTag uint16
-	index, typeTag, ok = ExtractShort(in)
+	_, typeTag, ok = ExtractShort(in)
 	if !ok {
 		return in, false, nil
 	}
@@ -291,7 +297,7 @@ func ParsePrivateKey(in []byte) (index []byte, ok bool, key PrivateKey) {
 // ParsePublicKey is an algorithm independent way of parsing public keys
 func ParsePublicKey(in []byte) (index []byte, ok bool, key PublicKey) {
 	var typeTag uint16
-	index, typeTag, ok = ExtractShort(in)
+	_, typeTag, ok = ExtractShort(in)
 	if !ok {
 		return in, false, nil
 	}
@@ -374,7 +380,7 @@ func (pub *DSAPublicKey) Fingerprint() []byte {
 
 	h := fingerprintHashInstanceForVersion(3)
 
-	h.Write(b[2:]) // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
+	_, _ = h.Write(b[2:]) // if public key is DSA, ignore the leading 0x00 0x00 for the key type (according to spec)
 	return h.Sum(nil)
 }
 
@@ -500,65 +506,65 @@ func notHex(r rune) bool {
 
 func exportName(n string, w *bufio.Writer) {
 	indent := "    "
-	w.WriteString(indent)
-	w.WriteString("(name \"")
-	w.WriteString(n)
-	w.WriteString("\")\n")
+	_, _ = w.WriteString(indent)
+	_, _ = w.WriteString("(name \"")
+	_, _ = w.WriteString(n)
+	_, _ = w.WriteString("\")\n")
 }
 
 func exportProtocol(n string, w *bufio.Writer) {
 	indent := "    "
-	w.WriteString(indent)
-	w.WriteString("(protocol ")
-	w.WriteString(n)
-	w.WriteString(")\n")
+	_, _ = w.WriteString(indent)
+	_, _ = w.WriteString("(protocol ")
+	_, _ = w.WriteString(n)
+	_, _ = w.WriteString(")\n")
 }
 
 func exportPrivateKey(key PrivateKey, w *bufio.Writer) {
 	indent := "    "
-	w.WriteString(indent)
-	w.WriteString("(private-key\n")
+	_, _ = w.WriteString(indent)
+	_, _ = w.WriteString("(private-key\n")
 	exportDSAPrivateKey(key.(*DSAPrivateKey), w)
-	w.WriteString(indent)
-	w.WriteString(")\n")
+	_, _ = w.WriteString(indent)
+	_, _ = w.WriteString(")\n")
 }
 
 func exportDSAPrivateKey(key *DSAPrivateKey, w *bufio.Writer) {
 	indent := "      "
-	w.WriteString(indent)
-	w.WriteString("(dsa\n")
+	_, _ = w.WriteString(indent)
+	_, _ = w.WriteString("(dsa\n")
 	exportParameter("p", key.PrivateKey.P, w)
 	exportParameter("q", key.PrivateKey.Q, w)
 	exportParameter("g", key.PrivateKey.G, w)
 	exportParameter("y", key.PrivateKey.Y, w)
 	exportParameter("x", key.PrivateKey.X, w)
-	w.WriteString(indent)
-	w.WriteString(")\n")
+	_, _ = w.WriteString(indent)
+	_, _ = w.WriteString(")\n")
 }
 
 func exportParameter(name string, val *big.Int, w *bufio.Writer) {
 	indent := "        "
-	w.WriteString(indent)
-	w.WriteString(fmt.Sprintf("(%s #%X#)\n", name, val))
+	_, _ = w.WriteString(indent)
+	_, _ = w.WriteString(fmt.Sprintf("(%s #%X#)\n", name, val))
 }
 
 func exportAccount(a *Account, w *bufio.Writer) {
 	indent := "  "
-	w.WriteString(indent)
-	w.WriteString("(account\n")
+	_, _ = w.WriteString(indent)
+	_, _ = w.WriteString("(account\n")
 	exportName(a.Name, w)
 	exportProtocol(a.Protocol, w)
 	exportPrivateKey(a.Key, w)
-	w.WriteString(indent)
-	w.WriteString(")\n")
+	_, _ = w.WriteString(indent)
+	_, _ = w.WriteString(")\n")
 }
 
 func exportAccounts(as []*Account, w io.Writer) {
 	bw := bufio.NewWriter(w)
-	bw.WriteString("(privkeys\n")
+	_, _ = bw.WriteString("(privkeys\n")
 	for _, a := range as {
 		exportAccount(a, bw)
 	}
-	bw.WriteString(")\n")
-	bw.Flush()
+	_, _ = bw.WriteString(")\n")
+	_ = bw.Flush()
 }

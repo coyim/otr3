@@ -58,7 +58,7 @@ func Test_StartAuthenticate_generatesAndSetsTheFirstMessageOnTheConversation(t *
 	c.theirKey = alicePrivateKey.PublicKey()
 	c.smp.s1 = nil
 
-	c.StartAuthenticate("", []byte("hello world"))
+	_, _ = c.StartAuthenticate("", []byte("hello world"))
 
 	assertNotNil(t, c.smp.s1)
 	assertEquals(t, c.smp.s1.msg.hasQuestion, false)
@@ -73,7 +73,7 @@ func Test_StartAuthenticate_generatesAn1QMessageIfAQuestionIsGiven(t *testing.T)
 	c.theirKey = alicePrivateKey.PublicKey()
 	c.smp.s1 = nil
 
-	c.StartAuthenticate("Where did we meet?", []byte("hello world"))
+	_, _ = c.StartAuthenticate("Where did we meet?", []byte("hello world"))
 
 	assertNotNil(t, c.smp.s1)
 	assertEquals(t, c.smp.s1.msg.hasQuestion, true)

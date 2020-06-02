@@ -133,7 +133,7 @@ func Test_receive_whiteSpaceTagWillSignalSetupErrorIfSomethingFails(t *testing.T
 	msg := genWhitespaceTag(policies(allowV2 | allowV3))
 
 	c.expectMessageEvent(t, func() {
-		c.Receive(msg)
+		_, _, _ = c.Receive(msg)
 	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 

@@ -376,7 +376,7 @@ func extractGx(decryptedGx []byte) (*big.Int, error) {
 
 func sumHMAC(key, data []byte, v otrVersion) []byte {
 	mac := hmac.New(v.hash2Instance, key)
-	mac.Write(data)
+	_, _ = mac.Write(data)
 	return mac.Sum(nil)
 }
 

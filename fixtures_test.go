@@ -278,7 +278,7 @@ func fixtureDecryptDataMsgBase(encryptedDataMsg []byte) ([]byte, plainDataMsg, e
 		return nil, plainDataMsg{}, err
 	}
 
-	exp.decrypt(keys.receivingAESKey[:], m.topHalfCtr, m.encryptedMsg)
+	_ = exp.decrypt(keys.receivingAESKey[:], m.topHalfCtr, m.encryptedMsg)
 
 	return header, exp, nil
 }

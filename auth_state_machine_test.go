@@ -70,9 +70,9 @@ func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedG
 	newMsg, newEncryptedGx, _ := ExtractData(newDHCommitMsg)
 	_, newHashedGx, _ := ExtractData(newMsg)
 
-	authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsgBody())
+	_, _, _ = authStateNone{}.receiveDHCommitMessage(c, fixtureDHCommitMsgBody())
 
-	authStateAwaitingRevealSig{}.receiveDHCommitMessage(c, newDHCommitMsg)
+	_, _, _ = authStateAwaitingRevealSig{}.receiveDHCommitMessage(c, newDHCommitMsg)
 	assertDeepEquals(t, c.ake.encryptedGx, newEncryptedGx)
 	assertDeepEquals(t, c.ake.xhashedGx, newHashedGx)
 }
@@ -110,7 +110,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyIgnoreIncomingMsgAndResendOurDHCommitMs
 
 func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaitingRevealSig(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	//make sure we store the same values when creating the DH commit
 	c := newConversation(otrV3{}, fixtureRand())
@@ -150,7 +150,7 @@ func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *te
 
 func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSig(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := bobContextAtAwaitingDHKey()
 	c.sentRevealSig = false
@@ -167,7 +167,7 @@ func Test_receiveDHKey_TransitionsFromAwaitingDHKeyToAwaitingSigAndSendsRevealSi
 
 func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := bobContextAtAwaitingDHKey()
 
@@ -182,7 +182,7 @@ func Test_receiveDHKey_AtAwaitingDHKeyStoresGyAndSigKey(t *testing.T) {
 
 func Test_receiveDHKey_AtAwaitingDHKey_storesOursAndTheirDHKeys(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := bobContextAtAwaitingDHKey()
 
@@ -201,7 +201,7 @@ func Test_receiveDHKey_AtAuthAwaitingSigIfReceivesSameDHKeyMsgRetransmitRevealSi
 	var nilB *big.Int
 
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
@@ -373,7 +373,7 @@ func Test_receiveDecoded_receiveDHCommitMessageAndFailsWillSignalSetupError(t *t
 	msg := fixtureDHCommitMsgV2()
 
 	c.expectMessageEvent(t, func() {
-		c.receiveDecoded(msg)
+		_, _, _ = c.receiveDecoded(msg)
 	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
@@ -383,7 +383,7 @@ func Test_receiveDecoded_receiveDHKeyMessageAndFailsWillSignalSetupError(t *test
 	msg := fixtureDHKeyMsg(otrV3{})
 
 	c.expectMessageEvent(t, func() {
-		c.receiveDecoded(msg)
+		_, _, _ = c.receiveDecoded(msg)
 	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
@@ -393,7 +393,7 @@ func Test_receiveDecoded_receiveRevealSigMessageAndFailsWillSignalSetupError(t *
 	msg := fixtureRevealSigMsg(otrV2{})
 
 	c.expectMessageEvent(t, func() {
-		c.receiveDecoded(msg)
+		_, _, _ = c.receiveDecoded(msg)
 	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
@@ -403,7 +403,7 @@ func Test_receiveDecoded_receiveSigMessageAndSetMessageStateToEncrypted(t *testi
 	msg := fixtureSigMsg(otrV2{})
 
 	c.expectMessageEvent(t, func() {
-		c.receiveDecoded(msg)
+		_, _, _ = c.receiveDecoded(msg)
 	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 
@@ -451,7 +451,7 @@ func Test_receiveDecoded_receiveSigMessageAndStoresTheirKeyIDAndTheirCurrentDHPu
 
 func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
@@ -465,7 +465,7 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfprocessDHKeyR
 
 func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMessageReturnsError(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixedRand([]string{"ABCD"}))
 	c.initAKE()
@@ -480,7 +480,7 @@ func Test_authStateAwaitingDHKey_receiveDHKeyMessage_returnsErrorIfrevealSigMess
 
 func Test_authStateAwaitingSig_receiveDHKeyMessage_returnsErrorIfprocessDHKeyReturnsError(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
@@ -501,7 +501,7 @@ func Test_authStateAwaitingSig_receiveSigMessage_returnsErrorIfProcessSigFails(t
 
 func Test_authStateAwaitingRevealSig_receiveDHCommitMessage_returnsErrorIfProcessDHCommitOrGenerateCommitInstanceTagsFailsFails(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
@@ -513,7 +513,7 @@ func Test_authStateAwaitingRevealSig_receiveDHCommitMessage_returnsErrorIfProces
 
 func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfgenerateCommitMsgInstanceTagsFails(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV3{}, fixtureRand())
 	c.initAKE()
@@ -525,7 +525,7 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfgenerateCommitMsgIn
 
 func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfdhKeyMessageFails(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV2{}, fixedRand([]string{"ABCD"}))
 	c.initAKE()
@@ -537,7 +537,7 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfdhKeyMessageFails(t
 
 func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfProcessDHCommitFails(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV2{}, fixtureRand())
 	c.initAKE()
@@ -549,7 +549,7 @@ func Test_authStateNone_receiveDHCommitMessage_returnsErrorIfProcessDHCommitFail
 
 func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfMsgDoesntHaveHeader(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV2{}, fixtureRand())
 	c.initAKE()
@@ -561,7 +561,7 @@ func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfMsgDoesntHaveHead
 
 func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractFirstPart(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV2{}, fixtureRand())
 	c.initAKE()
@@ -573,7 +573,7 @@ func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractFirstP
 
 func Test_authStateAwaitingDHKey_receiveDHCommitMessage_failsIfCantExtractSecondPart(t *testing.T) {
 	ourDHCommitAKE := fixtureConversation()
-	ourDHCommitAKE.dhCommitMessage()
+	_, _ = ourDHCommitAKE.dhCommitMessage()
 
 	c := newConversation(otrV2{}, fixtureRand())
 	c.initAKE()
@@ -605,7 +605,7 @@ func Test_akeHasFinished_willSignalThatWeAreTalkingToOurselvesIfWeAre(t *testing
 	c.theirKey = bobPrivateKey.PublicKey()
 
 	c.expectMessageEvent(t, func() {
-		c.akeHasFinished()
+		_ = c.akeHasFinished()
 	}, MessageEventMessageReflected, nil, nil)
 }
 
@@ -616,7 +616,7 @@ func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeHave(t *testing.T) {
 	c.msgState = plainText
 
 	c.expectSecurityEvent(t, func() {
-		c.akeHasFinished()
+		_ = c.akeHasFinished()
 	}, GoneSecure)
 }
 
@@ -627,7 +627,7 @@ func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeWereFinished(t *testi
 	c.msgState = plainText
 
 	c.expectSecurityEvent(t, func() {
-		c.akeHasFinished()
+		_ = c.akeHasFinished()
 	}, GoneSecure)
 }
 
@@ -638,7 +638,7 @@ func Test_akeHasFinished_willSignalThatWeHaveGoneSecureIfWeHaveRefreshed(t *test
 	c.msgState = encrypted
 
 	c.expectSecurityEvent(t, func() {
-		c.akeHasFinished()
+		_ = c.akeHasFinished()
 	}, StillSecure)
 }
 
@@ -671,7 +671,7 @@ func Test_akeHasFinished_wipesAKEKeys(t *testing.T) {
 		state:            authStateNone{},
 	}
 
-	c.akeHasFinished()
+	_ = c.akeHasFinished()
 
 	assertDeepEquals(t, *c.ake, ake{state: c.ake.state})
 }

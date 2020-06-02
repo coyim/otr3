@@ -167,7 +167,7 @@ func Test_maybeRetransmit_updatesLastSentWhenSendingAMessage(t *testing.T) {
 	setSent := time.Now().Add(-30 * time.Second)
 	c.heartbeat.lastSent = setSent
 
-	c.maybeRetransmit()
+	_, _ = c.maybeRetransmit()
 
 	assertNotEquals(t, c.heartbeat.lastSent, setSent)
 }
@@ -209,7 +209,7 @@ func Test_maybeRetransmit_signalsMessageEventWhenResendingMessage(t *testing.T) 
 	c.resend.mayRetransmit = retransmitWithPrefix
 
 	c.expectMessageEvent(t, func() {
-		c.maybeRetransmit()
+		_, _ = c.maybeRetransmit()
 	}, MessageEventMessageResent, nil, nil)
 }
 
@@ -231,6 +231,6 @@ func Test_maybeRetransmit_signalMessageEventWhenSendingMessageExact(t *testing.T
 	c.resend.mayRetransmit = retransmitExact
 
 	c.expectMessageEvent(t, func() {
-		c.maybeRetransmit()
+		_, _ = c.maybeRetransmit()
 	}, MessageEventMessageSent, nil, nil)
 }

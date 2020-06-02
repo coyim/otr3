@@ -120,11 +120,6 @@ type keyManagementContext struct {
 	oldMACKeys     []macKey
 }
 
-func (k *keyManagementContext) incrementOurCounter(ourKeyID, theirKeyID uint32) {
-	counter := k.counterHistory.findCounterFor(ourKeyID, theirKeyID)
-	counter.ourCounter++
-}
-
 func (k *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {
 	k.theirCurrentDHPubKey = setBigInt(k.theirCurrentDHPubKey, key)
 }
@@ -311,7 +306,7 @@ func calculateAKEKeys(s *big.Int, v otrVersion) (ssid [8]byte, revealSigKeys, si
 // h1() and h2() are the same
 func h(b byte, secbytes []byte, h hash.Hash) []byte {
 	h.Reset()
-	h.Write([]byte{b})
-	h.Write(secbytes[:])
+	_, _ = h.Write([]byte{b})
+	_, _ = h.Write(secbytes[:])
 	return h.Sum(nil)
 }

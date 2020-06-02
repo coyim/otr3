@@ -95,7 +95,7 @@ func Test_receiveQueryMessageV2V3_sendDHCommitv3WhenV2AndV3AreAllowed(t *testing
 
 func Test_receiveQueryMessage_StoresRAndXAndGx(t *testing.T) {
 	fixture := fixtureConversation()
-	fixture.dhCommitMessage()
+	_, _ = fixture.dhCommitMessage()
 
 	cxt := &Conversation{
 		version: otrV3{},
@@ -118,7 +118,7 @@ func Test_receiveQueryMessage_signalsMessageEventOnFailure(t *testing.T) {
 	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 	c.Policies.add(allowV3)
 	c.expectMessageEvent(t, func() {
-		c.receiveQueryMessage(queryMsg)
+		_, _ = c.receiveQueryMessage(queryMsg)
 	}, MessageEventSetupError, nil, errShortRandomRead)
 }
 

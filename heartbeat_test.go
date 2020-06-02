@@ -31,7 +31,7 @@ func Test_potentialHeartbeat_doesntUpdateLastSentIfLastSentWasRecently(t *testin
 	tt := time.Now().Add(-10 * time.Second)
 	c.heartbeat.lastSent = tt
 	plain := []byte("Foo plain")
-	c.potentialHeartbeat(plain)
+	_, _ = c.potentialHeartbeat(plain)
 	assertEquals(t, c.heartbeat.lastSent, tt)
 }
 
@@ -41,7 +41,7 @@ func Test_potentialHeartbeat_updatesLastSentIfWeNeedToSendAHeartbeat(t *testing.
 	tt := time.Now().Add(-61 * time.Second)
 	c.heartbeat.lastSent = tt
 	plain := []byte("Foo plain")
-	c.potentialHeartbeat(plain)
+	_, _ = c.potentialHeartbeat(plain)
 	assertEquals(t, c.heartbeat.lastSent.After(tt), true)
 }
 
@@ -53,7 +53,7 @@ func Test_potentialHeartbeat_logsTheHeartbeatWhenWeSendIt(t *testing.T) {
 	plain := []byte("Foo plain")
 
 	c.expectMessageEvent(t, func() {
-		c.potentialHeartbeat(plain)
+		_, _ = c.potentialHeartbeat(plain)
 	}, MessageEventLogHeartbeatSent, nil, nil)
 }
 

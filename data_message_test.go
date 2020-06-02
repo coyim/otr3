@@ -73,7 +73,7 @@ func Test_genDataMsg_willResetMayRetransmit(t *testing.T) {
 
 	c.resend.mayRetransmit = retransmitExact
 
-	c.genDataMsg(nil)
+	_, _, _ = c.genDataMsg(nil)
 
 	assertEquals(t, c.resend.mayRetransmit, noRetransmit)
 }
@@ -85,7 +85,7 @@ func Test_genDataMsg_willNotResetMayRetransmitIfItEncountersAnError(t *testing.T
 	c.ourInstanceTag = 0
 	c.resend.mayRetransmit = retransmitExact
 
-	c.genDataMsg(nil)
+	_, _, _ = c.genDataMsg(nil)
 
 	assertEquals(t, c.resend.mayRetransmit, retransmitExact)
 }
@@ -100,7 +100,7 @@ func Test_genDataMsg_setsLastMessageWhenNewMessageIsPlaintext(t *testing.T) {
 	counter := c.keys.counterHistory.findCounterFor(c.keys.ourKeyID-1, c.keys.theirKeyID)
 	counter.ourCounter = 0x1011121314
 
-	c.genDataMsg(msg)
+	_, _, _ = c.genDataMsg(msg)
 
 	assertDeepEquals(t, c.resend.pending(),
 		[]messageToResend{
@@ -260,7 +260,7 @@ func Test_processDataMessage_signalsThatMessageIsUnreadableForAGPGConflictError(
 	c.msgState = encrypted
 
 	c.expectMessageEvent(t, func() {
-		c.receiveDecoded(msg)
+		_, _, _ = c.receiveDecoded(msg)
 	}, MessageEventReceivedMessageUnreadable, nil, nil)
 }
 
@@ -283,7 +283,7 @@ func Test_Receive_returnsACustomErrorMessageIfOneIsAvailable(t *testing.T) {
 			}
 			return []byte("white hole happened")
 		}}
-	c.receiveDecoded(msg)
+	_, _, _ = c.receiveDecoded(msg)
 	ts, _ := c.withInjections(nil, nil)
 	assertDeepEquals(t, string(ts[0]), "?OTR Error: nova happened")
 }
@@ -296,7 +296,7 @@ func Test_processDataMessage_signalsThatMessageIsMalformedIfSomeOtherErrorHappen
 	c.msgState = encrypted
 	c.keys.ourKeyID = 1
 	c.expectMessageEvent(t, func() {
-		c.receiveDecoded(msg)
+		_, _, _ = c.receiveDecoded(msg)
 	}, MessageEventReceivedMessageMalformed, nil, nil)
 }
 
@@ -316,7 +316,7 @@ func Test_processDataMessage_callsErrorMessageHandlerAndReturnsTheResultAsAnOTRE
 		}}
 
 	c.keys.ourKeyID = 1
-	c.receiveDecoded(msg)
+	_, _, _ = c.receiveDecoded(msg)
 	ts, _ := c.withInjections(nil, nil)
 	assertDeepEquals(t, string(ts[0]), "?OTR Error: sunflower happened")
 }

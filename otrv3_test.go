@@ -25,7 +25,7 @@ func Test_verifyInstanceTags_signalsMalformedMessageWhenOurInstanceTagIsLesserTh
 	c := &Conversation{version: v}
 
 	c.expectMessageEvent(t, func() {
-		v.verifyInstanceTags(c, 0x100, 0x99)
+		_ = v.verifyInstanceTags(c, 0x100, 0x99)
 	}, MessageEventReceivedMessageMalformed, nil, nil)
 }
 
@@ -47,7 +47,7 @@ func Test_verifyInstanceTags_signalsAMessageEventWhenOurInstanceTagDoesNotMatch(
 	c.ourInstanceTag = 0x122
 
 	c.expectMessageEvent(t, func() {
-		v.verifyInstanceTags(c, c.theirInstanceTag, 0x121)
+		_ = v.verifyInstanceTags(c, c.theirInstanceTag, 0x121)
 	}, MessageEventReceivedMessageForOtherInstance, nil, nil)
 }
 
@@ -83,7 +83,7 @@ func Test_verifyInstanceTags_signalsMalformedMessageWhenTheirInstanceTagIsTooLow
 	c := &Conversation{version: v}
 
 	c.expectMessageEvent(t, func() {
-		v.verifyInstanceTags(c, 0, 0x100)
+		_ = v.verifyInstanceTags(c, 0, 0x100)
 	}, MessageEventReceivedMessageMalformed, nil, nil)
 }
 
@@ -102,7 +102,7 @@ func Test_verifyInstanceTags_signalsAMessageEventWhenTheirInstanceTagDoesNotMatc
 	c.theirInstanceTag = 0x122
 
 	c.expectMessageEvent(t, func() {
-		v.verifyInstanceTags(c, 0x121, c.ourInstanceTag)
+		_ = v.verifyInstanceTags(c, 0x121, c.ourInstanceTag)
 	}, MessageEventReceivedMessageForOtherInstance, nil, nil)
 }
 
@@ -111,7 +111,7 @@ func Test_otrv3_parseMessageHeader_signalsMalformedMessageWhenWeCantParseInstanc
 	c := &Conversation{version: v}
 
 	c.expectMessageEvent(t, func() {
-		v.parseMessageHeader(c, []byte{0x00, 0x03, 0x02, 0x00, 0x00, 0x01, 0x22, 0x00, 0x00, 0x01})
+		_, _, _ = v.parseMessageHeader(c, []byte{0x00, 0x03, 0x02, 0x00, 0x00, 0x01, 0x22, 0x00, 0x00, 0x01})
 	}, MessageEventReceivedMessageMalformed, nil, nil)
 }
 

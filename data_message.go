@@ -132,7 +132,7 @@ func (c *Conversation) processDataMessageWithRawErrors(header, msg []byte) (plai
 
 	p := plainDataMsg{}
 	//this can't return an error since receivingAESKey is a AES-128 key
-	p.decrypt(sessionKeys.receivingAESKey[:], dataMessage.topHalfCtr, dataMessage.encryptedMsg)
+	_ = p.decrypt(sessionKeys.receivingAESKey[:], dataMessage.topHalfCtr, dataMessage.encryptedMsg)
 
 	plain = makeCopy(p.message)
 	if len(plain) == 0 {

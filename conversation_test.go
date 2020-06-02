@@ -85,7 +85,7 @@ func Test_receiveDecoded_signalsAMessageEventForADataMessageWhenNoEncryptionIsAc
 	c.SetOurKeys([]PrivateKey{bobPrivateKey})
 
 	c.expectMessageEvent(t, func() {
-		c.receiveDecoded(m)
+		_, _, _ = c.receiveDecoded(m)
 	}, MessageEventReceivedMessageNotInPrivate, nil, nil)
 }
 
@@ -333,7 +333,7 @@ func Test_End_whenStateIsEncrypted_willSignalSecurityEvent(t *testing.T) {
 	bob.msgState = encrypted
 
 	bob.expectSecurityEvent(t, func() {
-		bob.End()
+		_, _ = bob.End()
 	}, GoneInsecure)
 }
 
@@ -342,7 +342,7 @@ func Test_End_whenStateIsPlaintext_willNotSignalSecurityEvent(t *testing.T) {
 	bob.msgState = plainText
 
 	bob.doesntExpectSecurityEvent(t, func() {
-		bob.End()
+		_, _ = bob.End()
 	})
 }
 
@@ -351,16 +351,16 @@ func Test_End_whenStateIsFinished_willNotSignalSecurityEvent(t *testing.T) {
 	bob.msgState = finished
 
 	bob.doesntExpectSecurityEvent(t, func() {
-		bob.End()
+		_, _ = bob.End()
 	})
 }
 
 func Test_End_wipesKeys(t *testing.T) {
 	bob := bobContextAfterAKE()
 	bob.msgState = encrypted
-	bob.End()
+	_, _ = bob.End()
 	stub := bobContextAfterAKE()
-	stub.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
+	_, _, _ = stub.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
 
 	assertDeepEquals(t, dhKeyPair{}, bob.keys.ourCurrentDHKeys)
 	assertDeepEquals(t, dhKeyPair{}, bob.keys.ourPreviousDHKeys)
