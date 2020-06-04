@@ -19,7 +19,7 @@ func decode(x []base, src []byte) {
 	u := len(src)
 	v := 1
 	acc := uint(0)
-	accLen := 0
+	accLen := uint(0)
 	for u > 0 {
 		u--
 		b := src[u]

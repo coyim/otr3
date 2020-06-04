@@ -45,7 +45,7 @@ func modpowOpt(x []base, e []byte, m []base, m0i base, tmp []base) base {
 	t1 := tmp
 	t2 := tmp[mwlen:]
 
-	winLen := 5
+	winLen := uint(5)
 	for ; winLen > 1; winLen-- {
 		if ((one<<winLen)+1)*mwlen <= twlen {
 			break
@@ -70,7 +70,7 @@ func modpowOpt(x []base, e []byte, m []base, m0i base, tmp []base) base {
 	muladdSmall(x, zero, m)
 
 	acc := base(0)
-	accLen := 0
+	accLen := uint(0)
 	elen := len(e)
 	ep := 0
 
@@ -90,7 +90,7 @@ func modpowOpt(x []base, e []byte, m []base, m0i base, tmp []base) base {
 		bits := (acc >> (accLen - k)) & ((one << k) - one)
 		accLen -= k
 
-		for i := 0; i < k; i++ {
+		for i := uint(0); i < k; i++ {
 			montmul(t1, x, x, m, m0i)
 			copy(x, t1[:mlen])
 		}

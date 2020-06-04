@@ -23,7 +23,7 @@ func encode(dst []byte, x []base) {
 	buf := l
 	k := one
 	acc := zero
-	accLen := 0
+	accLen := uint(0)
 
 	for l != 0 {
 		w := zero

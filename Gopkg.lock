@@ -11,11 +11,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fb85a4f79d7e6bbe69d8514da5f4e5b83653e598149c6263ee2bc19568a7ea77"
+  digest = "1:af89928ac1de98c3a70bee986688ad9375cbf41b79fe85fada15aa8acaa645c0"
   name = "github.com/coyim/constbn"
   packages = ["."]
   pruneopts = "UT"
-  revision = "cf80c486b2136e171568543ad98112f201acd280"
+  revision = "39ec63d16c0a7cd225706e976578f622e28d1277"
 
 [[projects]]
   branch = "master"
@@ -35,6 +35,7 @@
   input-imports = [
     "github.com/awnumar/memcall",
     "github.com/coyim/constbn",
+    "golang.org/x/sys/windows",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
