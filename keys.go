@@ -147,7 +147,7 @@ func ImportKeysFromFile(fname string) ([]*Account, error) {
 
 // ExportKeysToFile will create the named file (or truncate it) and write all the accounts to that file in libotr format.
 func ExportKeysToFile(acs []*Account, fname string) error {
-	f, err := os.Create(fname)
+	f, err := os.OpenFile(fname, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
