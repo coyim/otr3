@@ -14,6 +14,8 @@ func (p *dhKeyPair) wipe() {
 	}
 
 	wipeBigInt(p.pub)
+
+	tryUnlock(p.priv)
 	wipeSecretKeyValue(p.priv)
 	p.pub = nil
 	p.priv = nil
@@ -36,6 +38,7 @@ func (a *ake) wipe(wipeKeys bool) {
 		return
 	}
 
+	tryUnlock(a.secretExponent)
 	wipeSecretKeyValue(a.secretExponent)
 	a.secretExponent = nil
 
@@ -48,7 +51,9 @@ func (a *ake) wipe(wipeKeys bool) {
 	wipeBytes(a.r[:])
 
 	a.wipeGX()
+	a.revealKey.unlock()
 	a.revealKey.wipe()
+	a.sigKey.unlock()
 	a.sigKey.wipe()
 
 	if wipeKeys {

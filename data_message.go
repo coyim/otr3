@@ -59,6 +59,8 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 
 	x := dataMessageExtra{keys.extraKey[:]}
 
+	keys.unlock()
+
 	return dataMessage, x, nil
 }
 

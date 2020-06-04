@@ -3,15 +3,38 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:23b9850a220387962bae181bf0eaec5ae228cf3415ff365daa57de5e4820b33e"
+  name = "github.com/awnumar/memcall"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "73db50fd9f807b4e2811f9f0b33c92e9da6b2489"
+
+[[projects]]
+  branch = "master"
   digest = "1:fb85a4f79d7e6bbe69d8514da5f4e5b83653e598149c6263ee2bc19568a7ea77"
   name = "github.com/coyim/constbn"
   packages = ["."]
   pruneopts = "UT"
   revision = "cf80c486b2136e171568543ad98112f201acd280"
 
+[[projects]]
+  branch = "master"
+  digest = "1:30986a354a6c49a3706fa3483998a10328724f105b32b2911ac3554fc649579b"
+  name = "golang.org/x/sys"
+  packages = [
+    "internal/unsafeheader",
+    "unix",
+    "windows",
+  ]
+  pruneopts = "UT"
+  revision = "6fdc65e7d9800cc59998e8ac0d9406a20ff5f399"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = ["github.com/coyim/constbn"]
+  input-imports = [
+    "github.com/awnumar/memcall",
+    "github.com/coyim/constbn",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

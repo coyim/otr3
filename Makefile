@@ -10,7 +10,7 @@ else ifeq ($(GO_VERSION), go1.6)
 else ifeq ($(GO_VERSION), go1.7)
 else ifeq ($(GO_VERSION), go1.8)
 else
-	golint ./...
+	golint . ./compat ./sexp
 endif
 
 test:

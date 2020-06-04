@@ -32,3 +32,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/coyim/constbn"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/awnumar/memcall"

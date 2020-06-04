@@ -155,6 +155,8 @@ func (k *keyManagementContext) generateNewDHKeyPair(randomness io.Reader) error 
 		return err
 	}
 
+	tryLock(newPrivKey)
+
 	k.ourPreviousDHKeys.wipe()
 	k.ourPreviousDHKeys = k.ourCurrentDHKeys
 
@@ -247,6 +249,8 @@ func calculateDHSessionKeys(ourPrivKey secretKeyValue, ourPubKey, theirPubKey *b
 
 	ret.extraKey = h(0xFF, secbytes, v.hash2Instance())
 
+	ret.lock()
+
 	return ret
 }
 
@@ -301,6 +305,9 @@ func calculateAKEKeys(s *big.Int, v otrVersion) (ssid [8]byte, revealSigKeys, si
 	revealSigKeys.m2 = h(0x03, secbytes, sha)
 	signatureKeys.m1 = h(0x04, secbytes, sha)
 	signatureKeys.m2 = h(0x05, secbytes, sha)
+
+	revealSigKeys.lock()
+	signatureKeys.lock()
 
 	return
 }

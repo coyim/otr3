@@ -24,6 +24,7 @@ type secretKeyValue []byte
 func createSecretKeyValue(v secretKeyValue) secretKeyValue {
 	res := make(secretKeyValue, len(v))
 	copy(res, v)
+	tryLock(res)
 	return res
 }
 
@@ -65,6 +66,7 @@ func GenerateMissingKeys(existing [][]byte) ([]PrivateKey, error) {
 		if err := priv.Generate(rand.Reader); err != nil {
 			return nil, err
 		}
+		priv.lock()
 		result = append(result, &priv)
 	}
 
@@ -237,6 +239,7 @@ func readPrivateKey(r *bufio.Reader) (PrivateKey, bool) {
 	if ok2 {
 		k.PrivateKey = *res
 		k.DSAPublicKey.PublicKey = k.PrivateKey.PublicKey
+		k.lock()
 	}
 	ok3 := sexp.ReadListEnd(r)
 	return k, ok1 && ok2 && ok3
@@ -352,6 +355,8 @@ func (priv *DSAPrivateKey) Parse(in []byte) (index []byte, ok bool) {
 
 	priv.PrivateKey.PublicKey = priv.DSAPublicKey.PublicKey
 	index, priv.X, ok = ExtractMPI(in)
+
+	priv.lock()
 
 	return index, ok
 }
@@ -488,6 +493,9 @@ func (priv *DSAPrivateKey) Import(in []byte) bool {
 
 	a := modExpCT(new(constbn.Int).SetBigInt(priv.PrivateKey.G),
 		secretKeyValue(priv.PrivateKey.X.Bytes()), new(constbn.Int).SetBigInt(priv.PrivateKey.P))
+
+	priv.lock()
+
 	return a.GetBigInt().Cmp(priv.PrivateKey.Y) == 0
 }
 
@@ -500,6 +508,7 @@ func (priv *DSAPrivateKey) Generate(rand io.Reader) error {
 		return err
 	}
 	priv.DSAPublicKey.PublicKey = priv.PrivateKey.PublicKey
+	priv.lock()
 	return nil
 }
 
