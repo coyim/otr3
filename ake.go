@@ -78,13 +78,10 @@ func appendAll(one, two *big.Int, publicKey PublicKey, keyID uint32) []byte {
 	return AppendWord(append(AppendMPI(AppendMPI(nil, one), two), publicKey.serialize()...), keyID)
 }
 
-func fixedSize(s int, v []byte) []byte {
-	if len(v) < s {
-		vv := make([]byte, s)
-		copy(vv, v)
-		return vv
-	}
-	return v
+func fixedSizeCopy(s int, v []byte) []byte {
+	vv := make([]byte, s)
+	copy(vv, v)
+	return vv
 }
 
 func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
@@ -100,8 +97,18 @@ func (c *Conversation) calcXb(key *akeKeys, mb []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	// We have to copy the key here, and expand it to the requisite length -
+	// not all c values will be long enough. We immediately clean the copy
+	// afterwards
+	ccopy := fixedSizeCopy(c.version.keyLength(), key.c)
+	tryLock(ccopy)
+	defer func() {
+		tryUnlock(ccopy)
+		wipeBytes(ccopy)
+	}()
+
 	// this error can't happen, since key.c is fixed to the correct size
-	xb, _ = encrypt(fixedSize(c.version.keyLength(), key.c), append(xb, sigb...))
+	xb, _ = encrypt(ccopy, append(xb, sigb...))
 
 	return xb, nil
 }
@@ -126,6 +133,8 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 	}
 
 	// this can't return an error, since ake.r is of a fixed size that is always correct
+	// we send in a slice here, since the original r is a fixed array. the slicing process
+	// does NOT create a copy of the data
 	c.ake.encryptedGx, _ = encrypt(c.ake.r[:], AppendMPI(nil, c.ake.ourPublicValue))
 
 	return c.serializeDHCommit(c.ake.ourPublicValue), nil
@@ -344,7 +353,18 @@ func (c *Conversation) processEncryptedSig(encryptedSig []byte, theirMAC []byte,
 	}
 
 	decryptedSig := encryptedSig
-	if err := decrypt(fixedSize(c.version.keyLength(), keys.c), decryptedSig, encryptedSig); err != nil {
+
+	// We have to copy the key here, and expand it to the requisite length -
+	// not all c values will be long enough. We immediately clean the copy
+	// afterwards
+	ccopy := fixedSizeCopy(c.version.keyLength(), keys.c)
+	tryLock(ccopy)
+	defer func() {
+		tryUnlock(ccopy)
+		wipeBytes(ccopy)
+	}()
+
+	if err := decrypt(ccopy, decryptedSig, encryptedSig); err != nil {
 		return err
 	}
 

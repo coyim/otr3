@@ -63,8 +63,8 @@ func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing
 
 func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedGx(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
-	c.ake.encryptedGx = []byte{0x02}                                 //some encryptedGx
-	c.ake.xhashedGx = fixedSize(otrV3{}.hash2Length(), []byte{0x05}) //some hashedGx
+	c.ake.encryptedGx = []byte{0x02}                                     //some encryptedGx
+	c.ake.xhashedGx = fixedSizeCopy(otrV3{}.hash2Length(), []byte{0x05}) //some hashedGx
 
 	newDHCommitMsg := fixtureDHCommitMsgBody()
 	newMsg, newEncryptedGx, _ := ExtractData(newDHCommitMsg)
@@ -648,15 +648,15 @@ func Test_akeHasFinished_wipesAKEKeys(t *testing.T) {
 	c.theirKey = bobPrivateKey.PublicKey()
 
 	revKey := akeKeys{
-		c:  fixedSize(16, []byte{1, 2, 3}),
-		m1: fixedSize(32, []byte{4, 5, 6}),
-		m2: fixedSize(32, []byte{7, 8, 9}),
+		c:  fixedSizeCopy(16, []byte{1, 2, 3}),
+		m1: fixedSizeCopy(32, []byte{4, 5, 6}),
+		m2: fixedSizeCopy(32, []byte{7, 8, 9}),
 	}
 
 	sigKey := akeKeys{
-		c:  fixedSize(16, []byte{3, 2, 1}),
-		m1: fixedSize(32, []byte{6, 5, 4}),
-		m2: fixedSize(32, []byte{9, 8, 7}),
+		c:  fixedSizeCopy(16, []byte{3, 2, 1}),
+		m1: fixedSizeCopy(32, []byte{6, 5, 4}),
+		m2: fixedSizeCopy(32, []byte{9, 8, 7}),
 	}
 
 	c.ake = &ake{
@@ -667,7 +667,7 @@ func Test_akeHasFinished_wipesAKEKeys(t *testing.T) {
 		sigKey:           sigKey,
 		r:                [16]byte{1, 2, 3},
 		encryptedGx:      []byte{1, 2, 3},
-		xhashedGx:        fixedSize(otrV3{}.hash2Length(), []byte{1, 2, 3}),
+		xhashedGx:        fixedSizeCopy(otrV3{}.hash2Length(), []byte{1, 2, 3}),
 		state:            authStateNone{},
 	}
 

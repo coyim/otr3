@@ -34,7 +34,7 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 		tlvs:    tlvs,
 	}
 
-	encrypted := plain.encrypt(keys.sendingAESKey[:], topHalfCtr)
+	encrypted := plain.encrypt(keys.sendingAESKey, topHalfCtr)
 
 	header, err := c.messageHeader(msgTypeData)
 	if err != nil {
@@ -57,7 +57,7 @@ func (c *Conversation) genDataMsgWithFlag(message []byte, flag byte, tlvs ...tlv
 	c.updateMayRetransmitTo(noRetransmit)
 	c.lastMessage(message)
 
-	x := dataMessageExtra{keys.extraKey[:]}
+	x := dataMessageExtra{keys.extraKey}
 
 	keys.unlock()
 

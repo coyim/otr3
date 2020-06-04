@@ -142,7 +142,7 @@ func (c *dataMsg) sign(key []byte, header []byte, v otrVersion) {
 }
 
 func (c dataMsg) checkSign(key []byte, header []byte, v otrVersion) error {
-	mac := hmac.New(v.hashInstance, key[:])
+	mac := hmac.New(v.hashInstance, key)
 	_, _ = mac.Write(header)
 	_, _ = mac.Write(c.serializeUnsignedCache)
 	authenticatorCalculated := mac.Sum(nil)
