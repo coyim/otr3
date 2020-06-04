@@ -1,7 +1,5 @@
 package constbn
 
-import "math/bits"
-
 type base uint32
 
 // constant time primitive implementations. the ctl argument has to be base(0) or base(1)
@@ -88,11 +86,6 @@ func bitLen(x base) base {
 
 func mul31(x, y base) uint64 {
 	return uint64(x) * uint64(y)
-}
-
-func mul31Lo(x, y base) base {
-	_, lo := bits.Mul32(uint32(x), uint32(y))
-	return base(lo) & mask31
 }
 
 func zeroes(len base) []base {

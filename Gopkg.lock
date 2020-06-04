@@ -11,11 +11,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:af89928ac1de98c3a70bee986688ad9375cbf41b79fe85fada15aa8acaa645c0"
+  digest = "1:3af1c0ec56b32cff2ef927880376b490174df5e2055411fd631249cce334e191"
   name = "github.com/coyim/constbn"
   packages = ["."]
   pruneopts = "UT"
-  revision = "39ec63d16c0a7cd225706e976578f622e28d1277"
+  revision = "bb6a806b950f1f1d198984686471f7a025f3afc1"
 
 [[projects]]
   branch = "master"
