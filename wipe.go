@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"reflect"
+	"runtime"
 	"unsafe"
 )
 
@@ -176,10 +177,14 @@ func zeroesUint32(n int) []uint32 {
 
 func wipeBytes(b []byte) {
 	copy(b, zeroes(len(b)))
+
+	runtime.KeepAlive(b)
 }
 
 func wipeUint32(b []uint32) {
 	copy(b, zeroesUint32(len(b)))
+
+	runtime.KeepAlive(b)
 }
 
 func wipeBigInt(k *big.Int) {
@@ -188,6 +193,8 @@ func wipeBigInt(k *big.Int) {
 	}
 
 	k.SetBytes(zeroes(len(k.Bytes())))
+
+	runtime.KeepAlive(k)
 }
 
 func wipeSecretKeyValue(k secretKeyValue) {
@@ -196,6 +203,8 @@ func wipeSecretKeyValue(k secretKeyValue) {
 	}
 
 	copy(k, zeroes(len(k)))
+
+	runtime.KeepAlive(k)
 }
 
 func setBigInt(dst *big.Int, src *big.Int) *big.Int {
