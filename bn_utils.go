@@ -2,8 +2,12 @@ package otr3
 
 import "math/big"
 
-func modExp(g, x *big.Int) *big.Int {
-	return new(big.Int).Exp(g, x, p)
+func modExp(g, x, m *big.Int) *big.Int {
+	return new(big.Int).Exp(g, x, m)
+}
+
+func modExpP(g, x *big.Int) *big.Int {
+	return modExp(g, x, p)
 }
 
 func modInverse(g, x *big.Int) *big.Int {

@@ -53,11 +53,11 @@ func (c *Conversation) calcAKEKeys(s *big.Int) {
 
 func (c *Conversation) setSecretExponent(val *big.Int) {
 	c.ake.secretExponent = new(big.Int).Set(val)
-	c.ake.ourPublicValue = modExp(g1, val)
+	c.ake.ourPublicValue = modExpP(g1, val)
 }
 
 func (c *Conversation) calcDHSharedSecret() *big.Int {
-	return modExp(c.ake.theirPublicValue, c.ake.secretExponent)
+	return modExpP(c.ake.theirPublicValue, c.ake.secretExponent)
 }
 
 func (c *Conversation) generateEncryptedSignature(key *akeKeys) ([]byte, error) {

@@ -158,7 +158,7 @@ func (k *keyManagementContext) generateNewDHKeyPair(randomness io.Reader) error 
 
 	k.ourCurrentDHKeys = dhKeyPair{
 		priv: newPrivKey,
-		pub:  modExp(g1, newPrivKey),
+		pub:  modExpP(g1, newPrivKey),
 	}
 	k.ourKeyID++
 	return nil
@@ -232,7 +232,7 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int, v otrVe
 		sendbyte, recvbyte = 0x02, 0x01
 	}
 
-	s := new(big.Int).Exp(theirPubKey, ourPrivKey, p)
+	s := modExp(theirPubKey, ourPrivKey, p)
 	secbytes := AppendMPI(nil, s)
 
 	sha := v.hashInstance()

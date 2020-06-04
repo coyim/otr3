@@ -476,7 +476,7 @@ func (priv *DSAPrivateKey) Import(in []byte) bool {
 	priv.PrivateKey.X = mpis[4]
 	priv.DSAPublicKey.PublicKey = priv.PrivateKey.PublicKey
 
-	a := new(big.Int).Exp(priv.PrivateKey.G, priv.PrivateKey.X, priv.PrivateKey.P)
+	a := modExp(priv.PrivateKey.G, priv.PrivateKey.X, priv.PrivateKey.P)
 	return a.Cmp(priv.PrivateKey.Y) == 0
 }
 
