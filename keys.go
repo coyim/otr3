@@ -14,6 +14,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/coyim/constbn"
 	"github.com/coyim/otr3/sexp"
 )
 
@@ -485,8 +486,9 @@ func (priv *DSAPrivateKey) Import(in []byte) bool {
 	priv.PrivateKey.X = mpis[4]
 	priv.DSAPublicKey.PublicKey = priv.PrivateKey.PublicKey
 
-	a := modExp(priv.PrivateKey.G, priv.PrivateKey.X, priv.PrivateKey.P)
-	return a.Cmp(priv.PrivateKey.Y) == 0
+	a := modExpCT(new(constbn.Int).SetBigInt(priv.PrivateKey.G),
+		secretKeyValue(priv.PrivateKey.X.Bytes()), new(constbn.Int).SetBigInt(priv.PrivateKey.P))
+	return a.GetBigInt().Cmp(priv.PrivateKey.Y) == 0
 }
 
 // Generate will generate a new DSA Private Key with the randomness provided. The parameter size used is 1024 and 160.

@@ -36,10 +36,6 @@ func randSecret(r io.Reader, b []byte) (secretKeyValue, error) {
 	return secretKeyValue(b), nil
 }
 
-func randSizedMPI(r io.Reader, size int) (*big.Int, error) {
-	return randMPI(r, make([]byte, size))
-}
-
 func randSizedSecret(r io.Reader, size int) (secretKeyValue, error) {
 	return randSecret(r, make([]byte, size))
 }
