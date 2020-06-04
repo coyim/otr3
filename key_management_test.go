@@ -11,7 +11,7 @@ func Test_calculateDHSessionKeys(t *testing.T) {
 		theirKeyID: 2,
 		ourCurrentDHKeys: dhKeyPair{
 			pub:  fixedGX(),
-			priv: fixedX(),
+			priv: secretKeyValue(fixedX().Bytes()),
 		},
 		theirPreviousDHPubKey: fixedGY(),
 	}
@@ -41,7 +41,7 @@ func Test_calculateDHSessionKeys_storesGeneratedMACKeys(t *testing.T) {
 		theirKeyID:           theirKeyID,
 		theirCurrentDHPubKey: big.NewInt(1),
 		ourCurrentDHKeys: dhKeyPair{
-			priv: big.NewInt(1),
+			priv: secretKeyValue(big.NewInt(1).Bytes()),
 			pub:  big.NewInt(1),
 		},
 	}
@@ -164,16 +164,16 @@ func Test_rotateOurKeys_rotateOurCurrentDHKeys(t *testing.T) {
 		ourKeyID: recipientKeyID,
 		ourCurrentDHKeys: dhKeyPair{
 			pub:  fixedGX(),
-			priv: fixedX(),
+			priv: secretKeyValue(fixedX().Bytes()),
 		},
 	}
 
 	_ = c.rotateOurKeys(recipientKeyID, fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
 
 	assertEquals(t, c.ourKeyID, recipientKeyID+1)
-	assertDeepEquals(t, c.ourPreviousDHKeys.priv, fixedX())
+	assertDeepEquals(t, c.ourPreviousDHKeys.priv, secretKeyValue(fixedX().Bytes()))
 	assertDeepEquals(t, c.ourPreviousDHKeys.pub, fixedGX())
-	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedY())
+	assertDeepEquals(t, c.ourCurrentDHKeys.priv, secretKeyValue(fixedY().Bytes()))
 	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedGY())
 }
 
@@ -185,16 +185,16 @@ func Test_rotateOurKeys_doesNotRotateIfWeDontReceiveOurCurrentKeyID(t *testing.T
 		ourKeyID: recipientKeyID,
 		ourCurrentDHKeys: dhKeyPair{
 			pub:  fixedGX(),
-			priv: fixedX(),
+			priv: secretKeyValue(fixedX().Bytes()),
 		},
 	}
 
 	_ = c.rotateOurKeys(recipientKeyID+1, fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
 
 	assertEquals(t, c.ourKeyID, recipientKeyID)
-	assertEquals(t, c.ourPreviousDHKeys.priv, nilB)
+	assertDeepEquals(t, c.ourPreviousDHKeys.priv, secretKeyValue(nil))
 	assertEquals(t, c.ourPreviousDHKeys.pub, nilB)
-	assertDeepEquals(t, c.ourCurrentDHKeys.priv, fixedX())
+	assertDeepEquals(t, c.ourCurrentDHKeys.priv, secretKeyValue(fixedX().Bytes()))
 	assertDeepEquals(t, c.ourCurrentDHKeys.pub, fixedGX())
 }
 
@@ -251,7 +251,7 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 	c := keyManagementContext{
 		ourKeyID: 2,
 		ourPreviousDHKeys: dhKeyPair{
-			priv: big.NewInt(1),
+			priv: secretKeyValue(big.NewInt(1).Bytes()),
 			pub:  big.NewInt(2),
 		},
 	}
@@ -321,7 +321,7 @@ func Test_checkMessageCounter_messageIsValidWhenCounterIsLargerThanTheLastReceiv
 }
 
 func Test_generateNewDHKeypair_wipesPreviousDHKeysBeforePointingToCurrentDHKeys(t *testing.T) {
-	prevPrivKey := big.NewInt(1)
+	prevPrivKey := secretKeyValue(big.NewInt(1).Bytes())
 	prevPubKey := big.NewInt(2)
 
 	c := keyManagementContext{
@@ -333,6 +333,6 @@ func Test_generateNewDHKeypair_wipesPreviousDHKeysBeforePointingToCurrentDHKeys(
 
 	_ = c.generateNewDHKeyPair(fixedRand([]string{"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"}))
 
-	assertEquals(t, prevPrivKey.Int64(), int64(0))
+	assertDeepEquals(t, prevPrivKey, secretKeyValue{0x0})
 	assertEquals(t, prevPubKey.Int64(), int64(0))
 }

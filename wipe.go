@@ -13,7 +13,7 @@ func (p *dhKeyPair) wipe() {
 	}
 
 	wipeBigInt(p.pub)
-	wipeBigInt(p.priv)
+	wipeSecretKeyValue(p.priv)
 	p.pub = nil
 	p.priv = nil
 }
@@ -35,7 +35,7 @@ func (a *ake) wipe(wipeKeys bool) {
 		return
 	}
 
-	wipeBigInt(a.secretExponent)
+	wipeSecretKeyValue(a.secretExponent)
 	a.secretExponent = nil
 
 	wipeBigInt(a.ourPublicValue)
@@ -190,11 +190,27 @@ func wipeBigInt(k *big.Int) {
 	k.SetBytes(zeroes(len(k.Bytes())))
 }
 
+func wipeSecretKeyValue(k secretKeyValue) {
+	if k == nil {
+		return
+	}
+
+	copy(k, zeroes(len(k)))
+}
+
 func setBigInt(dst *big.Int, src *big.Int) *big.Int {
 	wipeBigInt(dst)
 
 	ret := big.NewInt(0)
 	ret.Set(src)
+	return ret
+}
+
+func setSecretKeyValue(dst secretKeyValue, src secretKeyValue) secretKeyValue {
+	wipeSecretKeyValue(dst)
+
+	ret := make(secretKeyValue, len(src))
+	copy(ret, src)
 	return ret
 }
 

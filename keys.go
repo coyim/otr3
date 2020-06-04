@@ -17,6 +17,15 @@ import (
 	"github.com/coyim/otr3/sexp"
 )
 
+// secretKeyValue contains the secret in big-endian byte representation
+type secretKeyValue []byte
+
+func createSecretKeyValue(v secretKeyValue) secretKeyValue {
+	res := make(secretKeyValue, len(v))
+	copy(res, v)
+	return res
+}
+
 // PublicKey is a public key used to verify signed messages
 type PublicKey interface {
 	Parse([]byte) ([]byte, bool)

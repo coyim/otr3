@@ -2,6 +2,7 @@ package otr3
 
 import (
 	"crypto/rand"
+	"math/big"
 	"testing"
 	"time"
 )
@@ -91,15 +92,15 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 	// "When starting a private Conversation [...],
 	// generate two DH key pairs for yourself, and set our_keyid = 2"
 	assertEquals(t, alice.keys.ourKeyID, uint32(2))
-	assertEquals(t, alice.keys.ourCurrentDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, new(big.Int).SetBytes([]byte(alice.keys.ourCurrentDHKeys.priv)).BitLen() > 0, true)
 	assertEquals(t, alice.keys.ourCurrentDHKeys.pub.BitLen() > 0, true)
-	assertEquals(t, alice.keys.ourPreviousDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, new(big.Int).SetBytes([]byte(alice.keys.ourPreviousDHKeys.priv)).BitLen() > 0, true)
 	assertEquals(t, alice.keys.ourPreviousDHKeys.pub.BitLen() > 0, true)
 
 	assertEquals(t, bob.keys.ourKeyID, uint32(2))
-	assertEquals(t, bob.keys.ourCurrentDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, new(big.Int).SetBytes([]byte(bob.keys.ourCurrentDHKeys.priv)).BitLen() > 0, true)
 	assertEquals(t, bob.keys.ourCurrentDHKeys.pub.BitLen() > 0, true)
-	assertEquals(t, bob.keys.ourPreviousDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, new(big.Int).SetBytes([]byte(bob.keys.ourPreviousDHKeys.priv)).BitLen() > 0, true)
 	assertEquals(t, bob.keys.ourPreviousDHKeys.pub.BitLen() > 0, true)
 }
 
@@ -147,15 +148,15 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 	// "When starting a private Conversation [...],
 	// generate two DH key pairs for yourself, and set our_keyid = 2"
 	assertEquals(t, alice.keys.ourKeyID, uint32(2))
-	assertEquals(t, alice.keys.ourCurrentDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, new(big.Int).SetBytes([]byte(alice.keys.ourCurrentDHKeys.priv)).BitLen() > 0, true)
 	assertEquals(t, alice.keys.ourCurrentDHKeys.pub.BitLen() > 0, true)
-	assertEquals(t, alice.keys.ourPreviousDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, new(big.Int).SetBytes([]byte(alice.keys.ourPreviousDHKeys.priv)).BitLen() > 0, true)
 	assertEquals(t, alice.keys.ourPreviousDHKeys.pub.BitLen() > 0, true)
 
 	assertEquals(t, bob.keys.ourKeyID, uint32(2))
-	assertEquals(t, bob.keys.ourCurrentDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, new(big.Int).SetBytes([]byte(bob.keys.ourCurrentDHKeys.priv)).BitLen() > 0, true)
 	assertEquals(t, bob.keys.ourCurrentDHKeys.pub.BitLen() > 0, true)
-	assertEquals(t, bob.keys.ourPreviousDHKeys.priv.BitLen() > 0, true)
+	assertEquals(t, new(big.Int).SetBytes([]byte(bob.keys.ourPreviousDHKeys.priv)).BitLen() > 0, true)
 	assertEquals(t, bob.keys.ourPreviousDHKeys.pub.BitLen() > 0, true)
 }
 

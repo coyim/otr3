@@ -47,11 +47,11 @@ func Test_wipe_keyManagementContext(t *testing.T) {
 		ourKeyID:   2,
 		theirKeyID: 3,
 		ourCurrentDHKeys: dhKeyPair{
-			priv: big.NewInt(1),
+			priv: secretKeyValue(big.NewInt(1).Bytes()),
 			pub:  big.NewInt(2),
 		},
 		ourPreviousDHKeys: dhKeyPair{
-			priv: big.NewInt(3),
+			priv: secretKeyValue(big.NewInt(3).Bytes()),
 			pub:  big.NewInt(4),
 		},
 		theirCurrentDHPubKey:  big.NewInt(5),

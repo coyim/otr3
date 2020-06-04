@@ -27,7 +27,7 @@ func Test_receiveDHCommit_AtAuthStateNoneStoresGyAndY(t *testing.T) {
 	assertDeepEquals(t, nextMsg, messageWithHeader(nil))
 
 	assertDeepEquals(t, c.ake.ourPublicValue, fixedGY())
-	assertDeepEquals(t, c.ake.secretExponent, fixedY())
+	assertDeepEquals(t, c.ake.secretExponent, secretKeyValue(fixedY().Bytes()))
 }
 
 func Test_receiveDHCommit_AtAuthStateNoneStoresEncryptedGxAndHashedGx(t *testing.T) {
@@ -127,7 +127,7 @@ func Test_receiveDHCommit_AtAwaitingDHKeyForgetOurGxAndSendDHKeyMsgAndGoToAwaiti
 	assertEquals(t, state, authStateAwaitingRevealSig{})
 	assertEquals(t, dhMsgType(newMsg), msgTypeDHKey)
 	assertDeepEquals(t, c.ake.ourPublicValue, fixedGY())
-	assertDeepEquals(t, c.ake.secretExponent, fixedY())
+	assertDeepEquals(t, c.ake.secretExponent, secretKeyValue(fixedY().Bytes()))
 }
 
 func Test_receiveDHKey_AtAuthStateNoneOrAuthStateAwaitingRevealSigIgnoreIt(t *testing.T) {
@@ -191,7 +191,7 @@ func Test_receiveDHKey_AtAwaitingDHKey_storesOursAndTheirDHKeys(t *testing.T) {
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, c.ake.keys.theirCurrentDHPubKey, fixedGY())
 	assertDeepEquals(t, c.ake.keys.ourCurrentDHKeys.pub, fixedGX())
-	assertDeepEquals(t, c.ake.keys.ourCurrentDHKeys.priv, fixedX())
+	assertDeepEquals(t, c.ake.keys.ourCurrentDHKeys.priv, secretKeyValue(fixedX().Bytes()))
 
 	assertEquals(t, c.ake.keys.ourKeyID, uint32(1))
 	assertEquals(t, c.ake.keys.theirKeyID, uint32(0))
@@ -263,7 +263,7 @@ func Test_receiveRevealSig_AtAwaitingRevealSig_savesAKEKeysToConversationAndGene
 	assertDeepEquals(t, c.keys.theirCurrentDHPubKey, fixedGX())
 	assertNil(t, c.keys.theirPreviousDHPubKey)
 	assertDeepEquals(t, c.keys.ourPreviousDHKeys.pub, fixedGY())
-	assertDeepEquals(t, c.keys.ourPreviousDHKeys.priv, fixedY())
+	assertDeepEquals(t, c.keys.ourPreviousDHKeys.priv, secretKeyValue(fixedY().Bytes()))
 
 	//should wipe
 	assertDeepEquals(t, c.ake, &ake{state: c.ake.state})
@@ -660,7 +660,7 @@ func Test_akeHasFinished_wipesAKEKeys(t *testing.T) {
 	}
 
 	c.ake = &ake{
-		secretExponent:   big.NewInt(1),
+		secretExponent:   secretKeyValue(big.NewInt(1).Bytes()),
 		ourPublicValue:   big.NewInt(2),
 		theirPublicValue: big.NewInt(2),
 		revealKey:        revKey,

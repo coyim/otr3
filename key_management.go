@@ -5,11 +5,13 @@ import (
 	"hash"
 	"io"
 	"math/big"
+
+	"github.com/coyim/constbn"
 )
 
 type dhKeyPair struct {
 	pub  *big.Int
-	priv *big.Int
+	priv secretKeyValue
 }
 
 type akeKeys struct {
@@ -124,8 +126,8 @@ func (k *keyManagementContext) setTheirCurrentDHPubKey(key *big.Int) {
 	k.theirCurrentDHPubKey = setBigInt(k.theirCurrentDHPubKey, key)
 }
 
-func (k *keyManagementContext) setOurCurrentDHKeys(priv *big.Int, pub *big.Int) {
-	k.ourCurrentDHKeys.priv = setBigInt(k.ourCurrentDHKeys.priv, priv)
+func (k *keyManagementContext) setOurCurrentDHKeys(priv secretKeyValue, pub *big.Int) {
+	k.ourCurrentDHKeys.priv = setSecretKeyValue(k.ourCurrentDHKeys.priv, priv)
 	k.ourCurrentDHKeys.pub = setBigInt(k.ourCurrentDHKeys.pub, pub)
 }
 
@@ -148,7 +150,7 @@ func (k *keyManagementContext) revealMACKeys() []macKey {
 }
 
 func (k *keyManagementContext) generateNewDHKeyPair(randomness io.Reader) error {
-	newPrivKey, err := randSizedMPI(randomness, 40)
+	newPrivKey, err := randSizedSecret(randomness, 40)
 	if err != nil {
 		return err
 	}
@@ -158,7 +160,7 @@ func (k *keyManagementContext) generateNewDHKeyPair(randomness io.Reader) error 
 
 	k.ourCurrentDHKeys = dhKeyPair{
 		priv: newPrivKey,
-		pub:  modExpP(g1, newPrivKey),
+		pub:  modExpPCT(g1ct, newPrivKey).GetBigInt(),
 	}
 	k.ourKeyID++
 	return nil
@@ -220,7 +222,7 @@ func (k *keyManagementContext) calculateDHSessionKeys(ourKeyID, theirKeyID uint3
 	return ret, nil
 }
 
-func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int, v otrVersion) sessionKeys {
+func calculateDHSessionKeys(ourPrivKey secretKeyValue, ourPubKey, theirPubKey *big.Int, v otrVersion) sessionKeys {
 	var ret sessionKeys
 	var sendbyte, recvbyte byte
 
@@ -232,7 +234,7 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int, v otrVe
 		sendbyte, recvbyte = 0x02, 0x01
 	}
 
-	s := modExp(theirPubKey, ourPrivKey, p)
+	s := modExpCT(new(constbn.Int).SetBigInt(theirPubKey), ourPrivKey, pct).GetBigInt()
 	secbytes := AppendMPI(nil, s)
 
 	sha := v.hashInstance()
@@ -248,7 +250,7 @@ func calculateDHSessionKeys(ourPrivKey, ourPubKey, theirPubKey *big.Int, v otrVe
 	return ret
 }
 
-func (k *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey, pubKey *big.Int, err error) {
+func (k *keyManagementContext) pickOurKeys(ourKeyID uint32) (privKey secretKeyValue, pubKey *big.Int, err error) {
 	if ourKeyID == 0 || k.ourKeyID == 0 {
 		return nil, nil, newOtrConflictError("invalid key id for local peer")
 	}

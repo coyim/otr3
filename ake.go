@@ -6,12 +6,14 @@ import (
 	"io"
 	"math/big"
 	"time"
+
+	"github.com/coyim/constbn"
 )
 
 var dontIgnoreFastRepeatQueryMessage = "false"
 
 type ake struct {
-	secretExponent   *big.Int
+	secretExponent   secretKeyValue
 	ourPublicValue   *big.Int
 	theirPublicValue *big.Int
 
@@ -51,13 +53,13 @@ func (c *Conversation) calcAKEKeys(s *big.Int) {
 	c.ssid, c.ake.revealKey, c.ake.sigKey = calculateAKEKeys(s, c.version)
 }
 
-func (c *Conversation) setSecretExponent(val *big.Int) {
-	c.ake.secretExponent = new(big.Int).Set(val)
-	c.ake.ourPublicValue = modExpP(g1, val)
+func (c *Conversation) setSecretExponent(val secretKeyValue) {
+	c.ake.secretExponent = createSecretKeyValue(val)
+	c.ake.ourPublicValue = modExpPCT(g1ct, val).GetBigInt()
 }
 
 func (c *Conversation) calcDHSharedSecret() *big.Int {
-	return modExpP(c.ake.theirPublicValue, c.ake.secretExponent)
+	return modExpPCT(new(constbn.Int).SetBigInt(c.ake.theirPublicValue), c.ake.secretExponent).GetBigInt()
 }
 
 func (c *Conversation) generateEncryptedSignature(key *akeKeys) ([]byte, error) {
@@ -111,13 +113,13 @@ func (c *Conversation) dhCommitMessage() ([]byte, error) {
 	c.ake.keys.ourKeyID = 0
 
 	// A random value x of at least 320 bits (40 byte)
-	x, err := c.randMPI(make([]byte, 40))
+	x, err := c.randSecret(make([]byte, 40))
 	if err != nil {
 		return nil, err
 	}
 
 	c.setSecretExponent(x)
-	wipeBigInt(x)
+	wipeSecretKeyValue(x)
 
 	if err := c.randomInto(c.ake.r[:]); err != nil {
 		return nil, err
@@ -143,14 +145,14 @@ func (c *Conversation) dhKeyMessage() ([]byte, error) {
 	c.initAKE()
 
 	// A random value x of at least 320 bits (40 byte)
-	y, err := c.randMPI(make([]byte, 40)[:])
+	y, err := c.randSecret(make([]byte, 40)[:])
 
 	if err != nil {
 		return nil, err
 	}
 
 	c.setSecretExponent(y)
-	wipeBigInt(y)
+	wipeSecretKeyValue(y)
 
 	return c.serializeDHKey(), nil
 }

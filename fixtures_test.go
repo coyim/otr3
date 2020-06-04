@@ -105,7 +105,7 @@ func bobContextAfterAKE() *Conversation {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.keys.ourKeyID = 2
 	c.keys.ourCurrentDHKeys.pub = fixedGX()
-	c.keys.ourPreviousDHKeys.priv = fixedX()
+	c.keys.ourPreviousDHKeys.priv = secretKeyValue(fixedX().Bytes())
 	c.keys.ourPreviousDHKeys.pub = fixedGX()
 
 	c.keys.theirKeyID = 1
@@ -117,9 +117,9 @@ func bobContextAfterAKE() *Conversation {
 func aliceContextAfterAKE() *Conversation {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.keys.ourKeyID = 1
-	c.keys.ourCurrentDHKeys.priv = fixedY()
+	c.keys.ourCurrentDHKeys.priv = secretKeyValue(fixedY().Bytes())
 	c.keys.ourCurrentDHKeys.pub = fixedGY()
-	c.keys.ourPreviousDHKeys.priv = fixedY()
+	c.keys.ourPreviousDHKeys.priv = secretKeyValue(fixedY().Bytes())
 	c.keys.ourPreviousDHKeys.pub = fixedGY()
 
 	c.keys.theirKeyID = 1
@@ -133,7 +133,7 @@ func aliceContextAfterAKE() *Conversation {
 func bobContextAtAwaitingSig() *Conversation {
 	c := bobContextAtReceiveDHKey()
 	c.ake.keys.ourKeyID = 1
-	c.ake.keys.ourCurrentDHKeys.priv = fixedX()
+	c.ake.keys.ourCurrentDHKeys.priv = secretKeyValue(fixedX().Bytes())
 	c.ake.keys.ourCurrentDHKeys.pub = fixedGX()
 	c.ake.keys.theirKeyID = 1
 	c.ake.keys.theirCurrentDHPubKey = fixedGY()
@@ -163,8 +163,8 @@ func bobContextAtAwaitingDHKey() *Conversation {
 	c.ake.state = authStateAwaitingDHKey{}
 	c.ourCurrentKey = bobPrivateKey
 
-	copy(c.ake.r[:], fixedr)      // stored at sendDHCommit
-	c.setSecretExponent(fixedX()) // stored at sendDHCommit
+	copy(c.ake.r[:], fixedr)                              // stored at sendDHCommit
+	c.setSecretExponent(secretKeyValue(fixedX().Bytes())) // stored at sendDHCommit
 
 	return c
 }
@@ -195,7 +195,7 @@ func aliceContextAtAwaitingRevealSig() *Conversation {
 	c.ake.xhashedGx = hashedFixedGX()      //stored at receiveDHCommit
 	c.ake.encryptedGx = encryptedFixedGX() //stored at receiveDHCommit
 
-	c.setSecretExponent(fixedY()) //stored at sendDHKey
+	c.setSecretExponent(secretKeyValue(fixedY().Bytes())) //stored at sendDHKey
 
 	return c
 }
@@ -213,11 +213,11 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 		ourKeyID:   senderKeyID + 1,
 		theirKeyID: recipientKeyID + 1,
 		ourCurrentDHKeys: dhKeyPair{
-			priv: fixedY(),
+			priv: secretKeyValue(fixedY().Bytes()),
 			pub:  fixedGY(),
 		},
 		ourPreviousDHKeys: dhKeyPair{
-			priv: fixedY(),
+			priv: secretKeyValue(fixedY().Bytes()),
 			pub:  fixedGY(),
 		},
 		theirCurrentDHPubKey:  fixedGX(),
@@ -227,7 +227,7 @@ func fixtureDataMsg(plain plainDataMsg) ([]byte, keyManagementContext) {
 	c1 := receiverContext.counterHistory.findCounterFor(recipientKeyID, senderKeyID)
 	c1.theirKeyID = 1
 
-	keys := calculateDHSessionKeys(fixedX(), fixedGX(), fixedGY(), conv.version)
+	keys := calculateDHSessionKeys(secretKeyValue(fixedX().Bytes()), fixedGX(), fixedGY(), conv.version)
 
 	h, _ := conv.messageHeader(msgTypeData)
 	m := dataMsg{
@@ -270,7 +270,7 @@ func fixtureDecryptDataMsgBase(encryptedDataMsg []byte) ([]byte, plainDataMsg, e
 		return nil, plainDataMsg{}, err
 	}
 
-	keys := calculateDHSessionKeys(fixedX(), fixedGX(), fixedGY(), c.version)
+	keys := calculateDHSessionKeys(secretKeyValue(fixedX().Bytes()), fixedGX(), fixedGY(), c.version)
 
 	exp := plainDataMsg{}
 	err = m.checkSign(keys.receivingMACKey, header, c.version)
