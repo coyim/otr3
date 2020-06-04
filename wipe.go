@@ -221,10 +221,13 @@ func setBigInt(dst *big.Int, src *big.Int) *big.Int {
 }
 
 func setSecretKeyValue(dst secretKeyValue, src secretKeyValue) secretKeyValue {
+	tryUnlock(dst)
 	wipeSecretKeyValue(dst)
 
 	ret := make(secretKeyValue, len(src))
 	copy(ret, src)
+	tryLock(ret)
+
 	return ret
 }
 
