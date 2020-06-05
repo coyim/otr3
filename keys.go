@@ -12,6 +12,7 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/coyim/constbn"
@@ -132,8 +133,7 @@ func readPotentialStringOrSymbol(r *bufio.Reader) (string, bool) {
 
 // ImportKeysFromFile will read the libotr formatted file given and return all accounts defined in it
 func ImportKeysFromFile(fname string) ([]*Account, error) {
-	/* #nosec G304 */
-	f, err := os.Open(fname)
+	f, err := os.Open(filepath.Clean(fname))
 	if err != nil {
 		return nil, err
 	}
