@@ -61,6 +61,12 @@ func Test_receiveDHCommit_ResendPreviousDHKeyMsgFromAwaitingRevealSig(t *testing
 	assertDeepEquals(t, prevDHKeyMsg, msg)
 }
 
+func fixedSizeCopy(s int, v []byte) []byte {
+	vv := make([]byte, s)
+	copy(vv, v)
+	return vv
+}
+
 func Test_receiveDHCommit_AtAuthAwaitingRevealSigiForgetOldEncryptedGxAndHashedGx(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	c.ake.encryptedGx = []byte{0x02}                                     //some encryptedGx

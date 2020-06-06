@@ -214,14 +214,16 @@ func Test_processSig(t *testing.T) {
 	alice.ourCurrentKey = bobPrivateKey
 	alice.setSecretExponent(secretKeyValue(fixedY().Bytes()))
 	alice.ake.theirPublicValue = fixedGX()
+	alice.calcAKEKeys(alice.calcDHSharedSecret())
+
 	msg, _ := alice.sigMessage()
 
 	bob := newConversation(otrV3{}, rnd)
 	bob.initAKE()
-	bob.ake.sigKey = alice.ake.sigKey
 	bob.ourCurrentKey = alicePrivateKey
 	bob.setSecretExponent(secretKeyValue(fixedX().Bytes()))
 	bob.ake.theirPublicValue = fixedGY()
+	bob.calcAKEKeys(bob.calcDHSharedSecret())
 
 	err := bob.processSig(msg)
 
@@ -279,6 +281,7 @@ func Test_sigMessage_increasesOurKeyId(t *testing.T) {
 	c.setSecretExponent(secretKeyValue(fixedY().Bytes()))
 	c.ake.theirPublicValue = fixedGX()
 	c.ake.keys.ourKeyID = ourKeyID
+	c.calcAKEKeys(c.calcDHSharedSecret())
 
 	_, err := c.sigMessage()
 	assertEquals(t, err, nil)
