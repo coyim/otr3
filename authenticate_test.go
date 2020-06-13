@@ -45,7 +45,7 @@ func Test_StartAuthenticate_generatesAndReturnsTheFirstSMPMessageToSend(t *testi
 	assertEquals(t, e, nil)
 	assertEquals(t, c.smp.state, smpStateExpect2{})
 
-	dec, _ := c.decode(encodedMessage(msg[0]))
+	dec, _ := decode(encodedMessage(msg[0]))
 	_, messageBody, _ := c.parseMessageHeader(dec)
 	assertDeepEquals(t, len(messageBody), 1361)
 }
@@ -92,7 +92,7 @@ func Test_StartAuthenticate_generatesAnAbortMessageTLVIfWeAreInAnSMPStateAlready
 
 	msg, e := c.StartAuthenticate("", []byte("hello world"))
 	assertEquals(t, e, nil)
-	dec, _ := c.decode(encodedMessage(msg[0]))
+	dec, _ := decode(encodedMessage(msg[0]))
 	_, messageBody, _ := c.parseMessageHeader(dec)
 	assertDeepEquals(t, len(messageBody), 1369)
 }
@@ -144,7 +144,7 @@ func Test_ProvideAuthenticationSecret_continuesWithMessageProcessingIfInTheRight
 
 	msg, e := c.ProvideAuthenticationSecret([]byte("hello world"))
 	assertNil(t, e)
-	dec, _ := c.decode(encodedMessage(msg[0]))
+	dec, _ := decode(encodedMessage(msg[0]))
 	_, messageBody, _ := c.parseMessageHeader(dec)
 	assertDeepEquals(t, len(messageBody), 2181)
 }
@@ -187,7 +187,7 @@ func Test_AbortAuthentication_generatesSMPAbortMessage(t *testing.T) {
 
 	assertDeepEquals(t, c.smp.state, smpStateExpect1{})
 	assertNil(t, e)
-	dec, _ := c.decode(encodedMessage(msgs[0]))
+	dec, _ := decode(encodedMessage(msgs[0]))
 	_, messageBody, _ := c.parseMessageHeader(dec)
 	assertEquals(t, len(messageBody), 505)
 }

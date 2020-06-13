@@ -20,7 +20,7 @@ func Test_receive_OTRQueryMsgRepliesWithDHCommitMessage(t *testing.T) {
 	_, enc, err := c.Receive(msg)
 	assertEquals(t, err, nil)
 
-	toSend, _ := c.decode(encodedMessage(enc[0]))
+	toSend, _ := decode(encodedMessage(enc[0]))
 
 	assertDeepEquals(t, toSend[:3], exp)
 }

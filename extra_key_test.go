@@ -107,7 +107,7 @@ func Test_UseExtraSymmetricKey_generatesADataMessageWithTheDataProvided(t *testi
 	c.msgState = encrypted
 
 	_, msg, err := c.UseExtraSymmetricKey(0x1234, []byte{0xAB, 0xCD, 0xEE})
-	decodedMsg, _ := c.decode(encodedMessage(msg[0]))
+	decodedMsg, _ := decode(encodedMessage(msg[0]))
 	assertNil(t, err)
 	_, exp, e := fixtureDecryptDataMsgBase(decodedMsg)
 	assertNil(t, e)
@@ -126,7 +126,7 @@ func Test_UseExtraSymmetricKey_generatesADataMessageWithIgnoreUnreadableSet(t *t
 	_, c.keys = fixtureDataMsg(plainDataMsg{message: []byte("something")})
 	c.msgState = encrypted
 	_, msg, _ := c.UseExtraSymmetricKey(0x1234, []byte{0xAB, 0xCD, 0xEE})
-	decodedMsg, _ := c.decode(encodedMessage(msg[0]))
+	decodedMsg, _ := decode(encodedMessage(msg[0]))
 	assertEquals(t, decodedMsg[11], messageFlagIgnoreUnreadable)
 }
 

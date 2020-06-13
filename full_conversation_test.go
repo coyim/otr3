@@ -75,7 +75,7 @@ func Test_AKE_forVersion3And2InThePolicy(t *testing.T) {
 
 	//Alice send Bob DHKey
 	_, toSend, err = bob.Receive(toSend[0])
-	m, _ := bob.decode(encodedMessage(toSend[0]))
+	m, _ := decode(encodedMessage(toSend[0]))
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: m})
 
@@ -131,7 +131,7 @@ func Test_AKE_withVersion3ButWithoutVersion2InThePolicy(t *testing.T) {
 
 	//Alice send Bob DHKey
 	_, toSend, err = bob.Receive(toSend[0])
-	m, _ := bob.decode(encodedMessage(toSend[0]))
+	m, _ := decode(encodedMessage(toSend[0]))
 	assertEquals(t, err, nil)
 	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: m})
 
@@ -187,7 +187,7 @@ func Test_processDataMessageShouldExtractData(t *testing.T) {
 
 	//Alice send Bob DHKey
 	_, toSend, err = bob.Receive(toSend[0])
-	m, _ := bob.decode(encodedMessage(toSend[0]))
+	m, _ := decode(encodedMessage(toSend[0]))
 	assertNil(t, err)
 	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: m})
 
@@ -240,7 +240,7 @@ func Test_startingAKE_shouldNotBreakTheEncryptedChannel(t *testing.T) {
 
 	//Alice send Bob DHKey
 	_, toSend, err = bob.Receive(toSend[0])
-	dec, _ := bob.decode(encodedMessage(toSend[0]))
+	dec, _ := decode(encodedMessage(toSend[0]))
 	assertNil(t, err)
 	assertDeepEquals(t, bob.ake.state, authStateAwaitingSig{revealSigMsg: dec})
 

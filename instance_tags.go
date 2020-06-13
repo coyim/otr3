@@ -38,9 +38,9 @@ func (c *Conversation) generateInstanceTag() error {
 }
 
 // ExtractInstanceTags returns our and theirs instance tags from the message, and ok if the message was parsed properly
-func (c *Conversation) ExtractInstanceTags(m []byte) (ours, theirs uint32, ok bool) {
+func ExtractInstanceTags(m []byte) (ours, theirs uint32, ok bool) {
 	if bytes.HasPrefix(m, []byte("?OTR:")) {
-		msg, err := c.decode(encodedMessage(m))
+		msg, err := decode(encodedMessage(m))
 		if err != nil {
 			return 0, 0, false
 		}
