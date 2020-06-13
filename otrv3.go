@@ -130,24 +130,6 @@ func (v otrV3) verifyInstanceTags(c *Conversation, their, our uint32) error {
 	return nil
 }
 
-// ExtractInstanceTags returns our and theirs instance tags from the message, and ok if the message was parsed properly
-func (c *Conversation) ExtractInstanceTags(msg []byte) (ours, theirs uint32, ok bool) {
-	if len(msg) < otrv3HeaderLen {
-		return 0, 0, false
-	}
-
-	_, senderInstanceTag, _ := ExtractWord(msg[messageHeaderPrefix:])
-	_, receiverInstanceTag, _ := ExtractWord(msg)
-
-	v := otrV3{}
-	if err := v.verifyInstanceTags(c, senderInstanceTag, receiverInstanceTag); err != nil {
-		return 0, 0, false
-	}
-
-	return receiverInstanceTag, senderInstanceTag, true
-
-}
-
 func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error) {
 	if len(msg) < otrv3HeaderLen {
 		malformedMessage(c)

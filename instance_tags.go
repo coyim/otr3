@@ -1,6 +1,9 @@
 package otr3
 
-import "encoding/binary"
+import (
+	"bytes"
+	"encoding/binary"
+)
 
 // GetOurInstanceTag returns our instance tag - it computes it if none has been computed yet
 func (c *Conversation) GetOurInstanceTag() uint32 {
@@ -32,4 +35,50 @@ func (c *Conversation) generateInstanceTag() error {
 	c.ourInstanceTag = ret
 
 	return nil
+}
+
+// ExtractInstanceTags returns our and theirs instance tags from the message, and ok if the message was parsed properly
+func (c *Conversation) ExtractInstanceTags(m []byte) (ours, theirs uint32, ok bool) {
+	if bytes.HasPrefix(m, []byte("?OTR:")) {
+		msg, err := c.decode(encodedMessage(m))
+		if err != nil {
+			return 0, 0, false
+		}
+
+		if len(msg) < otrv3HeaderLen {
+			return 0, 0, false
+		}
+
+		_, senderInstanceTag, _ := ExtractWord(msg[messageHeaderPrefix:])
+		_, receiverInstanceTag, _ := ExtractWord(msg)
+
+		return receiverInstanceTag, senderInstanceTag, true
+	} else if bytes.HasPrefix(m, []byte("?OTR|")) {
+		if len(m) < 23 {
+			return 0, 0, false
+		}
+
+		header := m[:23]
+		headerPart := bytes.Split(header, fragmentSeparator)[0]
+		itagParts := bytes.Split(headerPart, fragmentItagsSeparator)
+
+		if len(itagParts) < 3 {
+			return 0, 0, false
+		}
+
+		senderInstanceTag, err1 := parseItag(itagParts[1])
+		if err1 != nil {
+			return 0, 0, false
+		}
+
+		receiverInstanceTag, err2 := parseItag(itagParts[2])
+		if err2 != nil {
+			return 0, 0, false
+		}
+
+		return receiverInstanceTag, senderInstanceTag, true
+	} else {
+		// All other prefixes are for older versions or don't have instance tags
+		return 0, 0, false
+	}
 }
