@@ -7,7 +7,6 @@ import (
 	/* #nosec G505*/
 	"crypto/sha1"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 	"hash"
 	"math/big"
@@ -102,27 +101,6 @@ func (v otrV3) messageHeader(c *Conversation, msgType byte) ([]byte, error) {
 	return out, nil
 }
 
-func (c *Conversation) generateInstanceTag() error {
-	if c.ourInstanceTag != 0 {
-		return nil
-	}
-
-	var ret uint32
-	var dst [4]byte
-
-	for ret < minValidInstanceTag {
-		if err := c.randomInto(dst[:]); err != nil {
-			return err
-		}
-
-		ret = binary.BigEndian.Uint32(dst[:])
-	}
-
-	c.ourInstanceTag = ret
-
-	return nil
-}
-
 func malformedMessage(c *Conversation) {
 	c.messageEvent(MessageEventReceivedMessageMalformed)
 	c.generatePotentialErrorMessage(ErrorCodeMessageMalformed)
@@ -150,6 +128,24 @@ func (v otrV3) verifyInstanceTags(c *Conversation, their, our uint32) error {
 	}
 
 	return nil
+}
+
+// ExtractInstanceTags returns our and theirs instance tags from the message, and ok if the message was parsed properly
+func (c *Conversation) ExtractInstanceTags(msg []byte) (ours, theirs uint32, ok bool) {
+	if len(msg) < otrv3HeaderLen {
+		return 0, 0, false
+	}
+
+	_, senderInstanceTag, _ := ExtractWord(msg[messageHeaderPrefix:])
+	_, receiverInstanceTag, _ := ExtractWord(msg)
+
+	v := otrV3{}
+	if err := v.verifyInstanceTags(c, senderInstanceTag, receiverInstanceTag); err != nil {
+		return 0, 0, false
+	}
+
+	return receiverInstanceTag, senderInstanceTag, true
+
 }
 
 func (v otrV3) parseMessageHeader(c *Conversation, msg []byte) ([]byte, []byte, error) {
