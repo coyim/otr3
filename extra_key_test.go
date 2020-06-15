@@ -12,10 +12,10 @@ func Test_processExtraSymmetricKeyTLV_signalsAReceivedKeyEventWithTheExtraKey(t 
 
 	called := false
 
-	c.receivedKeyHandler = dynamicReceivedKeyHandler{func(usage uint32, usageData []byte, symkey []byte) {
+	c.SetReceivedKeyHandler(dynamicReceivedKeyHandler{func(usage uint32, usageData []byte, symkey []byte) {
 		assertDeepEquals(t, symkey, extraKey)
 		called = true
-	}}
+	}})
 
 	_, _ = c.processExtraSymmetricKeyTLV(tlv{tlvTypeExtraSymmetricKey, 0x04, []byte{0xAB, 0x12, 0xCD, 0x44}}, x)
 
