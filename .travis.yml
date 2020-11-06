@@ -1,4 +1,7 @@
 language: go
+arch:
+  - amd64
+  - ppc64le
 
 go:
   - tip
@@ -8,7 +11,8 @@ go:
   - "1.11.13"
   - "1.10.8"
   - "1.9.7"
-
+  
+go_import_path: github.com/coyim/otr3/
 matrix:
   allow_failures:
     - go: tip
