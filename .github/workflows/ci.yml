@@ -47,7 +47,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - uses: technote-space/workflow-conclusion-action@v1
-      - uses: ./.github/actions/ci-conclusion-message
+      - uses: coyim/coyim/.github/actions/ci-conclusion-message@main
         id: message-generator
         with:
           status: ${{ env.WORKFLOW_CONCLUSION }}
