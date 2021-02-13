@@ -1,0 +1,63 @@
+name: OTR3 CI
+
+on: [push, pull_request]
+
+jobs:
+  test-linux:
+    runs-on: ubuntu-20.04
+
+    env:
+      GOPATH: ${{ github.workspace }}
+      GO111MODULE: off
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        go: [ '1.15', '1.14', '1.13', '1.12', '1.11' ]
+
+    name: Test go-${{ matrix.go }} (Linux)
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
+      - name: install OS dependencies
+        run: sudo apt-get install automake libtool libgcrypt11-dev libgpg-error-dev
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: install project dependencies
+        run: make deps-ci
+      - name: run tests
+        run: make ci
+      - name: coverage
+        run: make coveralls
+        env:
+          COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+
+  notify-test:
+    name: Notify on success or failure of test
+    needs: test-linux
+    runs-on: ubuntu-20.04
+    if: always()
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - uses: technote-space/workflow-conclusion-action@v1
+      - uses: ./.github/actions/ci-conclusion-message
+        id: message-generator
+        with:
+          status: ${{ env.WORKFLOW_CONCLUSION }}
+          commit_id: ${{ github.sha }}
+          commit_message: ${{ github.event.head_commit.message }}
+      - name: send message to Matrix on conclusion
+        uses: olabiniV2/matrix-message@v0.0.1
+        with:
+          room_id: ${{ secrets.MATRIX_COYIM_ROOM_ID }}
+          access_token: ${{ secrets.MATRIX_ACCESS_TOKEN }}
+          server: ${{ secrets.MATRIX_SERVER }}
+          subject: ${{ steps.message-generator.outputs.subject }}
+          message: ${{ steps.message-generator.outputs.message }}
