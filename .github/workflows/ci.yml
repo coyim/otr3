@@ -61,10 +61,34 @@ jobs:
         run: make deps-ci
       - name: run tests
         run: make lint test
-          
+
+  test-osx:
+    runs-on: macos-latest
+
+    env:
+      GOPATH: ${{ github.workspace }}
+      GO111MODULE: off
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
+        
+    name: Test go-1.14 (OS X)
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.14
+      - name: install project dependencies
+        run: make deps-ci
+      - name: run tests
+        run: make lint test
+        
   notify-test:
     name: Notify on success or failure of test
-    needs: [test-linux, test-windows]
+    needs: [test-linux, test-windows, test-osx]
     runs-on: ubuntu-20.04
     if: always()
     steps:
