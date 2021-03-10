@@ -37,10 +37,34 @@ jobs:
         run: make coveralls
         env:
           COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+          
+  test-windows:
+    runs-on: windows-2019
 
+    env:
+      GOPATH: ${{ github.workspace }}
+      GO111MODULE: off
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
+        
+    name: Test go-1.14 (Windows)
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.14
+      - name: install project dependencies
+        run: make deps-ci
+      - name: run tests
+        run: make lint test
+          
   notify-test:
     name: Notify on success or failure of test
-    needs: test-linux
+    needs: [test-linux, test-windows]
     runs-on: ubuntu-20.04
     if: always()
     steps:
