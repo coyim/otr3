@@ -1078,5 +1078,5 @@ func Test_ExportKeysToFile_returnsAnErrorIfSomethingGoesWrong(t *testing.T) {
 	acc := &Account{Name: "hello", Protocol: "go-xmpp", Key: priv}
 
 	err := ExportKeysToFile([]*Account{acc}, "non_existing_directory/test_export_of_keys.blah")
-	assertDeepEquals(t, err.Error(), "open non_existing_directory/test_export_of_keys.blah: no such file or directory")
+	assertMatches(t, err.Error(), "open non_existing_directory/test_export_of_keys.blah: (no such file or directory|The system cannot find the path specified.)")
 }

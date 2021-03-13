@@ -5,6 +5,7 @@ import (
 	"io"
 	"math/big"
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -59,6 +60,16 @@ func assertNotNil(t *testing.T, actual interface{}) {
 func assertDeepEquals(t *testing.T, actual, expected interface{}) {
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("Expected:\n%#v \nto equal:\n%#v\n", actual, expected)
+	}
+}
+
+func assertMatches(t *testing.T, actual, expected string) {
+	matches, err := regexp.MatchString("^"+expected+"$", actual)
+	if err != nil {
+		t.Errorf("Expected:\n%#v \nto match:\n%#v - Can't compile regex: %s\n", actual, expected, err.Error())
+	}
+	if !matches {
+		t.Errorf("Expected:\n%#v \nto match:\n%#v\n", actual, expected)
 	}
 }
 
