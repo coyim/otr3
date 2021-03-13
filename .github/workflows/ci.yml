@@ -25,7 +25,9 @@ jobs:
         with:
           path: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
       - name: install OS dependencies
-        run: sudo apt-get install libgcrypt11-dev libgpg-error-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install libgcrypt11-dev libgpg-error-dev
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go }}
@@ -37,7 +39,7 @@ jobs:
         run: make coveralls
         env:
           COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-          
+
   test-windows:
     runs-on: windows-2019
 
@@ -47,7 +49,7 @@ jobs:
     defaults:
       run:
         working-directory: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
-        
+
     name: Test go-1.14 (Windows)
     steps:
       - name: checkout
@@ -71,7 +73,7 @@ jobs:
     defaults:
       run:
         working-directory: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
-        
+
     name: Test go-1.14 (OS X)
     steps:
       - name: checkout
@@ -85,7 +87,7 @@ jobs:
         run: make deps-ci
       - name: run tests
         run: make lint test
-        
+
   notify-test:
     name: Notify on success or failure of test
     needs: [test-linux, test-windows, test-osx]
