@@ -12,7 +12,7 @@ import (
 // Lock is a wrapper for mlock(2).
 func Lock(b []byte) error {
 	if err := unix.Mlock(b); err != nil {
-		return fmt.Errorf("<memcall> could not acquire lock on %p, limit reached? [Err: %s]", &b[0], err)
+		return fmt.Errorf("<memcall> could not acquire lock on %p, limit reached? [Err: %s]", _getStartPtr(b), err)
 	}
 
 	return nil
@@ -21,7 +21,7 @@ func Lock(b []byte) error {
 // Unlock is a wrapper for munlock(2).
 func Unlock(b []byte) error {
 	if err := unix.Munlock(b); err != nil {
-		return fmt.Errorf("<memcall> could not free lock on %p [Err: %s]", &b[0], err)
+		return fmt.Errorf("<memcall> could not free lock on %p [Err: %s]", _getStartPtr(b), err)
 	}
 
 	return nil
@@ -54,7 +54,7 @@ func Free(b []byte) error {
 
 	// Free the memory back to the kernel.
 	if err := unix.Munmap(b); err != nil {
-		return fmt.Errorf("<memcall> could not deallocate %p [Err: %s]", &b[0], err)
+		return fmt.Errorf("<memcall> could not deallocate %p [Err: %s]", _getStartPtr(b), err)
 	}
 
 	return nil
@@ -75,7 +75,7 @@ func Protect(b []byte, mpf MemoryProtectionFlag) error {
 
 	// Change the protection value of the byte slice.
 	if err := unix.Mprotect(b, prot); err != nil {
-		return fmt.Errorf("<memcall> could not set %d on %p [Err: %s]", prot, &b[0], err)
+		return fmt.Errorf("<memcall> could not set %d on %p [Err: %s]", prot, _getStartPtr(b), err)
 	}
 
 	return nil
