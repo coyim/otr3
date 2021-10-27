@@ -11,13 +11,15 @@ import (
 
 func assertEquals(t *testing.T, actual, expected interface{}) {
 	if actual != expected {
-		t.Errorf("Expected:\n%#v \nto equal:\n%#v\n", actual, expected)
+		t.Errorf("Expected:\n%#v \n"+
+			"to equal:\n%#v\n", actual, expected)
 	}
 }
 
 func assertNotEquals(t *testing.T, actual, expected interface{}) {
 	if actual == expected {
-		t.Errorf("Expected:\n%#v \nto not equal:\n%#v\n", actual, expected)
+		t.Errorf("Expected:\n%#v \n"+
+			"to not equal:\n%#v\n", actual, expected)
 	}
 }
 
@@ -35,7 +37,8 @@ func isNil(actual interface{}) bool {
 
 func assertNil(t *testing.T, actual interface{}) {
 	if !isNil(actual) {
-		t.Errorf("Expected:\n%#v \nto be nil\n", actual)
+		t.Errorf("Expected:\n%#v \n"+
+			"to be nil\n", actual)
 	}
 }
 
@@ -53,23 +56,27 @@ func assertFalse(t *testing.T, actual bool) {
 
 func assertNotNil(t *testing.T, actual interface{}) {
 	if isNil(actual) {
-		t.Errorf("Expected:\n%#v \nto not be nil\n", actual)
+		t.Errorf("Expected:\n%#v \n"+
+			"to not be nil\n", actual)
 	}
 }
 
 func assertDeepEquals(t *testing.T, actual, expected interface{}) {
 	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("Expected:\n%#v \nto equal:\n%#v\n", actual, expected)
+		t.Errorf("Expected:\n%#v \n"+
+			"to equal:\n%#v\n", actual, expected)
 	}
 }
 
 func assertMatches(t *testing.T, actual, expected string) {
 	matches, err := regexp.MatchString("^"+expected+"$", actual)
 	if err != nil {
-		t.Errorf("Expected:\n%#v \nto match:\n%#v - Can't compile regex: %s\n", actual, expected, err.Error())
+		t.Errorf("Expected:\n%#v \n"+
+			"to match:\n%#v - Can't compile regex: %s\n", actual, expected, err.Error())
 	}
 	if !matches {
-		t.Errorf("Expected:\n%#v \nto match:\n%#v\n", actual, expected)
+		t.Errorf("Expected:\n%#v \n"+
+			"to match:\n%#v\n", actual, expected)
 	}
 }
 

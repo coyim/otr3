@@ -9,7 +9,7 @@ const (
 	// MessageEventEncryptionRequired is signaled when our policy requires encryption but we are trying to send an unencrypted message.
 	MessageEventEncryptionRequired MessageEvent = iota
 
-	// MessageEventEncryptionError is signaled when an error occured while encrypting a message and the message was not sent.
+	// MessageEventEncryptionError is signaled when an error occurred while encrypting a message and the message was not sent.
 	MessageEventEncryptionError
 
 	// MessageEventConnectionEnded is signaled when we are asked to send a message but the peer has ended the private conversation.

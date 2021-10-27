@@ -6,7 +6,7 @@ import "fmt"
 type ErrorCode int
 
 const (
-	// ErrorCodeEncryptionError means an error occured while encrypting a message
+	// ErrorCodeEncryptionError means an error occurred while encrypting a message
 	ErrorCodeEncryptionError ErrorCode = iota
 
 	// ErrorCodeMessageUnreadable means we received an unreadable encrypted message
