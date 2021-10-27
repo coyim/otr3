@@ -79,7 +79,7 @@ func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected(t *testin
 
 	assertDeepEquals(t, c.resend.pending(),
 		[]messageToResend{
-			messageToResend{MessagePlaintext(m), nil},
+			{MessagePlaintext(m), nil},
 		})
 }
 
@@ -95,8 +95,8 @@ func Test_Send_saveLastMessageWhenMsgIsPlainTextAndEncryptedIsExpected_AndAddsAn
 
 	assertDeepEquals(t, c.resend.pending(),
 		[]messageToResend{
-			messageToResend{MessagePlaintext(m), []interface{}{42, "hello"}},
-			messageToResend{MessagePlaintext(m2), []interface{}{15, "something"}},
+			{MessagePlaintext(m), []interface{}{42, "hello"}},
+			{MessagePlaintext(m2), []interface{}{15, "something"}},
 		})
 }
 

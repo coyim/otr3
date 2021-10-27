@@ -200,7 +200,7 @@ func Test_rotateOurKeys_doesNotRotateIfWeDontReceiveOurCurrentKeyID(t *testing.T
 
 func Test_revealMACKeys_ForgotOldKeysAfterBeenCalled(t *testing.T) {
 	oldMACKeys := []macKey{
-		macKey{0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03},
+		{0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03},
 	}
 	c := keyManagementContext{
 		oldMACKeys: oldMACKeys,
@@ -227,9 +227,9 @@ func Test_rotateTheirKey_revealAllMACKeysAssociatedWithTheirPreviousPubKey(t *te
 
 	c.macKeyHistory = macKeyHistory{
 		items: []macKeyUsage{
-			macKeyUsage{theirKeyID: 1, receivingKey: k2},
-			macKeyUsage{theirKeyID: 2, receivingKey: k1},
-			macKeyUsage{theirKeyID: 1, receivingKey: k2},
+			{theirKeyID: 1, receivingKey: k2},
+			{theirKeyID: 2, receivingKey: k1},
+			{theirKeyID: 1, receivingKey: k2},
 		},
 	}
 
@@ -258,9 +258,9 @@ func Test_rotateOurKey_revealAllMACKeysAssociatedWithOurPreviousPubKey(t *testin
 
 	c.macKeyHistory = macKeyHistory{
 		items: []macKeyUsage{
-			macKeyUsage{ourKeyID: 1, receivingKey: k2},
-			macKeyUsage{ourKeyID: 2, receivingKey: k1},
-			macKeyUsage{ourKeyID: 1, receivingKey: k2},
+			{ourKeyID: 1, receivingKey: k2},
+			{ourKeyID: 2, receivingKey: k1},
+			{ourKeyID: 1, receivingKey: k2},
 		},
 	}
 

@@ -299,7 +299,7 @@ func Test_End_whenStateIsEncrypted(t *testing.T) {
 
 	stub := bobContextAfterAKE()
 	stub.msgState = encrypted
-	expectedMsg, _, err := stub.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
+	expectedMsg, _, err := stub.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{{tlvType: tlvTypeDisconnected}})
 
 	assertDeepEquals(t, err, nil)
 	assertDeepEquals(t, bob.msgState, plainText)
@@ -360,7 +360,7 @@ func Test_End_wipesKeys(t *testing.T) {
 	bob.msgState = encrypted
 	_, _ = bob.End()
 	stub := bobContextAfterAKE()
-	_, _, _ = stub.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{tlv{tlvType: tlvTypeDisconnected}})
+	_, _, _ = stub.createSerializedDataMessage(nil, messageFlagIgnoreUnreadable, []tlv{{tlvType: tlvTypeDisconnected}})
 
 	assertDeepEquals(t, dhKeyPair{}, bob.keys.ourCurrentDHKeys)
 	assertDeepEquals(t, dhKeyPair{}, bob.keys.ourPreviousDHKeys)

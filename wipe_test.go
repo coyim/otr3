@@ -58,12 +58,12 @@ func Test_wipe_keyManagementContext(t *testing.T) {
 		theirPreviousDHPubKey: big.NewInt(6),
 		counterHistory: counterHistory{
 			counters: []*keyPairCounter{
-				&keyPairCounter{1, 1, 1, 1},
+				{1, 1, 1, 1},
 			},
 		},
 		macKeyHistory: macKeyHistory{
 			items: []macKeyUsage{
-				macKeyUsage{
+				{
 					ourKeyID:     2,
 					theirKeyID:   3,
 					receivingKey: macKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4},
@@ -71,7 +71,7 @@ func Test_wipe_keyManagementContext(t *testing.T) {
 			},
 		},
 		oldMACKeys: []macKey{
-			macKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 7, 6, 5},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 7, 6, 5},
 		},
 	}
 
