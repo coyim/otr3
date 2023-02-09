@@ -15,7 +15,7 @@ deps:
 	go install golang.org/x/lint/golint
 	go install golang.org/x/tools/cmd/cover
 #	go get github.com/golangci/golangci-lint/...
-	go install github.com/securego/gosec/cmd/gosec...
+	go install github.com/securego/gosec/v2/cmd/gosec
 
 deps-ci: deps
 	go install github.com/mattn/goveralls

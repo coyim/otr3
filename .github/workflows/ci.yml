@@ -18,7 +18,7 @@ jobs:
       - name: install OS dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libgcrypt11-dev libgpg-error-dev
+          sudo apt-get install libgcrypt20-dev libgpg-error-dev
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go }}
