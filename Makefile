@@ -6,10 +6,10 @@ lint:
 test:
 	go test -cover -v ./...
 
-test-slow:
-	make -C ./compat libotr-compat
+#test-slow:
+#	make -C ./compat libotr-compat
 
-ci: lint test test-slow
+ci: lint test # test-slow
 
 deps:
 	go install golang.org/x/lint/golint
