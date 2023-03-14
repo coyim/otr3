@@ -89,6 +89,20 @@ func Test_computesC3AndD3CorrectlyForOtrV2(t *testing.T) {
 	assertDeepEquals(t, smp.msg.d3, fixtureMessage1().d3)
 }
 
+func Test_computesC2AndD2CorrectlyForOtrV3(t *testing.T) {
+	otr := newConversation(otrV3{}, fixtureRand())
+	smp, _ := otr.generateSMP1()
+	assertDeepEquals(t, smp.msg.c2, fixtureMessage1v3().c2)
+	assertDeepEquals(t, smp.msg.d2, fixtureMessage1v3().d2)
+}
+
+func Test_computesC3AndD3CorrectlyForOtrV3(t *testing.T) {
+	otr := newConversation(otrV3{}, fixtureRand())
+	smp, _ := otr.generateSMP1()
+	assertDeepEquals(t, smp.msg.c3, fixtureMessage1v3().c3)
+	assertDeepEquals(t, smp.msg.d3, fixtureMessage1v3().d3)
+}
+
 func Test_thatVerifySMPStartParametersCheckG2AForOtrV3(t *testing.T) {
 	c := newConversation(otrV3{}, fixtureRand())
 	err := c.verifySMP1(smp1Message{g2a: new(big.Int).SetInt64(1)})
