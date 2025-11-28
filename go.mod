@@ -1,6 +1,6 @@
 module github.com/coyim/otr3
 
-go 1.19
+go 1.22
 
 require (
 	github.com/awnumar/memcall v0.1.2
