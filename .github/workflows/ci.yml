@@ -4,12 +4,12 @@ on: [push, pull_request]
 
 jobs:
   test-linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
-        go: [ '1.20', '1.19' ]
+        go: [ '1.25', '1.24', '1.23']
 
     name: Test go-${{ matrix.go }} (Linux)
     steps:
@@ -61,26 +61,26 @@ jobs:
       - name: run tests
         run: make lint test
 
-  notify-test:
-    name: Notify on success or failure of test
-    needs: [test-linux, test-windows, test-osx]
-    runs-on: ubuntu-20.04
-    if: always()
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - uses: technote-space/workflow-conclusion-action@v1
-      - uses: coyim/coyim/.github/actions/ci-conclusion-message@main
-        id: message-generator
-        with:
-          status: ${{ env.WORKFLOW_CONCLUSION }}
-          commit_id: ${{ github.sha }}
-          commit_message: ${{ github.event.head_commit.message }}
-      - name: send message to Matrix on conclusion
-        uses: olabiniV2/matrix-message@v0.0.1
-        with:
-          room_id: ${{ secrets.MATRIX_COYIM_ROOM_ID }}
-          access_token: ${{ secrets.MATRIX_ACCESS_TOKEN }}
-          server: ${{ secrets.MATRIX_SERVER }}
-          subject: ${{ steps.message-generator.outputs.subject }}
-          message: ${{ steps.message-generator.outputs.message }}
+  # notify-test:
+  #   name: Notify on success or failure of test
+  #   needs: [test-linux, test-windows, test-osx]
+  #   runs-on: ubuntu-20.04
+  #   if: always()
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v3
+  #     - uses: technote-space/workflow-conclusion-action@v1
+  #     - uses: coyim/coyim/.github/actions/ci-conclusion-message@main
+  #       id: message-generator
+  #       with:
+  #         status: ${{ env.WORKFLOW_CONCLUSION }}
+  #         commit_id: ${{ github.sha }}
+  #         commit_message: ${{ github.event.head_commit.message }}
+  #     - name: send message to Matrix on conclusion
+  #       uses: olabiniV2/matrix-message@v0.0.1
+  #       with:
+  #         room_id: ${{ secrets.MATRIX_COYIM_ROOM_ID }}
+  #         access_token: ${{ secrets.MATRIX_ACCESS_TOKEN }}
+  #         server: ${{ secrets.MATRIX_SERVER }}
+  #         subject: ${{ steps.message-generator.outputs.subject }}
+  #         message: ${{ steps.message-generator.outputs.message }}
