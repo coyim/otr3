@@ -192,6 +192,12 @@ func wipeUint32(b []uint32) {
 	runtime.KeepAlive(b)
 }
 
+func wipeUint32Array60(b [60]uint32) {
+	copy(b[:], zeroesUint32(60))
+
+	runtime.KeepAlive(b)
+}
+
 func wipeBigInt(k *big.Int) {
 	if k == nil {
 		return
@@ -252,6 +258,8 @@ var uint8SliceType = reflect.SliceOf(uint8Type)
 var uint32Type = reflect.ValueOf(uint32(1)).Type()
 var uint32SliceType = reflect.SliceOf(uint32Type)
 
+var uint32Array60Type = reflect.ArrayOf(60, uint32Type)
+
 func unsafeWipeSliceUint8(val reflect.Value) {
 	/* #nosec G103*/
 	ss := *(*[]uint8)(unsafe.Pointer(val.UnsafeAddr()))
@@ -262,6 +270,12 @@ func unsafeWipeSliceUint32(val reflect.Value) {
 	/* #nosec G103*/
 	ss := *(*[]uint32)(unsafe.Pointer(val.UnsafeAddr()))
 	wipeUint32(ss)
+}
+
+func unsafeWipeArray60Uint32(val reflect.Value) {
+	/* #nosec G103*/
+	ss := *(*[60]uint32)(unsafe.Pointer(val.UnsafeAddr()))
+	wipeUint32Array60(ss)
 }
 
 func unsafeWipeSlice(val reflect.Value) {
@@ -275,12 +289,34 @@ func unsafeWipeSlice(val reflect.Value) {
 	}
 }
 
+func unsafeWipeArray(val reflect.Value) {
+	switch val.Type() {
+	case uint32Array60Type:
+		unsafeWipeArray60Uint32(val)
+	default:
+		fmt.Printf("Unsupported array type: %v\n", val)
+	}
+}
+
+func unsafeWipeUint8(val reflect.Value) {
+	ss := (*uint8)(unsafe.Pointer(val.UnsafeAddr()))
+	*ss = 0
+}
+
 func unsafeWipeField(val reflect.Value) {
 	switch val.Kind() {
 	case reflect.Struct:
 		unsafeWipeStruct(val)
 	case reflect.Slice:
 		unsafeWipeSlice(val)
+	case reflect.Uint8:
+		if val.CanSet() {
+			val.SetZero()
+		} else {
+			unsafeWipeUint8(val)
+		}
+	case reflect.Array:
+		unsafeWipeArray(val)
 	default:
 		fmt.Printf("Unsupported wipe kind: %v\n", val.Kind().String())
 	}
