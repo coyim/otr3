@@ -5,9 +5,9 @@ go 1.23.0
 toolchain go1.23.12
 
 require (
-	github.com/awnumar/memcall v0.4.0
+	github.com/awnumar/memcall v0.5.0
 	github.com/coyim/constbn v0.0.0-20251201142907-b19b950d1e1c
-	golang.org/x/sys v0.33.0
+	golang.org/x/sys v0.35.0
 )
 
 require (
