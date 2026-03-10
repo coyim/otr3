@@ -96,8 +96,7 @@ func (c *Conversation) updateMayRetransmitTo(f retransmitFlag) {
 }
 
 func (c *Conversation) shouldRetransmit() bool {
-	return c.resend.shouldRetransmit() &&
-		c.heartbeat.lastSent.After(time.Now().Add(-resendInterval))
+	return c.resend.shouldRetransmit()
 }
 
 func (c *Conversation) maybeRetransmit() ([]messageWithHeader, error) {

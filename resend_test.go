@@ -27,14 +27,6 @@ func Test_shouldRetransmit_returnTrueIfAllTheConditionsForResendingAreMet(t *tes
 	assertEquals(t, c.shouldRetransmit(), true)
 }
 
-func Test_shouldRetransmit_returnFalseIfTheLastMessageWasSentTooFarBackInTime(t *testing.T) {
-	c := &Conversation{}
-	fixtureCorrectResend(c)
-	c.heartbeat.lastSent = time.Now().Add(-61 * time.Second)
-
-	assertEquals(t, c.shouldRetransmit(), false)
-}
-
 func Test_shouldRetransmit_returnTrueWhenFlagIsRetransmitWithPrefix(t *testing.T) {
 	c := &Conversation{}
 	fixtureCorrectResend(c)
